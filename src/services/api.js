@@ -1,13 +1,21 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/v1';
-console.log('API URL:', API_URL);
+// Ensure the API URL is defined
+let API_URL = import.meta.env.VITE_API_URL || '';
+
+// Important: Ensure VITE_API_URL ends with /v1 for API calls
+if (API_URL && !API_URL.endsWith('/v1')) {
+    API_URL = `${API_URL.replace(/\/$/, '')}/v1`;
+}
+
+console.log('API URL Configuration:', API_URL);
 
 const api = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true // Ensure cookies/sessions can be passed if needed
 });
 
 api.interceptors.request.use(

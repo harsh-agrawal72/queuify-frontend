@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Extract the base URL without /v1 for socket connections
+const rawApiUrl = import.meta.env.VITE_API_URL || '';
+const SOCKET_URL = rawApiUrl.replace(/\/v1\/?$/, '');
 
 let socketInstance = null;
 

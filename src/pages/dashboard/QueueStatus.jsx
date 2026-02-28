@@ -28,7 +28,10 @@ const QueueStatus = () => {
         if (!activeAppt) return;
 
         // Connect Socket
-        const newSocket = io('http://localhost:5000');
+        const rawApiUrl = import.meta.env.VITE_API_URL || '';
+        const SOCKET_URL = rawApiUrl.replace(/\/v1\/?$/, '');
+
+        const newSocket = io(SOCKET_URL || window.location.origin);
         setSocket(newSocket);
 
         newSocket.on('connect', () => {
