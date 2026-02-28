@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Ensure the API URL is defined
-let API_URL = import.meta.env.VITE_API_URL || '';
+let API_URL = import.meta.env.VITE_API_URL;
 
 // Important: Ensure VITE_API_URL ends with /v1 for API calls
 if (API_URL && !API_URL.endsWith('/v1')) {
