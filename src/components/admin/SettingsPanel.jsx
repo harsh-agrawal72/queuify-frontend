@@ -11,7 +11,10 @@ import {
     Shield,
     Loader2,
     ToggleLeft,
-    ToggleRight
+    ToggleRight,
+    Users,
+    UserPlus,
+    Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -23,6 +26,11 @@ const SettingsPanel = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('general');
+
+    const [admins, setAdmins] = useState([]);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteName, setInviteName] = useState('');
+    const [inviting, setInviting] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -65,8 +73,46 @@ const SettingsPanel = () => {
                 setLoading(false);
             }
         };
+
+        const fetchAdmins = async () => {
+            try {
+                const res = await api.get('/admin/admins');
+                setAdmins(res.data);
+            } catch (error) {
+                console.error("Failed to fetch admins", error);
+            }
+        };
+
         fetchSettings();
+        fetchAdmins();
     }, []);
+
+    const handleInviteAdmin = async (e) => {
+        e.preventDefault();
+        setInviting(true);
+        try {
+            const res = await api.post('/admin/admins/invite', { email: inviteEmail, name: inviteName });
+            toast.success('Admin invited successfully');
+            setAdmins([res.data, ...admins]);
+            setInviteEmail('');
+            setInviteName('');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to invite admin');
+        } finally {
+            setInviting(false);
+        }
+    };
+
+    const handleDeleteAdmin = async (adminId) => {
+        if (!window.confirm('Are you sure you want to remove this admin?')) return;
+        try {
+            await api.delete(`/admin/admins/${adminId}`);
+            toast.success('Admin removed');
+            setAdmins(admins.filter(a => a.id !== adminId));
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to remove admin');
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -246,6 +292,82 @@ const SettingsPanel = () => {
                         </div>
                     </div>
                 );
+            case 'admins':
+                return (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="border-b border-gray-100 pb-4 mb-4">
+                            <h2 className="text-lg font-semibold text-gray-800">Admin Management</h2>
+                            <p className="text-sm text-gray-500">Invite and manage administrators for your organization.</p>
+                        </div>
+
+                        {/* Invite Form */}
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                                <UserPlus className="h-4 w-4 text-indigo-500" /> Invite New Admin
+                            </h3>
+                            <div className="flex flex-col md:flex-row gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="Name (e.g. John Doe)"
+                                    value={inviteName}
+                                    onChange={(e) => setInviteName(e.target.value)}
+                                    className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none"
+                                />
+                                <input
+                                    type="email"
+                                    placeholder="Email Address"
+                                    value={inviteEmail}
+                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                    className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleInviteAdmin}
+                                    disabled={inviting || !inviteEmail || !inviteName}
+                                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                                >
+                                    {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Invite'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Admin List */}
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium text-gray-700">Current Admins</h3>
+                            {admins.length === 0 ? (
+                                <p className="text-sm text-gray-500 italic">No admins found.</p>
+                            ) : (
+                                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                                    {admins.map((admin, idx) => (
+                                        <div key={admin.id} className={`flex items-center justify-between p-4 ${idx !== admins.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                                            <div>
+                                                <p className="font-medium text-gray-800 text-sm">
+                                                    {admin.name} {admin.id === user?.id && <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">You</span>}
+                                                </p>
+                                                <p className="text-xs text-gray-500">{admin.email}</p>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className={`text-xs px-2.5 py-1 rounded-full ${admin.is_suspended ? 'bg-red-100 text-red-700' : admin.activated_at ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                    {admin.is_suspended ? 'Suspended' : admin.activated_at ? 'Active' : 'Invited'}
+                                                </span>
+                                                {admin.id !== user?.id && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteAdmin(admin.id)}
+                                                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Remove Admin"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
             default: return null;
         }
     }
@@ -284,6 +406,13 @@ const SettingsPanel = () => {
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'security' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
                     >
                         <Shield className="h-5 w-5" /> Security
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('admins')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'admins' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        <Users className="h-5 w-5" /> Admin Management
                     </button>
                 </div>
 

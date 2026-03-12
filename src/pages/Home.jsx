@@ -23,7 +23,11 @@ import {
     X,
     Twitter,
     Linkedin,
-    Github
+    Github,
+    Quote,
+    MessageCircle,
+    Plus,
+    Minus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Footer from '../components/layout/Footer';
@@ -83,7 +87,7 @@ const HeroSection = () => (
                         <CheckCircle className="h-4 w-4 text-green-500" /> No setup fee
                     </div>
                     <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" /> Cancel anytime
+                        <CheckCircle className="h-4 w-4 text-green-500" /> No Hidden Charges
                     </div>
                 </div>
             </motion.div>
@@ -128,7 +132,7 @@ const HeroSection = () => (
                                 {/* Header */}
                                 <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm shrink-0">
                                     <div>
-                                        <h3 className="font-bold text-gray-900">Dr. Sarah Connor</h3>
+                                        <h3 className="font-bold text-gray-900">Dr. Sarah Tiwari</h3>
                                         <p className="text-xs text-gray-500">General Consultation Room • Token #45</p>
                                     </div>
                                     <button className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">
@@ -142,7 +146,7 @@ const HeroSection = () => (
                                         <div className="absolute top-0 right-0 p-4 opacity-20"><Activity className="h-16 w-16" /></div>
                                         <p className="text-blue-100 text-sm font-medium mb-1">Currently Serving</p>
                                         <h2 className="text-4xl font-bold mb-2">A-045</h2>
-                                        <p className="text-xs text-blue-200">Patient: John Doe</p>
+                                        <p className="text-xs text-blue-200">Patient: Shubham Sharma</p>
                                     </div>
 
                                     <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex flex-col justify-center">
@@ -170,8 +174,8 @@ const HeroSection = () => (
                                     </div>
                                     <div className="p-2 space-y-2 overflow-hidden">
                                         {[
-                                            { token: 'A-046', name: 'Emily R.', time: '10:15 AM', status: 'ready', eta: 'Next' },
-                                            { token: 'A-047', name: 'Michael C.', time: '10:30 AM', status: 'waiting', eta: 'in 15m' },
+                                            { token: 'A-046', name: 'Tarun Kumar', time: '10:15 AM', status: 'ready', eta: 'Next' },
+                                            { token: 'A-047', name: 'Tanya Mittal', time: '10:30 AM', status: 'waiting', eta: 'in 15m' },
                                             { token: 'A-048', name: 'Wait-in Client', time: '10:35 AM', status: 'waiting', eta: 'in 25m' },
                                         ].map((item, i) => (
                                             <div key={i} className={`flex items-center justify-between p-3 rounded-lg border ${item.status === 'ready' ? 'bg-blue-50/50 border-blue-100' : 'bg-white border-gray-100'}`}>
@@ -403,9 +407,9 @@ const LiveDemoPreview = () => (
 
                             <div className="space-y-3">
                                 {[
-                                    { name: "Sarah J.", id: "#A001", status: "In Progress", time: "10:00 AM" },
-                                    { name: "Mike R.", id: "#A002", status: "Waiting", time: "10:15 AM" },
-                                    { name: "Emily W.", id: "#A003", status: "Waiting", time: "10:30 AM" },
+                                    { name: "Tannu Gupta", id: "#A001", status: "In Progress", time: "10:00 AM" },
+                                    { name: "Riya Singh", id: "#A002", status: "Waiting", time: "10:15 AM" },
+                                    { name: "Sarvesh", id: "#A003", status: "Waiting", time: "10:30 AM" },
                                 ].map((row, i) => (
                                     <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                                         <div className="flex items-center gap-3">
@@ -431,6 +435,82 @@ const LiveDemoPreview = () => (
         </div>
     </section>
 );
+
+const TestimonialSection = () => (
+    <section className="py-24 bg-indigo-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <SectionHeading title="Trusted by Service Leaders">
+                See what our partners are saying about Queuify.
+            </SectionHeading>
+
+            <div className="grid md:grid-cols-3 gap-8">
+                {[
+                    { quote: "Queuify completely eliminated the chaos in our waiting room. Our patients love waiting in their cars until we're ready for them.", author: "Dr. Rohit Mishra", role: "Clinic Director" },
+                    { quote: "Since implementing this system, our walk-aways have dropped by 80%. People appreciate knowing exactly when it's their turn.", author: "Mr. Rahul Bansal", role: "Retail Branch Manager" },
+                    { quote: "The analytics feature alone is worth it. We can now accurately predict peak times and staff our desks accordingly.", author: "Mr. Abhishek Sharma", role: "Gov Services Admin" }
+                ].map((item, i) => (
+                    <motion.div
+                        key={i}
+                        whileHover={{ y: -5 }}
+                        className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between"
+                    >
+                        <div>
+                            <Quote className="h-8 w-8 text-indigo-200 mb-4" />
+                            <p className="text-gray-700 leading-relaxed italic mb-6">"{item.quote}"</p>
+                        </div>
+                        <div className="flex items-center gap-4 border-t border-gray-50 pt-4">
+                            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                                {item.author.charAt(0)}
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-gray-900 text-sm">{item.author}</h4>
+                                <p className="text-xs text-gray-500">{item.role}</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
+const FAQSection = () => {
+    const [openIndex, setOpenIndex] = useState(0);
+    const faqs = [
+        { q: "Do my customers need to download an app?", a: "No! Queuify is entirely web-based. Your customers receive an SMS link to track their queue status and wait times directly in their mobile browser." },
+        { q: "How long does it take to set up?", a: "Most organizations are fully set up in under 15 minutes. You just need to create your organization profile, define your services, and set up your resources." },
+        { q: "Can I manage multiple locations?", a: "Yes, our enterprise structure allows Super Admins to oversee multiple organization branches, each with their own dedicated admin and queue system." },
+        { q: "Is the data secure?", a: "Absolutely. We use industry-standard encryption, and your customer data is securely stored and managed according to top privacy standards." },
+        { q: "What if someone misses their turn?", a: "The admin dashboard allows staff to pause, skip, or call the next person. If a customer is late, you can easily shift their position in the queue without disrupting flow." }
+    ];
+
+    return (
+        <section className="py-24 bg-white border-y border-gray-100">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <SectionHeading title="Frequently Asked Questions">
+                    Everything you need to know about the product and how it works.
+                </SectionHeading>
+
+                <div className="space-y-4">
+                    {faqs.map((faq, i) => (
+                        <div key={i} className={`border border-gray-100 rounded-xl overflow-hidden transition-all duration-300 ${openIndex === i ? 'shadow-md border-indigo-100 bg-white' : 'bg-gray-50/50 hover:bg-gray-50'}`}>
+                            <button
+                                className="w-full px-6 py-5 flex justify-between items-center text-left"
+                                onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
+                            >
+                                <span className={`font-semibold ${openIndex === i ? 'text-indigo-600' : 'text-gray-900'}`}>{faq.q}</span>
+                                {openIndex === i ? <Minus className="h-5 w-5 text-indigo-500 shrink-0" /> : <Plus className="h-5 w-5 text-gray-400 shrink-0" />}
+                            </button>
+                            <div className={`px-6 overflow-hidden transition-all duration-300 ${openIndex === i ? 'max-h-40 pb-5 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <p className="text-gray-600 leading-relaxed">{faq.a}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
 
 
 
@@ -467,6 +547,8 @@ const Home = () => {
                 <TargetIndustries />
                 <FeaturesGrid />
                 <LiveDemoPreview />
+                <TestimonialSection />
+                <FAQSection />
                 <CallToAction />
             </main>
             <Footer />
