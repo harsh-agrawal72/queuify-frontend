@@ -155,7 +155,7 @@ const AdminLiveQueue = () => {
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-6 border-b border-gray-100 pb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-gray-100 pb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                         <span className="relative flex h-4 w-4">
@@ -189,7 +189,7 @@ const AdminLiveQueue = () => {
             </div>
 
             {/* Overall Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Waiting Now</p>
                     <p className="text-3xl font-black text-orange-600 mt-1">{totalPending}</p>
@@ -220,22 +220,22 @@ const AdminLiveQueue = () => {
                                 layout
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[500px]"
+                                className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[400px]"
                             >
                                 {/* Queue Header */}
                                 <div className="p-6 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
-                                    <div>
-                                        <h3 className="text-lg font-black text-slate-800 tracking-tight">
-                                            {queue.name}
-                                            {queue.slot_start && (
-                                                <span className="ml-2 text-sm font-normal text-gray-500">
-                                                    ({formatTime(queue.slot_start)} - {formatTime(queue.slot_end)})
-                                                </span>
-                                            )}
-                                        </h3>
-                                        <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider mt-0.5 flex items-center gap-1">
-                                            <User className="h-3 w-3" /> {queue.resource_name}
-                                        </p>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
+                                            <User className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                                                {queue.resource_name}
+                                            </h3>
+                                            <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider flex items-center gap-1">
+                                                {queue.name} • Active Today
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
                                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Waiting</p>
@@ -274,8 +274,9 @@ const AdminLiveQueue = () => {
                                                             {isServing && <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse">SERVING</span>}
                                                             {isNext && <span className="text-[10px] font-black bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">NEXT</span>}
                                                         </div>
-                                                        <p className={`text-xs ${isServing ? 'text-indigo-100' : 'text-slate-400'} flex items-center gap-1 mt-0.5`}>
-                                                            Ticket: {appt.token_number}
+                                                        <p className={`text-xs ${isServing ? 'text-indigo-100' : 'text-slate-400'} flex items-center gap-2 mt-0.5`}>
+                                                            <Clock className="h-3 w-3" />
+                                                            {appt.slot_start ? `${formatTime(appt.slot_start)} Slot` : 'No Slot'} • Ticket: {appt.token_number}
                                                         </p>
                                                     </div>
 

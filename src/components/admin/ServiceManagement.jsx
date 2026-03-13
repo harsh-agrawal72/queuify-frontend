@@ -172,14 +172,14 @@ const ServiceManagement = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Service Management</h1>
                     <p className="text-sm text-gray-500 mt-1">Create services and assign resources (staff, rooms, equipment) to them.</p>
                 </div>
                 <button
                     onClick={() => setServiceModal({ open: true, edit: false, data: null })}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
                 >
                     <Plus className="h-4 w-4" /> Create Service
                 </button>
@@ -218,9 +218,9 @@ const ServiceManagement = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 sm:gap-2">
                                         {resources.length > 0 && (
-                                            <span className="text-xs font-medium px-2.5 py-1 bg-purple-50 text-purple-600 rounded-full">
+                                            <span className="hidden sm:inline-block text-xs font-medium px-2.5 py-1 bg-purple-50 text-purple-600 rounded-full">
                                                 {resources.length} resource{resources.length > 1 ? 's' : ''}
                                             </span>
                                         )}
@@ -330,7 +330,14 @@ const ServiceManagement = () => {
                         required: true,
                         help: 'CENTRAL: One shared queue for all resources. PER_RESOURCE: Separate queue for each staff/doctor (best for specific bookings).'
                     },
-                    { name: 'estimated_service_time', label: 'Est. Duration (min)', type: 'number', min: 1, required: true },
+                    { 
+                        name: 'estimated_service_time', 
+                        label: 'Estimated Duration (min)', 
+                        type: 'number', 
+                        min: 1, 
+                        required: true,
+                        help: 'Average time per appointment. This is used for wait-time estimates and as a default timing for new slots.'
+                    },
                 ]}
                 defaults={serviceModal.edit ? serviceModal.data : {
                     name: '',
@@ -382,13 +389,13 @@ const FormModal = ({ open, title, onClose, onSubmit, fields, defaults }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-                    <h2 className="font-semibold text-gray-900">{title}</h2>
-                    <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded-lg transition-colors"><X className="h-4 w-4 text-gray-400" /></button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+            <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h2 className="font-bold text-gray-900">{title}</h2>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X className="h-5 w-5 text-gray-400" /></button>
                 </div>
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
                     {fields.map(field => (
                         <div key={field.name} className={`${field.dependsOn && !formData[field.dependsOn] ? 'hidden' : 'block'}`}>
                             {field.type === 'checkbox' ? (

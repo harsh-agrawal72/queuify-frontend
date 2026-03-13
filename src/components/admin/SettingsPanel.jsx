@@ -376,56 +376,31 @@ const SettingsPanel = () => {
         <div className="max-w-5xl mx-auto space-y-8">
             <h1 className="text-2xl font-bold text-gray-900">Organization Settings</h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="flex flex-col md:grid md:grid-cols-12 gap-6 md:gap-8">
                 {/* Navigation/Sidebar */}
-                <div className="md:col-span-3 space-y-2">
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('general')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'general' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        <Building2 className="h-5 w-5" /> General Info
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('hours')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'hours' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        <Clock className="h-5 w-5" /> Business Hours
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('notifications')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'notifications' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        <Bell className="h-5 w-5" /> Notifications
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('security')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'security' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        <Shield className="h-5 w-5" /> Security
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('admins')}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'admins' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        <Users className="h-5 w-5" /> Admin Management
-                    </button>
+                <div className="md:col-span-3 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                    {[{ id: 'general', icon: Building2, label: 'General' }, { id: 'hours', icon: Clock, label: 'Hours' }, { id: 'notifications', icon: Bell, label: 'Alerts' }, { id: 'security', icon: Shield, label: 'Security' }, { id: 'admins', icon: Users, label: 'Admins' }].map(tab => (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex-shrink-0 flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? 'bg-indigo-600 md:bg-indigo-50 text-white md:text-indigo-700 shadow-lg md:shadow-none' : 'text-gray-600 hover:bg-gray-50'}`}
+                        >
+                            <tab.icon className="h-4 w-4 md:h-5 md:w-5" /> {tab.label}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Main Form */}
                 <div className="md:col-span-9">
-                    <form onSubmit={handleSave} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col justify-between">
+                    <form onSubmit={handleSave} className="bg-white p-5 md:p-8 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col justify-between">
                         {renderContent()}
-
-                        <div className="pt-8 mt-auto flex justify-end border-t border-gray-50">
+                        
+                        <div className="pt-6 mt-6 flex justify-end border-t border-gray-50">
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
                             >
                                 {saving ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
                                 Save Changes

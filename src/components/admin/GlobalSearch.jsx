@@ -58,7 +58,7 @@ const GlobalSearch = () => {
     const hasResults = results && (results.services?.length > 0 || results.resources?.length > 0 || results.appointments?.length > 0);
 
     return (
-        <div className="relative w-full max-w-md hidden md:block" ref={wrapperRef}>
+        <div className="relative w-full max-w-md" ref={wrapperRef}>
             <div className={`flex items-center bg-gray-100 rounded-full px-4 py-2 border transition-all ${isOpen ? 'border-indigo-300 ring-2 ring-indigo-100 bg-white' : 'border-transparent focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 hover:bg-gray-200'}`}>
                 {isLoading ? (
                     <Loader2 className="h-4 w-4 text-indigo-500 animate-spin" />

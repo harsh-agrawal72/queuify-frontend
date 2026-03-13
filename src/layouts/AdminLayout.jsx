@@ -164,7 +164,7 @@ const AdminLayout = () => {
                 initial={{ width: 260 }}
                 animate={{ width: isSidebarOpen ? 260 : 80 }}
                 className={`bg-white border-r border-gray-200 fixed h-full z-40 flex flex-col transition-all duration-300 shadow-sm ${
-                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-20'
                 }`}
             >
                 <div className="h-16 flex items-center px-6 border-b border-gray-100">
@@ -224,10 +224,10 @@ const AdminLayout = () => {
                 {/* Top Navbar */}
                 <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 h-16 flex items-center justify-between px-4 sticky top-0 z-20 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden p-2 text-gray-600">
+                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                             <Menu className="h-6 w-6" />
                         </button>
-                        <h1 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h1>
+                        <h1 className="text-lg md:text-xl font-bold text-gray-800 truncate">{getPageTitle()}</h1>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -352,7 +352,7 @@ const AdminLayout = () => {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 p-4 md:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
+                <main className="flex-1 p-3 md:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}

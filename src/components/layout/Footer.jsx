@@ -20,17 +20,6 @@ const Footer = () => {
                         <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-sm">
                             Revolutionizing queue management with intelligent routing and seamless booking experiences. Making waiting productive for everyone.
                         </p>
-                        <div className="flex items-center gap-4">
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-lg" aria-label="Twitter">
-                                <Twitter className="w-4 h-4" />
-                            </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-slate-700 hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-lg" aria-label="GitHub">
-                                <Github className="w-4 h-4" />
-                            </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:-translate-y-1 transition-all duration-300 shadow-lg" aria-label="LinkedIn">
-                                <Linkedin className="w-4 h-4" />
-                            </a>
-                        </div>
                     </div>
 
                     {/* Links - Company */}
@@ -59,11 +48,15 @@ const Footer = () => {
                         <ul className="space-y-4 text-sm">
                             <li className="flex items-start gap-3 text-slate-400">
                                 <MapPin className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                                <span>123 Tech Boulevard,<br />Innovation District, CA 94105</span>
+                                <span>14 Chhipi Gali,<br />Vrindavan, Mathura,<br />Uttar Pradesh, 281121</span>
                             </li>
                             <li className="flex items-center gap-3 text-slate-400">
                                 <Mail className="w-5 h-5 text-indigo-400 shrink-0" />
-                                <a href="mailto:hello@queuify.com" className="hover:text-indigo-300 transition-colors">hello@queuify.com</a>
+                                <a href="mailto:harsagrawal7270@gmail.com" className="hover:text-indigo-300 transition-colors">harsagrawal7270@gmail.com</a>
+                            </li>
+                            <li className="flex items-center gap-3 text-slate-400">
+                                <Phone className="w-5 h-5 text-indigo-400 shrink-0" />
+                                <a href="tel:+917668418353" className="hover:text-indigo-300 transition-colors">+91 7668418353</a>
                             </li>
                         </ul>
                     </div>

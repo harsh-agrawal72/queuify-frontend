@@ -48,7 +48,9 @@ export default function LiveQueue() {
 
     const isCompleted = status.status === 'completed';
     const isCancelled = status.status === 'cancelled';
-    const isServing = status.status === 'serving' || (status.current_serving_number === status.myRank && !isCompleted && !isCancelled);
+    const isServing = status.is_serving; // Explicitly set by backend now
+    const hasStarted = status.current_serving_number > 0;
+    const isWaiting = !isCompleted && !isCancelled && !isServing;
 
     return (
         <div className="w-full space-y-6">
@@ -71,8 +73,8 @@ export default function LiveQueue() {
                     <h1 className="text-8xl font-black tracking-tighter mb-4">#{status.myRank}</h1>
 
                     <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20">
-                        <span className={`w-2.5 h-2.5 rounded-full ${isServing ? 'bg-green-400 animate-pulse' : 'bg-blue-400'}`} />
-                        {isServing ? 'NOW SERVING' : status.status.toUpperCase()}
+                        <span className={`w-2.5 h-2.5 rounded-full ${isServing ? 'bg-green-400 animate-pulse' : !hasStarted ? 'bg-orange-400' : 'bg-blue-400'}`} />
+                        {isServing ? 'NOW SERVING' : !hasStarted ? 'QUEUE NOT STARTED' : 'SOON TO BE CALLED'}
                     </div>
                 </div>
 
@@ -109,14 +111,26 @@ export default function LiveQueue() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Currently Serving</p>
-                                        <p className="text-2xl font-black text-slate-800">#{status.current_serving_number}</p>
+                                        <p className="text-2xl font-black text-slate-800">
+                                            {status.current_serving_number > 0 ? `#${status.current_serving_number}` : 'No one yet'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Mode</p>
-                                    <p className="text-sm font-bold text-slate-600">Real-time Tracking</p>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Status</p>
+                                    <p className={`text-sm font-bold ${hasStarted ? 'text-green-600' : 'text-orange-600'}`}>
+                                        {hasStarted ? 'Live' : 'Waiting to start'}
+                                    </p>
                                 </div>
                             </div>
+
+                            {!hasStarted && status.people_ahead === 0 && (
+                                <div className="bg-orange-50 rounded-2xl p-4 text-center border border-orange-100">
+                                    <p className="text-sm font-medium text-orange-800">
+                                        You are first in line! Please wait for the administrator to start the queue.
+                                    </p>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

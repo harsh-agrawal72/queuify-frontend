@@ -138,7 +138,7 @@ const AppointmentManager = () => {
     return (
         <div className="w-full space-y-8">
             {/* Header with improved styling */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-gray-100 pb-6">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-gray-100 pb-6 px-1">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Appointments</h1>
                     <p className="text-gray-500 mt-2">Manage bookings, track status, and handle payments.</p>
@@ -182,7 +182,8 @@ const AppointmentManager = () => {
             </div>
 
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden min-h-[400px] flex flex-col">
-                <div className="overflow-x-auto flex-grow">
+                {/* Desktop view table */}
+                <div className="hidden md:block overflow-x-auto flex-grow">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
@@ -327,6 +328,107 @@ const AppointmentManager = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile view cards */}
+                <div className="md:hidden flex-grow px-4 py-6 space-y-4">
+                    {loading ? (
+                        [...Array(3)].map((_, i) => (
+                            <div key={i} className="bg-gray-50/50 rounded-2xl p-4 animate-pulse border border-gray-100">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="h-4 bg-gray-200 rounded w-32"></div>
+                                    <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="h-3 bg-gray-200 rounded w-full"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                                </div>
+                            </div>
+                        ))
+                    ) : appointments.length === 0 ? (
+                        <div className="py-20 text-center text-gray-500">
+                            <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                            <p className="font-semibold text-gray-900">No appointments found</p>
+                        </div>
+                    ) : (
+                        appointments.map((apt) => (
+                            <div key={apt.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm relative">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                                            {apt.user_name?.[0]?.toUpperCase() || 'G'}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900 leading-tight">{apt.user_name || 'Guest User'}</p>
+                                            <p className="text-[10px] text-gray-500 mt-0.5">{apt.user_email || '-'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                        {getStatusBadge(apt.status, apt.cancelled_by)}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveActionId(activeActionId === apt.id ? null : apt.id);
+                                            }}
+                                            className={`p-1.5 rounded-lg border ${activeActionId === apt.id ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'text-gray-400 border-gray-100'}`}
+                                        >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 py-3 border-t border-gray-50 mt-1">
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Service</p>
+                                        <p className="text-xs font-semibold text-gray-800 line-clamp-1">{apt.service_name || 'General'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Resource</p>
+                                        <p className="text-xs font-semibold text-gray-800 line-clamp-1">{apt.resource_name || 'Unassigned'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Date</p>
+                                        <p className="text-xs font-semibold text-gray-800">{apt.start_time ? format(new Date(apt.start_time), 'MMM d, yyyy') : '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Time</p>
+                                        <p className="text-xs font-semibold text-gray-800 font-mono">{apt.start_time ? format(new Date(apt.start_time), 'h:mm a') : '-'}</p>
+                                    </div>
+                                </div>
+
+                                {/* Mobile Action Overlay */}
+                                <AnimatePresence>
+                                    {activeActionId === apt.id && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 rounded-2xl flex flex-col p-4 shadow-xl border border-indigo-100"
+                                        >
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Update Status</h4>
+                                                <button onClick={() => setActiveActionId(null)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+                                                    <XCircle className="h-4 w-4 text-gray-400" />
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 flex-grow">
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">Pending</button>
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">Confirmed</button>
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">Completed</button>
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">Cancelled</button>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDelete(apt.id)}
+                                                className="mt-3 w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" /> Delete Permanently
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 {/* Pagination */}

@@ -43,6 +43,7 @@ const SlotManagement = () => {
     const [selectedModalResource, setSelectedModalResource] = useState(null);
     const [slotDate, setSlotDate] = useState('');
     const [slotTime, setSlotTime] = useState('');
+    const [slotEndTime, setSlotEndTime] = useState('');
     const [slotCapacity, setSlotCapacity] = useState(1);
     const [editingSlotId, setEditingSlotId] = useState(null);
 
@@ -166,10 +167,7 @@ const SlotManagement = () => {
             const start = new Date(`${slotDate}T${slotTime}`);
             const startTime = start.toISOString();
 
-            // Calculate end time from service estimated_service_time
-            const selectedService = modalServices.find(s => s.id === selectedModalService);
-            const duration = selectedService?.estimated_service_time || 30;
-            const end = new Date(start.getTime() + duration * 60 * 1000);
+            const end = new Date(`${slotDate}T${slotEndTime}`);
             const endTime = end.toISOString();
 
             const payload = {
@@ -231,8 +229,10 @@ const SlotManagement = () => {
             // Set Time/Date
             // slot.start_time is ISO string
             const start = new Date(slot.start_time);
+            const end = new Date(slot.end_time);
             setSlotDate(format(start, 'yyyy-MM-dd'));
             setSlotTime(format(start, 'HH:mm'));
+            setSlotEndTime(format(end, 'HH:mm'));
             setSlotCapacity(slot.max_capacity);
 
         } catch (error) {
@@ -273,6 +273,7 @@ const SlotManagement = () => {
         setSelectedModalResource(null);
         setSlotDate('');
         setSlotTime('');
+        setSlotEndTime('');
         setSlotCapacity(1);
     };
 
@@ -283,21 +284,24 @@ const SlotManagement = () => {
         setSelectedModalResource(null);
         setSlotDate('');
         setSlotTime('');
+        setSlotEndTime('');
         setSlotCapacity(1);
         setEditingSlotId(null);
     };
 
-    // Computed end time preview
-    const getEndTimePreview = () => {
-        if (!slotDate || !slotTime || !selectedModalResource) return null;
+    // Computed end time suggestion
+    const updateEndTimeSuggestion = (newStartTime) => {
+        if (!newStartTime) return;
         try {
-            const start = new Date(`${slotDate}T${slotTime}`);
+            const [h, m] = newStartTime.split(':').map(Number);
+            const date = new Date();
+            date.setHours(h, m, 0, 0);
             const selectedService = modalServices.find(s => s.id === selectedModalService);
             const duration = selectedService?.estimated_service_time || 30;
-            const end = new Date(start.getTime() + duration * 60 * 1000);
-            return format(end, 'h:mm a');
-        } catch {
-            return null;
+            const end = new Date(date.getTime() + duration * 60 * 1000);
+            setSlotEndTime(format(end, 'HH:mm'));
+        } catch (e) {
+            console.error("End time calc failed", e);
         }
     };
 
@@ -307,14 +311,14 @@ const SlotManagement = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Manage Slots</h1>
                     <p className="text-sm text-gray-500 mt-1">Create and manage time slots for your resources.</p>
                 </div>
                 <button
                     onClick={openModal}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
                 >
                     <Plus className="h-4 w-4" /> Create Slot
                 </button>
@@ -373,7 +377,7 @@ const SlotManagement = () => {
             </div>
 
             {/* ═══ SLOTS TABLE ═══ */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[300px]">
                 {loadingSlots ? (
                     <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-400 h-7 w-7" /></div>
                 ) : slots.length === 0 ? (
@@ -383,7 +387,8 @@ const SlotManagement = () => {
                         <p className="text-xs text-gray-400 mt-1">Create a slot or adjust your filters.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <>
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 text-gray-500 uppercase tracking-wider text-xs">
@@ -477,6 +482,55 @@ const SlotManagement = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden divide-y divide-gray-50">
+                        {slots.map(slot => {
+                            const remaining = slot.max_capacity - slot.booked_count;
+                            const isPast = new Date(slot.end_time) < new Date();
+                            const isFull = remaining <= 0;
+
+                            return (
+                                <div key={slot.id} className={`p-5 space-y-4 ${isPast ? 'opacity-60 bg-gray-50/50' : ''}`}>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-900">{format(parseISO(slot.start_time), 'EEEE, MMM d')}</p>
+                                            <p className="text-xs text-indigo-600 font-medium mt-1">
+                                                {format(parseISO(slot.start_time), 'h:mm a')} – {format(parseISO(slot.end_time), 'h:mm a')}
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleEditSlot(slot)} className="p-2 text-gray-400 hover:text-indigo-600 bg-gray-50 rounded-lg"><Pencil className="h-4 w-4" /></button>
+                                            <button onClick={() => handleDeleteSlot(slot.id)} className="p-2 text-gray-400 hover:text-red-500 bg-gray-50 rounded-lg"><Trash2 className="h-4 w-4" /></button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        <div className="flex-1 min-w-[120px]">
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Resource</p>
+                                            <p className="text-xs font-semibold text-gray-800">{slot.resource_name}</p>
+                                            <p className="text-[10px] text-gray-400 capitalize">{slot.resource_type}</p>
+                                        </div>
+                                        <div className="flex-1 min-w-[80px] text-right">
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Availability</p>
+                                            <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${isFull ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                {remaining} / {slot.max_capacity} Left
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 border-t border-gray-50">
+                                        <div className="flex flex-wrap gap-1">
+                                            {slot.service_names?.map(name => (
+                                                <span key={name} className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px] font-medium uppercase">{name}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    </>
                 )}
             </div>
 
@@ -608,7 +662,10 @@ const SlotManagement = () => {
                                                 required
                                                 step="300"
                                                 value={slotTime}
-                                                onChange={e => setSlotTime(e.target.value)}
+                                                onChange={e => {
+                                                    setSlotTime(e.target.value);
+                                                    updateEndTimeSuggestion(e.target.value);
+                                                }}
                                                 onBlur={e => {
                                                     if (!e.target.value) return;
                                                     const [h, m] = e.target.value.split(':').map(Number);
@@ -619,6 +676,32 @@ const SlotManagement = () => {
                                                     const formatted = format(rounded, 'HH:mm');
                                                     if (formatted !== e.target.value) {
                                                         setSlotTime(formatted);
+                                                        updateEndTimeSuggestion(formatted);
+                                                        toast('Time rounded to nearest 5 minutes', { icon: 'ℹ️' });
+                                                    }
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">5 min intervals</p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">End Time</label>
+                                            <input
+                                                type="time"
+                                                required
+                                                step="300"
+                                                value={slotEndTime}
+                                                onChange={e => setSlotEndTime(e.target.value)}
+                                                onBlur={e => {
+                                                    if (!e.target.value) return;
+                                                    const [h, m] = e.target.value.split(':').map(Number);
+                                                    const date = new Date();
+                                                    date.setHours(h, m, 0, 0);
+                                                    const coeff = 1000 * 60 * 5;
+                                                    const rounded = new Date(Math.round(date.getTime() / coeff) * coeff);
+                                                    const formatted = format(rounded, 'HH:mm');
+                                                    if (formatted !== e.target.value) {
+                                                        setSlotEndTime(formatted);
                                                         toast('Time rounded to nearest 5 minutes', { icon: 'ℹ️' });
                                                     }
                                                 }}
@@ -628,11 +711,11 @@ const SlotManagement = () => {
                                         </div>
                                     </div>
 
-                                    {/* Auto-calculated end time */}
+                                    {/* Guidance message */}
                                     {slotDate && slotTime && (
-                                        <div className="bg-green-50 rounded-xl p-3 flex items-center gap-2 text-sm text-green-700">
-                                            <Clock className="h-4 w-4" />
-                                            <span>End time: <strong>{getEndTimePreview()}</strong> (auto-calculated from service settings)</span>
+                                        <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-700">
+                                            <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                            <span>The end time is pre-filled based on your service duration ({modalServices.find(s => s.id === selectedModalService)?.estimated_service_time || 30} mins), but you can change it manually.</span>
                                         </div>
                                     )}
 
