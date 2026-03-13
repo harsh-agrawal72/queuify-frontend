@@ -11,7 +11,8 @@ import {
     Filter,
     AlertCircle,
     Users,
-    Pencil
+    Pencil,
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
