@@ -22,7 +22,8 @@ import {
     Linkedin,
     ShieldCheck,
     ShieldAlert,
-    ShieldOff
+    ShieldOff,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -83,7 +84,8 @@ const OrganizationAbout = () => {
             toast.success('Profile updated successfully');
             fetchData(); // Refresh to get updated trust score
         } catch (error) {
-            toast.error('Failed to save profile');
+            console.error('Save failed:', error);
+            toast.error(error.response?.data?.message || 'Failed to save profile');
         } finally {
             setSaving(false);
         }

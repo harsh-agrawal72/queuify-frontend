@@ -47,20 +47,35 @@ export default function MyAppointments() {
 
     // Count appointments per category
     const counts = appointments.reduce((acc, appt) => {
+        const isHistoryStatus = ['completed', 'no_show'].includes(appt.status);
+        const isCancelledStatus = appt.status === 'cancelled';
         const past = new Date(appt.end_time) < new Date();
-        const cancelled = appt.status === 'cancelled';
-        if (cancelled) acc.cancelled++;
-        else if (past) acc.history++;
-        else acc.upcoming++;
+
+        if (isCancelledStatus) {
+            acc.cancelled++;
+        } else if (isHistoryStatus || (past && ['confirmed', 'pending'].includes(appt.status))) {
+            acc.history++;
+        } else {
+            // Include 'serving' in upcoming, and confirmed/pending that aren't past
+            acc.upcoming++;
+        }
         return acc;
     }, { upcoming: 0, history: 0, cancelled: 0 });
 
     const filteredAppointments = appointments.filter(appt => {
+        const isHistoryStatus = ['completed', 'no_show'].includes(appt.status);
+        const isCancelledStatus = appt.status === 'cancelled';
         const past = new Date(appt.end_time) < new Date();
-        const cancelled = appt.status === 'cancelled';
-        if (filter === 'upcoming') return !past && !cancelled;
-        if (filter === 'history') return past && !cancelled;
-        if (filter === 'cancelled') return cancelled;
+
+        if (filter === 'upcoming') {
+            return !isCancelledStatus && !isHistoryStatus && !past;
+        }
+        if (filter === 'history') {
+            return !isCancelledStatus && (isHistoryStatus || past);
+        }
+        if (filter === 'cancelled') {
+            return isCancelledStatus;
+        }
         return true;
     });
 

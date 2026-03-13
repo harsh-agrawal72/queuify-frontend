@@ -121,7 +121,9 @@ const OrganizationManager = () => {
             localStorage.setItem('user', JSON.stringify(user));
             window.location.href = '/admin';
         } catch (error) {
-            toast.error("Impersonation failed. Ensure org has an admin.");
+            console.error('Impersonation error:', error);
+            const message = error.response?.data?.message || "Impersonation failed. Ensure org has an active admin.";
+            toast.error(message);
         }
     };
 

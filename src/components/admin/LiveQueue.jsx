@@ -254,10 +254,22 @@ const AdminLiveQueue = () => {
                                                 !queue.appointments.some((a, idx) => idx < i && (a.status === 'pending' || a.status === 'confirmed'));
                                             const isCompleted = appt.status === 'completed' || appt.status === 'no_show';
 
+                                            const showSeparator = i > 0 && queue.appointments[i - 1].slot_start !== appt.slot_start;
+
                                             return (
-                                                <motion.div
-                                                    key={appt.id}
-                                                    layout
+                                                <div key={appt.id}>
+                                                    {showSeparator && (
+                                                        <div className="flex items-center gap-4 my-6 opacity-60">
+                                                            <div className="h-px bg-gray-200 flex-1"></div>
+                                                            <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                                                                <Clock className="h-3 w-3" />
+                                                                {formatTime(appt.slot_start) || 'Next Available'}
+                                                            </div>
+                                                            <div className="h-px bg-gray-200 flex-1"></div>
+                                                        </div>
+                                                    )}
+                                                    <motion.div
+                                                        layout
                                                     className={`
                                                         p-4 rounded-2xl border transition-all duration-300 flex items-center gap-4
                                                         ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100 scale-[1.02] z-10' :
@@ -317,7 +329,8 @@ const AdminLiveQueue = () => {
                                                             </span>
                                                         )}
                                                     </div>
-                                                </motion.div>
+                                                    </motion.div>
+                                                </div>
                                             );
                                         })
                                     )}
