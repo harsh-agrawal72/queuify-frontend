@@ -32,7 +32,7 @@ const AdminLayout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -59,12 +59,22 @@ const AdminLayout = () => {
             }
         };
 
+        const handleResize = () => {
+            if (window.innerWidth <= 768) {
+                setIsSidebarOpen(false);
+            } else {
+                setIsSidebarOpen(true);
+            }
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
         document.addEventListener('keydown', handleEscKey);
+        window.addEventListener('resize', handleResize);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscKey);
+            window.removeEventListener('resize', handleResize);
         };
     }, []);
 
@@ -136,11 +146,26 @@ const AdminLayout = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+            {/* Mobile Overlay */}
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => window.innerWidth <= 768 && setIsSidebarOpen(false)}
+                        className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-30 md:hidden"
+                    />
+                )}
+            </AnimatePresence>
+
             {/* Sidebar */}
             <motion.aside
                 initial={{ width: 260 }}
                 animate={{ width: isSidebarOpen ? 260 : 80 }}
-                className="bg-white border-r border-gray-200 fixed h-full z-30 hidden md:flex flex-col transition-all duration-300 shadow-sm"
+                className={`bg-white border-r border-gray-200 fixed h-full z-40 flex flex-col transition-all duration-300 shadow-sm ${
+                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+                }`}
             >
                 <div className="h-16 flex items-center px-6 border-b border-gray-100">
                     <div className="flex items-center gap-3 text-indigo-600 font-bold text-xl overflow-hidden whitespace-nowrap">
@@ -165,6 +190,7 @@ const AdminLayout = () => {
                                 <Link
                                     key={item.path}
                                     to={item.path}
+                                    onClick={() => window.innerWidth <= 768 && setIsSidebarOpen(false)}
                                     title={!isSidebarOpen ? item.label : ''}
                                     className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${isActive
                                         ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm'
@@ -326,7 +352,7 @@ const AdminLayout = () => {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 p-6 md:p-8 w-full">
+                <main className="flex-1 p-4 md:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}

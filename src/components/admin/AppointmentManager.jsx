@@ -182,7 +182,7 @@ const AppointmentManager = () => {
             </div>
 
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden min-h-[400px] flex flex-col">
-                <div className="overflow-x-visible flex-grow">
+                <div className="overflow-x-auto flex-grow">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">

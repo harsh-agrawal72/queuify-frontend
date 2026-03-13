@@ -97,10 +97,10 @@ const HeroSection = () => (
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="mt-20 relative mx-auto max-w-5xl"
+                className="mt-16 md:mt-20 relative mx-auto max-w-5xl"
             >
                 <div className="rounded-2xl border border-gray-200 bg-white/50 backdrop-blur-xl shadow-2xl overflow-hidden p-2">
-                    <div className="rounded-xl overflow-hidden bg-gray-50 border border-gray-100 aspect-[16/9] relative group">
+                    <div className="rounded-xl overflow-hidden bg-gray-50 border border-gray-100 h-[500px] sm:h-[600px] md:h-auto md:aspect-[16/9] relative group">
                         {/* Realistic Mock UI Elements simulating the Admin dashboard */}
                         <div className="absolute top-0 left-0 w-full h-full bg-white flex">
                             {/* Sidebar */}
@@ -130,13 +130,13 @@ const HeroSection = () => (
                             <div className="flex-1 p-4 md:p-8 space-y-6 flex flex-col h-full bg-[#f8fafc] overflow-hidden">
 
                                 {/* Header */}
-                                <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm shrink-0">
-                                    <div>
-                                        <h3 className="font-bold text-gray-900">Dr. Sarah Tiwari</h3>
-                                        <p className="text-xs text-gray-500">General Consultation Room • Token #45</p>
+                                <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm shrink-0 flex-wrap gap-2">
+                                    <div className="max-w-[150px] sm:max-w-none">
+                                        <h3 className="font-bold text-gray-900 truncate">Dr. Sarah Tiwari</h3>
+                                        <p className="text-xs text-gray-500 truncate">General Consultation Room • Token #45</p>
                                     </div>
                                     <button className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">
-                                        <Users className="h-4 w-4" /> Call Next Person
+                                        <Users className="h-4 w-4" /> Call Next
                                     </button>
                                 </div>
 
@@ -200,16 +200,16 @@ const HeroSection = () => (
                         </div>
 
                         {/* Live Overlay Badge */}
-                        <div className="absolute top-4 sm:top-6 right-4 sm:right-6 bg-white/95 backdrop-blur shadow-xl border border-gray-100 rounded-xl p-3 flex items-center gap-3 transform hover:scale-105 transition-transform cursor-default z-20">
+                        <div className="absolute top-2 sm:top-6 right-2 sm:right-6 bg-white/95 backdrop-blur shadow-xl border border-gray-100 rounded-xl p-2 sm:p-3 flex items-center gap-2 sm:gap-3 transform hover:scale-105 transition-transform cursor-default z-20 scale-75 sm:scale-100 origin-top-right">
                             <div className="relative">
-                                <span className="flex h-3 w-3">
+                                <span className="flex h-2 w-2 sm:h-3 sm:w-3">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-emerald-500"></span>
                                 </span>
                             </div>
-                            <div className="pr-2">
-                                <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Live Sync active</div>
-                                <div className="text-sm font-bold text-gray-900 leading-tight">Zero Refresh Required</div>
+                            <div className="pr-1 sm:pr-2">
+                                <div className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Live Sync active</div>
+                                <div className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">Zero Refresh Required</div>
                             </div>
                         </div>
                     </div>
