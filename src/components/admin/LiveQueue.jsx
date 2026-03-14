@@ -22,18 +22,22 @@ import { useQueueSocket } from '../../hooks/useQueueSocket';
 const AdminLiveQueue = () => {
     const [queues, setQueues] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [refreshing, setRefreshing] = useState(false);
-    const [transitioningQueue, setTransitioningQueue] = useState(null); // { queueId, currentAppt, nextAppt }
+    const [transitioningQueue, setTransitioningQueue] = useState(null);
 
     const fetchQueue = async (isBackground = false) => {
         if (!isBackground) setLoading(true);
+        setError(null);
         try {
             const res = await api.get(`/admin/live-queue?date=${selectedDate}`);
             setQueues(res.data);
         } catch (error) {
-            console.error("Queue fetch failed");
-            toast.error("Failed to fetch live queue");
+            console.error('Queue fetch failed:', error?.response?.data || error);
+            const errMsg = error?.response?.data?.message || error?.message || 'Unknown error';
+            setError(errMsg);
+            if (!isBackground) toast.error(`Queue Error: ${errMsg}`);
         } finally {
             if (!isBackground) setLoading(false);
             setRefreshing(false);
@@ -204,6 +208,17 @@ const AdminLiveQueue = () => {
                 <div className="flex flex-col items-center justify-center py-24">
                     <Loader2 className="animate-spin text-indigo-600 h-10 w-10 mb-4" />
                     <p className="text-gray-500 font-medium font-mono text-xs uppercase tracking-widest">Hydrating Live Stream...</p>
+                </div>
+            ) : error ? (
+                <div className="col-span-full py-16 bg-red-50 rounded-3xl border-2 border-dashed border-red-200 text-center px-8">
+                    <XCircle className="h-10 w-10 text-red-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-red-800">Failed to Load Queue</h3>
+                    <p className="text-red-600 mt-1 text-sm font-mono bg-red-100 rounded-lg px-4 py-2 inline-block mt-3">{error}</p>
+                    <div className="mt-4">
+                        <button onClick={handleRefresh} className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors">
+                            Retry
+                        </button>
+                    </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
