@@ -14,18 +14,25 @@ import {
     ToggleRight,
     Users,
     UserPlus,
-    Trash2
+    Trash2,
+    AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 
 const SettingsPanel = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { openProfileModal } = useOutletContext();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('general');
+
+    // Delete org states
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
+    const [deletingOrg, setDeletingOrg] = useState(false);
+    const [orgName, setOrgName] = useState('');
 
     const [admins, setAdmins] = useState([]);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -61,6 +68,7 @@ const SettingsPanel = () => {
                         closeTime: res.data.close_time || '17:00',
                         queue_mode_default: res.data.queue_mode_default || 'CENTRAL'
                     });
+                    setOrgName(res.data.name || '');
                     setNotifications({
                         emailAlerts: res.data.email_notification ?? true,
                         newBookingNotify: res.data.new_booking_notification ?? true
@@ -368,6 +376,57 @@ const SettingsPanel = () => {
                         </div>
                     </div>
                 );
+            case 'danger':
+                return (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="border-b border-red-100 pb-4 mb-4">
+                            <h2 className="text-lg font-semibold text-red-700 flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5" /> Danger Zone
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-1">These actions are permanent and cannot be undone.</p>
+                        </div>
+
+                        <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+                            <h3 className="font-bold text-red-800 text-base mb-1">Delete Organization</h3>
+                            <p className="text-sm text-red-600 mb-4">
+                                Permanently deletes <strong>{orgName}</strong> and all associated data — admins, services, slots, and appointments. This cannot be reversed.
+                            </p>
+                            <div className="mb-4">
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    Type <code className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-mono">DELETE</code> to confirm
+                                </label>
+                                <input
+                                    type="text"
+                                    value={deleteConfirmText}
+                                    onChange={e => setDeleteConfirmText(e.target.value)}
+                                    placeholder="Type DELETE here"
+                                    className="w-full px-4 py-2.5 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-100 focus:border-red-400 outline-none text-sm font-mono"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                disabled={deleteConfirmText !== 'DELETE' || deletingOrg}
+                                onClick={async () => {
+                                    setDeletingOrg(true);
+                                    try {
+                                        await api.delete('/admin/org', { data: { confirmText: 'DELETE' } });
+                                        toast.success('Organization deleted');
+                                        logout();
+                                        navigate('/');
+                                    } catch (err) {
+                                        toast.error(err.response?.data?.message || 'Failed to delete organization');
+                                    } finally {
+                                        setDeletingOrg(false);
+                                    }
+                                }}
+                                className="flex items-center gap-2 bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                {deletingOrg ? 'Deleting...' : 'Permanently Delete Organization'}
+                            </button>
+                        </div>
+                    </div>
+                );
             default: return null;
         }
     }
@@ -379,7 +438,7 @@ const SettingsPanel = () => {
             <div className="flex flex-col md:grid md:grid-cols-12 gap-6 md:gap-8">
                 {/* Navigation/Sidebar */}
                 <div className="md:col-span-3 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                    {[{ id: 'general', icon: Building2, label: 'General' }, { id: 'hours', icon: Clock, label: 'Hours' }, { id: 'notifications', icon: Bell, label: 'Alerts' }, { id: 'security', icon: Shield, label: 'Security' }, { id: 'admins', icon: Users, label: 'Admins' }].map(tab => (
+                    {[{ id: 'general', icon: Building2, label: 'General' }, { id: 'hours', icon: Clock, label: 'Hours' }, { id: 'notifications', icon: Bell, label: 'Alerts' }, { id: 'security', icon: Shield, label: 'Security' }, { id: 'admins', icon: Users, label: 'Admins' }, { id: 'danger', icon: AlertTriangle, label: 'Danger' }].map(tab => (
                         <button
                             key={tab.id}
                             type="button"

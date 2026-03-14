@@ -47,7 +47,7 @@ const AdminLiveQueue = () => {
 
     // WebSocket Integration
     const user = JSON.parse(localStorage.getItem('user'));
-    const { queueData, emitStatusChange } = useQueueSocket(user?.organizationId);
+    const { queueData, emitStatusChange } = useQueueSocket(user?.org_id);
 
     useEffect(() => {
         if (queueData) {

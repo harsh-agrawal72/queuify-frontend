@@ -80,7 +80,44 @@ const OrganizationAbout = () => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await api.patch('/organizations/profile', profile);
+            // Only send actual DB columns — exclude computed/derived fields
+            const {
+                description,
+                address,
+                city,
+                state,
+                pincode,
+                contact_email,
+                contact_phone,
+                website_url,
+                working_hours,
+                gst_number,
+                registration_number,
+                established_year,
+                total_staff,
+                facebook_url,
+                instagram_url,
+                linkedin_url
+            } = profile;
+
+            await api.patch('/organizations/profile', {
+                description,
+                address,
+                city,
+                state,
+                pincode,
+                contact_email,
+                contact_phone,
+                website_url,
+                working_hours,
+                gst_number,
+                registration_number,
+                established_year,
+                total_staff,
+                facebook_url,
+                instagram_url,
+                linkedin_url
+            });
             toast.success('Profile updated successfully');
             fetchData(); // Refresh to get updated trust score
         } catch (error) {

@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { motion } from 'framer-motion';
-import { User, Lock, Mail, Save, Shield, Bell, Calendar, CheckCircle, Award, Clock, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Mail, Save, Shield, Bell, Calendar, CheckCircle, Award, Clock, Sparkles, Eye, EyeOff, Trash2, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, logout } = useAuth();
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
     const [emailNotifications, setEmailNotifications] = useState(user?.email_notification_enabled ?? true);
@@ -21,6 +22,12 @@ export default function Profile() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [stats, setStats] = useState(null);
+    const navigate = useNavigate();
+
+    // Delete account states
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -85,6 +92,24 @@ export default function Profile() {
             toast.error(err.response?.data?.message || 'Failed to update password');
         } finally {
             setPasswordLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!deletePassword) {
+            toast.error('Please enter your password to confirm');
+            return;
+        }
+        setDeleting(true);
+        try {
+            await api.delete('/user/account', { data: { password: deletePassword } });
+            toast.success('Account deleted successfully');
+            logout();
+            navigate('/');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to delete account');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -425,8 +450,76 @@ export default function Profile() {
                             </div>
                         </div>
                     </div>
+                    {/* Danger Zone */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-red-50 rounded-2xl border border-red-100 p-5"
+                    >
+                        <h3 className="font-bold text-red-700 flex items-center gap-2 mb-1">
+                            <AlertTriangle className="h-5 w-5" />
+                            Danger Zone
+                        </h3>
+                        <p className="text-xs text-red-500 mb-4">This will permanently delete your account and all data.</p>
+                        <button
+                            type="button"
+                            onClick={() => setShowDeleteModal(true)}
+                            className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-red-700 transition-all"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete My Account
+                        </button>
+                    </motion.div>
                 </motion.div>
             </div>
+
+            {/* Delete Account Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="p-2 bg-red-100 rounded-xl"><Trash2 className="h-5 w-5 text-red-600" /></div>
+                            <h2 className="font-bold text-gray-900 text-lg">Delete Account</h2>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-4 ml-12">
+                            This action is <strong>irreversible</strong>. All your appointments and data will be permanently deleted.
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Enter your password to confirm</label>
+                            <input
+                                type="password"
+                                value={deletePassword}
+                                onChange={e => setDeletePassword(e.target.value)}
+                                placeholder="Your current password"
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-100 focus:border-red-400 outline-none text-sm"
+                            />
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }}
+                                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteAccount}
+                                disabled={deleting || !deletePassword}
+                                className="flex-1 flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                                {deleting ? 'Deleting...' : 'Yes, Delete'}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }
