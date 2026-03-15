@@ -10,6 +10,7 @@ import { useQueueSocket } from '../../hooks/useQueueSocket';
 export default function LiveQueue() {
     const { appointmentId } = useParams();
     const [status, setStatus] = useState(null);
+    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
@@ -17,9 +18,12 @@ export default function LiveQueue() {
         try {
             const { data } = await api.get(`/appointments/${appointmentId}/queue`);
             setStatus(data);
+            setError(null);
             setLastUpdated(new Date());
         } catch (err) {
-            console.error(err);
+            console.error('Queue fetch error:', err);
+            const msg = err?.response?.data?.message || err?.message || 'Failed to load queue data';
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -44,7 +48,12 @@ export default function LiveQueue() {
 
     if (loading) return <div className="h-96 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
 
-    if (!status) return <div className="text-center p-12">Queue data unavailable.</div>;
+    if (!status) return (
+        <div className="text-center p-12 space-y-2">
+            <p className="text-gray-700 font-semibold">Queue data unavailable.</p>
+            {error && <p className="text-red-500 text-sm">Error: {error}</p>}
+        </div>
+    );
 
     const isCompleted = status.status === 'completed';
     const isCancelled = status.status === 'cancelled';
