@@ -100,17 +100,46 @@ export default function LiveQueue() {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="bg-indigo-50/50 p-6 rounded-3xl text-center border border-indigo-100">
-                                    <Users className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
-                                    <p className="text-4xl font-black text-indigo-900">{status.people_ahead}</p>
-                                    <p className="text-[10px] text-indigo-500 uppercase font-bold tracking-wider mt-1">People Ahead</p>
-                                </div>
-                                <div className="bg-blue-50/50 p-6 rounded-3xl text-center border border-blue-100">
-                                    <Clock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                                    <p className="text-4xl font-black text-blue-900">{status.estimated_wait_time}<span className="text-sm font-bold text-blue-400 ml-1">min</span></p>
-                                    <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider mt-1">Est. Wait</p>
-                                </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <motion.div 
+                                    whileHover={{ y: -5 }}
+                                    className="bg-indigo-50/50 p-4 rounded-3xl text-center border border-indigo-100"
+                                >
+                                    <Users className="h-6 w-6 text-indigo-600 mx-auto mb-1" />
+                                    <p className="text-3xl font-black text-indigo-900">{status.people_ahead}</p>
+                                    <p className="text-[10px] text-indigo-500 uppercase font-bold tracking-wider">People Ahead</p>
+                                </motion.div>
+                                
+                                <motion.div 
+                                    whileHover={{ y: -5 }}
+                                    className="bg-blue-50/50 p-4 rounded-3xl text-center border border-blue-100"
+                                >
+                                    <Clock className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+                                    <p className="text-3xl font-black text-blue-900">{status.estimated_wait_time}<span className="text-xs font-bold text-blue-400 ml-1">min</span></p>
+                                    <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider">Est. Wait</p>
+                                </motion.div>
+
+                                <motion.div 
+                                    whileHover={{ y: -5 }}
+                                    className="bg-slate-50 p-4 rounded-3xl text-center border border-slate-100"
+                                >
+                                    <PlayCircle className="h-6 w-6 text-slate-600 mx-auto mb-1" />
+                                    <p className="text-xl font-bold text-slate-900">
+                                        {status.slot_start_time ? new Date(status.slot_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Slot Time</p>
+                                </motion.div>
+
+                                <motion.div 
+                                    whileHover={{ y: -5 }}
+                                    className="bg-green-50 p-4 rounded-3xl text-center border border-green-100"
+                                >
+                                    <CheckCircle2 className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                                    <p className="text-xl font-bold text-green-900">
+                                        {status.expected_start_time ? new Date(status.expected_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                    </p>
+                                    <p className="text-[10px] text-green-500 uppercase font-bold tracking-wider">Expected Turn</p>
+                                </motion.div>
                             </div>
 
                             <div className="bg-slate-50 rounded-2xl p-6 flex items-center justify-between border border-slate-100">
