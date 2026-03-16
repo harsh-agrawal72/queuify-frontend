@@ -113,7 +113,7 @@ export default function OrganizationsList() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search hospitals, clinics, salons..."
+                                placeholder="Search organizations, services, or staff..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-gray-900 placeholder-gray-400 font-medium text-sm focus:ring-4 focus:ring-white/20 outline-none shadow-xl shadow-indigo-900/20 transition-all"

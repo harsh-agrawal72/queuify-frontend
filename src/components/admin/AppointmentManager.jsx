@@ -87,15 +87,31 @@ const AppointmentManager = () => {
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (apt) => {
         setActiveActionId(null);
-        if (!window.confirm("Are you sure you want to permanently delete this appointment?")) return;
+        
+        const isCancelled = apt.status === 'cancelled';
+        const confirmMessage = isCancelled 
+            ? "This appointment is already cancelled. Are you sure you want to permanently hide it from the dashboard?"
+            : "Are you sure you want to cancel and delete this appointment?";
 
-        setProcessingId(id);
+        if (!window.confirm(confirmMessage)) return;
+
+        setProcessingId(apt.id);
         try {
-            await api.delete(`/admin/appointments/${id}`);
-            setAppointments(prev => prev.filter(apt => apt.id !== id));
-            toast.success("Appointment deleted successfully");
+            await api.delete(`/admin/appointments/${apt.id}`);
+            
+            if (isCancelled) {
+                // Permanently hidden, remove from list
+                setAppointments(prev => prev.filter(a => a.id !== apt.id));
+                toast.success("Appointment hidden permanently");
+            } else {
+                // Just cancelled, update status in list
+                setAppointments(prev => prev.map(a => 
+                    a.id === apt.id ? { ...a, status: 'cancelled', cancelled_by: 'admin' } : a
+                ));
+                toast.success("Appointment cancelled successfully");
+            }
         } catch (error) {
             console.error(error);
             toast.error("Failed to delete appointment");
@@ -311,7 +327,7 @@ const AppointmentManager = () => {
 
                                                                 <div className="p-1">
                                                                     <button
-                                                                        onClick={() => handleDelete(apt.id)}
+                                                                        onClick={() => handleDelete(apt)}
                                                                         className="w-full text-left px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition-colors"
                                                                     >
                                                                         <Trash2 className="h-4 w-4" /> Delete
@@ -418,7 +434,7 @@ const AppointmentManager = () => {
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">Cancelled</button>
                                             </div>
                                             <button
-                                                onClick={() => handleDelete(apt.id)}
+                                                onClick={() => handleDelete(apt)}
                                                 className="mt-3 w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <Trash2 className="h-3.5 w-3.5" /> Delete Permanently

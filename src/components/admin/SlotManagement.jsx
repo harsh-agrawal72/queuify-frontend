@@ -157,11 +157,13 @@ const SlotManagement = () => {
             return;
         }
 
-        // Client-side capacity check
+        // Client-side capacity check removed as per user request
+    /*
         if (slotCapacity > (selectedModalResource.concurrent_capacity || 1)) {
             toast.error(`Capacity cannot exceed resource limit of ${selectedModalResource.concurrent_capacity}`);
             return;
         }
+    */
 
         setSubmitting(true);
         try {
@@ -728,23 +730,13 @@ const SlotManagement = () => {
                                             type="number"
                                             required
                                             min="1"
-                                            max={selectedModalResource.concurrent_capacity}
                                             value={slotCapacity}
                                             onChange={e => {
                                                 const val = parseInt(e.target.value) || 1;
                                                 setSlotCapacity(val);
                                             }}
-                                            className={`w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none text-sm ${slotCapacity > selectedModalResource.concurrent_capacity
-                                                ? 'border-red-400 focus:border-red-500 bg-red-50'
-                                                : 'border-gray-200 focus:border-indigo-500'
-                                                }`}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
                                         />
-                                        {slotCapacity > selectedModalResource.concurrent_capacity && (
-                                            <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                Cannot exceed resource capacity of {selectedModalResource.concurrent_capacity}
-                                            </p>
-                                        )}
                                     </div>
 
                                     <div className="flex gap-3 pt-2">
@@ -753,7 +745,7 @@ const SlotManagement = () => {
                                         </button>
                                         <button
                                             onClick={handleSaveSlot}
-                                            disabled={submitting || !slotDate || !slotTime || slotCapacity > selectedModalResource.concurrent_capacity}
+                                            disabled={submitting || !slotDate || !slotTime}
                                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                         >
                                             {submitting ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
