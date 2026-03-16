@@ -617,8 +617,8 @@ const SlotManagement = () => {
                                                             <p className="text-xs text-gray-400 capitalize">{r.type}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-xs font-medium text-blue-600">Capacity</p>
-                                                            <p className="text-xs text-gray-500">Max {r.concurrent_capacity}</p>
+                                                            <p className="text-xs text-blue-600">Capacity</p>
+                                                            <p className="text-xs text-gray-500">Resource Limit: {r.concurrent_capacity}</p>
                                                         </div>
                                                     </div>
                                                 </button>
@@ -642,7 +642,6 @@ const SlotManagement = () => {
                                     <div className="bg-indigo-50 rounded-xl p-3 flex items-center justify-between">
                                         <div>
                                             <p className="font-medium text-indigo-900 text-sm">{selectedModalResource.name}</p>
-                                            <p className="text-xs text-indigo-600">Max capacity: {selectedModalResource.concurrent_capacity}</p>
                                         </div>
                                         <button onClick={() => setModalStep(2)} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Change</button>
                                     </div>
@@ -724,7 +723,7 @@ const SlotManagement = () => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Capacity <span className="text-gray-400 font-normal">(max {selectedModalResource.concurrent_capacity})</span>
+                                            Capacity
                                         </label>
                                         <input
                                             type="number"
