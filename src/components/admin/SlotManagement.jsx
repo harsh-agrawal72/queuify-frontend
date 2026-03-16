@@ -617,8 +617,7 @@ const SlotManagement = () => {
                                                             <p className="text-xs text-gray-400 capitalize">{r.type}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-xs text-blue-600">Capacity</p>
-                                                            <p className="text-xs text-gray-500">Resource Limit: {r.concurrent_capacity}</p>
+                                                            <p className="text-xs text-blue-600">Selected</p>
                                                         </div>
                                                     </div>
                                                 </button>
