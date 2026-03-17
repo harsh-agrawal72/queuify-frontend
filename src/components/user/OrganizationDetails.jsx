@@ -5,8 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, CalendarCheck, Clock, CheckCircle2, ChevronRight, User, Timer,
     Building2, MapPin, Globe, Facebook, Instagram, Linkedin, ShieldAlert,
-    ExternalLink, Mail, Phone, Info, ShieldCheck, X, Maximize2, Star, ArrowRight
+    ExternalLink, Mail, Phone, Info, ShieldCheck, X, Maximize2, Star, ArrowRight, MessageCircle
 } from 'lucide-react';
+
+const ensureAbsoluteUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `https://${url}`;
+};
+
 import BookingWizard from './BookingWizard';
 import ReviewModal from './ReviewModal';
 
@@ -415,7 +422,7 @@ export default function OrganizationDetails() {
                         <div className="space-y-4">
                             {org?.website_url && (
                                 <a
-                                    href={org.website_url}
+                                    href={ensureAbsoluteUrl(org.website_url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100 group"
@@ -432,23 +439,35 @@ export default function OrganizationDetails() {
                             )}
 
                             {org?.facebook_url && (
-                                <a href={org.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-blue-50/50 text-blue-700 hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100 group">
+                                <a href={ensureAbsoluteUrl(org.facebook_url)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-blue-50/50 text-blue-700 hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100 group">
                                     <div className="p-2 bg-white rounded-xl shadow-sm transition-all"><Facebook className="h-4 w-4" /></div>
                                     <span className="text-sm font-bold">Facebook</span>
                                 </a>
                             )}
 
                             {org?.instagram_url && (
-                                <a href={org.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-pink-50/50 text-pink-700 hover:bg-pink-50 transition-all border border-transparent hover:border-pink-100 group">
+                                <a href={ensureAbsoluteUrl(org.instagram_url)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-pink-50/50 text-pink-700 hover:bg-pink-50 transition-all border border-transparent hover:border-pink-100 group">
                                     <div className="p-2 bg-white rounded-xl shadow-sm transition-all"><Instagram className="h-4 w-4" /></div>
                                     <span className="text-sm font-bold">Instagram</span>
                                 </a>
                             )}
 
                             {org?.linkedin_url && (
-                                <a href={org.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-transparent hover:border-indigo-200 group">
+                                <a href={ensureAbsoluteUrl(org.linkedin_url)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-2xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all border border-transparent hover:border-indigo-200 group">
                                     <div className="p-2 bg-white rounded-xl shadow-sm transition-all"><Linkedin className="h-4 w-4" /></div>
                                     <span className="text-sm font-bold">LinkedIn</span>
+                                </a>
+                            )}
+
+                            {org?.contact_phone && (
+                                <a
+                                    href={`https://wa.me/${org.contact_phone.replace(/\D/g, '')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all border border-transparent hover:border-emerald-200 group"
+                                >
+                                    <div className="p-2 bg-white rounded-xl shadow-sm transition-all"><MessageCircle className="h-4 w-4" /></div>
+                                    <span className="text-sm font-bold">WhatsApp Chat</span>
                                 </a>
                             )}
                         </div>

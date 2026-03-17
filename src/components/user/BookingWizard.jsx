@@ -264,7 +264,9 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                                 }`}
                         >
                             <div className="text-xs uppercase opacity-60 mb-1">{format(parseISO(slot.start_time), 'MMM d')}</div>
-                            <div className="text-sm font-bold">{format(parseISO(slot.start_time), 'h:mm a')}</div>
+                            <div className="text-[11px] font-bold leading-tight">
+                                {format(parseISO(slot.start_time), 'h:mm a')} - {format(parseISO(slot.end_time), 'h:mm a')}
+                            </div>
                         </button>
                     ))}
                 </div>
@@ -290,7 +292,9 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                     <div className="flex justify-between border-b pb-3 border-gray-200">
                         <span className="text-gray-500 text-sm">Time</span>
                         <div className="text-right">
-                            <span className="block font-bold text-gray-900 text-sm">{format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}</span>
+                            <span className="block font-bold text-gray-900 text-sm">
+                                {format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')} - {format(parseISO(selectedSlot.end_time), 'h:mm a')}
+                            </span>
                         </div>
                     </div>
                 )}
@@ -336,7 +340,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                             <div className="h-px bg-gray-200 my-4" />
                             <p className="text-sm font-bold text-gray-900">{selectedService?.name}</p>
                             <p className="text-xs text-gray-500 mt-1">
-                                {selectedSlot ? format(parseISO(selectedSlot.start_time), 'MMM d | h:mm a') : (selectedResource?.name || 'Central Queue')}
+                                {selectedSlot ? `${format(parseISO(selectedSlot.start_time), 'MMM d | h:mm a')} - ${format(parseISO(selectedSlot.end_time), 'h:mm a')}` : (selectedResource?.name || 'Central Queue')}
                             </p>
                         </div>
 

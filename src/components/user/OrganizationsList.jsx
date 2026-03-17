@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Building2, ArrowRight, Star, Clock, Shield, Filter, ChevronRight, Sparkles, Users, BadgeCheck } from 'lucide-react';
+import { Search, MapPin, Building2, ArrowRight, Star, Clock, Shield, Filter, ChevronRight, Sparkles, Users, BadgeCheck, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const getIndustryTerminology = (type) => {
@@ -216,14 +216,30 @@ export default function OrganizationsList() {
                                     <div className="p-6 sm:p-7 flex flex-col flex-1">
                                         {/* Header Row: Avatar + Info */}
                                         <div className="flex items-start gap-4 mb-5">
-                                            <div className={`w-16 h-16 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform`}>
-                                                {org.name[0]}
+                                            <div className={`w-16 h-16 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform overflow-hidden`}>
+                                                {org.logo_url ? (
+                                                    <img src={org.logo_url} alt={org.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    org.name[0]
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0 pt-1">
                                                 <div className="flex items-center gap-1.5 mb-1.5">
                                                     <h3 className="text-xl font-black text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
                                                         {org.name}
                                                     </h3>
+                                                    {org.contact_phone && (
+                                                        <a
+                                                            href={`https://wa.me/${org.contact_phone.replace(/\D/g, '')}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="p-1.5 rounded-full text-emerald-500 hover:bg-emerald-50 transition-colors flex-shrink-0"
+                                                            title="WhatsApp Chat"
+                                                        >
+                                                            <MessageCircle className="h-4 w-4" />
+                                                        </a>
+                                                    )}
                                                     <BadgeCheck className="h-5 w-5 text-blue-500 flex-shrink-0" />
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-2">

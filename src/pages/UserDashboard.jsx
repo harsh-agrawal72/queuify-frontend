@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import { MessageCircle } from 'lucide-react';
 import OrganizationCard from '../components/OrganizationCard';
 import SlotList from '../components/SlotList';
 import BookingModal from '../components/BookingModal';
@@ -187,9 +188,22 @@ const UserDashboard = () => {
                     <div className="relative p-6 border w-11/12 md:w-3/4 lg:w-1/2 shadow-xl rounded-lg bg-white max-h-[90vh] flex flex-col">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-gray-900">Slots at {selectedOrg.name}</h3>
-                            <button onClick={() => setSelectedOrg(null)} className="text-gray-500 hover:text-gray-700">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
+                            <div className="flex items-center gap-4">
+                                {selectedOrg.contact_phone && (
+                                    <a
+                                        href={`https://wa.me/${selectedOrg.contact_phone.replace(/\D/g, '')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-bold transition-colors border border-emerald-100"
+                                    >
+                                        <MessageCircle className="h-4 w-4" />
+                                        <span>WhatsApp Chat</span>
+                                    </a>
+                                )}
+                                <button onClick={() => setSelectedOrg(null)} className="text-gray-500 hover:text-gray-700">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="overflow-y-auto flex-grow">

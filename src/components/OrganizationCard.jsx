@@ -1,4 +1,5 @@
 import React from 'react';
+import { MessageCircle } from 'lucide-react';
 
 const getIndustryTerminology = (type) => {
     switch (type) {
@@ -20,10 +21,29 @@ const OrganizationCard = ({ org, onViewSlots }) => {
     return (
         <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group">
             <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center text-gray-400 font-bold text-lg border border-gray-100">
+                        {org.logo_url ? (
+                            <img src={org.logo_url} alt={org.name} className="w-full h-full object-cover" />
+                        ) : (
+                            org.name[0]
+                        )}
+                    </div>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{org.name}</h3>
+                            {org.contact_phone && (
+                                <a
+                                    href={`https://wa.me/${org.contact_phone.replace(/\D/g, '')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded-full text-emerald-500 hover:bg-emerald-50 transition-colors"
+                                    title="WhatsApp Chat"
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                </a>
+                            )}
                             {org.type && (
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100">
                                     {org.type}
