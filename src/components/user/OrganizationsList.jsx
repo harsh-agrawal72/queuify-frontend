@@ -20,14 +20,14 @@ const getIndustryTerminology = (type) => {
 
 const getTypeGradient = (type) => {
     switch (type) {
-        case 'Hospital': case 'Clinic': return 'from-red-500 to-rose-600';
-        case 'Salon': return 'from-pink-500 to-fuchsia-600';
-        case 'Bank': return 'from-blue-500 to-cyan-600';
-        case 'Government Office': return 'from-amber-500 to-orange-600';
-        case 'Consultancy': return 'from-violet-500 to-purple-600';
-        case 'Coaching Institute': return 'from-emerald-500 to-teal-600';
-        case 'Service Center': return 'from-slate-500 to-gray-600';
-        default: return 'from-indigo-500 to-blue-600';
+        case 'Hospital': case 'Clinic': return 'from-slate-700 to-slate-800';
+        case 'Salon': return 'from-zinc-700 to-zinc-800';
+        case 'Bank': return 'from-slate-800 to-indigo-950';
+        case 'Government Office': return 'from-stone-700 to-stone-800';
+        case 'Consultancy': return 'from-indigo-900 to-slate-900';
+        case 'Coaching Institute': return 'from-teal-900 to-slate-900';
+        case 'Service Center': return 'from-slate-600 to-slate-700';
+        default: return 'from-slate-800 to-slate-900';
     }
 };
 
@@ -91,20 +91,20 @@ export default function OrganizationsList() {
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-8 md:p-10 text-white overflow-hidden"
+                className="relative bg-slate-900 rounded-3xl p-8 md:p-10 text-white overflow-hidden border border-slate-800"
             >
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/10 rounded-full -ml-12 -mb-12 blur-2xl" />
+                {/* Subtle Accents */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-slate-800/20 rounded-full -ml-16 -mb-16 blur-2xl" />
 
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="h-5 w-5 text-amber-300" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-indigo-200">Queuify Network</span>
+                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Network Directory</span>
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-black mb-2">Find & Book Instantly</h1>
-                    <p className="text-indigo-200 text-sm md:text-base max-w-lg mb-6">
-                        Discover trusted organizations near you. Skip the wait, book your appointment in seconds.
+                    <h1 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">Find & Book Instantly</h1>
+                    <p className="text-slate-400 text-sm md:text-lg max-w-xl mb-8 leading-relaxed">
+                        Access our network of verified professional services. Secure your appointment with precision and ease.
                     </p>
 
                     {/* Search Bar */}
@@ -122,18 +122,18 @@ export default function OrganizationsList() {
                     </div>
 
                     {/* Stats Bar */}
-                    <div className="flex items-center gap-6 mt-6 text-xs text-indigo-200">
-                        <div className="flex items-center gap-1.5">
-                            <Shield className="h-4 w-4 text-emerald-400" />
-                            <span className="font-semibold">Verified Organizations</span>
+                    <div className="flex items-center gap-6 mt-8 pt-8 border-t border-slate-800/50 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+                        <div className="flex items-center gap-2">
+                            <Shield className="h-3.5 w-3.5 text-indigo-400" />
+                            <span>Verified</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <Clock className="h-4 w-4 text-amber-300" />
-                            <span className="font-semibold">Real-time Availability</span>
+                        <div className="flex items-center gap-2">
+                            <Clock className="h-3.5 w-3.5 text-indigo-400" />
+                            <span>Real-time</span>
                         </div>
-                        <div className="hidden sm:flex items-center gap-1.5">
-                            <Users className="h-4 w-4 text-blue-300" />
-                            <span className="font-semibold">{orgs.length}+ Organizations</span>
+                        <div className="hidden sm:flex items-center gap-2">
+                            <Users className="h-3.5 w-3.5 text-indigo-400" />
+                            <span>{orgs.length}+ Organizations</span>
                         </div>
                     </div>
                 </div>
@@ -248,7 +248,7 @@ export default function OrganizationsList() {
                                                     <span className="text-[10px] font-bold text-gray-500 bg-gray-100/80 px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wide">
                                                         {org.org_code}
                                                     </span>
-                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-gradient-to-r ${gradient} text-white shadow-sm`}>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200 shadow-sm`}>
                                                         {org.type || 'General'}
                                                     </span>
                                                 </div>

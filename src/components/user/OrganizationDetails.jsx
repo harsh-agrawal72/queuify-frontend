@@ -114,17 +114,6 @@ export default function OrganizationDetails() {
                         </div>
                     )}
                     <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent"></div>
-
-                    {/* Trust Badge overlay */}
-                    {org?.trustScore !== undefined && (
-                        <div className={`absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border shadow-lg ${org.trustScore >= 80 ? 'bg-emerald-500/90 border-emerald-400 text-white' :
-                            org.trustScore >= 50 ? 'bg-amber-500/90 border-amber-400 text-white' :
-                                'bg-red-500/90 border-red-400 text-white'
-                            }`}>
-                            {org.trustScore >= 80 ? <ShieldCheck className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
-                            <span className="text-xs font-bold uppercase tracking-wider">{org.trustScore}% Verified</span>
-                        </div>
-                    )}
                 </div>
 
                 {/* Profile Stats / Quick Info */}
@@ -172,23 +161,6 @@ export default function OrganizationDetails() {
                     </div>
                 </div>
             </div>
-
-            {/* Low Trust Warning */}
-            {org && org.trustScore < 40 && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-4 items-start shadow-sm"
-                >
-                    <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
-                        <ShieldAlert className="h-6 w-6" />
-                    </div>
-                    <div>
-                        <h4 className="text-amber-800 font-bold">Incomplete Profile</h4>
-                        <p className="text-amber-700 text-sm mt-0.5">This organization hasn't fully verified their details. Exercise caution before making significant bookings.</p>
-                    </div>
-                </motion.div>
-            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Side: Services & About */}

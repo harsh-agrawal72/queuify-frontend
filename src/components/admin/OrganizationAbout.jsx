@@ -180,47 +180,24 @@ const OrganizationAbout = () => {
 
     return (
         <div className="space-y-8 pb-20">
-            {/* Header & Trust Score */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            {/* Header & Verification Status */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-800 text-white">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">About Organization</h1>
-                    <p className="text-gray-500 mt-1">Manage your public profile to build trust with your customers.</p>
+                    <h1 className="text-2xl font-black tracking-tight">Organization Profile</h1>
+                    <p className="text-slate-400 mt-1">Manage your public information and verification documents.</p>
                 </div>
 
-                <div className="flex items-center gap-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <div className="relative w-16 h-16 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90">
-                            <circle
-                                cx="32"
-                                cy="32"
-                                r="28"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                                fill="transparent"
-                                className="text-indigo-200"
-                            />
-                            <circle
-                                cx="32"
-                                cy="32"
-                                r="28"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                                fill="transparent"
-                                strokeDasharray={175.92}
-                                strokeDashoffset={175.92 - (175.92 * profile.trustScore) / 100}
-                                className="text-indigo-600 transition-all duration-1000"
-                            />
-                        </svg>
-                        <span className="absolute text-sm font-bold text-indigo-700">{profile.trustScore}%</span>
+                {profile.verified ? (
+                    <div className="flex items-center gap-3 bg-indigo-500/10 text-indigo-400 px-6 py-3 rounded-2xl border border-indigo-500/20 shadow-sm scale-105 transition-transform" title="Your organization is verified by Queuify">
+                        <ShieldCheck className="h-5 w-5 fill-indigo-400 text-slate-950" />
+                        <span className="text-xs font-bold uppercase tracking-[0.2em]">Verified Partner</span>
                     </div>
-                    <div>
-                        <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Trust Score</p>
-                        <p className="text-sm text-indigo-900 font-medium">
-                            {profile.trustScore < 50 ? 'Complete your profile' :
-                                profile.trustScore < 80 ? 'Looking good!' : 'Highly Trusted!'}
-                        </p>
+                ) : (
+                    <div className="flex items-center gap-3 bg-slate-800/50 text-slate-500 px-6 py-3 rounded-2xl border border-slate-800">
+                        <ShieldOff className="h-5 w-5" />
+                        <span className="text-xs font-bold uppercase tracking-[0.2em]">Standard Profile</span>
                     </div>
-                </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
