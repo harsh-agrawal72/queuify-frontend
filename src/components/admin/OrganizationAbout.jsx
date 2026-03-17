@@ -305,9 +305,9 @@ const OrganizationAbout = () => {
                                         type="email"
                                         name="contact_email"
                                         value={profile.contact_email || ''}
-                                        onChange={handleChange}
-                                        placeholder="public@example.com"
-                                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        readOnly
+                                        title="Contact email can only be changed by contacting support"
+                                        className="w-full px-4 py-2 rounded-xl border border-gray-100 bg-gray-50 text-gray-500 cursor-not-allowed outline-none"
                                     />
                                 </div>
                                 <div>
