@@ -146,6 +146,12 @@ export default function OrganizationDetails() {
                         <div className="flex-1 pb-2">
                             <div className="flex flex-wrap items-center gap-3">
                                 <h1 className="text-3xl font-black text-gray-900">{org.name}</h1>
+                                {org.verified && (
+                                    <div className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100 shadow-sm" title="Verified Organization">
+                                        <ShieldCheck className="h-4 w-4 fill-blue-600 text-white" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
+                                    </div>
+                                )}
                                 <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-indigo-200">
                                     {org.type || 'Clinic'}
                                 </span>

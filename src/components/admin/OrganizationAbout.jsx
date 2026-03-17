@@ -227,12 +227,19 @@ const OrganizationAbout = () => {
                 {/* Left Side: Forms */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Basic Information */}
-                    <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                <Info className="h-5 w-5" />
+                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                    <Info className="h-5 w-5 text-indigo-600" /> Basic Information
+                                </h2>
+                                {profile.verified && (
+                                    <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full border border-blue-100 shadow-sm" title="Your organization is verified by Queuify">
+                                        <ShieldCheck className="h-4 w-4 fill-blue-600 text-white" />
+                                        <span className="text-xs font-bold uppercase tracking-widest">Verified Account</span>
+                                    </div>
+                                )}
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
                         </div>
 
                         <div className="space-y-4">
@@ -273,7 +280,7 @@ const OrganizationAbout = () => {
                                 </div>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     {/* Contact & Location */}
                     <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">

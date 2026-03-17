@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import {
     Loader2, Plus, Edit2, ShieldOff, ShieldCheck,
-    MoreVertical, LogIn, CreditCard, Trash2, Search
+    MoreVertical, LogIn, CreditCard, Trash2, Search,
+    ChevronDown, ChevronUp, MapPin, Info, FileText, Globe, Building2, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -13,6 +14,7 @@ const OrganizationManager = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [isEditing, setIsEditing] = useState(null); // org object
     const [search, setSearch] = useState('');
+    const [expandedRows, setExpandedRows] = useState(new Set());
 
     console.log("Rendering OrganizationManager", { isCreating, isEditing, orgsCount: orgs.length });
 
@@ -101,6 +103,18 @@ const OrganizationManager = () => {
     };
 
 
+    const toggleVerification = async (org) => {
+        const action = org.verified ? 'unverify' : 'verify';
+        if (!confirm(`Are you sure you want to ${action} this organization?`)) return;
+        try {
+            await api.patch(`/superadmin/organizations/${org.id}/${action}`);
+            toast.success(`Organization ${action === 'verify' ? 'verified' : 'unverified'}`);
+            fetchData();
+        } catch (error) {
+            toast.error(`Failed to ${action} organization`);
+        }
+    };
+
     const handleImpersonate = async (org) => {
         if (!confirm(`Log in as admin for ${org.name}? You will be logged out of SuperAdmin.`)) return;
         try {
@@ -145,6 +159,13 @@ const OrganizationManager = () => {
         const matchesType = !formData.typeFilter || o.type === formData.typeFilter;
         return matchesSearch && matchesType;
     });
+
+    const toggleRow = (id) => {
+        const next = new Set(expandedRows);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setExpandedRows(next);
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -291,7 +312,8 @@ const OrganizationManager = () => {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-gray-50 text-gray-500 border-b border-gray-100 uppercase text-xs font-semibold tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-4">Organization</th>
+                                    <th className="px-3 py-4 text-center"></th>
+                                    <th className="px-3 py-4">Organization</th>
                                     <th className="px-6 py-4">Type</th>
                                     <th className="px-6 py-4">Plan</th>
                                     <th className="px-6 py-4">Status</th>
@@ -302,57 +324,190 @@ const OrganizationManager = () => {
                             <tbody className="divide-y divide-gray-100">
                                 {filteredOrgs.map(org => {
                                     const orgPlan = plans.find(p => p.id === org.plan_id);
+                                    const isExpanded = expandedRows.has(org.id);
                                     return (
-                                        <tr key={org.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <p className="font-semibold text-gray-900">{org.name}</p>
-                                                <p className="text-gray-500 text-xs">{org.contact_email}</p>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200">
-                                                    {org.type || 'Clinic'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {orgPlan ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                                        <CreditCard className="h-3 w-3" /> {orgPlan.name}
+                                        <>
+                                            <tr key={org.id} className={`hover:bg-gray-50 transition-colors ${isExpanded ? 'bg-gray-50/50' : ''}`}>
+                                                <td className="px-3 py-4 text-center">
+                                                    <button 
+                                                        onClick={() => toggleRow(org.id)}
+                                                        className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+                                                    >
+                                                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                    </button>
+                                                </td>
+                                                <td className="px-3 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-semibold text-gray-900">{org.name}</p>
+                                                        {org.verified && (
+                                                            <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md border border-blue-100" title="Verified Organization">
+                                                                <ShieldCheck className="h-3 w-3 fill-blue-600 text-white" />
+                                                                <span className="text-[10px] font-bold">VERIFIED</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-gray-500 text-xs">{org.contact_email}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200">
+                                                        {org.type || 'Clinic'}
                                                     </span>
-                                                ) : <span className="text-gray-400 text-xs italic">No Plan</span>}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${org.status === 'active'
-                                                    ? 'bg-green-50 text-green-700 border-green-100'
-                                                    : 'bg-red-50 text-red-700 border-red-100'
-                                                    }`}>
-                                                    {org.status === 'active' ? 'Active' : org.status.charAt(0).toUpperCase() + org.status.slice(1)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-gray-500">
-                                                <span className="text-xs">Joined {new Date(org.created_at).toLocaleDateString()}</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button onClick={() => handleImpersonate(org)} className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Impersonate Admin"><LogIn className="h-4 w-4" /></button>
-                                                    <button onClick={() => openEdit(org)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Details"><Edit2 className="h-4 w-4" /></button>
-                                                    <button
-                                                        onClick={() => toggleStatus(org)}
-                                                        className={`p-2 rounded-lg transition-colors ${org.status === 'active' ? 'text-gray-400 hover:text-orange-600 hover:bg-orange-50' : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'}`}
-                                                        title={org.status === 'active' ? "Suspend" : "Activate"}
-                                                    >
-                                                        {org.status === 'active' ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                                                    </button>
-                                                    <div className="h-4 w-px bg-gray-200 mx-1" />
-                                                    <button
-                                                        onClick={() => setConfirmModal({ show: true, org, type: 'delete' })}
-                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Delete Organization"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {orgPlan ? (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                                            <CreditCard className="h-3 w-3" /> {orgPlan.name}
+                                                        </span>
+                                                    ) : <span className="text-gray-400 text-xs italic">No Plan</span>}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${org.status === 'active'
+                                                        ? 'bg-green-50 text-green-700 border-green-100'
+                                                        : 'bg-red-50 text-red-700 border-red-100'
+                                                        }`}>
+                                                        {org.status === 'active' ? 'Active' : org.status.charAt(0).toUpperCase() + org.status.slice(1)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-gray-500">
+                                                    <span className="text-xs">{new Date(org.created_at).toLocaleDateString()}</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button onClick={() => handleImpersonate(org)} className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Impersonate Admin"><LogIn className="h-4 w-4" /></button>
+                                                        <button onClick={() => openEdit(org)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Details"><Edit2 className="h-4 w-4" /></button>
+                                                        <button
+                                                            onClick={() => toggleStatus(org)}
+                                                            className={`p-2 rounded-lg transition-colors ${org.status === 'active' ? 'text-gray-400 hover:text-orange-600 hover:bg-orange-50' : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'}`}
+                                                            title={org.status === 'active' ? "Suspend" : "Activate"}
+                                                        >
+                                                            {org.status === 'active' ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                                                        </button>
+                                                        <div className="h-4 w-px bg-gray-200 mx-1" />
+                                                        <button
+                                                            onClick={() => setConfirmModal({ show: true, org, type: 'delete' })}
+                                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Delete Organization"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {isExpanded && (
+                                                <tr>
+                                                    <td colSpan="7" className="px-6 py-4 bg-gray-50/50 border-b border-gray-100">
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-300">
+                                                            {/* Profile Info */}
+                                                            <div className="space-y-4">
+                                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                                                    <Info className="h-3 w-3" /> Profile Details
+                                                                </h4>
+                                                                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-3">
+                                                                    <div>
+                                                                        <p className="text-[10px] text-gray-400 font-medium">Description</p>
+                                                                        <p className="text-sm text-gray-700 line-clamp-3">{org.description || 'No description provided'}</p>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <MapPin className="h-4 w-4 text-gray-400" />
+                                                                        <p className="text-sm text-gray-600">
+                                                                            {org.address || org.city ? `${org.address || ''}, ${org.city || ''}, ${org.state || ''} ${org.pincode || ''}` : 'No address provided'}
+                                                                        </p>
+                                                                    </div>
+                                                                    {org.website_url && (
+                                                                        <div className="flex items-center gap-2 text-blue-600">
+                                                                            <Globe className="h-4 w-4" />
+                                                                            <a href={org.website_url} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline flex items-center gap-1">
+                                                                                Website <ExternalLink className="h-3 w-3" />
+                                                                            </a>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Legal & Verification */}
+                                                            <div className="space-y-4">
+                                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                                                    <ShieldCheck className="h-3 w-3" /> Legal Information
+                                                                </h4>
+                                                                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-3">
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div>
+                                                                            <p className="text-[10px] text-gray-400 font-medium">GST Number</p>
+                                                                            <p className="text-sm font-semibold text-gray-700">{org.gst_number || 'N/A'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] text-gray-400 font-medium">Reg. Number</p>
+                                                                            <p className="text-sm font-semibold text-gray-700">{org.registration_number || 'N/A'}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="pt-2 border-t border-gray-50 flex gap-4">
+                                                                        <div>
+                                                                            <p className="text-[10px] text-gray-400 font-medium">Established</p>
+                                                                            <p className="text-sm text-gray-600">{org.established_year || 'N/A'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] text-gray-400 font-medium">Staff Size</p>
+                                                                            <p className="text-sm text-gray-600">{org.total_staff || 'N/A'}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Documents */}
+                                                            <div className="space-y-4">
+                                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                                                    <FileText className="h-3 w-3" /> Verification Documents
+                                                                </h4>
+                                                                <div className="space-y-2">
+                                                                    {['pan_card', 'aadhar_card'].map(docType => {
+                                                                        const doc = org.images?.find(img => img.image_type === docType);
+                                                                        return (
+                                                                            <div key={docType} className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm">
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className={`p-2 rounded-lg ${doc ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
+                                                                                        <FileText className="h-4 w-4" />
+                                                                                    </div>
+                                                                                    <span className="text-sm font-medium text-gray-700 capitalize">
+                                                                                        {docType.replace('_', ' ')}
+                                                                                    </span>
+                                                                                </div>
+                                                                                {doc ? (
+                                                                                    <a 
+                                                                                        href={`${api.defaults.baseURL}/organizations/image/${doc.id}`}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                                                                                    >
+                                                                                        VIEW <ExternalLink className="h-3 w-3" />
+                                                                                    </a>
+                                                                                ) : (
+                                                                                    <span className="text-[10px] text-gray-400 italic">Not Uploaded</span>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                
+                                                                {/* Verification Control */}
+                                                                <div className="pt-2">
+                                                                    <button
+                                                                        onClick={() => toggleVerification(org)}
+                                                                        className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all border ${
+                                                                            org.verified 
+                                                                            ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50' 
+                                                                            : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-100'
+                                                                        }`}
+                                                                    >
+                                                                        <ShieldCheck className={`h-4 w-4 ${org.verified ? 'fill-blue-600 text-white' : ''}`} />
+                                                                        {org.verified ? 'REMOVE VERIFICATION' : 'VERIFY ORGANIZATION'}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </>
                                     );
                                 })}
                             </tbody>

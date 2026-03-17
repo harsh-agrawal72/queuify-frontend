@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, ShieldCheck } from 'lucide-react';
 
 const getIndustryTerminology = (type) => {
     switch (type) {
@@ -30,8 +30,14 @@ const OrganizationCard = ({ org, onViewSlots }) => {
                         )}
                     </div>
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{org.name}</h3>
+                            {org.is_verified && (
+                                <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md border border-blue-100" title="Verified Organization">
+                                    <ShieldCheck className="h-3.5 w-3.5 fill-blue-600 text-white" />
+                                    <span className="text-[10px] font-bold">VERIFIED</span>
+                                </div>
+                            )}
                             {org.contact_phone && (
                                 <a
                                     href={`https://wa.me/${org.contact_phone.replace(/\D/g, '')}`}

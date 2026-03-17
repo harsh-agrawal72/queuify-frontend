@@ -240,7 +240,9 @@ export default function OrganizationsList() {
                                                             <MessageCircle className="h-4 w-4" />
                                                         </a>
                                                     )}
-                                                    <BadgeCheck className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                                    {org.is_verified && (
+                                                        <BadgeCheck className="h-5 w-5 text-blue-500 flex-shrink-0" title="Verified Organization" />
+                                                    )}
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span className="text-[10px] font-bold text-gray-500 bg-gray-100/80 px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wide">
