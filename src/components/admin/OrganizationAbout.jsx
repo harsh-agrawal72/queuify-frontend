@@ -51,8 +51,10 @@ const OrganizationAbout = () => {
         instagram_url: '',
         linkedin_url: '',
         trustScore: 0,
-        images: []
+        images: [],
+        email_verified: false
     });
+    const [verifyingEmail, setVerifyingEmail] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -127,6 +129,18 @@ const OrganizationAbout = () => {
             toast.error(error.response?.data?.message || 'Failed to save profile');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleVerifyEmail = async () => {
+        setVerifyingEmail(true);
+        try {
+            await api.post('/organizations/request-verification');
+            toast.success('Verification link sent to your email');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to send verification email');
+        } finally {
+            setVerifyingEmail(false);
         }
     };
 
@@ -271,7 +285,22 @@ const OrganizationAbout = () => {
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+                                        {profile.email_verified ? (
+                                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 uppercase tracking-wider">
+                                                <CheckCircle2 className="h-3 w-3" /> Verified
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={handleVerifyEmail}
+                                                disabled={verifyingEmail}
+                                                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider underline disabled:opacity-50"
+                                            >
+                                                {verifyingEmail ? 'Sending...' : 'Verify Now'}
+                                            </button>
+                                        )}
+                                    </div>
                                     <input
                                         type="email"
                                         name="contact_email"

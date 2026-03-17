@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import SetPassword from './pages/SetPassword';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import VerifyOrgEmail from './pages/VerifyOrgEmail';
 import SuperadminDashboard from './pages/SuperadminDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -42,6 +43,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/set-password" element={<SetPassword />} />
+              <Route path="/verify-org-email" element={<VerifyOrgEmail />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
