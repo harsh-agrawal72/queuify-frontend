@@ -31,6 +31,12 @@ const OrganizationManager = () => {
 
     const [confirmModal, setConfirmModal] = useState({ show: false, org: null, type: null });
 
+    const ensureAbsoluteUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        return `https://${url}`;
+    };
+
     const fetchData = async () => {
         try {
             const [orgsRes, plansRes] = await Promise.all([
@@ -416,7 +422,7 @@ const OrganizationManager = () => {
                                                                     {org.website_url && (
                                                                         <div className="flex items-center gap-2 text-blue-600">
                                                                             <Globe className="h-4 w-4" />
-                                                                            <a href={org.website_url} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline flex items-center gap-1">
+                                                                            <a href={ensureAbsoluteUrl(org.website_url)} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline flex items-center gap-1">
                                                                                 Website <ExternalLink className="h-3 w-3" />
                                                                             </a>
                                                                         </div>
