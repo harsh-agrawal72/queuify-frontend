@@ -23,6 +23,8 @@ import {
     ShieldCheck,
     ShieldAlert,
     ShieldOff,
+    FileText,
+    Download,
     X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -143,7 +145,8 @@ const OrganizationAbout = () => {
             formData.append(type, files[0]);
         }
 
-        const toastId = toast.loading('Uploading image...');
+        const isDocument = ['pan_card', 'aadhar_card'].includes(type);
+        const toastId = toast.loading(`Uploading ${isDocument ? 'document' : 'image'}...`);
         try {
             await api.post('/organizations/images', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -465,6 +468,80 @@ const OrganizationAbout = () => {
                         </div>
 
                         <div className="space-y-6">
+                            {/* Verification Documents */}
+                            <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 mb-6">
+                                <h3 className="text-sm font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                                    Verification Documents (PDF)
+                                </h3>
+                                <div className="space-y-4">
+                                    {/* PAN Card */}
+                                    <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                                <FileText className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">PAN Card</p>
+                                                {profile.images?.find(img => img.image_type === 'pan_card') ? (
+                                                    <a 
+                                                        href={profile.images.find(img => img.image_type === 'pan_card').image_url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                                                    >
+                                                        <Download className="h-3 w-3" /> View Document
+                                                    </a>
+                                                ) : (
+                                                    <p className="text-xs text-gray-500">Not uploaded</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <label className="cursor-pointer bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
+                                            {profile.images?.find(img => img.image_type === 'pan_card') ? 'Replace' : 'Upload'}
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="application/pdf"
+                                                onChange={(e) => handleImageUpload(e, 'pan_card')}
+                                            />
+                                        </label>
+                                    </div>
+
+                                    {/* Aadhar Card */}
+                                    <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                                <FileText className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">Aadhar Card</p>
+                                                {profile.images?.find(img => img.image_type === 'aadhar_card') ? (
+                                                    <a 
+                                                        href={profile.images.find(img => img.image_type === 'aadhar_card').image_url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                                                    >
+                                                        <Download className="h-3 w-3" /> View Document
+                                                    </a>
+                                                ) : (
+                                                    <p className="text-xs text-gray-500">Not uploaded</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <label className="cursor-pointer bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
+                                            {profile.images?.find(img => img.image_type === 'aadhar_card') ? 'Replace' : 'Upload'}
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="application/pdf"
+                                                onChange={(e) => handleImageUpload(e, 'aadhar_card')}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             {/* Logo Upload */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Organization Logo</label>
