@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { motion } from 'framer-motion';
-import { User, Lock, Mail, Save, Shield, Bell, Calendar, CheckCircle, Award, Clock, Sparkles, Eye, EyeOff, Trash2, AlertTriangle } from 'lucide-react';
+import { User, Lock, Mail, Save, Shield, Bell, Calendar, CheckCircle, Award, Clock, Sparkles, Eye, EyeOff, Trash2, AlertTriangle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ export default function Profile() {
     const { user, updateUser, logout } = useAuth();
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
+    const [phone, setPhone] = useState(user?.phone || '');
     const [emailNotifications, setEmailNotifications] = useState(user?.email_notification_enabled ?? true);
     const [notificationAlerts, setNotificationAlerts] = useState(user?.notification_enabled ?? true);
     const [loading, setLoading] = useState(false);
@@ -47,12 +48,14 @@ export default function Profile() {
         try {
             await api.patch('/user/profile', {
                 name,
+                phone,
                 email_notification_enabled: emailNotifications,
                 notification_enabled: notificationAlerts
             });
             // Update user in AuthContext + localStorage so toggles persist
             updateUser({
                 name,
+                phone,
                 email_notification_enabled: emailNotifications,
                 notification_enabled: notificationAlerts
             });
@@ -203,24 +206,25 @@ export default function Profile() {
                                 </div>
                             </div>
 
-                            {/* Email Field */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                                <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        disabled
-                                        className="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl bg-gray-50 text-gray-400 cursor-not-allowed text-sm"
-                                    />
-                                </div>
-                                <p className="text-[11px] text-gray-400 mt-1.5 flex items-center gap-1">
-                                    <Lock className="h-3 w-3" /> Email address cannot be changed for security reasons
-                                </p>
-                            </div>
+                             {/* Phone Field */}
+                             <div>
+                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                                 <div className="relative">
+                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                     <input
+                                         type="tel"
+                                         value={phone}
+                                         onChange={e => setPhone(e.target.value)}
+                                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                         placeholder="Your phone number"
+                                     />
+                                 </div>
+                                 <p className="text-[11px] text-gray-400 mt-1.5 flex items-center gap-1">
+                                     For emergency communication with organizations
+                                 </p>
+                             </div>
 
-                        </div>
+                         </div>
 
                         {/* Save Button */}
                         <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-end">

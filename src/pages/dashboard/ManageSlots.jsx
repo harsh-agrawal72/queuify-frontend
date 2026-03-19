@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, RefreshCw } from 'lucide-react';
 
 const ManageSlots = () => {
     const [slots, setSlots] = useState([]);
@@ -52,6 +52,24 @@ const ManageSlots = () => {
             fetchSlots();
         } catch (err) {
             toast.error('Failed to delete slot');
+        }
+    };
+
+    const handleRebalance = async (resourceId, startTime) => {
+        if (!resourceId) {
+            toast.error('Resource information missing for this slot');
+            return;
+        }
+        
+        const date = format(new Date(startTime), 'yyyy-MM-dd');
+        const loadingToast = toast.loading(`Optimizing load for ${date}...`);
+        
+        try {
+            const res = await api.post(`/admin/rebalance/${resourceId}?date=${date}`);
+            toast.success(res.data.message, { id: loadingToast });
+            fetchSlots();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to rebalance slots', { id: loadingToast });
         }
     };
 
@@ -122,6 +140,13 @@ const ManageSlots = () => {
                                     {slot.booked_count}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button 
+                                        onClick={() => handleRebalance(slot.resource_id, slot.start_time)}
+                                        className="text-primary-600 hover:text-primary-900 mr-4"
+                                        title="Redistribute appointments fairly for this doctor today"
+                                    >
+                                        <RefreshCw className="h-5 w-5" />
+                                    </button>
                                     <button onClick={() => handleDelete(slot.id)} className="text-red-600 hover:text-red-900">
                                         <Trash2 className="h-5 w-5" />
                                     </button>

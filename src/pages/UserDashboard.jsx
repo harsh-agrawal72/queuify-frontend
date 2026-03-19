@@ -75,11 +75,13 @@ const UserDashboard = () => {
         setShowBookingModal(true);
     };
 
-    const confirmBooking = async () => {
+    const confirmBooking = async (prefResource, prefTime) => {
         try {
             const response = await apiService.bookAppointment({
                 orgId: selectedOrg.id,
-                slotId: bookingSlot.slot_id
+                slotId: bookingSlot.slot_id,
+                pref_resource: prefResource,
+                pref_time: prefTime
             });
 
             // Assume response.data contains the booking details including token

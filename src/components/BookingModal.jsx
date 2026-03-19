@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+
 const getIndustryTerminology = (type) => {
     switch (type) {
         case 'Salon': return { action: 'Confirm Service', item: 'Service' };
@@ -12,41 +14,82 @@ const getIndustryTerminology = (type) => {
 };
 
 const BookingModal = ({ slot, orgName, orgType, isOpen, onClose, onConfirm, bookingData }) => {
+    const [prefResource, setPrefResource] = useState('ANY');
+    const [prefTime, setPrefTime] = useState('FLEXIBLE');
+
     if (!isOpen) return null;
     const term = getIndustryTerminology(orgType);
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-            <div className="relative p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+            <div className="relative p-6 border w-full max-w-md shadow-2xl rounded-2xl bg-white animate-in fade-in zoom-in duration-200">
 
                 {!bookingData ? (
                     <>
-                        <div className="mt-3 text-center">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900">{term.action}</h3>
-                            <div className="mt-2 px-7 py-3">
-                                <p className="text-sm text-gray-500">
-                                    Are you sure you want to {term.action.toLowerCase()} at <strong>{orgName}</strong>?
-                                </p>
-                                <div className="mt-4 bg-blue-50 p-2 rounded text-left">
-                                    <p className="text-sm"><strong>Date:</strong> {new Date(slot.start_time).toLocaleDateString()}</p>
-                                    <p className="text-sm"><strong>Time:</strong> {new Date(slot.start_time).toLocaleTimeString()} - {new Date(slot.end_time).toLocaleTimeString()}</p>
+                        <div className="text-center">
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">{term.action}</h3>
+                            <p className="text-sm text-gray-500 mb-6">
+                                Confirming your {term.item.toLowerCase()} at <span className="font-semibold text-gray-900">{orgName}</span>
+                            </p>
+
+                            <div className="bg-indigo-50 p-4 rounded-xl text-left mb-6 border border-indigo-100">
+                                <p className="text-sm font-medium text-indigo-900"><strong>Date:</strong> {new Date(slot.start_time).toLocaleDateString()}</p>
+                                <p className="text-sm font-medium text-indigo-900"><strong>Time:</strong> {new Date(slot.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(slot.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                            </div>
+
+                            {/* Preferences Section */}
+                            <div className="space-y-4 mb-8 text-left">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Resource Preference</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setPrefResource('ANY')}
+                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefResource === 'ANY' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200'}`}
+                                        >
+                                            Any Available
+                                        </button>
+                                        <button
+                                            onClick={() => setPrefResource('SPECIFIC')}
+                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefResource === 'SPECIFIC' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200'}`}
+                                        >
+                                            This Resource
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 mt-1">"Any Available" allows us to reassign you to another doctor/staff if needed.</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Rescheduling Priority</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setPrefTime('URGENT')}
+                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefTime === 'URGENT' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-200 hover:border-amber-200'}`}
+                                        >
+                                            Urgent Today
+                                        </button>
+                                        <button
+                                            onClick={() => setPrefTime('FLEXIBLE')}
+                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefTime === 'FLEXIBLE' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200'}`}
+                                        >
+                                            Flexible
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 mt-1">"Urgent" puts you on a high-priority waitlist if same-day reassignment fails.</p>
                                 </div>
                             </div>
-                            <div className="items-center px-4 py-3">
-                                <button
-                                    id="ok-btn"
-                                    className="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                                    onClick={onConfirm}
-                                >
-                                    Confirm
-                                </button>
-                                <button
-                                    className="mt-3 px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                                    onClick={onClose}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+
+                            <button
+                                className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-[0.98]"
+                                onClick={() => onConfirm(prefResource, prefTime)}
+                            >
+                                {term.action}
+                            </button>
+                            <button
+                                className="w-full mt-3 py-2 text-gray-500 font-medium hover:text-gray-700 transition-colors"
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </button>
                         </div>
                     </>
                 ) : (
