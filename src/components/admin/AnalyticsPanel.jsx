@@ -268,8 +268,9 @@ const AnalyticsPanel = () => {
             return canvas.toDataURL('image/png');
         } catch (err) {
             console.error('Failed to capture chart', err);
-            return null;
         }
+    };
+
     const handleRebalance = async () => {
         if (!resourceId) {
             toast.error("Please select a resource to rebalance scheduled slots.");

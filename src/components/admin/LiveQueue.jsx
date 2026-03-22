@@ -267,10 +267,11 @@ const AdminLiveQueue = () => {
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
-                                            className="p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-gray-100 shadow-sm transition-all"
+                                            className="flex items-center gap-2 p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-gray-100 shadow-sm transition-all text-xs font-bold"
                                             title="Rebalance this queue"
                                         >
-                                            <RefreshCw className="h-4 w-4" />
+                                            <RefreshCw className="h-3.5 w-3.5" />
+                                            <span className="hidden sm:inline">Rebalance</span>
                                         </button>
                                         <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
                                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Waiting</p>
