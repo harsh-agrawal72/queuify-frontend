@@ -12,7 +12,8 @@ const AdminAppointments = () => {
     const fetchAppointments = async () => {
         try {
             const res = await api.get('/admin/appointments');
-            setAppointments(res.data);
+            // Backend returns { appointments: [], totalPages: 1, currentPage: 1 }
+            setAppointments(res.data.appointments || []);
         } catch (err) {
             toast.error('Failed to load appointments');
         } finally {
@@ -44,8 +45,9 @@ const AdminAppointments = () => {
         }
     };
 
-    return (
-    const waitlistedCount = appointments.filter(app => app.status === 'waitlisted_urgent').length;
+    const waitlistedCount = appointments.length > 0 && Array.isArray(appointments)
+        ? appointments.filter(app => app.status === 'waitlisted_urgent').length 
+        : 0;
 
     return (
         <div className="space-y-6">

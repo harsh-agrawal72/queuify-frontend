@@ -38,44 +38,40 @@ const BookingModal = ({ slot, orgName, orgType, isOpen, onClose, onConfirm, book
                             </div>
 
                             {/* Preferences Section */}
-                            <div className="space-y-4 mb-8 text-left">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Resource Preference</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => setPrefResource('ANY')}
-                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefResource === 'ANY' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200'}`}
-                                        >
-                                            Any Available
-                                        </button>
-                                        <button
-                                            onClick={() => setPrefResource('SPECIFIC')}
-                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefResource === 'SPECIFIC' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200'}`}
-                                        >
-                                            This Resource
-                                        </button>
+                            <div className="space-y-5 mb-8 text-left">
+                                <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group">
+                                    <div className="pt-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={prefResource === 'ANY'}
+                                            onChange={(e) => setPrefResource(e.target.checked ? 'ANY' : 'SPECIFIC')}
+                                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        />
                                     </div>
-                                    <p className="text-[10px] text-gray-400 mt-1">"Any Available" allows us to reassign you to another doctor/staff if needed.</p>
-                                </div>
+                                    <div>
+                                        <span className="block text-sm font-bold text-gray-700">Flexible Resource</span>
+                                        <span className="block text-[10px] text-gray-500 mt-0.5 leading-relaxed">
+                                            Allow us to move your {term.item.toLowerCase()} to another available {orgType === 'Hospital' || orgType === 'Clinic' ? 'doctor' : 'staff member'} if your original choice becomes unavailable.
+                                        </span>
+                                    </div>
+                                </label>
 
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Rescheduling Priority</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => setPrefTime('URGENT')}
-                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefTime === 'URGENT' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-200 hover:border-amber-200'}`}
-                                        >
-                                            Urgent Today
-                                        </button>
-                                        <button
-                                            onClick={() => setPrefTime('FLEXIBLE')}
-                                            className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${prefTime === 'FLEXIBLE' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200'}`}
-                                        >
-                                            Flexible
-                                        </button>
+                                <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group">
+                                    <div className="pt-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={prefTime === 'URGENT'}
+                                            onChange={(e) => setPrefTime(e.target.checked ? 'URGENT' : 'FLEXIBLE')}
+                                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        />
                                     </div>
-                                    <p className="text-[10px] text-gray-400 mt-1">"Urgent" puts you on a high-priority waitlist if same-day reassignment fails.</p>
-                                </div>
+                                    <div>
+                                        <span className="block text-sm font-bold text-gray-700">Urgent Requirement</span>
+                                        <span className="block text-[10px] text-gray-500 mt-0.5 leading-relaxed">
+                                            If this slot is cancelled, put me on a high-priority waitlist for any other opening today.
+                                        </span>
+                                    </div>
+                                </label>
                             </div>
 
                             <button
