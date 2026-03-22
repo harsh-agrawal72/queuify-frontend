@@ -75,13 +75,14 @@ const UserDashboard = () => {
         setShowBookingModal(true);
     };
 
-    const confirmBooking = async (prefResource, prefTime) => {
+    const confirmBooking = async (prefResource, prefTime, bypassDuplicate = false) => {
         try {
             const response = await apiService.bookAppointment({
                 orgId: selectedOrg.id,
                 slotId: bookingSlot.slot_id,
                 pref_resource: prefResource,
-                pref_time: prefTime
+                pref_time: prefTime,
+                bypassDuplicate
             });
 
             // Assume response.data contains the booking details including token
@@ -96,8 +97,15 @@ const UserDashboard = () => {
 
         } catch (error) {
             console.error('Booking failed:', error);
-            alert(error.response?.data?.message || 'Booking failed');
-            setShowBookingModal(false);
+            if (error.response?.status === 409 && error.response?.data?.message === 'DUPLICATE_BOOKING_WARNING') {
+                const proceed = window.confirm("You have already booked this slot. Do you want to book it again?");
+                if (proceed) {
+                    confirmBooking(prefResource, prefTime, true);
+                }
+            } else {
+                alert(error.response?.data?.message || 'Booking failed');
+                setShowBookingModal(false);
+            }
         }
     };
 

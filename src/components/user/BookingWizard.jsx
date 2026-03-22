@@ -129,7 +129,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
     // ──────────────────────────────────────────────
     // Finalize Booking
     // ──────────────────────────────────────────────
-    const handleBookingCreation = async () => {
+    const handleBookingCreation = async (bypassDuplicate = false) => {
         setLoadingCreation(true);
         try {
             const res = await apiService.bookAppointment({
@@ -138,7 +138,8 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                 slotId: selectedSlot?.id,
                 orgId: orgId,
                 pref_resource: prefResource,
-                pref_time: prefTime
+                pref_time: prefTime,
+                bypassDuplicate
             });
 
             const apptData = {
@@ -158,7 +159,14 @@ const BookingWizard = ({ orgId, service, onClose }) => {
 
         } catch (error) {
             console.error(error);
-            toast.error(error.response?.data?.message || "Booking failed");
+            if (error.response?.status === 409 && error.response?.data?.message === 'DUPLICATE_BOOKING_WARNING') {
+                const proceed = window.confirm("You have already booked this slot. Do you want to book it again?");
+                if (proceed) {
+                    handleBookingCreation(true);
+                }
+            } else {
+                toast.error(error.response?.data?.message || "Booking failed");
+            }
         } finally {
             setLoadingCreation(false);
         }

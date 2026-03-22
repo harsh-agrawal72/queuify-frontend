@@ -37,19 +37,27 @@ const SlotView = () => {
         fetchSlots();
     }, [orgId, navigate]);
 
-    const handleBook = async (slotId) => {
+    const handleBook = async (slotId, bypassDuplicate = false) => {
+        const loadingToast = toast.loading(bypassDuplicate ? 'Retrying booking...' : 'Booking slot...');
         try {
-            const loadingToast = toast.loading('Booking slot...');
             await api.post('/appointments', {
                 orgId,
-                slotId
+                slotId,
+                bypassDuplicate
             });
             toast.dismiss(loadingToast);
             toast.success('Appointment booked successfully!');
             navigate('/dashboard/appointments');
         } catch (err) {
-            toast.dismiss();
-            toast.error(err.response?.data?.message || 'Booking failed');
+            toast.dismiss(loadingToast);
+            if (err.response?.status === 409 && err.response?.data?.message === 'DUPLICATE_BOOKING_WARNING') {
+                const proceed = window.confirm("You have already booked this slot. Do you want to book it again?");
+                if (proceed) {
+                    handleBook(slotId, true);
+                }
+            } else {
+                toast.error(err.response?.data?.message || 'Booking failed');
+            }
         }
     };
 
