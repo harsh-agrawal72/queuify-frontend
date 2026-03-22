@@ -560,8 +560,6 @@ const AnalyticsPanel = () => {
                     <button onClick={downloadExcel} className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 text-gray-600 text-sm font-medium transition shadow-sm">
                         <Download className="h-4 w-4" /> Export
                     </button>
-
-                    </button>
                 </div>
             </div>
 
