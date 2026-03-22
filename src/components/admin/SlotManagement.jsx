@@ -12,8 +12,7 @@ import {
     AlertCircle,
     Users,
     Pencil,
-    Info,
-    RefreshCw
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
@@ -268,27 +267,6 @@ const SlotManagement = () => {
     };
 
     // ═══════════════════════════════════════════
-    // REBALANCE SLOTS
-    // ═══════════════════════════════════════════
-    const handleRebalance = async (resourceId, startTime) => {
-        if (!resourceId) {
-            toast.error('Resource information missing for this slot');
-            return;
-        }
-
-        const date = format(parseISO(startTime), 'yyyy-MM-dd');
-        const loadingToast = toast.loading(`Optimizing load for ${date}...`);
-
-        try {
-            const res = await api.post(`/admin/rebalance/${resourceId}?date=${date}`);
-            toast.success(res.data.message || 'Slots rebalanced successfully', { id: loadingToast });
-            fetchSlots();
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to rebalance slots', { id: loadingToast });
-        }
-    };
-
-    // ═══════════════════════════════════════════
     // MODAL HELPERS
     // ═══════════════════════════════════════════
     const openModal = () => {
@@ -400,16 +378,6 @@ const SlotManagement = () => {
                             Clear all filters
                         </button>
                     ) : <div />}
-
-                    {filterResource && filterDate && (
-                        <button 
-                            onClick={() => handleRebalance(filterResource, filterDate)}
-                            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 font-bold text-sm"
-                            title="Redistribute today's schedule fairly for this resource"
-                        >
-                            <RefreshCw className="h-4 w-4" /> Rebalance Schedule
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -506,13 +474,6 @@ const SlotManagement = () => {
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleRebalance(slot.resource_id, slot.start_time)}
-                                                    className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors ml-1"
-                                                    title="Redistribute today's appointments fairly for this doctor"
-                                                >
-                                                    <RefreshCw className="h-4 w-4" />
-                                                </button>
-                                                <button
                                                     onClick={() => handleEditSlot(slot)}
                                                     className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors ml-1"
                                                     title="Edit slot"
@@ -544,7 +505,6 @@ const SlotManagement = () => {
                                             </p>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => handleRebalance(slot.resource_id, slot.start_time)} className="p-2 text-gray-400 hover:text-indigo-600 bg-gray-50 rounded-lg" title="Rebalance"><RefreshCw className="h-4 w-4" /></button>
                                             <button onClick={() => handleEditSlot(slot)} className="p-2 text-gray-400 hover:text-indigo-600 bg-gray-50 rounded-lg"><Pencil className="h-4 w-4" /></button>
                                             <button onClick={() => handleDeleteSlot(slot.id)} className="p-2 text-gray-400 hover:text-red-500 bg-gray-50 rounded-lg"><Trash2 className="h-4 w-4" /></button>
                                         </div>

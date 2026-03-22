@@ -9,6 +9,7 @@ import {
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { useAuth } from '../../context/AuthContext';
+import { formatWaitTime } from '../../utils/format';
 
 export default function UserDashboard() {
     const [stats, setStats] = useState(null);
@@ -181,7 +182,7 @@ export default function UserDashboard() {
                                         </div>
                                         <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
                                             <Clock className="h-3 w-3" />
-                                            <span className="text-xs font-bold">{nextApt.estimated_wait_time || 0} min wait</span>
+                                            <span className="text-xs font-bold">{formatWaitTime(nextApt.estimated_wait_time)} wait</span>
                                         </div>
                                     </div>
                                 </div>

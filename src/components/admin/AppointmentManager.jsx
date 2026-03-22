@@ -17,8 +17,7 @@ import {
     Check,
     MoreHorizontal,
     User,
-    CreditCard,
-    RefreshCw
+    CreditCard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -83,22 +82,6 @@ const AppointmentManager = () => {
         fetchAppointments();
         fetchResources();
     }, [page, search, statusFilter]);
-
-    const handleRebalance = async () => {
-        if (!selectedResourceId) {
-            toast.error("Please select a resource to rebalance.");
-            return;
-        }
-        const loadingToast = toast.loading("Rebalancing appointments...");
-        try {
-            await api.post(`/admin/rebalance/${selectedResourceId}?date=${selectedDate}`);
-            toast.success("Rebalance successful!", { id: loadingToast });
-            fetchAppointments(); // Refresh list
-        } catch (error) {
-            console.error('Rebalance failed:', error);
-            toast.error(error.response?.data?.message || "Rebalance failed", { id: loadingToast });
-        }
-    };
 
     const handleStatusUpdate = async (id, newStatus) => {
         setActiveActionId(null);
@@ -246,13 +229,6 @@ const AppointmentManager = () => {
                             <ChevronLeft className="h-3 w-3 text-gray-400 -rotate-90" />
                         </div>
                     </div>
-
-                    <button 
-                        onClick={handleRebalance}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition shadow-md shadow-indigo-100 font-bold text-sm"
-                    >
-                        <RefreshCw className="h-4 w-4" /> Rebalance
-                    </button>
                 </div>
             </div>
 

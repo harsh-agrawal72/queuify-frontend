@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useUserSocket } from '../hooks/useUserSocket';
 import { MessageCircle } from 'lucide-react';
 import OrganizationCard from '../components/OrganizationCard';
 import SlotList from '../components/SlotList';
@@ -7,6 +9,7 @@ import BookingModal from '../components/BookingModal';
 import MyBookings from '../components/MyBookings';
 
 const UserDashboard = () => {
+    const { user } = useAuth();
     const [organizations, setOrganizations] = useState([]);
     const [myBookings, setMyBookings] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -18,11 +21,24 @@ const UserDashboard = () => {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [confirmedBooking, setConfirmedBooking] = useState(null);
 
+    const { update } = useUserSocket(user?.id);
+
     // Fetch initial data
     useEffect(() => {
         fetchOrganizations();
         fetchMyBookings();
     }, []);
+
+    // Refresh on socket update
+    useEffect(() => {
+        if (update) {
+            console.log('[Dashboard] Refreshing due to real-time update');
+            fetchMyBookings();
+            if (selectedOrg) {
+                handleViewSlots(selectedOrg);
+            }
+        }
+    }, [update]);
 
     const fetchOrganizations = async (query = '', type = 'All') => {
         try {

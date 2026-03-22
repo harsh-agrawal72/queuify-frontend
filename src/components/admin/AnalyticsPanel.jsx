@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import {
     Loader2, TrendingUp, TrendingDown, DollarSign, Activity, AlertCircle,
     Download, CalendarDays, BarChart3, PieChart as PieIcon, Zap,
-    CheckCircle2, XCircle, Clock, Filter, X, Lightbulb, AlertTriangle, Info, ChevronDown, RefreshCw
+    CheckCircle2, XCircle, Clock, Filter, X, Lightbulb, AlertTriangle, Info, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -268,23 +268,6 @@ const AnalyticsPanel = () => {
             return canvas.toDataURL('image/png');
         } catch (err) {
             console.error('Failed to capture chart', err);
-        }
-    };
-
-    const handleRebalance = async () => {
-        if (!resourceId) {
-            toast.error("Please select a resource to rebalance scheduled slots.");
-            return;
-        }
-        const date = startDate || new Date().toISOString().split('T')[0];
-        const loadingToast = toast.loading("Rebalancing appointments...");
-        try {
-            await api.post(`/admin/rebalance/${resourceId}?date=${date}`);
-            toast.success("Rebalance successful!", { id: loadingToast });
-            fetchAnalytics(); // Refresh analytics after rebalance
-        } catch (error) {
-            console.error('Rebalance failed:', error);
-            toast.error(error.response?.data?.message || "Rebalance failed", { id: loadingToast });
         }
     };
 
@@ -578,12 +561,6 @@ const AnalyticsPanel = () => {
                         <Download className="h-4 w-4" /> Export
                     </button>
 
-                    <button 
-                        onClick={handleRebalance}
-                        className="flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition shadow-md shadow-indigo-100 font-bold text-sm"
-                        title="Redistribute appointments for selected resource and date"
-                    >
-                        <RefreshCw className="h-4 w-4" /> Rebalance
                     </button>
                 </div>
             </div>

@@ -6,6 +6,7 @@ import {
     Users, Clock, Ticket, ArrowLeft, RefreshCw, CheckCircle2, PlayCircle
 } from 'lucide-react';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
+import { formatWaitTime } from '../../utils/format';
 
 export default function LiveQueue() {
     const { appointmentId } = useParams();
@@ -115,7 +116,9 @@ export default function LiveQueue() {
                                     className="bg-blue-50/50 p-4 rounded-3xl text-center border border-blue-100"
                                 >
                                     <Clock className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                                    <p className="text-3xl font-black text-blue-900">{status.estimated_wait_time}<span className="text-xs font-bold text-blue-400 ml-1">min</span></p>
+                                    <p className="text-3xl font-black text-blue-900">
+                                        {formatWaitTime(status.estimated_wait_time)}
+                                    </p>
                                     <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider">Est. Wait</p>
                                 </motion.div>
 
