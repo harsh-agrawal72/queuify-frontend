@@ -18,6 +18,7 @@ const BookingModal = ({ slot, orgName, orgType, isOpen, onClose, onConfirm, book
     const [prefTime, setPrefTime] = useState('FLEXIBLE');
 
     if (!isOpen) return null;
+    console.log('[BookingModal] Rendering with props:', { orgName, orgType, hasBookingData: !!bookingData });
     const term = getIndustryTerminology(orgType);
 
     return (

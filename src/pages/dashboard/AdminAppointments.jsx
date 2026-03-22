@@ -15,6 +15,7 @@ const AdminAppointments = () => {
             // Backend returns { appointments: [], totalPages: 1, currentPage: 1 }
             setAppointments(res.data.appointments || []);
         } catch (err) {
+            console.error('[AdminAppointments] Error loading:', err);
             toast.error('Failed to load appointments');
         } finally {
             setLoading(false);

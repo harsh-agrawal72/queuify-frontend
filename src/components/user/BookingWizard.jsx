@@ -42,6 +42,8 @@ const BookingWizard = ({ orgId, service, onClose }) => {
     const [pendingAppointment, setPendingAppointment] = useState(null);
     const [bookingResult, setBookingResult] = useState(null);
     const [loadingCreation, setLoadingCreation] = useState(false);
+    const [prefResource, setPrefResource] = useState('ANY');
+    const [prefTime, setPrefTime] = useState('FLEXIBLE');
 
     // Derived State
     const showTimeStep = true;
@@ -134,7 +136,9 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                 serviceId: selectedService.id,
                 resourceId: selectedResource?.id,
                 slotId: selectedSlot?.id,
-                orgId: orgId
+                orgId: orgId,
+                pref_resource: prefResource,
+                pref_time: prefTime
             });
 
             const apptData = {
@@ -175,6 +179,8 @@ const BookingWizard = ({ orgId, service, onClose }) => {
             setSelectedService(null);
             setSelectedResource(null);
         }
+        setPrefResource('ANY');
+        setPrefTime('FLEXIBLE');
     };
 
     const handleGoToAppointments = () => {
@@ -298,6 +304,43 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Preferences Checkboxes */}
+            <div className="space-y-3">
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group">
+                    <div className="pt-0.5">
+                        <input
+                            type="checkbox"
+                            checked={prefResource === 'ANY'}
+                            onChange={(e) => setPrefResource(e.target.checked ? 'ANY' : 'SPECIFIC')}
+                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <span className="block text-xs font-bold text-gray-700">Flexible Staff</span>
+                        <span className="block text-[10px] text-gray-400 mt-0.5 leading-tight">
+                            Allow us to move you to another staff member if {selectedResource?.name} becomes unavailable.
+                        </span>
+                    </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group">
+                    <div className="pt-0.5">
+                        <input
+                            type="checkbox"
+                            checked={prefTime === 'URGENT'}
+                            onChange={(e) => setPrefTime(e.target.checked ? 'URGENT' : 'FLEXIBLE')}
+                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <span className="block text-xs font-bold text-gray-700">Urgent Requirement (Today)</span>
+                        <span className="block text-[10px] text-gray-400 mt-0.5 leading-tight">
+                            If this slot is cancelled, keep me on high-priority waitlist for same-day openings.
+                        </span>
+                    </div>
+                </label>
             </div>
 
             <button
