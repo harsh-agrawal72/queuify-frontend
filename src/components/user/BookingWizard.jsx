@@ -352,7 +352,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
             </div>
 
             <button
-                onClick={handleBookingCreation}
+                onClick={() => handleBookingCreation(false)}
                 disabled={loadingCreation}
                 className="w-full flex items-center justify-center gap-3 p-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50"
             >
