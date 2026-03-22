@@ -152,6 +152,18 @@ const AdminLiveQueue = () => {
         }
     };
 
+    const handleRebalance = async (resourceId, resourceName) => {
+        const loadingToast = toast.loading(`Rebalancing ${resourceName}'s schedule...`);
+        try {
+            await api.post(`/admin/rebalance/${resourceId}?date=${selectedDate}`);
+            toast.success("Schedule rebalanced!", { id: loadingToast });
+            fetchQueue(true);
+        } catch (error) {
+            console.error('Rebalance failed:', error);
+            toast.error(error.response?.data?.message || "Rebalance failed", { id: loadingToast });
+        }
+    };
+
     // Stats
     const totalPending = queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length, 0);
     const totalServing = queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'serving').length, 0);
@@ -252,9 +264,18 @@ const AdminLiveQueue = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Waiting</p>
-                                        <p className="text-xl font-black text-slate-800">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
+                                            className="p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-gray-100 shadow-sm transition-all"
+                                            title="Rebalance this queue"
+                                        >
+                                            <RefreshCw className="h-4 w-4" />
+                                        </button>
+                                        <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Waiting</p>
+                                            <p className="text-xl font-black text-slate-800">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                                        </div>
                                     </div>
                                 </div>
 

@@ -9,7 +9,8 @@ import {
     Loader2,
     Edit2,
     X,
-    Filter
+    Filter,
+    RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
@@ -107,6 +108,24 @@ const SlotManager = () => {
         }
     };
 
+    const handleRebalance = async (resourceId, startTime) => {
+        if (!resourceId) {
+            toast.error('Resource information missing for this slot');
+            return;
+        }
+
+        const date = format(parseISO(startTime), 'yyyy-MM-dd');
+        const loadingToast = toast.loading(`Optimizing load for ${date}...`);
+
+        try {
+            const res = await api.post(`/admin/rebalance/${resourceId}?date=${date}`);
+            toast.success(res.data.message || 'Slots rebalanced successfully', { id: loadingToast });
+            fetchSlots();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to rebalance slots', { id: loadingToast });
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -181,6 +200,9 @@ const SlotManager = () => {
                     {slots.map(slot => (
                         <div key={slot.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group relative">
                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleRebalance(slot.resource_id || selectedResource, slot.start_time)} className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors" title="Rebalance this doctor's appointments today">
+                                    <RefreshCw className="h-4 w-4" />
+                                </button>
                                 <button onClick={() => handleEditSlot(slot)} className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors" title="Edit Slot">
                                     <Edit2 className="h-4 w-4" />
                                 </button>

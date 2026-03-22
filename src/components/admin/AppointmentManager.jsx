@@ -17,7 +17,8 @@ import {
     Check,
     MoreHorizontal,
     User,
-    CreditCard
+    CreditCard,
+    RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -32,6 +33,9 @@ const AppointmentManager = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [processingId, setProcessingId] = useState(null);
     const [activeActionId, setActiveActionId] = useState(null);
+    const [resources, setResources] = useState([]);
+    const [selectedResourceId, setSelectedResourceId] = useState('');
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Logic for clicking outside to close dropdown
     const dropdownRef = useRef(null);
@@ -66,9 +70,35 @@ const AppointmentManager = () => {
         }
     };
 
+    const fetchResources = async () => {
+        try {
+            const res = await api.get('/resources');
+            setResources(res.data);
+        } catch (error) {
+            console.error("Failed to fetch resources", error);
+        }
+    };
+
     useEffect(() => {
         fetchAppointments();
+        fetchResources();
     }, [page, search, statusFilter]);
+
+    const handleRebalance = async () => {
+        if (!selectedResourceId) {
+            toast.error("Please select a resource to rebalance.");
+            return;
+        }
+        const loadingToast = toast.loading("Rebalancing appointments...");
+        try {
+            await api.post(`/admin/rebalance/${selectedResourceId}?date=${selectedDate}`);
+            toast.success("Rebalance successful!", { id: loadingToast });
+            fetchAppointments(); // Refresh list
+        } catch (error) {
+            console.error('Rebalance failed:', error);
+            toast.error(error.response?.data?.message || "Rebalance failed", { id: loadingToast });
+        }
+    };
 
     const handleStatusUpdate = async (id, newStatus) => {
         setActiveActionId(null);
@@ -160,15 +190,42 @@ const AppointmentManager = () => {
                     <p className="text-gray-500 mt-2">Manage bookings, track status, and handle payments.</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-1 shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="bg-transparent border-none text-sm font-medium text-gray-700 focus:outline-none p-1.5"
+                        />
+                    </div>
+
+                    <div className="relative group">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <select
+                            value={selectedResourceId}
+                            onChange={(e) => setSelectedResourceId(e.target.value)}
+                            className="pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none appearance-none bg-white transition-all cursor-pointer shadow-sm min-w-[180px]"
+                        >
+                            <option value="">All Resources</option>
+                            {resources.map(r => (
+                                <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <ChevronLeft className="h-3 w-3 text-gray-400 -rotate-90" />
+                        </div>
+                    </div>
+
                     <div className="relative group">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input
                             type="text"
-                            placeholder="Search appointments..."
+                            placeholder="Search accounts..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-full sm:w-72 transition-all shadow-sm"
+                            className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-full sm:w-64 transition-all shadow-sm"
                         />
                     </div>
 
@@ -177,7 +234,7 @@ const AppointmentManager = () => {
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none appearance-none bg-white transition-all cursor-pointer shadow-sm min-w-[160px]"
+                            className="pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none appearance-none bg-white transition-all cursor-pointer shadow-sm min-w-[140px]"
                         >
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
@@ -186,14 +243,16 @@ const AppointmentManager = () => {
                             <option value="cancelled">Cancelled</option>
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <motion.div
-                                animate={{ rotate: statusFilter ? 180 : 0 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <ChevronLeft className="h-3 w-3 text-gray-400 -rotate-90" />
-                            </motion.div>
+                            <ChevronLeft className="h-3 w-3 text-gray-400 -rotate-90" />
                         </div>
                     </div>
+
+                    <button 
+                        onClick={handleRebalance}
+                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition shadow-md shadow-indigo-100 font-bold text-sm"
+                    >
+                        <RefreshCw className="h-4 w-4" /> Rebalance
+                    </button>
                 </div>
             </div>
 
