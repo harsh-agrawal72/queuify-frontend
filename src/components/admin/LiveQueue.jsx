@@ -78,12 +78,18 @@ const AdminLiveQueue = () => {
     }, [queueData]);
 
     const formatTime = (isoString) => {
-        if (!isoString) return '';
-        return new Intl.DateTimeFormat('en-IN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        }).format(new Date(isoString));
+        if (!isoString) return '--:--';
+        try {
+            const date = new Date(isoString);
+            if (isNaN(date.getTime())) return '--:--';
+            return new Intl.DateTimeFormat('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }).format(date);
+        } catch (e) {
+            return '--:--';
+        }
     };
 
     const handleRefresh = () => {
@@ -138,14 +144,14 @@ const AdminLiveQueue = () => {
         if (currentlyServing) {
             // Need to transition the current one first
             setTransitioningQueue({
-                queueId: queue.id,
+                queueId: queue?.id,
                 currentAppt: currentlyServing,
                 nextAppt: nextInLine
             });
         } else {
             // Just call the next one
             await updateStatus(nextInLine.id, 'serving');
-            callPatient(nextInLine.token_number);
+            callPatient(nextInLine.token_number || '---');
         }
     };
 
@@ -160,9 +166,9 @@ const AdminLiveQueue = () => {
 
             // 2. Call next
             await updateStatus(nextAppt.id, 'serving', true);
-            callPatient(nextAppt.token_number);
+            callPatient(nextAppt.token_number || '---');
 
-            toast.success(t('queue.advanced_success', `Queue advanced! Ticket #{{token}} is now serving.`, { token: nextAppt.token_number }), { id: loadingToast });
+            toast.success(t('queue.advanced_success', `Queue advanced! Ticket #{{token}} is now serving.`, { token: nextAppt.token_number || '---' }), { id: loadingToast });
             setTransitioningQueue(null);
             fetchQueue(true);
         } catch (error) {
