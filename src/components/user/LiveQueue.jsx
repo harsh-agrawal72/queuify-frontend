@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { motion } from 'framer-motion';
 import {
-    Users, Clock, Ticket, ArrowLeft, RefreshCw, CheckCircle2, PlayCircle, Info
+    Users, Clock, Ticket, ArrowLeft, RefreshCw, CheckCircle2, PlayCircle, Info, Brain, Sparkles
 } from 'lucide-react';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { formatWaitTime } from '../../utils/format';
@@ -126,8 +126,12 @@ export default function LiveQueue() {
                                     </p>
                                     <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
                                         Est. Wait
-                                        <InfoTooltip text="Estimated time until your turn, based on real-time resource performance." />
+                                        <InfoTooltip text="Estimated time until your turn, calculated by our Smart AI model based on real-time performance." />
                                     </p>
+                                    <div className="flex items-center justify-center gap-1 mt-1">
+                                        <Sparkles className="h-3 w-3 text-blue-400" />
+                                        <span className="text-[8px] font-black text-blue-400 uppercase tracking-tighter">AI Powered</span>
+                                    </div>
                                 </motion.div>
 
                                 <motion.div 

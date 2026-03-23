@@ -11,8 +11,10 @@ import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { useAuth } from '../../context/AuthContext';
 import { formatWaitTime } from '../../utils/format';
 import InfoTooltip from '../common/InfoTooltip';
+import { useTranslation } from 'react-i18next';
 
 export default function UserDashboard() {
+    const { t } = useTranslation();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [recentAppointments, setRecentAppointments] = useState([]);
@@ -100,8 +102,8 @@ export default function UserDashboard() {
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Welcome Back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! 👋</h1>
-                    <p className="text-gray-500 mt-1">Here's what's happening with your appointments.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.welcome', 'Welcome back')}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! 👋</h1>
+                    <p className="text-gray-500 mt-1">{t('dashboard.subtitle', "Here's what's happening with your appointments.")}</p>
                 </div>
                 {isServing && (
                     <motion.div
@@ -118,28 +120,28 @@ export default function UserDashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard
-                    title="Upcoming"
+                    title={t('dashboard.upcoming', 'Upcoming')}
                     value={stats?.upcoming || 0}
                     icon={Calendar}
                     color="text-indigo-600"
                     bg="bg-indigo-50"
                 />
                 <StatCard
-                    title="Completed"
+                    title={t('dashboard.completed', 'Completed')}
                     value={stats?.completed || 0}
                     icon={CheckCircle}
                     color="text-emerald-600"
                     bg="bg-emerald-50"
                 />
                 <StatCard
-                    title="Cancelled"
+                    title={t('dashboard.cancelled', 'Cancelled')}
                     value={stats?.cancelled || 0}
                     icon={XCircle}
                     color="text-red-600"
                     bg="bg-red-50"
                 />
                 <StatCard
-                    title="Total Visits"
+                    title={t('dashboard.total_visits', 'Total Visits')}
                     value={totalAppointments}
                     icon={TrendingUp}
                     color="text-blue-600"

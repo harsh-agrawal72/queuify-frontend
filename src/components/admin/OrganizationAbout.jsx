@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
+import InfoTooltip from '../common/InfoTooltip';
 import {
     Info,
     MapPin,
@@ -197,7 +198,10 @@ const OrganizationAbout = () => {
             {/* Header & Verification Status */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-800 text-white">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight">Organization Profile</h1>
+                    <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                        Organization Profile
+                        <InfoTooltip text="This is your public profile. This information is shown to users when they search for your organization. Keep it updated to build trust and help users find you." />
+                    </h1>
                     <p className="text-slate-400 mt-1">Manage your public information and verification documents.</p>
                 </div>
 

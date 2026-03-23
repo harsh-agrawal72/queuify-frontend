@@ -9,6 +9,9 @@ import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import NotificationPanel from '../user/NotificationPanel';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../common/LanguageSwitcher';
+import ChatWidget from '../chat/ChatWidget';
 
 export default function UserLayout() {
     const { user, logout } = useAuth();
@@ -41,11 +44,13 @@ export default function UserLayout() {
         navigate('/login');
     };
 
+    const { t } = useTranslation();
+
     const navItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-        { icon: Search, label: 'Find Organizations', path: '/organizations' },
-        { icon: Calendar, label: 'My Appointments', path: '/appointments' },
-        { icon: User, label: 'Profile', path: '/profile' },
+        { icon: LayoutDashboard, label: t('navigation.dashboard', 'Dashboard'), path: '/dashboard' },
+        { icon: Search, label: t('navigation.organizations', 'Find Organizations'), path: '/organizations' },
+        { icon: Calendar, label: t('navigation.my_appointments', 'My Appointments'), path: '/appointments' },
+        { icon: User, label: t('navigation.profile', 'Profile'), path: '/profile' },
     ];
 
     return (
@@ -121,7 +126,7 @@ export default function UserLayout() {
                             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
                             <LogOut className="h-4 w-4" />
-                            Sign Out
+                            {t('navigation.logout', 'Sign Out')}
                         </button>
                     </div>
                 </div>
@@ -139,6 +144,8 @@ export default function UserLayout() {
                     </button>
 
                     <div className="flex items-center gap-4 ml-auto">
+                        <LanguageSwitcher />
+                        
                         <div className="relative">
                             <button
                                 onClick={() => setNotifOpen(!isNotifOpen)}
@@ -167,6 +174,9 @@ export default function UserLayout() {
                     </div>
                 </main>
             </div>
+            
+            {/* Global Chat Widget */}
+            <ChatWidget />
         </div>
     );
 }

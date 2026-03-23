@@ -13,7 +13,9 @@ import {
     Activity,
     Calendar,
     ArrowRightCircle,
-    SkipForward
+    SkipForward,
+    UserPlus,
+    X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,6 +28,10 @@ const AdminLiveQueue = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [refreshing, setRefreshing] = useState(false);
     const [transitioningQueue, setTransitioningQueue] = useState(null);
+    const [predictiveInsights, setPredictiveInsights] = useState(null);
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [activeQueueForManual, setActiveQueueForManual] = useState(null);
+    const [manualEntryData, setManualEntryData] = useState({ customer_name: '', customer_phone: '' });
 
     const fetchQueue = async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -44,9 +50,19 @@ const AdminLiveQueue = () => {
         }
     };
 
+    const fetchPredictiveInsights = async () => {
+        try {
+            const res = await api.get('/admin/predictive-insights');
+            setPredictiveInsights(res.data);
+        } catch (error) {
+            console.error('Failed to fetch predictions', error);
+        }
+    };
+
     // Initial Fetch
     useEffect(() => {
         fetchQueue();
+        fetchPredictiveInsights();
     }, [selectedDate]);
 
     // WebSocket Integration
@@ -164,6 +180,30 @@ const AdminLiveQueue = () => {
         }
     };
 
+    const handleAddWalkIn = (queue) => {
+        setActiveQueueForManual(queue);
+        setManualEntryData({ customer_name: '', customer_phone: '' });
+        setIsManualModalOpen(true);
+    };
+
+    const submitManualEntry = async (e) => {
+        e.preventDefault();
+        const loadingToast = toast.loading("Adding walk-in...");
+        try {
+            await api.post('/admin/appointments/manual', {
+                ...manualEntryData,
+                serviceId: activeQueueForManual.service_id,
+                resourceId: activeQueueForManual.resource_id,
+                status: 'confirmed'
+            });
+            toast.success("Walk-in added!", { id: loadingToast });
+            setIsManualModalOpen(false);
+            fetchQueue(true);
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add walk-in", { id: loadingToast });
+        }
+    };
+
     // Stats
     const totalPending = queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length, 0);
     const totalServing = queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'serving').length, 0);
@@ -213,6 +253,12 @@ const AdminLiveQueue = () => {
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Currently Serving</p>
                     <p className="text-3xl font-black text-indigo-600 mt-1">{totalServing}</p>
+                </div>
+                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hidden md:block">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Avg. Service Time</p>
+                    <p className="text-3xl font-black text-emerald-600 mt-1">
+                        {predictiveInsights?.averageDurations?.[0]?.minutes || 15}m
+                    </p>
                 </div>
             </div>
 
@@ -273,9 +319,25 @@ const AdminLiveQueue = () => {
                                             <RefreshCw className="h-3.5 w-3.5" />
                                             <span className="hidden sm:inline">Rebalance</span>
                                         </button>
-                                        <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Waiting</p>
-                                            <p className="text-xl font-black text-slate-800">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                                        <button
+                                            onClick={() => handleAddWalkIn(queue)}
+                                            className="flex items-center gap-2 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm transition-all text-xs font-bold"
+                                            title="Add Walk-in"
+                                        >
+                                            <UserPlus className="h-3.5 w-3.5" />
+                                            <span className="hidden sm:inline">Add Walk-in</span>
+                                        </button>
+                                        <div className="flex gap-2">
+                                            <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Waiting</p>
+                                                <p className="text-xl font-black text-slate-800">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                                            </div>
+                                            <div className="bg-indigo-600 px-4 py-2 rounded-2xl shadow-sm border border-indigo-500 text-center min-w-[80px]">
+                                                <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-tighter">Est. Wait</p>
+                                                <p className="text-xl font-black text-white">
+                                                    {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || '??'}m
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -318,11 +380,13 @@ const AdminLiveQueue = () => {
                                                         #{appt.queue_number}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 flex-wrap">
                                                             <h4 className={`font-bold truncate ${isServing ? 'text-white' : 'text-slate-900'}`}>{appt.user_name}</h4>
-                                                            {isServing && <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse">SERVING</span>}
-                                                            {isNext && <span className="text-[10px] font-black bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">NEXT</span>}
+                                                            {appt.user_phone && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isServing ? 'bg-white/20 border-white/30 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}>{appt.user_phone}</span>}
+                                                            {isServing && <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse tracking-wider">SERVING</span>}
+                                                            {isNext && <span className="text-[10px] font-black bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full tracking-wider">NEXT</span>}
                                                         </div>
+                                                        {appt.user_email && <p className={`text-[10px] font-medium truncate ${isServing ? 'text-indigo-100' : 'text-slate-500'}`}>{appt.user_email}</p>}
                                                         <p className={`text-xs ${isServing ? 'text-indigo-100' : 'text-slate-400'} flex items-center gap-2 mt-0.5`}>
                                                             <Clock className="h-3 w-3" />
                                                             {appt.slot_start ? `${formatTime(appt.slot_start)} Slot` : 'No Slot'} • Ticket: {appt.token_number}
@@ -441,6 +505,77 @@ const AdminLiveQueue = () => {
                                     </button>
                                 </div>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            {/* Manual Walk-in Modal */}
+            <AnimatePresence>
+                {isManualModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                            onClick={() => setIsManualModalOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative bg-white rounded-[2rem] p-8 shadow-2xl max-w-md w-full overflow-hidden"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                                    <UserPlus className="h-5 w-5 text-indigo-600" />
+                                    Add Walk-in
+                                </h3>
+                                <button onClick={() => setIsManualModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                    <X className="h-5 w-5 text-gray-400" />
+                                </button>
+                            </div>
+
+                            <div className="bg-indigo-50 p-4 rounded-2xl mb-6">
+                                <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">Target Queue</p>
+                                <p className="text-sm font-bold text-slate-700">{activeQueueForManual?.resource_name || activeQueueForManual?.name}</p>
+                                <p className="text-xs text-indigo-400">{activeQueueForManual?.name}</p>
+                            </div>
+
+                            <form onSubmit={submitManualEntry} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Customer Name</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        placeholder="Full Name"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                                        value={manualEntryData.customer_name}
+                                        onChange={e => setManualEntryData({ ...manualEntryData, customer_name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Phone Number</label>
+                                    <input
+                                        required
+                                        type="tel"
+                                        placeholder="+91 00000 00000"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                                        value={manualEntryData.customer_phone}
+                                        onChange={e => setManualEntryData({ ...manualEntryData, customer_phone: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="pt-4">
+                                    <button
+                                        type="submit"
+                                        className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        Add to Queue
+                                        <ArrowRightCircle className="h-5 w-5" />
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}

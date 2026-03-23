@@ -14,14 +14,15 @@ import {
     Loader2,
     Trash2,
     AlertCircle,
-    Check,
     MoreHorizontal,
     User,
-    CreditCard
+    CreditCard,
+    CalendarClock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import AdminRescheduleModal from './AdminRescheduleModal';
 
 const AppointmentManager = () => {
     const [appointments, setAppointments] = useState([]);
@@ -32,6 +33,7 @@ const AppointmentManager = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [processingId, setProcessingId] = useState(null);
     const [activeActionId, setActiveActionId] = useState(null);
+    const [reschedulingAppt, setReschedulingAppt] = useState(null);
     const [resources, setResources] = useState([]);
     const [selectedResourceId, setSelectedResourceId] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -56,7 +58,9 @@ const AppointmentManager = () => {
                     page,
                     limit: 10,
                     search,
-                    status: statusFilter
+                    status: statusFilter,
+                    resourceId: selectedResourceId,
+                    date: selectedDate
                 }
             });
             setAppointments(res.data.appointments);
@@ -71,7 +75,7 @@ const AppointmentManager = () => {
 
     const fetchResources = async () => {
         try {
-            const res = await api.get('/resources');
+            const res = await api.get('/resources', { params: { activeOnly: true } });
             setResources(res.data);
         } catch (error) {
             console.error("Failed to fetch resources", error);
@@ -81,7 +85,12 @@ const AppointmentManager = () => {
     useEffect(() => {
         fetchAppointments();
         fetchResources();
-    }, [page, search, statusFilter]);
+    }, [page, search, statusFilter, selectedResourceId, selectedDate]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [search, statusFilter, selectedResourceId, selectedDate]);
 
     const handleStatusUpdate = async (id, newStatus) => {
         setActiveActionId(null);
@@ -229,6 +238,20 @@ const AppointmentManager = () => {
                             <ChevronLeft className="h-3 w-3 text-gray-400 -rotate-90" />
                         </div>
                     </div>
+
+                    {(search || statusFilter || selectedResourceId || selectedDate) && (
+                        <button
+                            onClick={() => {
+                                setSearch('');
+                                setStatusFilter('');
+                                setSelectedResourceId('');
+                                setSelectedDate('');
+                            }}
+                            className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all"
+                        >
+                            Clear
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -285,6 +308,7 @@ const AppointmentManager = () => {
                                                     <div>
                                                         <p className="font-semibold text-gray-900 text-sm">{apt.user_name || 'Guest User'}</p>
                                                         <p className="text-xs text-gray-500 font-mono">{apt.user_email || '-'}</p>
+                                                        {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                                     </div>
                                                 </div>
                                             </td>
@@ -341,6 +365,20 @@ const AppointmentManager = () => {
                                                                 `}
                                                             >
                                                                 <div className="px-3 py-2 border-b border-gray-50 bg-gray-50/50">
+                                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</p>
+                                                                </div>
+                                                                <div className="p-1">
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            setReschedulingAppt(apt);
+                                                                            setActiveActionId(null);
+                                                                        }} 
+                                                                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
+                                                                    >
+                                                                        <CalendarClock className="h-4 w-4 text-indigo-500" /> Transfer Slot
+                                                                    </button>
+                                                                </div>
+                                                                <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
                                                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Update Status</p>
                                                                 </div>
                                                                 <div className="p-1">
@@ -412,6 +450,7 @@ const AppointmentManager = () => {
                                         <div>
                                             <p className="font-bold text-gray-900 leading-tight">{apt.user_name || 'Guest User'}</p>
                                             <p className="text-[10px] text-gray-500 mt-0.5">{apt.user_email || '-'}</p>
+                                            {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-2">
@@ -462,6 +501,15 @@ const AppointmentManager = () => {
                                                     <XCircle className="h-4 w-4 text-gray-400" />
                                                 </button>
                                             </div>
+                                            <button 
+                                                onClick={() => {
+                                                    setReschedulingAppt(apt);
+                                                    setActiveActionId(null);
+                                                }}
+                                                className="mb-3 w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <CalendarClock className="h-4 w-4" /> Transfer Slot
+                                            </button>
                                             <div className="grid grid-cols-2 gap-2 flex-grow">
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">Pending</button>
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">Confirmed</button>
@@ -505,6 +553,19 @@ const AppointmentManager = () => {
                     </div>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {reschedulingAppt && (
+                    <AdminRescheduleModal
+                        appointment={reschedulingAppt}
+                        onClose={() => setReschedulingAppt(null)}
+                        onSuccess={() => {
+                            setReschedulingAppt(null);
+                            fetchAppointments();
+                        }}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -4,17 +4,19 @@ import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket,
-    ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap
+    ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap, MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import ReviewModal from './ReviewModal';
+import RescheduleModal from './RescheduleModal';
 
 export default function MyAppointments() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('upcoming');
     const [reviewModalAppt, setReviewModalAppt] = useState(null);
+    const [reschedulingAppt, setReschedulingAppt] = useState(null);
 
     const fetchAppointments = async () => {
         setLoading(true);
@@ -276,6 +278,18 @@ export default function MyAppointments() {
                                                         >
                                                             <XCircle className="h-4 w-4" /> Cancel
                                                         </button>
+                                                        <button
+                                                            onClick={() => setReschedulingAppt(appt)}
+                                                            className="flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all shadow-sm"
+                                                        >
+                                                            <Calendar className="h-4 w-4" /> Reschedule
+                                                        </button>
+                                                        <button
+                                                            onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id } }))}
+                                                            className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"
+                                                        >
+                                                            <MessageCircle className="h-4 w-4" /> Chat
+                                                        </button>
                                                     </>
                                                 )}
 
@@ -300,6 +314,12 @@ export default function MyAppointments() {
                                                         >
                                                             <ArrowRight className="h-4 w-4" /> Book Again
                                                         </Link>
+                                                        <button
+                                                            onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id } }))}
+                                                            className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"
+                                                        >
+                                                            <MessageCircle className="h-4 w-4" /> Message
+                                                        </button>
                                                     </>
                                                 )}
 
@@ -353,6 +373,17 @@ export default function MyAppointments() {
                     onClose={() => setReviewModalAppt(null)}
                     onSuccess={() => {
                         setReviewModalAppt(null);
+                        fetchAppointments();
+                    }}
+                />
+            )}
+
+            {reschedulingAppt && (
+                <RescheduleModal
+                    appointment={reschedulingAppt}
+                    onClose={() => setReschedulingAppt(null)}
+                    onSuccess={() => {
+                        setReschedulingAppt(null);
                         fetchAppointments();
                     }}
                 />

@@ -20,6 +20,7 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import InfoTooltip from '../common/InfoTooltip';
 
 // ──────────────────────────────────────────────
 // UNIFIED SERVICE MANAGEMENT
@@ -174,7 +175,10 @@ const ServiceManagement = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Service Management</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        Service Management
+                        <InfoTooltip text="Services are the top-level categories of what you offer (e.g., Dental Checkup, Haircut). First create a Service, then add specific Resources (staff/rooms) to it." />
+                    </h1>
                     <p className="text-sm text-gray-500 mt-1">Create services and assign resources (staff, rooms, equipment) to them.</p>
                 </div>
                 <button
@@ -248,6 +252,7 @@ const ServiceManagement = () => {
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
                                                 <Users className="h-4 w-4" /> Resources
+                                                <InfoTooltip text="Resources are the actual assets or people who perform the service. Each resource can have their own schedule later in 'Slot Management'." />
                                             </h4>
                                             <button
                                                 onClick={() => setResourceModal({ open: true, edit: false, data: null, serviceId: service.id })}

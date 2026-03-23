@@ -9,6 +9,7 @@ import AnalyticsPanel from '../components/admin/AnalyticsPanel';
 import SettingsPanel from '../components/admin/SettingsPanel';
 import OrganizationAbout from '../components/admin/OrganizationAbout';
 import AdminReviews from '../components/admin/AdminReviews';
+import SupportInbox from './dashboard/SupportInbox';
 
 const AdminDashboard = () => {
     return (
@@ -23,6 +24,7 @@ const AdminDashboard = () => {
                 <Route path="about" element={<OrganizationAbout />} />
                 <Route path="reviews" element={<AdminReviews />} />
                 <Route path="settings" element={<SettingsPanel />} />
+                <Route path="inbox" element={<SupportInbox />} />
                 <Route path="*" element={<Navigate to="/admin/analytics" replace />} />
             </Route>
         </Routes>

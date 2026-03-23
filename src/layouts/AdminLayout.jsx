@@ -20,16 +20,20 @@ import {
     Briefcase,
     Clock,
     ShieldOff,
-    Star
+    Star,
+    MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileModal from '../components/common/ProfileModal';
 import GlobalSearch from '../components/admin/GlobalSearch';
 import Logo from '../components/common/Logo';
 import { formatDistanceToNow } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 
 const AdminLayout = () => {
     const { user, logout } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
@@ -113,14 +117,15 @@ const AdminLayout = () => {
     }, []);
 
     const menuItems = [
-        { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
-        { path: '/admin/services', icon: Briefcase, label: 'Service Management' },
-        { path: '/admin/slots', icon: Clock, label: 'Manage Slots' },
-        { path: '/admin/appointments', icon: Users, label: 'Appointments' },
-        { path: '/admin/queue', icon: ListVideo, label: 'Live Queue' },
-        { path: '/admin/reviews', icon: Star, label: 'Patient Reviews' },
-        { path: '/admin/about', icon: Building2, label: 'About Organization' },
-        { path: '/admin/settings', icon: Settings, label: 'Settings' },
+        { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics', 'Analytics') },
+        { path: '/admin/services', icon: Briefcase, label: t('navigation.service_management', 'Service Management') },
+        { path: '/admin/slots', icon: Clock, label: t('navigation.manage_slots', 'Manage Slots') },
+        { path: '/admin/appointments', icon: Users, label: t('navigation.appointments', 'Appointments') },
+        { path: '/admin/queue', icon: ListVideo, label: t('navigation.live_queue', 'Live Queue') },
+        { path: '/admin/inbox', icon: MessageCircle, label: t('navigation.support_inbox', 'Support Inbox') },
+        { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews', 'Patient Reviews') },
+        { path: '/admin/about', icon: Building2, label: t('navigation.about_organization', 'About Organization') },
+        { path: '/admin/settings', icon: Settings, label: t('navigation.settings', 'Settings') },
     ];
 
     const getIndustryTerminology = (type) => {
@@ -233,6 +238,9 @@ const AdminLayout = () => {
                     <div className="flex items-center gap-4">
                         {/* Search Bar */}
                         <GlobalSearch />
+                        
+                        {/* Language Switcher */}
+                        <LanguageSwitcher />
 
                         {/* Notifications */}
                         <div className="relative" ref={notificationRef}>

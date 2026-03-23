@@ -1,0 +1,29 @@
+{
+  "navigation": {
+    "dashboard": "डैशबोर्ड",
+    "organizations": "संस्थाएं",
+    "global_services": "वैश्विक सेवाएँ",
+    "home": "होम",
+    "my_appointments": "मेरी अपॉइंटमेंट",
+    "logout": "लॉग आउट"
+  },
+  "dashboard": {
+    "welcome": "वापसी पर स्वागत है",
+    "overview": "अवलोकन",
+    "total_bookings": "कुल बुकिंग्स",
+    "utilization": "उपयोग",
+    "cancellation_rate": "रद्दीकरण दर",
+    "revenue": "राजस्व"
+  },
+  "common": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "search": "खोजें...",
+    "loading": "लोड हो रहा है...",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "language": "भाषा"
+  }
+}

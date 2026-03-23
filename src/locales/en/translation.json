@@ -1,0 +1,29 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "organizations": "Organizations",
+    "global_services": "Global Services",
+    "home": "Home",
+    "my_appointments": "My Appointments",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "overview": "Overview",
+    "total_bookings": "Total Bookings",
+    "utilization": "Utilization",
+    "cancellation_rate": "Cancellation Rate",
+    "revenue": "Revenue"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search...",
+    "loading": "Loading...",
+    "yes": "Yes",
+    "no": "No",
+    "language": "Language"
+  }
+}

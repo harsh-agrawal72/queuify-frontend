@@ -5,7 +5,8 @@ import html2canvas from 'html2canvas';
 import {
     Loader2, TrendingUp, TrendingDown, DollarSign, Activity, AlertCircle,
     Download, CalendarDays, BarChart3, PieChart as PieIcon, Zap,
-    CheckCircle2, XCircle, Clock, Filter, X, Lightbulb, AlertTriangle, Info, ChevronDown
+    CheckCircle2, XCircle, Clock, Filter, X, Lightbulb, AlertTriangle, Info, ChevronDown,
+    Brain, Sparkles, TrendingUp as TrendingUpIcon, Gauge
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -13,6 +14,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart
 } from 'recharts';
 import InfoTooltip from '../common/InfoTooltip';
+import { useTranslation } from 'react-i18next';
 
 // ─── Color Palette ───
 const COLORS = {
@@ -174,11 +176,109 @@ const QuickStartGuide = ({ type = 'Other' }) => {
     );
 };
 
+// ─── AI Predictive Insights Section ───
+const PredictiveInsightsSection = ({ insights }) => {
+    const { t } = useTranslation();
+    if (!insights) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
+        >
+            {/* Main AI Wait Time Prediction */}
+            <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                    <Brain className="w-40 h-40" />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-6">
+                        <Sparkles className="h-5 w-5 text-indigo-200" />
+                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-100">Live AI Predictions</span>
+                    </div>
+                    <h3 className="text-2xl font-black mb-6">Queue Efficiency Model</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {insights.currentPredictions?.map((p, i) => (
+                            <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                                <p className="text-xs font-bold text-indigo-200 uppercase mb-1">{p.queue_name}</p>
+                                <div className="flex items-end justify-between">
+                                    <div>
+                                        <p className="text-2xl font-black">{p.predicted_total_wait}m</p>
+                                        <p className="text-[10px] text-indigo-100 opacity-80 pl-0.5">Est. Total Wait</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold text-white">{p.avg_service_time}m</p>
+                                        <p className="text-[10px] text-indigo-100 opacity-80">Avg. / Person</p>
+                                    </div>
+                                </div>
+                                <div className="mt-3 flex items-center gap-2">
+                                    <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-indigo-300" 
+                                            style={{ width: p.confidence === 'High' ? '100%' : p.confidence === 'Medium' ? '60%' : '30%' }} 
+                                        />
+                                    </div>
+                                    <span className="text-[9px] font-black uppercase text-indigo-200">{p.confidence} Confidence</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Resource Efficiency Ranking */}
+            <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                        <Gauge className="h-5 w-5 text-indigo-500" /> Efficiency
+                    </h3>
+                    <InfoTooltip text="Score based on average service time vs. service norm." />
+                </div>
+                <div className="space-y-4">
+                    {insights.resourceEfficiency?.slice(0, 4).map((r, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold text-gray-900 truncate">{r.resource_name}</p>
+                                <p className="text-[10px] text-gray-500">{r.service_name}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className={`text-sm font-black ${r.efficiency_score >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                    {r.efficiency_score}%
+                                </p>
+                                <p className="text-[10px] text-gray-400">{r.avg_time}m per appt</p>
+                            </div>
+                        </div>
+                    ))}
+                    {(!insights.resourceEfficiency || insights.resourceEfficiency.length === 0) && (
+                        <p className="text-center text-gray-400 text-xs py-10 italic">Need more completed data for rankings</p>
+                    )}
+                </div>
+                <div className="mt-8 pt-4 border-t border-gray-50">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest text-center">Peak Performance Hour</p>
+                    <div className="flex justify-center items-end gap-3">
+                        {insights.peakHours?.map((h, i) => (
+                            <div key={i} className="text-center">
+                                <div className="bg-indigo-50 text-indigo-600 rounded-lg px-2 py-1 font-black text-sm mb-1">
+                                    {h.hour}:00
+                                </div>
+                                <p className="text-[9px] text-gray-400 font-bold uppercase">{h.volume} Appts</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
 // ═══════════════════════════════════════
 // Main Component
 // ═══════════════════════════════════════
 const AnalyticsPanel = () => {
+    const { t } = useTranslation();
     const [stats, setStats] = useState(null);
+    const [predictiveInsights, setPredictiveInsights] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [services, setServices] = useState([]);
@@ -254,7 +354,19 @@ const AnalyticsPanel = () => {
         }
     }, [getDateRange, serviceId, resourceId]);
 
-    useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
+    const fetchPredictiveInsights = useCallback(async () => {
+        try {
+            const res = await api.get('/admin/predictive-insights');
+            setPredictiveInsights(res.data);
+        } catch (err) {
+            console.error('Predictive insights fetch failed', err);
+        }
+    }, []);
+
+    useEffect(() => { 
+        fetchAnalytics();
+        fetchPredictiveInsights();
+    }, [fetchAnalytics, fetchPredictiveInsights]);
 
     // Helper to capture chart as base64
     const captureChart = async (ref) => {
@@ -478,17 +590,17 @@ const AnalyticsPanel = () => {
     // ─── KPI Cards ───
     const kpiCards = [
         {
-            title: 'Total Bookings', value: stats.totalBookings,
+            title: t('dashboard.total_bookings', 'Total Bookings'), value: stats.totalBookings,
             growth: stats.growth?.bookings, icon: CalendarDays,
             color: 'from-indigo-500 to-purple-600', lightBg: 'bg-indigo-50', lightText: 'text-indigo-600'
         },
         {
-            title: 'Slot Utilization', value: `${stats.utilization}%`,
+            title: t('dashboard.utilization', 'Slot Utilization'), value: `${stats.utilization}%`,
             growth: stats.growth?.utilization, suffix: 'pt', icon: Activity,
             color: 'from-blue-500 to-cyan-600', lightBg: 'bg-blue-50', lightText: 'text-blue-600'
         },
         {
-            title: 'Cancellation Rate', value: `${stats.cancellationRate}%`,
+            title: t('dashboard.cancellation_rate', 'Cancellation Rate'), value: `${stats.cancellationRate}%`,
             growth: stats.growth?.cancellation, suffix: 'pt', invertGrowth: true, icon: XCircle,
             color: 'from-rose-500 to-pink-600', lightBg: 'bg-rose-50', lightText: 'text-rose-600'
         },
@@ -520,7 +632,7 @@ const AnalyticsPanel = () => {
             {/* ═══ Header ═══ */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Analytics & Reports</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.overview', 'Analytics & Reports')}</h1>
                     <div className="flex items-center gap-2 mt-1">
                         <p className="text-gray-500 text-sm">
                             {stats.dateRange?.start} → {stats.dateRange?.end}
@@ -623,6 +735,9 @@ const AnalyticsPanel = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* ═══ AI Predictive Insights ═══ */}
+            <PredictiveInsightsSection insights={predictiveInsights} />
 
             {/* ═══ KPI Cards ═══ */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
