@@ -9,10 +9,12 @@ import {
     Loader2,
     Edit2,
     X,
-    Filter
+    Filter,
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
+import InfoTooltip from '../common/InfoTooltip';
 
 const SlotManager = () => {
     const [slots, setSlots] = useState([]);
@@ -284,7 +286,10 @@ const SlotManager = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Max Capacity</label>
+                                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                                    Max Capacity
+                                    <InfoTooltip text="The maximum number of bookings allowed within this specific time slot." />
+                                </label>
                                 <input
                                     type="number"
                                     min="1"

@@ -12,6 +12,7 @@ import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart
 } from 'recharts';
+import InfoTooltip from '../common/InfoTooltip';
 
 // ─── Color Palette ───
 const COLORS = {
@@ -639,8 +640,17 @@ const AnalyticsPanel = () => {
                             </div>
                             <GrowthBadge value={card.growth} suffix={card.suffix || '%'} />
                         </div>
-                        <p className="text-sm text-gray-500 font-medium">{card.title}</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <p className="text-sm text-gray-500 font-medium">{card.title}</p>
+                            <InfoTooltip 
+                                text={
+                                    card.title === 'Total Bookings' ? "Total number of appointments scheduled within the selected time range." :
+                                    card.title === 'Slot Utilization' ? "Percentage of available time slots that have been filled by bookings." :
+                                    "Percentage of total bookings that were cancelled during this period."
+                                } 
+                            />
+                        </div>
+                        <p className="text-2xl font-bold text-gray-900">{card.value}</p>
                         <p className="text-xs text-gray-400 mt-2">vs previous period</p>
                     </motion.div>
                 ))}
@@ -772,7 +782,9 @@ const AnalyticsPanel = () => {
                 className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
             >
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
-                    <Zap className="h-5 w-5 text-amber-500" /> Peak Hours Heatmap
+                    <Zap className="h-5 w-5 text-amber-500" /> 
+                    Peak Hours Heatmap
+                    <InfoTooltip text="Visual distribution of bookings across days and hours. Darker areas indicate higher demand, helping you optimize staffing." />
                 </h3>
                 <div className="overflow-x-auto">
                     <div className="min-w-[600px]">

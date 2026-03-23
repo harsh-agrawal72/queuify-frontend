@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Info } from 'lucide-react';
 import clsx from 'clsx';
+import InfoTooltip from '../../components/common/InfoTooltip';
 
 const AdminAppointments = () => {
     const [appointments, setAppointments] = useState([]);
@@ -69,8 +70,9 @@ const AdminAppointments = () => {
                             <Clock className="h-5 w-5 text-amber-400" aria-hidden="true" />
                         </div>
                         <div className="ml-3">
-                            <p className="text-sm text-amber-700 font-bold">
+                            <p className="text-sm text-amber-700 font-bold flex items-center gap-1.5">
                                 Attention: There are {waitlistedCount} urgent appointments requiring manual reassignment for today.
+                                <InfoTooltip text="These are appointments from deleted or modified slots that currently have no assigned resource. Please reassign them manually." />
                             </p>
                         </div>
                     </div>

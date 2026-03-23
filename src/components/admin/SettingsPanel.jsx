@@ -15,11 +15,13 @@ import {
     Users,
     UserPlus,
     Trash2,
-    AlertTriangle
+    AlertTriangle,
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useOutletContext, useNavigate } from 'react-router-dom';
+import InfoTooltip from '../common/InfoTooltip';
 
 const SettingsPanel = () => {
     const { user, logout } = useAuth();
@@ -222,7 +224,10 @@ const SettingsPanel = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-gray-100 pb-4 mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">Business Hours</h2>
+                            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1.5">
+                                Business Hours
+                                <InfoTooltip text="Global operating timings for your organization. Bookings can only be made within these hours." />
+                            </h2>
                             <p className="text-sm text-gray-500">Manage your operating timings.</p>
                         </div>
                         <div className="grid grid-cols-2 gap-8 max-w-lg">

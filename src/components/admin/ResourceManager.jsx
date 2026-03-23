@@ -8,9 +8,11 @@ import {
     X,
     Save,
     Users,
-    Monitor
+    Monitor,
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import InfoTooltip from '../common/InfoTooltip';
 
 const ResourceManager = () => {
     const [resources, setResources] = useState([]);
@@ -200,7 +202,10 @@ const ResourceManager = () => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Resource Type</label>
+                                            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                                                Resource Type
+                                                <InfoTooltip text="Staff: People providing service. Room/Equipment: Physical assets. Counter: Service desks." />
+                                            </label>
                                             <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                                                 <option value="staff">Staff</option>
                                                 <option value="room">Room</option>
@@ -209,7 +214,10 @@ const ResourceManager = () => {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Concurrent Capacity</label>
+                                            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                                                Concurrent Capacity
+                                                <InfoTooltip text="How many people can this resource serve simultaneously? Default is 1." />
+                                            </label>
                                             <input type="number" required min="1" value={formData.concurrent_capacity} onChange={e => setFormData({ ...formData, concurrent_capacity: parseInt(e.target.value) })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
                                         </div>
                                     </div>

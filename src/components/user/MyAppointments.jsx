@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
-import { format, parseISO, isPast } from 'date-fns';
+import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket,
     ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap
@@ -49,14 +49,15 @@ export default function MyAppointments() {
     const counts = appointments.reduce((acc, appt) => {
         const isHistoryStatus = ['completed', 'no_show'].includes(appt.status);
         const isCancelledStatus = appt.status === 'cancelled';
-        const past = new Date(appt.end_time) < new Date();
+        
+        const endDate = appt.end_time ? parseISO(appt.end_time) : null;
+        const past = (endDate && isValid(endDate)) ? isPast(endDate) : false;
 
         if (isCancelledStatus) {
             acc.cancelled++;
         } else if (isHistoryStatus || (past && ['confirmed', 'pending'].includes(appt.status))) {
             acc.history++;
         } else {
-            // Include 'serving' in upcoming, and confirmed/pending that aren't past
             acc.upcoming++;
         }
         return acc;
@@ -65,7 +66,9 @@ export default function MyAppointments() {
     const filteredAppointments = appointments.filter(appt => {
         const isHistoryStatus = ['completed', 'no_show'].includes(appt.status);
         const isCancelledStatus = appt.status === 'cancelled';
-        const past = new Date(appt.end_time) < new Date();
+        
+        const endDate = appt.end_time ? parseISO(appt.end_time) : null;
+        const past = (endDate && isValid(endDate)) ? isPast(endDate) : false;
 
         if (filter === 'upcoming') {
             return !isCancelledStatus && !isHistoryStatus && !past;
@@ -177,7 +180,8 @@ export default function MyAppointments() {
                     <AnimatePresence mode="popLayout">
                         {filteredAppointments.map((appt, idx) => {
                             const statusConfig = getStatusConfig(appt.status);
-                            const startDate = parseISO(appt.start_time);
+                            const startDate = appt.start_time ? parseISO(appt.start_time) : null;
+                            const isDateValid = startDate && isValid(startDate);
 
                             return (
                                 <motion.div
@@ -191,11 +195,19 @@ export default function MyAppointments() {
                                     <div className="flex flex-col md:flex-row">
                                         {/* Date Block */}
                                         <div className="flex md:flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 w-full md:w-28 py-3 md:py-6 gap-2 md:gap-0 flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-100">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">{format(startDate, 'EEE')}</span>
-                                            <span className="text-3xl font-black text-gray-900">{format(startDate, 'd')}</span>
-                                            <span className="text-xs font-bold text-indigo-600">{format(startDate, 'MMM yyyy')}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">
+                                                {isDateValid ? format(startDate, 'EEE') : '---'}
+                                            </span>
+                                            <span className="text-3xl font-black text-gray-900">
+                                                {isDateValid ? format(startDate, 'd') : '??'}
+                                            </span>
+                                            <span className="text-xs font-bold text-indigo-600">
+                                                {isDateValid ? format(startDate, 'MMM yyyy') : 'Date TBD'}
+                                            </span>
                                             <div className="hidden md:block mt-2 bg-white/80 px-2.5 py-1 rounded-lg">
-                                                <span className="text-[11px] font-bold text-gray-700">{format(startDate, 'h:mm a')}</span>
+                                                <span className="text-[11px] font-bold text-gray-700">
+                                                    {isDateValid ? format(startDate, 'h:mm a') : 'No Time'}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -235,7 +247,7 @@ export default function MyAppointments() {
                                                     {/* Time (mobile) */}
                                                     <span className="md:hidden inline-flex items-center gap-1 text-gray-400 text-[11px] font-medium">
                                                         <Clock className="h-3 w-3" />
-                                                        {format(startDate, 'h:mm a')}
+                                                        {isDateValid ? format(startDate, 'h:mm a') : 'TBD'}
                                                     </span>
 
                                                     {/* Resource */}

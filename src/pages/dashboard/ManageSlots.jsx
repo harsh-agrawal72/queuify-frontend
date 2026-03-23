@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { Trash2, Plus, RefreshCw } from 'lucide-react';
+import { Trash2, Plus, RefreshCw, Info } from 'lucide-react';
+import InfoTooltip from '../../components/common/InfoTooltip';
 
 const ManageSlots = () => {
     const [slots, setSlots] = useState([]);
@@ -101,7 +102,10 @@ const ManageSlots = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                        <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                            Capacity
+                            <InfoTooltip text="The maximum number of appointments allowed in this time slot." />
+                        </label>
                         <input
                             type="number"
                             min="1"
@@ -124,7 +128,10 @@ const ManageSlots = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booked</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center justify-end gap-1">
+                                Actions
+                                <InfoTooltip text="Rebalance (Refresh Icon): Redistributes appointments fairly among available resource slots for the day." />
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">

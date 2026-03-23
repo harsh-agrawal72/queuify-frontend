@@ -6,10 +6,11 @@ import {
     Calendar, CheckCircle, Clock, MapPin, ArrowRight, XCircle, Search, Activity, Users, Star,
     Building2, TrendingUp, Sparkles, Award, ChevronRight
 } from 'lucide-react';
-import { format, parseISO, formatDistanceToNow } from 'date-fns';
+import { format, parseISO, formatDistanceToNow, isValid } from 'date-fns';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { useAuth } from '../../context/AuthContext';
 import { formatWaitTime } from '../../utils/format';
+import InfoTooltip from '../common/InfoTooltip';
 
 export default function UserDashboard() {
     const [stats, setStats] = useState(null);
@@ -178,18 +179,27 @@ export default function UserDashboard() {
                                     <div className="flex gap-4">
                                         <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
                                             <Users className="h-3 w-3" />
-                                            <span className="text-xs font-bold">{nextApt.people_ahead || 0} Ahead</span>
+                                            <span className="text-xs font-bold flex items-center gap-1">
+                                                {nextApt.people_ahead || 0} Ahead
+                                                <InfoTooltip text="Number of confirmed bookings currently ahead of you in this specific slot." />
+                                            </span>
                                         </div>
                                         <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
                                             <Clock className="h-3 w-3" />
-                                            <span className="text-xs font-bold">{formatWaitTime(nextApt.estimated_wait_time)} wait</span>
+                                            <span className="text-xs font-bold flex items-center gap-1">
+                                                {formatWaitTime(nextApt.estimated_wait_time)} wait
+                                                <InfoTooltip text="Estimated time until your turn, based on real-time resource performance." />
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-4 bg-white shadow-2xl shadow-indigo-900/20 p-6 rounded-[2rem] text-slate-900 min-w-[200px]">
                                     <div className="text-center flex-1 border-r border-slate-100 pr-4">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Your Token</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-1">
+                                            Your Token
+                                            <InfoTooltip text="Your unique sequence number for this slot. Use this for tracking your position." />
+                                        </p>
                                         <p className="text-4xl font-black text-indigo-600">#{nextApt.queue_number}</p>
                                     </div>
                                     <Link
@@ -258,12 +268,18 @@ export default function UserDashboard() {
                                             <p className="font-medium text-gray-900 text-sm">{apt.service_name || 'Appointment'}</p>
                                             <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
                                                 <MapPin className="h-3 w-3" /> {apt.org_name || 'Organization'}
-                                                {apt.start_time && (
-                                                    <>
-                                                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                                                        {format(parseISO(apt.start_time), 'dd MMM yyyy, hh:mm a')}
-                                                    </>
-                                                )}
+                                                {(() => {
+                                                    const d = apt.start_time ? parseISO(apt.start_time) : null;
+                                                    if (d && isValid(d)) {
+                                                        return (
+                                                            <>
+                                                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                                                {format(d, 'dd MMM yyyy, hh:mm a')}
+                                                            </>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
                                             </p>
                                         </div>
                                     </div>
@@ -362,7 +378,10 @@ export default function UserDashboard() {
                         </div>
                         {user?.created_at && (
                             <div className="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
-                                <span>Member since {format(parseISO(user.created_at), 'MMMM yyyy')}</span>
+                                <span>Member since {(() => {
+                                    const d = user.created_at ? parseISO(user.created_at) : null;
+                                    return (d && isValid(d)) ? format(d, 'MMMM yyyy') : 'N/A';
+                                })()}</span>
                             </div>
                         )}
                     </div>

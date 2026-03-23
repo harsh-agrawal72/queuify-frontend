@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { motion } from 'framer-motion';
 import {
-    Users, Clock, Ticket, ArrowLeft, RefreshCw, CheckCircle2, PlayCircle
+    Users, Clock, Ticket, ArrowLeft, RefreshCw, CheckCircle2, PlayCircle, Info
 } from 'lucide-react';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { formatWaitTime } from '../../utils/format';
+import { isValid, parseISO } from 'date-fns';
+import InfoTooltip from '../common/InfoTooltip';
 
 export default function LiveQueue() {
     const { appointmentId } = useParams();
@@ -108,7 +110,10 @@ export default function LiveQueue() {
                                 >
                                     <Users className="h-6 w-6 text-indigo-600 mx-auto mb-1" />
                                     <p className="text-3xl font-black text-indigo-900">{status.people_ahead}</p>
-                                    <p className="text-[10px] text-indigo-500 uppercase font-bold tracking-wider">People Ahead</p>
+                                    <p className="text-[10px] text-indigo-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                        People Ahead
+                                        <InfoTooltip text="Number of confirmed bookings currently ahead of you in this specific slot." />
+                                    </p>
                                 </motion.div>
                                 
                                 <motion.div 
@@ -119,7 +124,10 @@ export default function LiveQueue() {
                                     <p className="text-3xl font-black text-blue-900">
                                         {formatWaitTime(status.estimated_wait_time)}
                                     </p>
-                                    <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider">Est. Wait</p>
+                                    <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                        Est. Wait
+                                        <InfoTooltip text="Estimated time until your turn, based on real-time resource performance." />
+                                    </p>
                                 </motion.div>
 
                                 <motion.div 
@@ -128,9 +136,15 @@ export default function LiveQueue() {
                                 >
                                     <PlayCircle className="h-6 w-6 text-slate-600 mx-auto mb-1" />
                                     <p className="text-xl font-bold text-slate-900">
-                                        {status.slot_start_time ? new Date(status.slot_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                        {(() => {
+                                            const d = status.slot_start_time ? parseISO(status.slot_start_time) : null;
+                                            return (d && isValid(d)) ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                                        })()}
                                     </p>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Slot Time</p>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                        Slot Time
+                                        <InfoTooltip text="The scheduled start time for this resource's availability slot." />
+                                    </p>
                                 </motion.div>
 
                                 <motion.div 
@@ -139,9 +153,15 @@ export default function LiveQueue() {
                                 >
                                     <CheckCircle2 className="h-6 w-6 text-green-600 mx-auto mb-1" />
                                     <p className="text-xl font-bold text-green-900">
-                                        {status.expected_start_time ? new Date(status.expected_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                        {(() => {
+                                            const d = status.expected_start_time ? parseISO(status.expected_start_time) : null;
+                                            return (d && isValid(d)) ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                                        })()}
                                     </p>
-                                    <p className="text-[10px] text-green-500 uppercase font-bold tracking-wider">Expected Turn</p>
+                                    <p className="text-[10px] text-green-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                        Expected Turn
+                                        <InfoTooltip text="Dynamic estimate of when you will be called, updated in real-time." />
+                                    </p>
                                 </motion.div>
                             </div>
 

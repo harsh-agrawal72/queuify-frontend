@@ -9,9 +9,11 @@ import {
     Save,
     Briefcase,
     Link2,
-    Unlink
+    Unlink,
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import InfoTooltip from '../common/InfoTooltip';
 
 const ServiceManager = () => {
     const [services, setServices] = useState([]);
@@ -241,14 +243,20 @@ const ServiceManager = () => {
                                 <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Queue & Time Settings</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Queue Scope</label>
+                                        <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                                            Queue Scope
+                                            <InfoTooltip text="Centralized: Single queue for all resources. Per Resource: Each doctor/counter has their own independent line." />
+                                        </label>
                                         <select value={formData.queue_scope} onChange={e => setFormData({ ...formData, queue_scope: e.target.value })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                                             <option value="CENTRAL">Centralized</option>
                                             <option value="PER_RESOURCE">Per Resource</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Duration (mins)</label>
+                                        <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                                            Estimated Duration (mins)
+                                            <InfoTooltip text="Approximate time per appointment. This is used to calculate the 'Estimated Wait Time' for your customers." />
+                                        </label>
                                         <input type="number" required min="1" value={formData.estimated_service_time} onChange={e => setFormData({ ...formData, estimated_service_time: parseInt(e.target.value) })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
                                     </div>
                                 </div>
