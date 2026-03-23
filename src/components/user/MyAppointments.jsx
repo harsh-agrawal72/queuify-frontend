@@ -4,12 +4,13 @@ import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket,
-    ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap, MessageCircle
+    ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap, MessageCircle, Navigation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import ReviewModal from './ReviewModal';
 import RescheduleModal from './RescheduleModal';
+import MapModal from './MapModal';
 
 export default function MyAppointments() {
     const [appointments, setAppointments] = useState([]);
@@ -17,6 +18,7 @@ export default function MyAppointments() {
     const [filter, setFilter] = useState('upcoming');
     const [reviewModalAppt, setReviewModalAppt] = useState(null);
     const [reschedulingAppt, setReschedulingAppt] = useState(null);
+    const [mapModalAppt, setMapModalAppt] = useState(null);
 
     const fetchAppointments = async () => {
         setLoading(true);
@@ -290,6 +292,14 @@ export default function MyAppointments() {
                                                         >
                                                             <MessageCircle className="h-4 w-4" /> Chat
                                                         </button>
+                                                        {appt.org_address && (
+                                                            <button
+                                                                onClick={() => setMapModalAppt(appt)}
+                                                                className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
+                                                            >
+                                                                <Navigation className="h-4 w-4" /> View Map
+                                                            </button>
+                                                        )}
                                                     </>
                                                 )}
 
@@ -320,6 +330,14 @@ export default function MyAppointments() {
                                                         >
                                                             <MessageCircle className="h-4 w-4" /> Message
                                                         </button>
+                                                        {appt.org_address && (
+                                                            <button
+                                                                onClick={() => setMapModalAppt(appt)}
+                                                                className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
+                                                            >
+                                                                <Navigation className="h-4 w-4" /> View Map
+                                                            </button>
+                                                        )}
                                                     </>
                                                 )}
 
@@ -388,6 +406,13 @@ export default function MyAppointments() {
                     }}
                 />
             )}
+
+            <MapModal
+                isOpen={!!mapModalAppt}
+                onClose={() => setMapModalAppt(null)}
+                address={mapModalAppt?.org_address}
+                orgName={mapModalAppt?.org_name}
+            />
         </div>
     );
 }
