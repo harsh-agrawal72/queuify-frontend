@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
@@ -13,6 +14,7 @@ import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';
 
 export default function MyAppointments() {
+    const { t } = useTranslation();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('upcoming');
@@ -99,9 +101,9 @@ export default function MyAppointments() {
     };
 
     const tabs = [
-        { key: 'upcoming', label: 'Upcoming', count: counts.upcoming, icon: Calendar, activeColor: 'bg-indigo-600' },
-        { key: 'history', label: 'Completed', count: counts.history, icon: Clock, activeColor: 'bg-emerald-600' },
-        { key: 'cancelled', label: 'Cancelled', count: counts.cancelled, icon: XCircle, activeColor: 'bg-red-500' },
+        { key: 'upcoming', label: t('appointment.upcoming'), count: counts.upcoming, icon: Calendar, activeColor: 'bg-indigo-600' },
+        { key: 'history', label: t('appointment.history'), count: counts.history, icon: Clock, activeColor: 'bg-emerald-600' },
+        { key: 'cancelled', label: t('appointment.cancelled'), count: counts.cancelled, icon: XCircle, activeColor: 'bg-red-500' },
     ];
 
     return (
@@ -109,8 +111,8 @@ export default function MyAppointments() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Track, manage, and review all your bookings in one place.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('navigation.my_appointments')}</h1>
+                    <p className="text-gray-500 mt-1 text-sm">{t('appointment.appointments')}</p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -118,7 +120,7 @@ export default function MyAppointments() {
                         className="flex items-center gap-2 bg-white border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition text-sm"
                     >
                         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
+                        {t('common.refresh')}
                     </button>
                     <Link
                         to="/organizations"
@@ -236,15 +238,15 @@ export default function MyAppointments() {
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border ${statusConfig.color}`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
                                                         {appt.status === 'cancelled' && appt.cancelled_by
-                                                            ? (appt.cancelled_by === 'admin' ? 'Cancelled by Admin' : 'Cancelled by You')
-                                                            : appt.status}
+                                                            ? (appt.cancelled_by === 'admin' ? t('appointment.cancelled_by_admin') : t('appointment.cancelled_by_you'))
+                                                            : t(`status.${appt.status}`, appt.status)}
                                                     </span>
 
                                                     {/* Queue Number */}
-                                                    {appt.queue_number && (
+                                                    {(appt.live_queue_number || appt.queue_number) && (
                                                         <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-gray-100">
                                                             <Ticket className="h-3 w-3" />
-                                                            Queue #{appt.queue_number}
+                                                            Queue #{(appt.live_queue_number && appt.live_queue_number > 0) ? appt.live_queue_number : appt.queue_number}
                                                         </span>
                                                     )}
 
@@ -272,32 +274,32 @@ export default function MyAppointments() {
                                                             to={`/queue/${appt.id}`}
                                                             className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-200"
                                                         >
-                                                            <Zap className="h-4 w-4" /> Live Queue
+                                                            <Zap className="h-4 w-4" /> {t('appointment.live_queue')}
                                                         </Link>
                                                         <button
                                                             onClick={() => handleCancel(appt.id)}
                                                             className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-500 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
                                                         >
-                                                            <XCircle className="h-4 w-4" /> Cancel
+                                                            <XCircle className="h-4 w-4" /> {t('appointment.cancel')}
                                                         </button>
                                                         <button
                                                             onClick={() => setReschedulingAppt(appt)}
                                                             className="flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all shadow-sm"
                                                         >
-                                                            <Calendar className="h-4 w-4" /> Reschedule
+                                                            <Calendar className="h-4 w-4" /> {t('appointment.reschedule')}
                                                         </button>
                                                         <button
-                                                            onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id } }))}
+                                                            onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id, orgName: appt.org_name, orgAvatar: null } }))}
                                                             className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"
                                                         >
-                                                            <MessageCircle className="h-4 w-4" /> Chat
+                                                            <MessageCircle className="h-4 w-4" /> {t('appointment.chat')}
                                                         </button>
                                                         {appt.org_address && (
                                                             <button
                                                                 onClick={() => setMapModalAppt(appt)}
                                                                 className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
                                                             >
-                                                                <Navigation className="h-4 w-4" /> View Map
+                                                                <Navigation className="h-4 w-4" /> {t('appointment.view_map')}
                                                             </button>
                                                         )}
                                                     </>

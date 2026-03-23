@@ -85,31 +85,28 @@ const ChatWidget = () => {
     useEffect(() => {
         const handleGlobalOpen = async (event) => {
             setIsOpen(true);
-            const orgId = event.detail?.orgId;
-            if (orgId) {
-                try {
-                    // Initiate or get existing conversation
-                    const res = await api.post('/chat/initiate', { orgId });
-                    const conv = res.data;
-                    
-                    // The backend might return a plain conversation object
-                    // We need to fetch the full list to get org_name etc but we can just open it
-                    // Wait, if we initiate, we get the conversation. Let's fetch conversations to ensure it's in the list
-                    await fetchConversations();
-                    
-                    // We need to construct the full conversation object with org_name from the event detail if missing, 
-                    // but fetchConversations will populate it, then we can find it.
-                    // For simplicity, handleOpenChat needs org_name, so let's just use the result if possible.
-                    // Actually, fetchConversations is async, we can await it, then find the conv by id.
-                    const updatedConversations = await api.get('/chat/user');
-                    setConversations(updatedConversations.data);
-                    const fullConv = updatedConversations.data.find(c => c.id === conv.id);
-                    if (fullConv) {
-                        handleOpenChat(fullConv);
-                    }
-                } catch (error) {
-                    console.error('Failed to initiate chat via event', error);
-                }
+            const { orgId, orgName, orgAvatar } = event.detail || {};
+            if (!orgId) return;
+
+            try {
+                // Initiate or get existing conversation
+                const res = await api.post('/chat/initiate', { orgId });
+                const conv = res.data;
+
+                // Build a minimal conversation object so we can open chat immediately
+                // without waiting for a full list refresh
+                const chatObject = {
+                    ...conv,
+                    org_name: conv.org_name || orgName || 'Organization',
+                    org_avatar: conv.org_avatar || orgAvatar || null,
+                };
+
+                // Also refresh the list in background so it stays up to date
+                fetchConversations();
+
+                handleOpenChat(chatObject);
+            } catch (error) {
+                console.error('Failed to initiate chat via event', error);
             }
         };
 

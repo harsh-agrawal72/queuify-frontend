@@ -36,9 +36,12 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
             setLoadingSlots(true);
             try {
                 const dateStr = format(selectedDate, 'yyyy-MM-dd');
-                const resourceParam = selectedResourceId === 'ANY' ? '' : `&resourceId=${selectedResourceId}`;
-                const { data } = await api.get(`/slots?serviceId=${appointment.service_id}&date=${dateStr}${resourceParam}`);
-                // Filter out the current slot if it's on the same day
+                const params = new URLSearchParams({ serviceId: appointment.service_id, date: dateStr });
+                if (selectedResourceId !== 'ANY') params.set('resourceId', selectedResourceId);
+
+                // Use the user-facing endpoint which scopes by orgId in the URL (not req.user.org_id)
+                const { data } = await api.get(`/slots/available/${appointment.org_id}?${params.toString()}`);
+                // Filter out the current slot and fully-booked ones
                 setSlots(data.filter(s => s.id !== appointment.slot_id && s.booked_count < s.max_capacity));
             } catch (error) {
                 console.error('Failed to load slots', error);

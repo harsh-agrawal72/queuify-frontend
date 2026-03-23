@@ -14,7 +14,7 @@ const InfoTooltip = ({ text, position = 'top', className = "" }) => {
 
     return (
         <div 
-            className={`relative inline-flex items-center justify-center p-0.5 ${className}`}
+            className={`relative inline-flex items-center justify-center p-0.5 ${isVisible ? 'z-[100]' : 'z-auto'} ${className}`}
             onMouseEnter={() => setIsVisible(true)}
             onMouseLeave={() => setIsVisible(false)}
             onClick={(e) => {
