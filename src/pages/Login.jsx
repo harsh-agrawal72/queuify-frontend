@@ -136,7 +136,6 @@ const Login = () => {
                             {loading ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                             ) : (
                                 <>
                                     {t('auth.sign_in', 'Sign In')} <ArrowRight className="h-5 w-5" />
                                 </>
