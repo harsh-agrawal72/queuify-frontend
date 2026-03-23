@@ -13,21 +13,21 @@ const PrivacyPolicy = () => {
                         <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
                             <Shield className="h-6 w-6" />
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-6">{t('policies.privacy.title', 'Privacy Policy')}</h1>
                         <div className="prose prose-blue max-w-none text-gray-600 space-y-6">
-                            <p>Last updated: {new Date().toLocaleDateString()}</p>
+                            <p>{t('policies.privacy.last_updated', 'Last updated: {{date}}', { date: new Date().toLocaleDateString() })}</p>
 
-                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">1. Information We Collect</h2>
-                            <p>We collect information you provide directly to us when you create an account, update your profile, use our services, or communicate with us. This may include your name, email address, phone number, and any other information you choose to provide.</p>
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.privacy.sec1_title', '1. Information We Collect')}</h2>
+                            <p>{t('policies.privacy.sec1_desc', 'We collect information you provide directly to us when you create an account, update your profile, use our services, or communicate with us. This may include your name, email address, phone number, and any other information you choose to provide.')}</p>
 
-                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">2. How We Use Your Information</h2>
-                            <p>We use the information we collect to operate, maintain, and improve our services, communicate with you, process your transactions, and provide customer support.</p>
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.privacy.sec2_title', '2. How We Use Your Information')}</h2>
+                            <p>{t('policies.privacy.sec2_desc', 'We use the information we collect to operate, maintain, and improve our services, communicate with you, process your transactions, and provide customer support.')}</p>
 
-                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">3. Data Security</h2>
-                            <p>We implement appropriate technical and organizational measures to protect the security of your personal information. However, please note that no method of transmission over the Internet or method of electronic storage is 100% secure.</p>
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.privacy.sec3_title', '3. Data Security')}</h2>
+                            <p>{t('policies.privacy.sec3_desc', 'We implement appropriate technical and organizational measures to protect the security of your personal information. However, please note that no method of transmission over the Internet or method of electronic storage is 100% secure.')}</p>
 
-                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">4. Contact Us</h2>
-                            <p>If you have any questions about this Privacy Policy, please contact us at support@Queuify.com.</p>
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.privacy.sec4_title', '4. Contact Us')}</h2>
+                            <p>{t('policies.privacy.sec4_desc', 'If you have any questions about this Privacy Policy, please contact us at support@Queuify.com.')}</p>
                         </div>
                     </div>
                 </div>

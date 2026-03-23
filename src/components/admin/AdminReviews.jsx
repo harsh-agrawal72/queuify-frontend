@@ -4,8 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Star, MessageSquare, Calendar, User, Search, Filter } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminReviews() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const [stats, setStats] = useState(null);
     const [reviews, setReviews] = useState([]);
@@ -63,8 +65,8 @@ export default function AdminReviews() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Patient Reviews</h1>
-                    <p className="text-gray-500 mt-1">Monitor feedback and ratings from your patients.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('admin.reviews.title', 'Patient Reviews')}</h1>
+                    <p className="text-gray-500 mt-1">{t('admin.reviews.subtitle', 'Monitor feedback and ratings from your patients.')}</p>
                 </div>
             </div>
 
@@ -75,7 +77,7 @@ export default function AdminReviews() {
                     className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
                 >
                     <div>
-                        <p className="text-gray-500 text-sm font-medium mb-1">Average Rating</p>
+                        <p className="text-gray-500 text-sm font-medium mb-1">{t('admin.reviews.average', 'Average Rating')}</p>
                         <div className="flex items-end gap-2">
                             <h3 className="text-4xl font-black text-gray-900">{stats?.averageRating || '0.0'}</h3>
                             <span className="text-gray-400 font-medium mb-1">/ 5.0</span>
@@ -91,7 +93,7 @@ export default function AdminReviews() {
                     className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between"
                 >
                     <div>
-                        <p className="text-gray-500 text-sm font-medium mb-1">Total Reviews</p>
+                        <p className="text-gray-500 text-sm font-medium mb-1">{t('admin.reviews.total', 'Total Reviews')}</p>
                         <h3 className="text-4xl font-black text-gray-900">{stats?.totalReviews || 0}</h3>
                     </div>
                     <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-500">
@@ -106,7 +108,7 @@ export default function AdminReviews() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Search by patient name or comment..."
+                        placeholder={t('admin.reviews.search_placeholder', 'Search by patient name or comment...')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium"
@@ -119,12 +121,12 @@ export default function AdminReviews() {
                         onChange={(e) => setFilterRating(e.target.value)}
                         className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 font-medium appearance-none"
                     >
-                        <option value="all">All Ratings</option>
-                        <option value="5">5 Stars</option>
-                        <option value="4">4 Stars</option>
-                        <option value="3">3 Stars</option>
-                        <option value="2">2 Stars</option>
-                        <option value="1">1 Star</option>
+                        <option value="all">{t('admin.reviews.all_ratings', 'All Ratings')}</option>
+                        <option value="5">{t('admin.reviews.stars', '{{count}} Stars', { count: 5 })}</option>
+                        <option value="4">{t('admin.reviews.stars', '{{count}} Stars', { count: 4 })}</option>
+                        <option value="3">{t('admin.reviews.stars', '{{count}} Stars', { count: 3 })}</option>
+                        <option value="2">{t('admin.reviews.stars', '{{count}} Stars', { count: 2 })}</option>
+                        <option value="1">{t('admin.reviews.star', '{{count}} Star', { count: 1 })}</option>
                     </select>
                 </div>
             </div>
@@ -134,8 +136,8 @@ export default function AdminReviews() {
                 {filteredReviews.length === 0 ? (
                     <div className="p-12 text-center text-gray-500">
                         <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                        <h3 className="text-lg font-semibold text-gray-900">No reviews found</h3>
-                        <p className="mt-1">Try adjusting your filters or search term.</p>
+                        <h3 className="text-lg font-semibold text-gray-900">{t('admin.reviews.no_reviews', 'No reviews found')}</h3>
+                        <p className="mt-1">{t('admin.reviews.no_reviews_hint', 'Try adjusting your filters or search term.')}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-100">
@@ -166,7 +168,7 @@ export default function AdminReviews() {
                                         "{review.comment}"
                                     </p>
                                 ) : (
-                                    <p className="text-gray-400 italic mt-2 text-sm">No comment provided.</p>
+                                    <p className="text-gray-400 italic mt-2 text-sm">{t('admin.reviews.no_comment', 'No comment provided.')}</p>
                                 )}
                             </div>
                         ))}

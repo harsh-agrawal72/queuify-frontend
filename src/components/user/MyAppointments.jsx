@@ -40,7 +40,7 @@ export default function MyAppointments() {
     }, []);
 
     const handleCancel = async (id) => {
-        if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
+        if (!window.confirm(t('appointment.cancel_confirm', 'Are you sure you want to cancel this appointment?'))) return;
         try {
             await api.post(`/appointments/${id}/cancel`);
             toast.success('Appointment cancelled');
@@ -126,7 +126,7 @@ export default function MyAppointments() {
                         to="/organizations"
                         className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 text-sm"
                     >
-                        <Search className="h-4 w-4" /> Book New
+                        <Search className="h-4 w-4" /> {t('appointment.book_new', 'Book New')}
                     </Link>
                 </div>
             </div>
@@ -160,7 +160,7 @@ export default function MyAppointments() {
             {!loading && (
                 <div className="flex items-center justify-between">
                     <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-                        {filteredAppointments.length} {filter} appointment{filteredAppointments.length !== 1 ? 's' : ''}
+                        {filteredAppointments.length} {t(`appointment.filter_${filter}`, filter)} {t('appointment.appointments_count', { count: filteredAppointments.length })}
                     </p>
                 </div>
             )}
@@ -208,11 +208,11 @@ export default function MyAppointments() {
                                                 {isDateValid ? format(startDate, 'd') : '??'}
                                             </span>
                                             <span className="text-xs font-bold text-indigo-600">
-                                                {isDateValid ? format(startDate, 'MMM yyyy') : 'Date TBD'}
+                                                {isDateValid ? format(startDate, 'MMM yyyy') : t('common.date_tbd', 'Date TBD')}
                                             </span>
                                             <div className="hidden md:block mt-2 bg-white/80 px-2.5 py-1 rounded-lg">
                                                 <span className="text-[11px] font-bold text-gray-700">
-                                                    {isDateValid ? format(startDate, 'h:mm a') : 'No Time'}
+                                                    {isDateValid ? format(startDate, 'h:mm a') : t('common.no_time', 'No Time')}
                                                 </span>
                                             </div>
                                         </div>
@@ -223,7 +223,7 @@ export default function MyAppointments() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-start gap-3 mb-3">
                                                     <div>
-                                                        <h3 className="font-bold text-gray-900 text-lg leading-tight">{appt.service_name || 'Appointment'}</h3>
+                                                        <h3 className="font-bold text-gray-900 text-lg leading-tight">{appt.service_name || t('appointment.title', 'Appointment')}</h3>
                                                         {appt.org_name && (
                                                             <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-1">
                                                                 <Building2 className="h-3.5 w-3.5 text-gray-400" />
@@ -246,14 +246,14 @@ export default function MyAppointments() {
                                                     {(appt.live_queue_number || appt.queue_number) && (
                                                         <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-gray-100">
                                                             <Ticket className="h-3 w-3" />
-                                                            Queue #{(appt.live_queue_number && appt.live_queue_number > 0) ? appt.live_queue_number : appt.queue_number}
+                                                            {t('appointment.token_label', 'Queue #')}{(appt.live_queue_number && appt.live_queue_number > 0) ? appt.live_queue_number : appt.queue_number}
                                                         </span>
                                                     )}
 
                                                     {/* Time (mobile) */}
                                                     <span className="md:hidden inline-flex items-center gap-1 text-gray-400 text-[11px] font-medium">
                                                         <Clock className="h-3 w-3" />
-                                                        {isDateValid ? format(startDate, 'h:mm a') : 'TBD'}
+                                                        {isDateValid ? format(startDate, 'h:mm a') : t('common.tbd', 'TBD')}
                                                     </span>
 
                                                     {/* Resource */}
@@ -312,7 +312,7 @@ export default function MyAppointments() {
                                                                 onClick={() => setReviewModalAppt(appt)}
                                                                 className="flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-100 transition-all"
                                                             >
-                                                                <Star className="h-4 w-4" /> Rate
+                                                                <Star className="h-4 w-4" /> {t('appointment.rate', 'Rate')}
                                                             </button>
                                                         )}
                                                         {appt.status === 'completed' && appt.review_id && (
@@ -324,20 +324,20 @@ export default function MyAppointments() {
                                                             to="/organizations"
                                                             className="flex items-center justify-center gap-2 text-indigo-600 bg-indigo-50 border border-indigo-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all"
                                                         >
-                                                            <ArrowRight className="h-4 w-4" /> Book Again
+                                                            <ArrowRight className="h-4 w-4" /> {t('appointment.book_again', 'Book Again')}
                                                         </Link>
                                                         <button
                                                             onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id } }))}
                                                             className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"
                                                         >
-                                                            <MessageCircle className="h-4 w-4" /> Message
+                                                            <MessageCircle className="h-4 w-4" /> {t('appointment.message', 'Message')}
                                                         </button>
                                                         {appt.org_address && (
                                                             <button
                                                                 onClick={() => setMapModalAppt(appt)}
                                                                 className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
                                                             >
-                                                                <Navigation className="h-4 w-4" /> View Map
+                                                                <Navigation className="h-4 w-4" /> {t('appointment.view_map')}
                                                             </button>
                                                         )}
                                                     </>
@@ -348,7 +348,7 @@ export default function MyAppointments() {
                                                         to="/organizations"
                                                         className="flex items-center justify-center gap-2 text-indigo-600 bg-indigo-50 border border-indigo-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all"
                                                     >
-                                                        <ArrowRight className="h-4 w-4" /> Rebook
+                                                        <ArrowRight className="h-4 w-4" /> {t('appointment.rebook', 'Rebook')}
                                                     </Link>
                                                 )}
                                             </div>
@@ -368,13 +368,13 @@ export default function MyAppointments() {
                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
                         <Calendar className="h-10 w-10 text-gray-300" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">No {filter} appointments</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{t('appointment.no_filter_appointments', 'No {{filter}} appointments', { filter: t(`appointment.filter_${filter}`, filter) })}</h3>
                     <p className="text-gray-500 text-sm max-w-sm mx-auto mb-6">
                         {filter === 'upcoming'
-                            ? "You don't have any upcoming appointments. Browse organizations to book one!"
+                            ? t('appointment.no_upcoming_hint', "You don't have any upcoming appointments. Browse organizations to book one!")
                             : filter === 'history'
-                                ? "No completed appointments yet. Your history will appear here."
-                                : "No cancelled appointments. That's a good thing!"}
+                                ? t('appointment.no_history_hint', "No completed appointments yet. Your history will appear here.")
+                                : t('appointment.no_cancelled_hint', "No cancelled appointments. That's a good thing!")}
                     </p>
                     {filter === 'upcoming' && (
                         <Link

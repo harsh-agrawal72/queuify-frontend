@@ -28,9 +28,10 @@ import {
     Download,
     X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const OrganizationAbout = () => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -67,7 +68,7 @@ const OrganizationAbout = () => {
             }));
         } catch (error) {
             console.error('Failed to fetch organization profile', error);
-            toast.error('Failed to load profile');
+            toast.error(t('admin.about.load_failed', 'Failed to load profile'));
         } finally {
             setLoading(false);
         }
@@ -123,11 +124,11 @@ const OrganizationAbout = () => {
                 instagram_url,
                 linkedin_url
             });
-            toast.success('Profile updated successfully');
+            toast.success(t('admin.about.save_success', 'Profile updated successfully'));
             fetchData(); // Refresh to get updated trust score
         } catch (error) {
             console.error('Save failed:', error);
-            toast.error(error.response?.data?.message || 'Failed to save profile');
+            toast.error(error.response?.data?.message || t('admin.about.save_failed', 'Failed to save profile'));
         } finally {
             setSaving(false);
         }
@@ -137,9 +138,9 @@ const OrganizationAbout = () => {
         setVerifyingEmail(true);
         try {
             await api.post('/organizations/request-verification');
-            toast.success('Verification link sent to your email');
+            toast.success(t('admin.about.verification_sent', 'Verification link sent to your email'));
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to send verification email');
+            toast.error(error.response?.data?.message || t('admin.about.verification_failed', 'Failed to send verification email'));
         } finally {
             setVerifyingEmail(false);
         }
@@ -161,27 +162,27 @@ const OrganizationAbout = () => {
         }
 
         const isDocument = ['pan_card', 'aadhar_card'].includes(type);
-        const toastId = toast.loading(`Uploading ${isDocument ? 'document' : 'image'}...`);
+        const toastId = toast.loading(t('admin.about.uploading_media', 'Uploading {{type}}...', { type: isDocument ? t('common.document', 'document') : t('common.image', 'image') }));
         try {
             await api.post('/organizations/images', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            toast.success('Image uploaded successfully', { id: toastId });
+            toast.success(t('admin.about.upload_success', 'Image uploaded successfully'), { id: toastId });
             fetchData();
         } catch (error) {
-            toast.error('Failed to upload image', { id: toastId });
+            toast.error(t('admin.about.upload_failed_msg', 'Failed to upload image'), { id: toastId });
         }
     };
 
     const handleDeleteImage = async (imageId) => {
-        if (!window.confirm('Are you sure you want to delete this image?')) return;
+        if (!window.confirm(t('admin.about.delete_image_confirm', 'Are you sure you want to delete this image?'))) return;
 
         try {
             await api.delete(`/organizations/images/${imageId}`);
-            toast.success('Image deleted');
+            toast.success(t('admin.about.image_deleted', 'Image deleted'));
             fetchData();
         } catch (error) {
-            toast.error('Failed to delete image');
+            toast.error(t('admin.about.delete_image_failed', 'Failed to delete image'));
         }
     };
 
@@ -199,21 +200,21 @@ const OrganizationAbout = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-800 text-white">
                 <div>
                     <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                        Organization Profile
-                        <InfoTooltip text="This is your public profile. This information is shown to users when they search for your organization. Keep it updated to build trust and help users find you." />
+                        {t('admin.about.title', 'Organization Profile')}
+                        <InfoTooltip text={t('admin.about.tooltip', 'This is your public profile. This information is shown to users when they search for your organization. Keep it updated to build trust and help users find you.')} />
                     </h1>
-                    <p className="text-slate-400 mt-1">Manage your public information and verification documents.</p>
+                    <p className="text-slate-400 mt-1">{t('admin.about.subtitle', 'Manage your public information and verification documents.')}</p>
                 </div>
 
                 {profile.verified ? (
                     <div className="flex items-center gap-3 bg-indigo-500/10 text-indigo-400 px-6 py-3 rounded-2xl border border-indigo-500/20 shadow-sm scale-105 transition-transform" title="Your organization is verified by Queuify">
                         <ShieldCheck className="h-5 w-5 fill-indigo-400 text-slate-950" />
-                        <span className="text-xs font-bold uppercase tracking-[0.2em]">Verified Partner</span>
+                        <span className="text-xs font-bold uppercase tracking-[0.2em]">{t('admin.about.verified_label', 'Verified Partner')}</span>
                     </div>
                 ) : (
                     <div className="flex items-center gap-3 bg-slate-800/50 text-slate-500 px-6 py-3 rounded-2xl border border-slate-800">
                         <ShieldOff className="h-5 w-5" />
-                        <span className="text-xs font-bold uppercase tracking-[0.2em]">Standard Profile</span>
+                        <span className="text-xs font-bold uppercase tracking-[0.2em]">{t('admin.about.standard_label', 'Standard Profile')}</span>
                     </div>
                 )}
             </div>
@@ -226,12 +227,12 @@ const OrganizationAbout = () => {
                         <div>
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                    <Info className="h-5 w-5 text-indigo-600" /> Basic Information
+                                    <Info className="h-5 w-5 text-indigo-600" /> {t('admin.about.basic_info', 'Basic Information')}
                                 </h2>
                                 {profile.verified && (
-                                    <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full border border-blue-100 shadow-sm" title="Your organization is verified by Queuify">
+                                    <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full border border-blue-100 shadow-sm" title={t('admin.about.verified_title', 'Your organization is verified by Queuify')}>
                                         <ShieldCheck className="h-4 w-4 fill-blue-600 text-white" />
-                                        <span className="text-xs font-bold uppercase tracking-widest">Verified Account</span>
+                                        <span className="text-xs font-bold uppercase tracking-widest">{t('admin.about.verified_account', 'Verified Account')}</span>
                                     </div>
                                 )}
                             </div>
@@ -239,37 +240,37 @@ const OrganizationAbout = () => {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.description', 'Description')}</label>
                                 <textarea
                                     name="description"
                                     value={profile.description || ''}
                                     onChange={handleChange}
                                     rows={4}
-                                    placeholder="Tell your customers about your organization, history, and mission..."
+                                    placeholder={t('admin.about.description_placeholder', 'Tell your customers about your organization, history, and mission...')}
                                     className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none"
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Established Year</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.established', 'Established Year')}</label>
                                     <input
                                         type="number"
                                         name="established_year"
                                         value={profile.established_year || ''}
                                         onChange={handleChange}
-                                        placeholder="e.g. 2010"
+                                        placeholder={t('admin.about.year_placeholder', 'e.g. 2010')}
                                         className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Staff</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.total_staff', 'Total Staff')}</label>
                                     <input
                                         type="number"
                                         name="total_staff"
                                         value={profile.total_staff || ''}
                                         onChange={handleChange}
-                                        placeholder="Approx. number of employees"
+                                        placeholder={t('admin.about.staff_placeholder', 'Approx. number of employees')}
                                         className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     />
                                 </div>
@@ -283,7 +284,7 @@ const OrganizationAbout = () => {
                             <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
                                 <MapPin className="h-5 w-5" />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Contact & Location</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('admin.about.contact_location', 'Contact & Location')}</h2>
                         </div>
 
                         <div className="space-y-4">
@@ -293,7 +294,7 @@ const OrganizationAbout = () => {
                                         <label className="block text-sm font-medium text-gray-700">Contact Email</label>
                                         {profile.email_verified ? (
                                             <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 uppercase tracking-wider">
-                                                <CheckCircle2 className="h-3 w-3" /> Verified
+                                            <CheckCircle2 className="h-3 w-3" /> {t('common.verified', 'Verified')}
                                             </span>
                                         ) : (
                                             <button
@@ -301,7 +302,7 @@ const OrganizationAbout = () => {
                                                 disabled={verifyingEmail}
                                                 className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider underline disabled:opacity-50"
                                             >
-                                                {verifyingEmail ? 'Sending...' : 'Verify Now'}
+                                                {verifyingEmail ? t('common.sending', 'Sending...') : t('admin.about.verify_now', 'Verify Now')}
                                             </button>
                                         )}
                                     </div>
@@ -315,33 +316,33 @@ const OrganizationAbout = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.phone', 'Contact Phone')}</label>
                                     <input
                                         type="tel"
                                         name="contact_phone"
                                         value={profile.contact_phone || ''}
                                         onChange={handleChange}
-                                        placeholder="+91 98765 43210"
+                                        placeholder={t('admin.about.phone_placeholder', '+91 98765 43210')}
                                         className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.address', 'Full Address')}</label>
                                 <input
                                     type="text"
                                     name="address"
                                     value={profile.address || ''}
                                     onChange={handleChange}
-                                    placeholder="Street, Landmark..."
+                                    placeholder={t('admin.about.address_placeholder', 'Street, Landmark...')}
                                     className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                 />
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.city', 'City')}</label>
                                     <input
                                         type="text"
                                         name="city"
@@ -351,7 +352,7 @@ const OrganizationAbout = () => {
                                     />
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.state', 'State')}</label>
                                     <input
                                         type="text"
                                         name="state"
@@ -361,7 +362,7 @@ const OrganizationAbout = () => {
                                     />
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.pincode', 'Pincode')}</label>
                                     <input
                                         type="text"
                                         name="pincode"
@@ -373,7 +374,7 @@ const OrganizationAbout = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.website', 'Website URL')}</label>
                                 <div className="relative">
                                     <Globe className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                                     <input
@@ -381,7 +382,7 @@ const OrganizationAbout = () => {
                                         name="website_url"
                                         value={profile.website_url || ''}
                                         onChange={handleChange}
-                                        placeholder="https://www.example.com"
+                                        placeholder={t('admin.about.website_placeholder', 'https://www.example.com')}
                                         className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     />
                                 </div>
@@ -395,7 +396,7 @@ const OrganizationAbout = () => {
                             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                                 <Share2 className="h-5 w-5" />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Social Media Links</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('admin.about.social_links', 'Social Media Links')}</h2>
                         </div>
 
                         <div className="space-y-4">
@@ -441,7 +442,7 @@ const OrganizationAbout = () => {
                             <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
                                 <ShieldOff className="h-5 w-5" />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Legal & Verification</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('admin.about.legal_verification', 'Legal & Verification')}</h2>
                         </div>
 
                         <div className="space-y-4">
@@ -481,7 +482,7 @@ const OrganizationAbout = () => {
                             <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                                 <ImageIcon className="h-5 w-5" />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Media</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('admin.about.media', 'Media')}</h2>
                         </div>
 
                         <div className="space-y-6">
@@ -489,7 +490,7 @@ const OrganizationAbout = () => {
                             <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 mb-6">
                                 <h3 className="text-sm font-semibold text-amber-900 mb-3 flex items-center gap-2">
                                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                                    Verification Documents (PDF)
+                                    {t('admin.about.verification_docs', 'Verification Documents (PDF)')}
                                 </h3>
                                 <div className="space-y-4">
                                     {/* PAN Card */}
@@ -499,7 +500,7 @@ const OrganizationAbout = () => {
                                                 <FileText className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-gray-900">PAN Card</p>
+                                                <p className="text-sm font-medium text-gray-900">{t('admin.about.pan_card', 'PAN Card')}</p>
                                                 {profile.images?.find(img => img.image_type === 'pan_card') ? (
                                                     <a 
                                                         href={profile.images.find(img => img.image_type === 'pan_card').image_url} 
@@ -507,15 +508,15 @@ const OrganizationAbout = () => {
                                                         rel="noopener noreferrer"
                                                         className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
                                                     >
-                                                        <Download className="h-3 w-3" /> View Document
+                                                        <Download className="h-3 w-3" /> {t('admin.about.view_document', 'View Document')}
                                                     </a>
                                                 ) : (
-                                                    <p className="text-xs text-gray-500">Not uploaded</p>
+                                                    <p className="text-xs text-gray-500">{t('common.not_uploaded', 'Not uploaded')}</p>
                                                 )}
                                             </div>
                                         </div>
                                         <label className="cursor-pointer bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
-                                            {profile.images?.find(img => img.image_type === 'pan_card') ? 'Replace' : 'Upload'}
+                                            {profile.images?.find(img => img.image_type === 'pan_card') ? t('common.replace', 'Replace') : t('common.upload', 'Upload')}
                                             <input
                                                 type="file"
                                                 className="hidden"
@@ -532,7 +533,7 @@ const OrganizationAbout = () => {
                                                 <FileText className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-gray-900">Aadhar Card</p>
+                                                <p className="text-sm font-medium text-gray-900">{t('admin.about.aadhar_card', 'Aadhar Card')}</p>
                                                 {profile.images?.find(img => img.image_type === 'aadhar_card') ? (
                                                     <a 
                                                         href={profile.images.find(img => img.image_type === 'aadhar_card').image_url} 
@@ -540,15 +541,15 @@ const OrganizationAbout = () => {
                                                         rel="noopener noreferrer"
                                                         className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
                                                     >
-                                                        <Download className="h-3 w-3" /> View Document
+                                                        <Download className="h-3 w-3" /> {t('admin.about.view_document', 'View Document')}
                                                     </a>
                                                 ) : (
-                                                    <p className="text-xs text-gray-500">Not uploaded</p>
+                                                    <p className="text-xs text-gray-500">{t('common.not_uploaded', 'Not uploaded')}</p>
                                                 )}
                                             </div>
                                         </div>
                                         <label className="cursor-pointer bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
-                                            {profile.images?.find(img => img.image_type === 'aadhar_card') ? 'Replace' : 'Upload'}
+                                            {profile.images?.find(img => img.image_type === 'aadhar_card') ? t('common.replace', 'Replace') : t('common.upload', 'Upload')}
                                             <input
                                                 type="file"
                                                 className="hidden"
@@ -561,7 +562,7 @@ const OrganizationAbout = () => {
                             </div>
                             {/* Logo Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Organization Logo</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.about.logo_label', 'Organization Logo')}</label>
                                 <div className="flex items-center gap-4">
                                     <div className="w-16 h-16 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                                         {profile.images?.find(img => img.image_type === 'logo') ? (
@@ -575,7 +576,7 @@ const OrganizationAbout = () => {
                                         )}
                                     </div>
                                     <label className="cursor-pointer bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                                        {profile.images?.find(img => img.image_type === 'logo') ? 'Change' : 'Upload'}
+                                        {profile.images?.find(img => img.image_type === 'logo') ? t('common.change', 'Change') : t('common.upload', 'Upload')}
                                         <input
                                             type="file"
                                             className="hidden"
@@ -588,7 +589,7 @@ const OrganizationAbout = () => {
 
                             {/* Cover Image Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.about.cover_label', 'Cover Image')}</label>
                                 <div className="relative group rounded-xl overflow-hidden aspect-video bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
                                     {profile.images?.find(img => img.image_type === 'cover') ? (
                                         <>
@@ -613,7 +614,7 @@ const OrganizationAbout = () => {
                                     ) : (
                                         <label className="cursor-pointer flex flex-col items-center">
                                             <Plus className="h-8 w-8 text-gray-300 mb-2" />
-                                            <span className="text-xs text-gray-500">Add Cover Image</span>
+                                            <span className="text-xs text-gray-500">{t('admin.about.add_cover', 'Add Cover Image')}</span>
                                             <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'cover')} />
                                         </label>
                                     )}
@@ -623,7 +624,7 @@ const OrganizationAbout = () => {
                             {/* Gallery Management */}
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-gray-700">Photo Gallery</label>
+                                    <label className="text-sm font-medium text-gray-700">{t('admin.about.gallery_label', 'Photo Gallery')}</label>
                                     <span className="text-xs text-gray-500">{profile.images?.filter(i => i.image_type === 'gallery').length || 0}/10</span>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -693,13 +694,13 @@ const OrganizationAbout = () => {
                                 disabled={saving}
                                 className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                {saving ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                ) : (
-                                    <Save className="h-5 w-5" />
-                                )}
-                                Save All Changes
-                            </button>
+                                    {saving ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <Save className="h-5 w-5" />
+                                    )}
+                                    {t('admin.about.save_btn', 'Save All Changes')}
+                                </button>
                         </div>
                     </section>
                 </div>

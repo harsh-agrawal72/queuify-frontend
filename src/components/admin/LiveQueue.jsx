@@ -20,8 +20,10 @@ import {
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
+import { useTranslation } from 'react-i18next';
 
 const AdminLiveQueue = () => {
+    const { t } = useTranslation();
     const [queues, setQueues] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -41,9 +43,9 @@ const AdminLiveQueue = () => {
             setQueues(res.data);
         } catch (error) {
             console.error('Queue fetch failed:', error?.response?.data || error);
-            const errMsg = error?.response?.data?.message || error?.message || 'Unknown error';
+            const errMsg = error?.response?.data?.message || error?.message || t('common.unknown_error', 'Unknown error');
             setError(errMsg);
-            if (!isBackground) toast.error(`Queue Error: ${errMsg}`);
+            if (!isBackground) toast.error(t('queue.load_error', `Queue Error: {{error}}`, { error: errMsg }));
         } finally {
             if (!isBackground) setLoading(false);
             setRefreshing(false);
@@ -92,14 +94,14 @@ const AdminLiveQueue = () => {
     const updateStatus = async (id, status, silent = false) => {
         try {
             await api.patch(`/admin/appointments/${id}`, { status });
-            if (!silent) toast.success(`Updated status to ${status.replace('_', ' ')}`);
+            if (!silent) toast.success(t('appointment.status_updated_generic', `Updated status to {{status}}`, { status: t(`status.${status}`, status.replace('_', ' ')) }));
 
             // Emit via socket for real-time propagation
             emitStatusChange(id, status);
 
             if (!silent) fetchQueue(true);
         } catch (error) {
-            if (!silent) toast.error(error.response?.data?.message || "Action failed");
+            if (!silent) toast.error(error.response?.data?.message || t('common.action_failed', "Action failed"));
             throw error;
         }
     };
@@ -113,8 +115,8 @@ const AdminLiveQueue = () => {
                             <Volume2 className="h-6 w-6 text-white" />
                         </div>
                         <div className="ml-4 flex-1">
-                            <p className="text-sm font-medium text-white/80 uppercase tracking-widest text-[10px]">Calling Now</p>
-                            <p className="mt-1 text-2xl font-bold text-white">Ticket #{token}</p>
+                            <p className="text-sm font-medium text-white/80 uppercase tracking-widest text-[10px]">{t('queue.calling_now', 'Calling Now')}</p>
+                            <p className="mt-1 text-2xl font-bold text-white">{t('queue.ticket', 'Ticket')} #{token}</p>
                         </div>
                     </div>
                 </div>
@@ -129,7 +131,7 @@ const AdminLiveQueue = () => {
         const nextInLine = queue.appointments.find(a => a.status === 'confirmed' || a.status === 'pending');
 
         if (!nextInLine) {
-            toast("No one waiting in this queue");
+            toast(t('queue.no_one_waiting', "No one waiting in this queue"));
             return;
         }
 
@@ -150,7 +152,7 @@ const AdminLiveQueue = () => {
     const completeTransition = async (status) => {
         if (!transitioningQueue) return;
         const { currentAppt, nextAppt } = transitioningQueue;
-        const loadingToast = toast.loading("Advancing queue...");
+        const loadingToast = toast.loading(t('queue.advancing', "Advancing queue..."));
 
         try {
             // 1. Update current
@@ -160,23 +162,23 @@ const AdminLiveQueue = () => {
             await updateStatus(nextAppt.id, 'serving', true);
             callPatient(nextAppt.token_number);
 
-            toast.success(`Queue advanced! Ticket #${nextAppt.token_number} is now serving.`, { id: loadingToast });
+            toast.success(t('queue.advanced_success', `Queue advanced! Ticket #{{token}} is now serving.`, { token: nextAppt.token_number }), { id: loadingToast });
             setTransitioningQueue(null);
             fetchQueue(true);
         } catch (error) {
-            toast.error("Transition failed", { id: loadingToast });
+            toast.error(t('queue.transition_failed', "Transition failed"), { id: loadingToast });
         }
     };
 
     const handleRebalance = async (resourceId, resourceName) => {
-        const loadingToast = toast.loading(`Rebalancing ${resourceName}'s schedule...`);
+        const loadingToast = toast.loading(t('queue.rebalancing_status', `Rebalancing {{resource}}'s schedule...`, { resource: resourceName }));
         try {
             await api.post(`/admin/rebalance/${resourceId}?date=${selectedDate}`);
-            toast.success("Schedule rebalanced!", { id: loadingToast });
+            toast.success(t('queue.rebalanced_success', "Schedule rebalanced!"), { id: loadingToast });
             fetchQueue(true);
         } catch (error) {
             console.error('Rebalance failed:', error);
-            toast.error(error.response?.data?.message || "Rebalance failed", { id: loadingToast });
+            toast.error(error.response?.data?.message || t('queue.rebalance_failed', "Rebalance failed"), { id: loadingToast });
         }
     };
 
@@ -188,7 +190,7 @@ const AdminLiveQueue = () => {
 
     const submitManualEntry = async (e) => {
         e.preventDefault();
-        const loadingToast = toast.loading("Adding walk-in...");
+        const loadingToast = toast.loading(t('queue.adding_walkin', "Adding walk-in..."));
         try {
             await api.post('/admin/appointments/manual', {
                 ...manualEntryData,
@@ -196,11 +198,11 @@ const AdminLiveQueue = () => {
                 resourceId: activeQueueForManual.resource_id,
                 status: 'confirmed'
             });
-            toast.success("Walk-in added!", { id: loadingToast });
+            toast.success(t('queue.walkin_added', "Walk-in added!"), { id: loadingToast });
             setIsManualModalOpen(false);
             fetchQueue(true);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to add walk-in", { id: loadingToast });
+            toast.error(error.response?.data?.message || t('queue.walkin_failed', "Failed to add walk-in"), { id: loadingToast });
         }
     };
 
@@ -218,11 +220,11 @@ const AdminLiveQueue = () => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
                         </span>
-                        Real-time Queue Dashboard
+                        {t('queue.dashboard_title', 'Real-time Queue Dashboard')}
                     </h1>
                     <p className="text-gray-500 mt-2 flex items-center gap-2">
                         <Activity className="h-4 w-4 text-indigo-500" />
-                        Managing {queues.length} active service queues
+                        {t('queue.managing_active', 'Managing {{count}} active service queues', { count: queues.length })}
                     </p>
                 </div>
 
@@ -247,17 +249,17 @@ const AdminLiveQueue = () => {
             {/* Overall Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Waiting Now</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('queue.waiting_now', 'Waiting Now')}</p>
                     <p className="text-3xl font-black text-orange-600 mt-1">{totalPending}</p>
                 </div>
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Currently Serving</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('queue.currently_serving', 'Currently Serving')}</p>
                     <p className="text-3xl font-black text-indigo-600 mt-1">{totalServing}</p>
                 </div>
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hidden md:block">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Avg. Service Time</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('queue.avg_service_time', 'Avg. Service Time')}</p>
                     <p className="text-3xl font-black text-emerald-600 mt-1">
-                        {predictiveInsights?.averageDurations?.[0]?.minutes || 15}m
+                        {predictiveInsights?.averageDurations?.[0]?.minutes || 15}{t('common.minutes_short', 'm')}
                     </p>
                 </div>
             </div>
@@ -265,16 +267,16 @@ const AdminLiveQueue = () => {
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-24">
                     <Loader2 className="animate-spin text-indigo-600 h-10 w-10 mb-4" />
-                    <p className="text-gray-500 font-medium font-mono text-xs uppercase tracking-widest">Hydrating Live Stream...</p>
+                    <p className="text-gray-500 font-medium font-mono text-xs uppercase tracking-widest">{t('queue.hydrating', 'Hydrating Live Stream...')}</p>
                 </div>
             ) : error ? (
                 <div className="col-span-full py-16 bg-red-50 rounded-3xl border-2 border-dashed border-red-200 text-center px-8">
                     <XCircle className="h-10 w-10 text-red-400 mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-red-800">Failed to Load Queue</h3>
+                    <h3 className="text-lg font-bold text-red-800">{t('queue.load_fail_title', 'Failed to Load Queue')}</h3>
                     <p className="text-red-600 mt-1 text-sm font-mono bg-red-100 rounded-lg px-4 py-2 inline-block mt-3">{error}</p>
                     <div className="mt-4">
                         <button onClick={handleRefresh} className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors">
-                            Retry
+                            {t('common.retry', 'Retry')}
                         </button>
                     </div>
                 </div>
@@ -284,8 +286,8 @@ const AdminLiveQueue = () => {
                         {queues.length === 0 ? (
                             <div className="col-span-full py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-center">
                                 <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                <h3 className="text-xl font-bold text-gray-900">No Activity Today</h3>
-                                <p className="text-gray-500 mt-1">Queues will appear here as soon as customers join.</p>
+                                <h3 className="text-xl font-bold text-gray-900">{t('queue.no_activity', 'No Activity Today')}</h3>
+                                <p className="text-gray-500 mt-1">{t('queue.check_back', 'Queues will appear here as soon as customers join.')}</p>
                             </div>
                         ) : queues.map(queue => (
                             <motion.div
@@ -306,7 +308,7 @@ const AdminLiveQueue = () => {
                                                 {queue.resource_name}
                                             </h3>
                                             <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                {queue.name} • Active Today
+                                                {queue.name} • {t('queue.active_today', 'Active Today')}
                                             </p>
                                         </div>
                                     </div>
@@ -317,25 +319,25 @@ const AdminLiveQueue = () => {
                                             title="Rebalance this queue"
                                         >
                                             <RefreshCw className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">Rebalance</span>
+                                            <span className="hidden sm:inline">{t('common.rebalance', 'Rebalance')}</span>
                                         </button>
                                         <button
                                             onClick={() => handleAddWalkIn(queue)}
                                             className="flex items-center gap-2 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm transition-all text-xs font-bold"
-                                            title="Add Walk-in"
+                                            title={t('queue.add_walkin', "Add Walk-in")}
                                         >
                                             <UserPlus className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">Add Walk-in</span>
+                                            <span className="hidden sm:inline">{t('queue.add_walkin', 'Add Walk-in')}</span>
                                         </button>
                                         <div className="flex gap-2">
                                             <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Waiting</p>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{t('queue.waiting_status', 'Waiting')}</p>
                                                 <p className="text-xl font-black text-slate-800">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
                                             </div>
                                             <div className="bg-indigo-600 px-4 py-2 rounded-2xl shadow-sm border border-indigo-500 text-center min-w-[80px]">
-                                                <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-tighter">Est. Wait</p>
+                                                <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-tighter">{t('queue.est_wait', 'Est. Wait')}</p>
                                                 <p className="text-xl font-black text-white">
-                                                    {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || '??'}m
+                                                    {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || '??'}{t('common.minutes_short', 'm')}
                                                 </p>
                                             </div>
                                         </div>
@@ -345,7 +347,7 @@ const AdminLiveQueue = () => {
                                 {/* Queue Body */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                                     {queue.appointments.length === 0 ? (
-                                        <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-sm">Empty Queue</div>
+                                        <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-sm">{t('queue.empty_queue', 'Empty Queue')}</div>
                                     ) : (
                                         queue.appointments.map((appt, i) => {
                                             const isServing = appt.status === 'serving';
@@ -362,7 +364,7 @@ const AdminLiveQueue = () => {
                                                             <div className="h-px bg-gray-200 flex-1"></div>
                                                             <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">
                                                                 <Clock className="h-3 w-3" />
-                                                                {formatTime(appt.slot_start) || 'Next Available'}
+                                                                {formatTime(appt.slot_start) || t('queue.next_available', 'Next Available')}
                                                             </div>
                                                             <div className="h-px bg-gray-200 flex-1"></div>
                                                         </div>
@@ -383,13 +385,13 @@ const AdminLiveQueue = () => {
                                                         <div className="flex items-center gap-2 flex-wrap">
                                                             <h4 className={`font-bold truncate ${isServing ? 'text-white' : 'text-slate-900'}`}>{appt.user_name}</h4>
                                                             {appt.user_phone && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isServing ? 'bg-white/20 border-white/30 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}>{appt.user_phone}</span>}
-                                                            {isServing && <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse tracking-wider">SERVING</span>}
-                                                            {isNext && <span className="text-[10px] font-black bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full tracking-wider">NEXT</span>}
+                                                            {isServing && <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse tracking-wider">{t('status.serving', 'SERVING')}</span>}
+                                                            {isNext && <span className="text-[10px] font-black bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full tracking-wider">{t('status.next', 'NEXT')}</span>}
                                                         </div>
                                                         {appt.user_email && <p className={`text-[10px] font-medium truncate ${isServing ? 'text-indigo-100' : 'text-slate-500'}`}>{appt.user_email}</p>}
                                                         <p className={`text-xs ${isServing ? 'text-indigo-100' : 'text-slate-400'} flex items-center gap-2 mt-0.5`}>
                                                             <Clock className="h-3 w-3" />
-                                                            {appt.slot_start ? `${formatTime(appt.slot_start)} Slot` : 'No Slot'} • Ticket: {appt.token_number}
+                                                            {appt.slot_start ? t('queue.slot_time', `{{time}} Slot`, { time: formatTime(appt.slot_start) }) : t('queue.no_slot', 'No Slot')} • {t('queue.ticket', 'Ticket')}: {appt.token_number}
                                                         </p>
                                                     </div>
 
@@ -444,7 +446,7 @@ const AdminLiveQueue = () => {
                                         onClick={() => handleCallNext(queue)}
                                     >
                                         <ArrowRightCircle className="h-5 w-5" />
-                                        Call Next Customer
+                                        {t('queue.call_next', 'Call Next Customer')}
                                     </button>
                                 </div>
                             </motion.div>
@@ -477,9 +479,9 @@ const AdminLiveQueue = () => {
                                     <ArrowRightCircle className="h-10 w-10 text-indigo-600" />
                                 </div>
 
-                                <h3 className="text-2xl font-black text-slate-900">Queue Transition</h3>
+                                <h3 className="text-2xl font-black text-slate-900">{t('queue.transition_title', 'Queue Transition')}</h3>
                                 <p className="text-slate-500 leading-relaxed">
-                                    Customer <span className="font-bold text-slate-800">#{transitioningQueue.currentAppt.queue_number}</span> is still marked as serving. How was their session ended?
+                                    {t('queue.transition_message', `Customer #{{number}} is still marked as serving. How was their session ended?`, { number: transitioningQueue.currentAppt.queue_number })}
                                 </p>
 
                                 <div className="grid grid-cols-1 gap-3 pt-6">
@@ -488,20 +490,20 @@ const AdminLiveQueue = () => {
                                         className="w-full py-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-emerald-100 transition-all border border-emerald-100"
                                     >
                                         <CheckCircle className="h-5 w-5" />
-                                        Completed Successfully
+                                        {t('queue.completed_successfully', 'Completed Successfully')}
                                     </button>
                                     <button
                                         onClick={() => completeTransition('no_show')}
                                         className="w-full py-4 bg-rose-50 text-rose-700 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-rose-100 transition-all border border-rose-100"
                                     >
                                         <SkipForward className="h-5 w-5" />
-                                        No Show / Cancelled
+                                        {t('status.no_show', 'No Show')} / {t('status.cancelled', 'Cancelled')}
                                     </button>
                                     <button
                                         onClick={() => setTransitioningQueue(null)}
                                         className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all"
                                     >
-                                        Wait, don't advance yet
+                                        {t('common.wait_cancel', "Wait, don't advance yet")}
                                     </button>
                                 </div>
                             </div>
@@ -529,7 +531,7 @@ const AdminLiveQueue = () => {
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
                                     <UserPlus className="h-5 w-5 text-indigo-600" />
-                                    Add Walk-in
+                                    {t('queue.add_walkin', 'Add Walk-in')}
                                 </h3>
                                 <button onClick={() => setIsManualModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                     <X className="h-5 w-5 text-gray-400" />
@@ -537,25 +539,25 @@ const AdminLiveQueue = () => {
                             </div>
 
                             <div className="bg-indigo-50 p-4 rounded-2xl mb-6">
-                                <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">Target Queue</p>
+                                <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">{t('queue.target_queue', 'Target Queue')}</p>
                                 <p className="text-sm font-bold text-slate-700">{activeQueueForManual?.resource_name || activeQueueForManual?.name}</p>
                                 <p className="text-xs text-indigo-400">{activeQueueForManual?.name}</p>
                             </div>
 
                             <form onSubmit={submitManualEntry} className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Customer Name</label>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">{t('common.customer_name', 'Customer Name')}</label>
                                     <input
                                         required
                                         type="text"
-                                        placeholder="Full Name"
+                                        placeholder={t('common.full_name', 'Full Name')}
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
                                         value={manualEntryData.customer_name}
                                         onChange={e => setManualEntryData({ ...manualEntryData, customer_name: e.target.value })}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Phone Number</label>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">{t('common.phone_number', 'Phone Number')}</label>
                                     <input
                                         required
                                         type="tel"
@@ -571,7 +573,7 @@ const AdminLiveQueue = () => {
                                         type="submit"
                                         className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
                                     >
-                                        Add to Queue
+                                        {t('queue.add_to_queue', 'Add to Queue')}
                                         <ArrowRightCircle className="h-5 w-5" />
                                     </button>
                                 </div>

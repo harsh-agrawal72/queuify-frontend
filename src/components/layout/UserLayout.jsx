@@ -48,7 +48,7 @@ export default function UserLayout() {
 
     const navItems = [
         { icon: LayoutDashboard, label: t('navigation.dashboard', 'Dashboard'), path: '/dashboard' },
-        { icon: Search, label: t('navigation.organizations', 'Find Organizations'), path: '/organizations' },
+        { icon: Search, label: t('navigation.find_organizations', 'Find Organizations'), path: '/organizations' },
         { icon: Calendar, label: t('navigation.my_appointments', 'My Appointments'), path: '/appointments' },
         { icon: User, label: t('navigation.profile', 'Profile'), path: '/profile' },
     ];
@@ -88,7 +88,7 @@ export default function UserLayout() {
                     {/* Nav Items */}
                     <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
                         <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                            Menu
+                            {t('common.menu', 'Menu')}
                         </div>
                         {navItems.map((item) => {
                             const isActive = location.pathname === item.path;

@@ -17,8 +17,10 @@ import {
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 import InfoTooltip from '../common/InfoTooltip';
+import { useTranslation } from 'react-i18next';
 
 const SlotManagement = () => {
+    const { t } = useTranslation();
     // ─── Data ───
     const [services, setServices] = useState([]);
     const [resources, setResources] = useState([]);
@@ -59,7 +61,7 @@ const SlotManagement = () => {
                 setServices(res.data);
                 setModalServices(res.data);
             } catch {
-                toast.error('Failed to load services');
+                toast.error(t('service.load_failed', 'Failed to load services'));
             } finally {
                 setLoadingServices(false);
             }
@@ -82,7 +84,7 @@ const SlotManagement = () => {
                 const res = await api.get(`/resources/by-service/${filterService}`);
                 setResources(res.data);
             } catch {
-                toast.error('Failed to load resources');
+                toast.error(t('service.resource_load_failed', 'Failed to load resources'));
             } finally {
                 setLoadingResources(false);
             }
@@ -103,7 +105,7 @@ const SlotManagement = () => {
             const res = await api.get('/slots', { params });
             setSlots(res.data);
         } catch {
-            toast.error('Failed to load slots');
+            toast.error(t('slot.load_failed', 'Failed to load slots'));
         } finally {
             setLoadingSlots(false);
         }
@@ -129,7 +131,7 @@ const SlotManagement = () => {
                 const res = await api.get(`/resources/by-service/${selectedModalService}`);
                 setModalResources(res.data);
             } catch {
-                toast.error('Failed to load resources');
+                toast.error(t('resource.load_failed', 'Failed to load resources'));
             } finally {
                 setLoadingModalResources(false);
             }
@@ -154,7 +156,7 @@ const SlotManagement = () => {
     // ═══════════════════════════════════════════
     const handleSaveSlot = async () => {
         if (!selectedModalResource || !slotDate || !slotTime) {
-            toast.error('Please complete all fields');
+            toast.error(t('common.complete_fields', 'Please complete all fields'));
             return;
         }
 
@@ -183,17 +185,17 @@ const SlotManagement = () => {
 
             if (editingSlotId) {
                 await api.patch(`/admin/slots/${editingSlotId}`, payload);
-                toast.success('Slot updated successfully');
+                toast.success(t('slot.updated', 'Slot updated successfully'));
             } else {
                 // Use /admin/slots for consistency and validation
                 await api.post('/admin/slots', payload);
-                toast.success('Slot created successfully');
+                toast.success(t('slot.created', 'Slot created successfully'));
             }
 
             closeModal();
             fetchSlots();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to save slot');
+            toast.error(error.response?.data?.message || t('slot.save_failed', 'Failed to save slot'));
         } finally {
             setSubmitting(false);
         }
@@ -241,7 +243,7 @@ const SlotManagement = () => {
 
         } catch (error) {
             console.error(error);
-            toast.error("Failed to load slot details");
+            toast.error(t('slot.load_details_failed', "Failed to load slot details"));
             closeModal();
         } finally {
             setLoadingModalResources(false);
@@ -252,17 +254,17 @@ const SlotManagement = () => {
     // DELETE SLOT
     // ═══════════════════════════════════════════
     const handleDeleteSlot = async (slotId) => {
-        if (!confirm('Delete this slot?')) return;
+        if (!confirm(t('slot.delete_confirm', 'Delete this slot?'))) return;
         try {
             await api.delete(`/slots/${slotId}`);
             setSlots(prev => prev.filter(s => s.id !== slotId));
-            toast.success('Slot deleted');
+            toast.success(t('slot.deleted', 'Slot deleted'));
         } catch (error) {
             if (error.response?.status === 404) {
                 setSlots(prev => prev.filter(s => s.id !== slotId));
-                toast.error('Slot already deleted');
+                toast.error(t('slot.already_deleted', 'Slot already deleted'));
             } else {
-                toast.error(error.response?.data?.message || 'Failed to delete slot');
+                toast.error(error.response?.data?.message || t('slot.delete_failed', 'Failed to delete slot'));
             }
         }
     };
@@ -318,23 +320,23 @@ const SlotManagement = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        Manage Slots
-                        <InfoTooltip text="Slots are the specific time periods when a Resource is available for a Service. Select a Service and then a Resource to create a slot." />
+                        {t('navigation.manage_slots', 'Manage Slots')}
+                        <InfoTooltip text={t('slot.mgmt_tooltip', 'Slots are the specific time periods when a Resource is available for a Service. Select a Service and then a Resource to create a slot.')} />
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Create and manage time slots for your resources.</p>
+                    <p className="text-sm text-gray-500 mt-1">{t('slot.mgmt_subtitle', 'Create and manage time slots for your resources.')}</p>
                 </div>
                 <button
                     onClick={openModal}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
                 >
-                    <Plus className="h-4 w-4" /> Create Slot
+                    <Plus className="h-4 w-4" /> {t('slot.create_slot', 'Create Slot')}
                 </button>
             </div>
 
             {/* ═══ FILTERS ═══ */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <div className="flex items-center gap-2 mb-4 text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                    <Filter className="h-4 w-4" /> Filters
+                    <Filter className="h-4 w-4" /> {t('common.filters', 'Filters')}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -344,7 +346,7 @@ const SlotManagement = () => {
                             onChange={e => { setFilterService(e.target.value); setFilterResource(''); }}
                             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm bg-white"
                         >
-                            <option value="">All Services</option>
+                            <option value="">{t('service.all_services', 'All Services')}</option>
                             {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                     </div>
@@ -357,7 +359,7 @@ const SlotManagement = () => {
                             disabled={!filterService}
                             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm bg-white disabled:bg-gray-50 disabled:text-gray-400"
                         >
-                            <option value="">{filterService ? 'All Resources' : 'Select service first'}</option>
+                            <option value="">{filterService ? t('resource.all_resources', 'All Resources') : t('service.select_first', 'Select service first')}</option>
                             {resources.map(r => <option key={r.id} value={r.id}>{r.name} ({r.type})</option>)}
                         </select>
                     </div>
@@ -379,7 +381,7 @@ const SlotManagement = () => {
                             onClick={() => { setFilterService(''); setFilterResource(''); setFilterDate(''); }}
                             className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                         >
-                            Clear all filters
+                            {t('common.clear_all_filters', 'Clear all filters')}
                         </button>
                     ) : <div />}
                 </div>
@@ -392,8 +394,8 @@ const SlotManagement = () => {
                 ) : slots.length === 0 ? (
                     <div className="text-center py-16">
                         <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 font-medium">No slots found</p>
-                        <p className="text-xs text-gray-400 mt-1">Create a slot or adjust your filters.</p>
+                        <p className="text-gray-500 font-medium">{t('slot.no_slots', 'No slots found')}</p>
+                        <p className="text-xs text-gray-400 mt-1">{t('slot.adjust_filters', 'Create a slot or adjust your filters.')}</p>
                     </div>
                 ) : (
                     <>
@@ -401,15 +403,15 @@ const SlotManagement = () => {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 text-gray-500 uppercase tracking-wider text-xs">
-                                    <th className="px-5 py-3 text-left font-semibold">Date</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Service</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Resource</th>
-                                    <th className="px-5 py-3 text-left font-semibold">Time Range</th>
-                                    <th className="px-5 py-3 text-center font-semibold">Capacity</th>
-                                    <th className="px-5 py-3 text-center font-semibold">Booked</th>
-                                    <th className="px-5 py-3 text-center font-semibold">Remaining</th>
-                                    <th className="px-5 py-3 text-center font-semibold">Status</th>
-                                    <th className="px-5 py-3 text-right font-semibold">Actions</th>
+                                    <th className="px-5 py-3 text-left font-semibold">{t('common.date', 'Date')}</th>
+                                    <th className="px-5 py-3 text-left font-semibold">{t('common.service', 'Service')}</th>
+                                    <th className="px-5 py-3 text-left font-semibold">{t('common.resource', 'Resource')}</th>
+                                    <th className="px-5 py-3 text-left font-semibold">{t('slot.time_range', 'Time Range')}</th>
+                                    <th className="px-5 py-3 text-center font-semibold">{t('slot.capacity', 'Capacity')}</th>
+                                    <th className="px-5 py-3 text-center font-semibold">{t('common.booked', 'Booked')}</th>
+                                    <th className="px-5 py-3 text-center font-semibold">{t('slot.remaining', 'Remaining')}</th>
+                                    <th className="px-5 py-3 text-center font-semibold">{t('common.status', 'Status')}</th>
+                                    <th className="px-5 py-3 text-right font-semibold">{t('common.actions', 'Actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -433,7 +435,7 @@ const SlotManagement = () => {
                                                             </span>
                                                         ))
                                                     ) : (
-                                                        <span className="text-gray-400">No Services</span>
+                                                        <span className="text-gray-400">{t('service.no_services', 'No Services')}</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -466,21 +468,21 @@ const SlotManagement = () => {
                                                         isAlmostFull ? 'bg-yellow-50 text-yellow-600' :
                                                             'bg-emerald-50 text-emerald-600'
                                                     }`}>
-                                                    {isPast ? 'Past' : isFull ? 'Full' : isAlmostFull ? 'Almost Full' : 'Available'}
+                                                    {isPast ? t('status.past', 'Past') : isFull ? t('status.full', 'Full') : isAlmostFull ? t('status.almost_full', 'Almost Full') : t('status.available', 'Available')}
                                                 </span>
                                             </td>
                                             <td className="px-5 py-3.5 text-right">
                                                 <button
                                                     onClick={() => handleDeleteSlot(slot.id)}
                                                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete slot"
+                                                    title={t('slot.delete', 'Delete slot')}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleEditSlot(slot)}
                                                     className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors ml-1"
-                                                    title="Edit slot"
+                                                    title={t('slot.edit', 'Edit slot')}
                                                 >
                                                     <Pencil className="h-4 w-4" />
                                                 </button>
@@ -523,7 +525,7 @@ const SlotManagement = () => {
                                         <div className="flex-1 min-w-[80px] text-right">
                                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Availability</p>
                                             <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${isFull ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                                                {remaining} / {slot.max_capacity} Left
+                                                {t('slot.left_count', '{{count}} Left', { count: remaining })} / {slot.max_capacity}
                                             </span>
                                         </div>
                                     </div>
@@ -548,13 +550,13 @@ const SlotManagement = () => {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeModal}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-                            <h2 className="font-semibold text-gray-900">{editingSlotId ? 'Update Time Slot' : 'Create Time Slot'}</h2>
+                            <h2 className="font-semibold text-gray-900">{editingSlotId ? t('slot.update_slot', 'Update Time Slot') : t('slot.create_slot_title', 'Create Time Slot')}</h2>
                             <button onClick={closeModal} className="p-1 hover:bg-gray-200 rounded-lg transition-colors"><X className="h-4 w-4 text-gray-400" /></button>
                         </div>
 
                         {/* Step indicator */}
                         <div className="px-6 pt-4 flex gap-1">
-                            {['Service', 'Resource', 'Date & Time'].map((label, i) => (
+                            {[t('common.service', 'Service'), t('common.resource', 'Resource'), t('slot.date_time', 'Date & Time')].map((label, i) => (
                                 <div key={label} className="flex-1">
                                     <div className={`h-1 rounded-full transition-all ${i + 1 <= modalStep ? 'bg-indigo-600' : 'bg-gray-200'}`} />
                                     <p className={`text-[10px] mt-1 text-center ${i + 1 <= modalStep ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>{label}</p>
@@ -566,7 +568,7 @@ const SlotManagement = () => {
                             {/* Step 1: Select Service */}
                             {modalStep === 1 && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Service</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('service.select_service', 'Select Service')}</label>
                                     <div className="space-y-2 max-h-64 overflow-y-auto">
                                         {modalServices.map(s => (
                                             <button
@@ -583,13 +585,13 @@ const SlotManagement = () => {
                                                     }`}
                                             >
                                                 <p className="font-medium text-gray-900 text-sm">{s.name}</p>
-                                                <p className="text-xs text-gray-500 mt-0.5">{s.description || 'No description'}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">{s.description || t('service.no_description', 'No description')}</p>
                                             </button>
                                         ))}
                                         {modalServices.length === 0 && (
                                             <div className="text-center py-8">
                                                 <AlertCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                                                <p className="text-sm text-gray-500">No services found. Create a service first.</p>
+                                                <p className="text-sm text-gray-500">{t('service.none_found', 'No services found. Create a service first.')}</p>
                                             </div>
                                         )}
                                     </div>
@@ -599,7 +601,7 @@ const SlotManagement = () => {
                             {/* Step 2: Select Resource */}
                             {modalStep === 2 && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Resource</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('resource.select_resource', 'Select Resource')}</label>
                                     {loadingModalResources ? (
                                         <div className="flex justify-center py-8"><Loader2 className="animate-spin text-indigo-400 h-5 w-5" /></div>
                                     ) : (
@@ -631,12 +633,12 @@ const SlotManagement = () => {
                                             {modalResources.length === 0 && (
                                                 <div className="text-center py-8">
                                                     <AlertCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                                                    <p className="text-sm text-gray-500">No resources for this service. Add resources first.</p>
+                                                    <p className="text-sm text-gray-500">{t('service.no_resources_hint', 'No resources for this service. Add resources first.')}</p>
                                                 </div>
                                             )}
                                         </div>
                                     )}
-                                    <button onClick={() => setModalStep(1)} className="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium">← Back to services</button>
+                                    <button onClick={() => setModalStep(1)} className="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium">{t('common.back_to_services', '← Back to services')}</button>
                                 </div>
                             )}
 
@@ -648,12 +650,12 @@ const SlotManagement = () => {
                                         <div>
                                             <p className="font-medium text-indigo-900 text-sm">{selectedModalResource.name}</p>
                                         </div>
-                                        <button onClick={() => setModalStep(2)} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Change</button>
+                                        <button onClick={() => setModalStep(2)} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">{t('common.change', 'Change')}</button>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common.date', 'Date')}</label>
                                             <input
                                                 type="date"
                                                 required
@@ -663,7 +665,7 @@ const SlotManagement = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Time</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('admin.slots.start_time', 'Start Time')}</label>
                                             <input
                                                 type="time"
                                                 required
@@ -684,15 +686,15 @@ const SlotManagement = () => {
                                                     if (formatted !== e.target.value) {
                                                         setSlotTime(formatted);
                                                         updateEndTimeSuggestion(formatted);
-                                                        toast('Time rounded to nearest 5 minutes', { icon: 'ℹ️' });
+                                                        toast(t('slot.time_rounded', 'Time rounded to nearest 5 minutes'), { icon: 'ℹ️' });
                                                     }
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
                                             />
-                                            <p className="text-xs text-gray-500 mt-1">5 min intervals</p>
+                                            <p className="text-xs text-gray-500 mt-1">{t('admin.slots.interval_hint', '5 min intervals')}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">End Time</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('admin.slots.end_time', 'End Time')}</label>
                                             <input
                                                 type="time"
                                                 required
@@ -709,12 +711,12 @@ const SlotManagement = () => {
                                                     const formatted = format(rounded, 'HH:mm');
                                                     if (formatted !== e.target.value) {
                                                         setSlotEndTime(formatted);
-                                                        toast('Time rounded to nearest 5 minutes', { icon: 'ℹ️' });
+                                                        toast(t('slot.time_rounded', 'Time rounded to nearest 5 minutes'), { icon: 'ℹ️' });
                                                     }
                                                 }}
                                                 className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
                                             />
-                                            <p className="text-xs text-gray-500 mt-1">5 min intervals</p>
+                                            <p className="text-xs text-gray-500 mt-1">{t('admin.slots.interval_hint', '5 min intervals')}</p>
                                         </div>
                                     </div>
 
@@ -722,13 +724,13 @@ const SlotManagement = () => {
                                     {slotDate && slotTime && (
                                         <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-700">
                                             <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                                            <span>The end time is pre-filled based on your service duration ({modalServices.find(s => s.id === selectedModalService)?.estimated_service_time || 30} mins), but you can change it manually.</span>
+                                            <span>{t('admin.slots.end_time_hint', 'The end time is pre-filled based on your service duration ({{duration}} mins), but you can change it manually.', { duration: modalServices.find(s => s.id === selectedModalService)?.estimated_service_time || 30 })}</span>
                                         </div>
                                     )}
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Capacity
+                                            {t('admin.slots.max_capacity', 'Capacity')}
                                         </label>
                                         <input
                                             type="number"
@@ -745,7 +747,7 @@ const SlotManagement = () => {
 
                                     <div className="flex gap-3 pt-2">
                                         <button onClick={() => setModalStep(2)} className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
-                                            Back
+                                            {t('common.back', 'Back')}
                                         </button>
                                         <button
                                             onClick={handleSaveSlot}
@@ -753,7 +755,7 @@ const SlotManagement = () => {
                                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                         >
                                             {submitting ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                                            {submitting ? 'Saving...' : (editingSlotId ? 'Update Slot' : 'Create Slot')}
+                                            {submitting ? t('common.saving', 'Saving...') : (editingSlotId ? t('slot.update_slot_btn', 'Update Slot') : t('slot.create_slot_btn', 'Create Slot'))}
                                         </button>
                                     </div>
                                 </div>

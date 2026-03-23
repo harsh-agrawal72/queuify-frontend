@@ -112,7 +112,7 @@ export default function UserDashboard() {
                         className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full flex items-center gap-2 font-bold animate-pulse text-sm"
                     >
                         <Activity className="h-4 w-4" />
-                        Its your turn!
+                        {t('dashboard.your_turn', 'Its your turn!')}
                     </motion.div>
                 )}
             </div>
@@ -156,10 +156,10 @@ export default function UserDashboard() {
                 transition={{ delay: 0.1 }}
             >
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900">Next Appointment</h2>
+                    <h2 className="text-lg font-bold text-gray-900">{t('dashboard.next_appointment', 'Next Appointment')}</h2>
                     {nextApt && (
                         <Link to="/appointments" className="text-indigo-600 text-sm font-medium hover:underline">
-                            View All
+                            {t('common.view_all', 'View All')}
                         </Link>
                     )}
                 </div>
@@ -182,15 +182,15 @@ export default function UserDashboard() {
                                         <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
                                             <Users className="h-3 w-3" />
                                             <span className="text-xs font-bold flex items-center gap-1">
-                                                {nextApt.people_ahead || 0} Ahead
-                                                <InfoTooltip text="Number of confirmed bookings currently ahead of you in this specific slot." />
+                                                {t('appointment.people_ahead', '{{count}} Ahead', { count: nextApt.people_ahead || 0 })}
+                                                <InfoTooltip text={t('appointment.people_ahead_tooltip', "Number of confirmed bookings currently ahead of you in this specific slot.")} />
                                             </span>
                                         </div>
                                         <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
                                             <Clock className="h-3 w-3" />
                                             <span className="text-xs font-bold flex items-center gap-1">
-                                                {formatWaitTime(nextApt.estimated_wait_time)} wait
-                                                <InfoTooltip text="Estimated time until your turn, based on real-time resource performance." />
+                                                {formatWaitTime(nextApt.estimated_wait_time)} {t('common.wait', 'wait')}
+                                                <InfoTooltip text={t('appointment.wait_time_tooltip', "Estimated time until your turn, based on real-time resource performance.")} />
                                             </span>
                                         </div>
                                     </div>
@@ -199,8 +199,8 @@ export default function UserDashboard() {
                                 <div className="flex items-center gap-4 bg-white shadow-2xl shadow-indigo-900/20 p-6 rounded-[2rem] text-slate-900 min-w-[200px]">
                                     <div className="text-center flex-1 border-r border-slate-100 pr-4">
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-1">
-                                            Your Token
-                                            <InfoTooltip text="Your unique sequence number for this slot. Use this for tracking your position." />
+                                            {t('appointment.your_token', 'Your Token')}
+                                            <InfoTooltip text={t('appointment.token_tooltip', "Your unique sequence number for this slot. Use this for tracking your position.")} />
                                         </p>
                                         <p className="text-4xl font-black text-indigo-600">#{nextApt.queue_number}</p>
                                     </div>
@@ -219,14 +219,14 @@ export default function UserDashboard() {
                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Calendar className="h-8 w-8 text-gray-400" />
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">No upcoming appointments</h3>
-                        <p className="text-gray-500 mt-1 mb-6">Looks like your schedule is clear.</p>
+                        <h3 className="text-lg font-semibold text-gray-900">{t('appointment.no_upcoming', 'No upcoming appointments')}</h3>
+                        <p className="text-gray-500 mt-1 mb-6">{t('appointment.clear_schedule', 'Looks like your schedule is clear.')}</p>
                         <Link
                             to="/organizations"
                             className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition font-medium"
                         >
                             <Search className="h-4 w-4" />
-                            Find & Book Appointment
+                            {t('user.dashboard.find_and_book', 'Find & Book Appointment')}
                         </Link>
                     </div>
                 )}
@@ -245,10 +245,10 @@ export default function UserDashboard() {
                     <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                         <h2 className="font-bold text-gray-900 flex items-center gap-2">
                             <Clock className="h-5 w-5 text-indigo-500" />
-                            Recent Appointments
+                            {t('user.dashboard.recent_appointments', 'Recent Appointments')}
                         </h2>
                         <Link to="/appointments" className="text-indigo-600 text-sm font-medium hover:underline flex items-center gap-1">
-                            View All <ChevronRight className="h-4 w-4" />
+                            {t('common.view_all', 'View All')} <ChevronRight className="h-4 w-4" />
                         </Link>
                     </div>
 
@@ -267,9 +267,9 @@ export default function UserDashboard() {
                                             <Building2 className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <p className="font-medium text-gray-900 text-sm">{apt.service_name || 'Appointment'}</p>
+                                            <p className="font-medium text-gray-900 text-sm">{apt.service_name || t('appointment.title', 'Appointment')}</p>
                                             <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
-                                                <MapPin className="h-3 w-3" /> {apt.org_name || 'Organization'}
+                                                <MapPin className="h-3 w-3" /> {apt.org_name || t('appointment.organization', 'Organization')}
                                                 {(() => {
                                                     const d = apt.start_time ? parseISO(apt.start_time) : null;
                                                     if (d && isValid(d)) {
@@ -286,7 +286,7 @@ export default function UserDashboard() {
                                         </div>
                                     </div>
                                     <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize ${getStatusColor(apt.status)}`}>
-                                        {apt.status}
+                                        {t(`status.${apt.status}`, apt.status)}
                                     </span>
                                 </motion.div>
                             ))}
@@ -294,8 +294,8 @@ export default function UserDashboard() {
                     ) : (
                         <div className="p-8 text-center">
                             <Calendar className="h-10 w-10 text-gray-200 mx-auto mb-2" />
-                            <p className="text-gray-500 text-sm font-medium">No appointment history yet</p>
-                            <p className="text-gray-400 text-xs mt-1">Book your first appointment to see it here!</p>
+                            <p className="text-gray-500 text-sm font-medium">{t('user.dashboard.no_history', 'No appointment history yet')}</p>
+                            <p className="text-gray-400 text-xs mt-1">{t('user.dashboard.book_first', 'Book your first appointment to see it here!')}</p>
                         </div>
                     )}
                 </motion.div>
@@ -311,7 +311,7 @@ export default function UserDashboard() {
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-amber-500" />
-                            Quick Actions
+                            {t('user.dashboard.quick_actions', 'Quick Actions')}
                         </h2>
                         <div className="space-y-2">
                             <Link
@@ -322,8 +322,8 @@ export default function UserDashboard() {
                                     <Search className="h-4 w-4" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-800">Find Organizations</p>
-                                    <p className="text-[11px] text-gray-400">Browse & book appointments</p>
+                                    <p className="text-sm font-medium text-gray-800">{t('navigation.find_organizations', 'Find Organizations')}</p>
+                                    <p className="text-[11px] text-gray-400">{t('user.dashboard.browse_book', 'Browse & book appointments')}</p>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-indigo-500 transition-colors" />
                             </Link>
@@ -335,8 +335,8 @@ export default function UserDashboard() {
                                     <Calendar className="h-4 w-4" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-800">My Appointments</p>
-                                    <p className="text-[11px] text-gray-400">View all your bookings</p>
+                                    <p className="text-sm font-medium text-gray-800">{t('navigation.my_appointments', 'My Appointments')}</p>
+                                    <p className="text-[11px] text-gray-400">{t('user.dashboard.view_all_bookings', 'View all your bookings')}</p>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-emerald-500 transition-colors" />
                             </Link>
@@ -348,8 +348,8 @@ export default function UserDashboard() {
                                     <Users className="h-4 w-4" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-800">My Profile</p>
-                                    <p className="text-[11px] text-gray-400">Update your personal info</p>
+                                    <p className="text-sm font-medium text-gray-800">{t('navigation.profile', 'My Profile')}</p>
+                                    <p className="text-[11px] text-gray-400">{t('user.dashboard.update_info', 'Update your personal info')}</p>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-purple-500 transition-colors" />
                             </Link>
@@ -360,11 +360,11 @@ export default function UserDashboard() {
                     <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-5 text-white">
                         <h2 className="font-bold flex items-center gap-2 mb-4">
                             <Award className="h-5 w-5 text-amber-300" />
-                            Your Activity
+                            {t('user.dashboard.your_activity', 'Your Activity')}
                         </h2>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-white/70 text-sm">Total Visits</span>
+                                <span className="text-white/70 text-sm">{t('dashboard.total_visits', 'Total Visits')}</span>
                                 <span className="font-bold">{totalAppointments}</span>
                             </div>
                             <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
@@ -373,14 +373,14 @@ export default function UserDashboard() {
                                     style={{ width: `${Math.min((stats?.completed || 0) / Math.max(totalAppointments, 1) * 100, 100)}%` }}
                                 ></div>
                             </div>
-                            <div className="flex items-center justify-between text-xs text-white/50">
-                                <span>{stats?.completed || 0} completed</span>
-                                <span>{Math.round((stats?.completed || 0) / Math.max(totalAppointments, 1) * 100)}% success rate</span>
+                             <div className="flex items-center justify-between text-xs text-white/50">
+                                <span>{t('user.dashboard.completed_count', '{{count}} completed', { count: stats?.completed || 0 })}</span>
+                                <span>{t('user.dashboard.success_rate', '{{rate}}% success rate', { rate: Math.round((stats?.completed || 0) / Math.max(totalAppointments, 1) * 100) })}</span>
                             </div>
                         </div>
                         {user?.created_at && (
                             <div className="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
-                                <span>Member since {(() => {
+                                <span>{t('user.dashboard.member_since', 'Member since')} {(() => {
                                     const d = user.created_at ? parseISO(user.created_at) : null;
                                     return (d && isValid(d)) ? format(d, 'MMMM yyyy') : 'N/A';
                                 })()}</span>

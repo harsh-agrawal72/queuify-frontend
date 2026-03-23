@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -11,6 +12,7 @@ const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const { login, googleLogin, loading } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -18,7 +20,7 @@ const Login = () => {
     };
 
     const handleLoginSuccess = async (user) => {
-        toast.success(`Welcome back, ${user.name}!`);
+        toast.success(t('auth.welcome_back', 'Welcome back, {{name}}!', { name: user.name }));
         const role = user.role || 'user';
         if (role === 'superadmin') navigate('/superadmin');
         else if (role === 'admin') navigate('/admin');
@@ -41,7 +43,7 @@ const Login = () => {
             const user = await googleLogin(credentialResponse.credential);
             handleLoginSuccess(user);
         } catch (error) {
-            toast.error('Google login failed');
+            toast.error(t('auth.google_failed', 'Google login failed'));
         }
     };
 
@@ -55,7 +57,7 @@ const Login = () => {
                 <div className="p-2 rounded-full group-hover:bg-gray-100 transition-colors">
                     <ChevronLeft className="h-5 w-5" />
                 </div>
-                Back to home
+                {t('common.back_to_home', 'Back to home')}
             </Link>
             {/* Background Gradients */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
@@ -73,13 +75,13 @@ const Login = () => {
                         <Link to="/" className="inline-flex items-center mb-6 hover:scale-105 transition-transform origin-center">
                             <Logo iconSize="w-12 h-12" textClass="text-3xl text-gray-900 ml-2" />
                         </Link>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
-                        <p className="text-gray-500">Sign in to manage your productivity.</p>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('auth.login_title', 'Welcome back')}</h1>
+                        <p className="text-gray-500">{t('auth.login_subtitle', 'Sign in to continue to Queuify')}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">{t('auth.email', 'Email Address')}</label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
                                     <Mail className="h-5 w-5" />
@@ -98,9 +100,9 @@ const Login = () => {
 
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-semibold text-gray-700">Password</label>
+                                <label className="block text-sm font-semibold text-gray-700">{t('auth.password', 'Password')}</label>
                                 <Link to="/forgot-password" size="sm" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                                    Forgot?
+                                    {t('auth.forgot_password', 'Forgot?')}
                                 </Link>
                             </div>
                             <div className="relative group">
@@ -134,8 +136,9 @@ const Login = () => {
                             {loading ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
+                             ) : (
                                 <>
-                                    Sign In <ArrowRight className="h-5 w-5" />
+                                    {t('auth.sign_in', 'Sign In')} <ArrowRight className="h-5 w-5" />
                                 </>
                             )}
                         </button>
@@ -146,7 +149,7 @@ const Login = () => {
                             <div className="w-full border-t border-gray-100"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-white text-gray-400 font-medium uppercase tracking-wider">Or continue with</span>
+                            <span className="px-4 bg-white text-gray-400 font-medium uppercase tracking-wider">{t('auth.or_continue_with', 'Or continue with')}</span>
                         </div>
                     </div>
 
@@ -154,7 +157,7 @@ const Login = () => {
                         <div className="flex justify-center w-full">
                             <GoogleLogin
                                 onSuccess={handleGoogleSuccess}
-                                onError={() => toast.error('Google Sign In failed')}
+                                onError={() => toast.error(t('auth.google_failed', 'Google Sign In failed'))}
                                 shape="pill"
                                 theme="outline"
                                 width="100%"
@@ -165,9 +168,9 @@ const Login = () => {
                     </div>
 
                     <p className="mt-10 text-center text-gray-500 text-sm">
-                        New to Queuify?{' '}
+                        {t('auth.no_account', "Don't have an account?")}{' '}
                         <Link to="/register" className="font-bold text-gray-900 hover:text-blue-600 transition-colors">
-                            Create a free account
+                            {t('auth.register', 'Create a free account')}
                         </Link>
                     </p>
                 </div>

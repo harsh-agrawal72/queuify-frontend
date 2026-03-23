@@ -23,8 +23,10 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminRescheduleModal from './AdminRescheduleModal';
+import { useTranslation } from 'react-i18next';
 
 const AppointmentManager = () => {
+    const { t } = useTranslation();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -67,7 +69,7 @@ const AppointmentManager = () => {
             setTotalPages(res.data.totalPages);
         } catch (error) {
             console.error("Failed to fetch appointments", error);
-            toast.error("Failed to load appointments");
+            toast.error(t('appointment.load_failed', "Failed to load appointments"));
         } finally {
             setLoading(false);
         }
@@ -100,7 +102,7 @@ const AppointmentManager = () => {
             setAppointments(prev => prev.map(apt =>
                 apt.id === id ? { ...apt, status: newStatus } : apt
             ));
-            toast.success(`Status updated to ${newStatus}`);
+            toast.success(t('appointment.status_updated', 'Status updated to {{status}}', { status: newStatus }));
         } catch (error) {
             console.error(error);
             toast.error("Failed to update status");
@@ -114,8 +116,8 @@ const AppointmentManager = () => {
         
         const isCancelled = apt.status === 'cancelled';
         const confirmMessage = isCancelled 
-            ? "This appointment is already cancelled. Are you sure you want to permanently hide it from the dashboard?"
-            : "Are you sure you want to cancel and delete this appointment?";
+            ? t('appointment.confirm_hide', "This appointment is already cancelled. Are you sure you want to permanently hide it from the dashboard?")
+            : t('appointment.confirm_cancel', "Are you sure you want to cancel and delete this appointment?");
 
         if (!window.confirm(confirmMessage)) return;
 
@@ -132,11 +134,11 @@ const AppointmentManager = () => {
                 setAppointments(prev => prev.map(a => 
                     a.id === apt.id ? { ...a, status: 'cancelled', cancelled_by: 'admin' } : a
                 ));
-                toast.success("Appointment cancelled successfully");
+                toast.success(t('appointment.cancelled_success', "Appointment cancelled successfully"));
             }
         } catch (error) {
             console.error(error);
-            toast.error("Failed to delete appointment");
+            toast.error(t('appointment.delete_failed', "Failed to delete appointment"));
         } finally {
             setProcessingId(null);
         }
@@ -160,9 +162,9 @@ const AppointmentManager = () => {
             'cancelled': <XCircle className="h-3 w-3" />
         };
 
-        let displayLabel = status;
+        let displayLabel = t(`status.${status}`, status);
         if (status === 'cancelled' && cancelledBy) {
-            displayLabel = cancelledBy === 'admin' ? 'Cancelled by Admin' : 'Cancelled by User';
+            displayLabel = cancelledBy === 'admin' ? t('status.cancelled_by_admin', 'Cancelled by Admin') : t('status.cancelled_by_user', 'Cancelled by User');
         }
 
         return (
@@ -178,8 +180,8 @@ const AppointmentManager = () => {
             {/* Header with improved styling */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-gray-100 pb-6 px-1">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Appointments</h1>
-                    <p className="text-gray-500 mt-2">Manage bookings, track status, and handle payments.</p>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{t('navigation.appointments', 'Appointments')}</h1>
+                    <p className="text-gray-500 mt-2">{t('appointment.mgmt_subtitle', 'Manage bookings, track status, and handle payments.')}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
@@ -200,7 +202,7 @@ const AppointmentManager = () => {
                             onChange={(e) => setSelectedResourceId(e.target.value)}
                             className="pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none appearance-none bg-white transition-all cursor-pointer shadow-sm min-w-[180px]"
                         >
-                            <option value="">All Resources</option>
+                            <option value="">{t('common.all_resources', 'All Resources')}</option>
                             {resources.map(r => (
                                 <option key={r.id} value={r.id}>{r.name}</option>
                             ))}
@@ -214,7 +216,7 @@ const AppointmentManager = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input
                             type="text"
-                            placeholder="Search accounts..."
+                            placeholder={t('common.search_placeholder', 'Search accounts...')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-full sm:w-64 transition-all shadow-sm"
@@ -228,11 +230,11 @@ const AppointmentManager = () => {
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none appearance-none bg-white transition-all cursor-pointer shadow-sm min-w-[140px]"
                         >
-                            <option value="">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="">{t('common.all_status', 'All Status')}</option>
+                            <option value="pending">{t('status.pending', 'Pending')}</option>
+                            <option value="confirmed">{t('status.confirmed', 'Confirmed')}</option>
+                            <option value="completed">{t('status.completed', 'Completed')}</option>
+                            <option value="cancelled">{t('status.cancelled', 'Cancelled')}</option>
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                             <ChevronLeft className="h-3 w-3 text-gray-400 -rotate-90" />
@@ -249,7 +251,7 @@ const AppointmentManager = () => {
                             }}
                             className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all"
                         >
-                            Clear
+                            {t('common.clear', 'Clear')}
                         </button>
                     )}
                 </div>
@@ -261,12 +263,12 @@ const AppointmentManager = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Service Details</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date & Time</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Assigned Resource</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.customer', 'Customer')}</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.service_details', 'Service Details')}</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('slot.date_time', 'Date & Time')}</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.assigned_resource', 'Assigned Resource')}</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.status', 'Status')}</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">{t('common.actions', 'Actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -288,8 +290,8 @@ const AppointmentManager = () => {
                                             <div className="bg-gray-50 p-4 rounded-full mb-4">
                                                 <Calendar className="h-8 w-8 text-gray-400" />
                                             </div>
-                                            <p className="text-lg font-semibold text-gray-900">No appointments found</p>
-                                            <p className="text-sm text-gray-500 max-w-xs mt-1">Try adjusting your search or filters to find what you're looking for.</p>
+                                            <p className="text-lg font-semibold text-gray-900">{t('appointment.no_appointments', 'No appointments found')}</p>
+                                            <p className="text-sm text-gray-500 max-w-xs mt-1">{t('appointment.adjust_filters', "Try adjusting your search or filters to find what you're looking for.")}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -306,7 +308,7 @@ const AppointmentManager = () => {
                                                         {apt.user_name?.[0]?.toUpperCase() || 'G'}
                                                     </div>
                                                     <div>
-                                                        <p className="font-semibold text-gray-900 text-sm">{apt.user_name || 'Guest User'}</p>
+                                                        <p className="font-semibold text-gray-900 text-sm">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
                                                         <p className="text-xs text-gray-500 font-mono">{apt.user_email || '-'}</p>
                                                         {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                                     </div>
@@ -314,7 +316,7 @@ const AppointmentManager = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-sm font-medium text-gray-900">{apt.service_name || 'General Service'}</span>
+                                                    <span className="text-sm font-medium text-gray-900">{apt.service_name || t('common.general_service', 'General Service')}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -332,7 +334,7 @@ const AppointmentManager = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                                    <span className="text-sm font-medium text-gray-700">{apt.resource_name || 'Unassigned'}</span>
+                                                    <span className="text-sm font-medium text-gray-700">{apt.resource_name || t('common.unassigned', 'Unassigned')}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -365,7 +367,7 @@ const AppointmentManager = () => {
                                                                 `}
                                                             >
                                                                 <div className="px-3 py-2 border-b border-gray-50 bg-gray-50/50">
-                                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</p>
+                                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.actions', 'Actions')}</p>
                                                                 </div>
                                                                 <div className="p-1">
                                                                     <button 
@@ -375,24 +377,24 @@ const AppointmentManager = () => {
                                                                         }} 
                                                                         className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
                                                                     >
-                                                                        <CalendarClock className="h-4 w-4 text-indigo-500" /> Transfer Slot
+                                                                        <CalendarClock className="h-4 w-4 text-indigo-500" /> {t('appointment.transfer_slot', 'Transfer Slot')}
                                                                     </button>
                                                                 </div>
                                                                 <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
-                                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Update Status</p>
+                                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.update_status', 'Update Status')}</p>
                                                                 </div>
                                                                 <div className="p-1">
-                                                                    <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div> Pending
+                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div> {t('status.pending', 'Pending')}
                                                                     </button>
                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-blue-500"></div> Confirmed
+                                                                        <div className="w-2 h-2 rounded-full bg-blue-500"></div> {t('status.confirmed', 'Confirmed')}
                                                                     </button>
                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Completed
+                                                                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
                                                                     </button>
                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-rose-500"></div> Cancelled
+                                                                        <div className="w-2 h-2 rounded-full bg-rose-500"></div> {t('status.cancelled', 'Cancelled')}
                                                                     </button>
                                                                 </div>
 
@@ -403,7 +405,7 @@ const AppointmentManager = () => {
                                                                         onClick={() => handleDelete(apt)}
                                                                         className="w-full text-left px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition-colors"
                                                                     >
-                                                                        <Trash2 className="h-4 w-4" /> Delete
+                                                                        <Trash2 className="h-4 w-4" /> {t('common.delete', 'Delete')}
                                                                     </button>
                                                                 </div>
                                                             </motion.div>
@@ -437,7 +439,7 @@ const AppointmentManager = () => {
                     ) : appointments.length === 0 ? (
                         <div className="py-20 text-center text-gray-500">
                             <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                            <p className="font-semibold text-gray-900">No appointments found</p>
+                            <p className="font-semibold text-gray-900">{t('appointment.no_appointments', 'No appointments found')}</p>
                         </div>
                     ) : (
                         appointments.map((apt) => (
@@ -448,7 +450,7 @@ const AppointmentManager = () => {
                                             {apt.user_name?.[0]?.toUpperCase() || 'G'}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-900 leading-tight">{apt.user_name || 'Guest User'}</p>
+                                            <p className="font-bold text-gray-900 leading-tight">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
                                             <p className="text-[10px] text-gray-500 mt-0.5">{apt.user_email || '-'}</p>
                                             {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                         </div>
@@ -469,19 +471,19 @@ const AppointmentManager = () => {
 
                                 <div className="grid grid-cols-2 gap-3 py-3 border-t border-gray-50 mt-1">
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Service</p>
-                                        <p className="text-xs font-semibold text-gray-800 line-clamp-1">{apt.service_name || 'General'}</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.service', 'Service')}</p>
+                                        <p className="text-xs font-semibold text-gray-800 line-clamp-1">{apt.service_name || t('common.general', 'General')}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Resource</p>
-                                        <p className="text-xs font-semibold text-gray-800 line-clamp-1">{apt.resource_name || 'Unassigned'}</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.resource', 'Resource')}</p>
+                                        <p className="text-xs font-semibold text-gray-800 line-clamp-1">{apt.resource_name || t('common.unassigned', 'Unassigned')}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Date</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.date', 'Date')}</p>
                                         <p className="text-xs font-semibold text-gray-800">{apt.start_time ? format(new Date(apt.start_time), 'MMM d, yyyy') : '-'}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Time</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.time', 'Time')}</p>
                                         <p className="text-xs font-semibold text-gray-800 font-mono">{apt.start_time ? format(new Date(apt.start_time), 'h:mm a') : '-'}</p>
                                     </div>
                                 </div>
@@ -496,7 +498,7 @@ const AppointmentManager = () => {
                                             className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 rounded-2xl flex flex-col p-4 shadow-xl border border-indigo-100"
                                         >
                                             <div className="flex justify-between items-center mb-4">
-                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Update Status</h4>
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('appointment.update_status', 'Update Status')}</h4>
                                                 <button onClick={() => setActiveActionId(null)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                                                     <XCircle className="h-4 w-4 text-gray-400" />
                                                 </button>
@@ -508,19 +510,19 @@ const AppointmentManager = () => {
                                                 }}
                                                 className="mb-3 w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
                                             >
-                                                <CalendarClock className="h-4 w-4" /> Transfer Slot
+                                                <CalendarClock className="h-4 w-4" /> {t('appointment.transfer_slot', 'Transfer Slot')}
                                             </button>
                                             <div className="grid grid-cols-2 gap-2 flex-grow">
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">Pending</button>
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">Confirmed</button>
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">Completed</button>
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">Cancelled</button>
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">{t('status.completed', 'Completed')}</button>
+                                                <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">{t('status.cancelled', 'Cancelled')}</button>
                                             </div>
                                             <button
                                                 onClick={() => handleDelete(apt)}
                                                 className="mt-3 w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors flex items-center justify-center gap-2"
                                             >
-                                                <Trash2 className="h-3.5 w-3.5" /> Delete Permanently
+                                                <Trash2 className="h-3.5 w-3.5" /> {t('appointment.delete_permanently', 'Delete Permanently')}
                                             </button>
                                         </motion.div>
                                     )}
@@ -533,7 +535,7 @@ const AppointmentManager = () => {
                 {/* Pagination */}
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50 mt-auto">
                     <p className="text-xs text-gray-500 font-medium">
-                        Showing page {page} of {totalPages}
+                        {t('common.showing_page', 'Showing page {{page}} of {{totalPages}}', { page, totalPages })}
                     </p>
                     <div className="flex gap-2">
                         <button
@@ -541,14 +543,14 @@ const AppointmentManager = () => {
                             disabled={page === 1}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:shadow-none transition-all border border-transparent hover:border-gray-200"
                         >
-                            <ChevronLeft className="h-4 w-4" /> Previous
+                            <ChevronLeft className="h-4 w-4" /> {t('common.previous', 'Previous')}
                         </button>
                         <button
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:shadow-none transition-all border border-transparent hover:border-gray-200"
                         >
-                            Next <ChevronRight className="h-4 w-4" />
+                            {t('common.next', 'Next')} <ChevronRight className="h-4 w-4" />
                         </button>
                     </div>
                 </div>

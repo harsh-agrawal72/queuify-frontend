@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import InfoTooltip from '../common/InfoTooltip';
+import { useTranslation } from 'react-i18next';
 
 // ──────────────────────────────────────────────
 // UNIFIED SERVICE MANAGEMENT
@@ -29,6 +30,7 @@ import InfoTooltip from '../common/InfoTooltip';
 // ──────────────────────────────────────────────
 
 const ServiceManagement = () => {
+    const { t } = useTranslation();
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedService, setExpandedService] = useState(null);
@@ -48,7 +50,7 @@ const ServiceManagement = () => {
             const res = await api.get('/services');
             setServices(res.data);
         } catch {
-            toast.error("Failed to load services");
+            toast.error(t('service.load_failed', "Failed to load services"));
         } finally {
             setLoading(false);
         }
@@ -63,7 +65,7 @@ const ServiceManagement = () => {
             const res = await api.get(`/resources/by-service/${serviceId}`);
             setResourcesByService(prev => ({ ...prev, [serviceId]: res.data }));
         } catch {
-            toast.error("Failed to load resources");
+            toast.error(t('resource.load_failed', "Failed to load resources"));
         } finally {
             setLoadingResources(prev => ({ ...prev, [serviceId]: false }));
         }
@@ -92,7 +94,7 @@ const ServiceManagement = () => {
                     estimated_service_time: formData.estimated_service_time
                 };
                 await api.patch(`/services/${serviceModal.data.id}`, updatePayload);
-                toast.success("Service updated");
+                toast.success(t('service.updated', "Service updated"));
             } else {
                 await api.post('/services', {
                     name: formData.name,
@@ -100,23 +102,23 @@ const ServiceManagement = () => {
                     queue_scope: formData.queue_scope,
                     estimated_service_time: formData.estimated_service_time
                 });
-                toast.success("Service created");
+                toast.success(t('service.created', "Service created"));
             }
             setServiceModal({ open: false, edit: false, data: null });
             fetchServices();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Operation failed");
+            toast.error(error.response?.data?.message || t('common.operation_failed', "Operation failed"));
         }
     };
 
     const handleDeleteService = async (id) => {
-        if (!confirm("Delete this service and all its resources?")) return;
+        if (!confirm(t('service.delete_confirm', "Delete this service and all its resources?"))) return;
         try {
             await api.delete(`/services/${id}`);
             setServices(prev => prev.filter(s => s.id !== id));
-            toast.success("Service deleted");
+            toast.success(t('service.deleted', "Service deleted"));
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to delete service");
+            toast.error(error.response?.data?.message || t('service.delete_failed', "Failed to delete service"));
         }
     };
 
@@ -134,7 +136,7 @@ const ServiceManagement = () => {
                     concurrent_capacity: formData.concurrent_capacity
                 };
                 await api.patch(`/resources/${resourceModal.data.id}`, updatePayload);
-                toast.success("Resource updated");
+                toast.success(t('resource.updated', "Resource updated"));
             } else {
                 await api.post('/resources', {
                     name: formData.name,
@@ -143,26 +145,26 @@ const ServiceManagement = () => {
                     concurrent_capacity: formData.concurrent_capacity,
                     serviceIds: [serviceId]
                 });
-                toast.success("Resource created");
+                toast.success(t('resource.created', "Resource created"));
             }
             setResourceModal({ open: false, edit: false, data: null, serviceId: null });
             fetchResourcesForService(serviceId);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Operation failed");
+            toast.error(error.response?.data?.message || t('common.operation_failed', "Operation failed"));
         }
     };
 
     const handleDeleteResource = async (resourceId, serviceId) => {
-        if (!confirm("Delete this resource and its slots?")) return;
+        if (!confirm(t('resource.delete_confirm', "Delete this resource and its slots?"))) return;
         try {
             await api.delete(`/resources/${resourceId}`);
             setResourcesByService(prev => ({
                 ...prev,
                 [serviceId]: prev[serviceId]?.filter(r => r.id !== resourceId)
             }));
-            toast.success("Resource deleted");
+            toast.success(t('resource.deleted', "Resource deleted"));
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to delete resource");
+            toast.error(error.response?.data?.message || t('resource.delete_failed', "Failed to delete resource"));
         }
     };
 
@@ -176,16 +178,16 @@ const ServiceManagement = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        Service Management
-                        <InfoTooltip text="Services are the top-level categories of what you offer (e.g., Dental Checkup, Haircut). First create a Service, then add specific Resources (staff/rooms) to it." />
+                        {t('navigation.service_management', 'Service Management')}
+                        <InfoTooltip text={t('service.mgmt_tooltip', 'Services are the top-level categories of what you offer (e.g., Dental Checkup, Haircut). First create a Service, then add specific Resources (staff/rooms) to it.')} />
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Create services and assign resources (staff, rooms, equipment) to them.</p>
+                    <p className="text-sm text-gray-500 mt-1">{t('service.mgmt_subtitle', 'Create services and assign resources (staff, rooms, equipment) to them.')}</p>
                 </div>
                 <button
                     onClick={() => setServiceModal({ open: true, edit: false, data: null })}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
                 >
-                    <Plus className="h-4 w-4" /> Create Service
+                    <Plus className="h-4 w-4" /> {t('service.create_service', 'Create Service')}
                 </button>
             </div>
 
@@ -195,8 +197,8 @@ const ServiceManagement = () => {
             ) : services.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                     <Layers className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-600">No services yet</h3>
-                    <p className="text-sm text-gray-400 mt-1">Create your first service to get started.</p>
+                    <h3 className="text-lg font-semibold text-gray-600">{t('service.no_services', 'No services yet')}</h3>
+                    <p className="text-sm text-gray-400 mt-1">{t('service.create_first', 'Create your first service to get started.')}</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -218,14 +220,14 @@ const ServiceManagement = () => {
                                         </div>
                                         <div>
                                             <h3 className="font-semibold text-gray-900 text-base">{service.name}</h3>
-                                            <p className="text-xs text-gray-500 mt-0.5">{service.description || 'No description'}</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">{service.description || t('service.no_description', 'No description')}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-1 sm:gap-2">
                                         {resources.length > 0 && (
                                             <span className="hidden sm:inline-block text-xs font-medium px-2.5 py-1 bg-purple-50 text-purple-600 rounded-full">
-                                                {resources.length} resource{resources.length > 1 ? 's' : ''}
+                                                {t('service.resource_count', '{{count}} resource', { count: resources.length, defaultValue: resources.length > 1 ? `${resources.length} resources` : `${resources.length} resource` })}
                                             </span>
                                         )}
                                         <button
@@ -251,14 +253,14 @@ const ServiceManagement = () => {
                                     <div className="p-5 bg-gray-50/30">
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
-                                                <Users className="h-4 w-4" /> Resources
-                                                <InfoTooltip text="Resources are the actual assets or people who perform the service. Each resource can have their own schedule later in 'Slot Management'." />
+                                                <Users className="h-4 w-4" /> {t('service.resources', 'Resources')}
+                                                <InfoTooltip text={t('service.resources_tooltip', "Resources are the actual assets or people who perform the service. Each resource can have their own schedule later in 'Slot Management'.")} />
                                             </h4>
                                             <button
                                                 onClick={() => setResourceModal({ open: true, edit: false, data: null, serviceId: service.id })}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-600 border border-indigo-200 rounded-lg text-xs font-medium hover:bg-indigo-50 transition-colors"
                                             >
-                                                <Plus className="h-3 w-3" /> Add Resource
+                                                <Plus className="h-3 w-3" /> {t('service.add_resource', 'Add Resource')}
                                             </button>
                                         </div>
 
@@ -267,8 +269,8 @@ const ServiceManagement = () => {
                                         ) : resources.length === 0 ? (
                                             <div className="text-center py-6 bg-white rounded-xl border border-dashed border-gray-200">
                                                 <AlertCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                                                <p className="text-sm text-gray-500">No resources for this service.</p>
-                                                <p className="text-xs text-gray-400 mt-1">Add a resource to start creating time slots.</p>
+                                                <p className="text-sm text-gray-500">{t('service.no_resources', 'No resources for this service.')}</p>
+                                                <p className="text-xs text-gray-400 mt-1">{t('service.add_resource_hint', 'Add a resource to start creating time slots.')}</p>
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
@@ -287,7 +289,7 @@ const ServiceManagement = () => {
                                                                 <div className="flex items-center gap-2 mt-0.5">
                                                                     <span className="text-xs text-gray-400 capitalize">{resource.type}</span>
                                                                     <span className="text-xs text-blue-600 font-medium flex items-center gap-0.5">
-                                                                        <Users className="h-3 w-3" /> Cap: {resource.concurrent_capacity}
+                                                                        <Users className="h-3 w-3" /> {t('service.capacity', 'Cap')}: {resource.concurrent_capacity}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -321,27 +323,27 @@ const ServiceManagement = () => {
             {/* ═══ SERVICE MODAL ═══ */}
             <FormModal
                 open={serviceModal.open}
-                title={serviceModal.edit ? 'Edit Service' : 'New Service'}
+                title={serviceModal.edit ? t('service.edit_service', 'Edit Service') : t('service.new_service', 'New Service')}
                 onClose={() => setServiceModal({ open: false, edit: false, data: null })}
                 onSubmit={handleServiceSubmit}
                 fields={[
-                    { name: 'name', label: 'Service Name', type: 'text', required: true },
-                    { name: 'description', label: 'Description', type: 'textarea' },
+                    { name: 'name', label: t('service.service_name', 'Service Name'), type: 'text', required: true },
+                    { name: 'description', label: t('common.description', 'Description'), type: 'textarea' },
                     {
                         name: 'queue_scope',
-                        label: 'Queue Scope',
+                        label: t('service.queue_scope', 'Queue Scope'),
                         type: 'select',
                         options: ['PER_RESOURCE', 'CENTRAL'],
                         required: true,
-                        help: 'CENTRAL: One shared queue for all resources. PER_RESOURCE: Separate queue for each staff/doctor (best for specific bookings).'
+                        help: t('service.queue_scope_help', 'CENTRAL: One shared queue for all resources. PER_RESOURCE: Separate queue for each staff/doctor (best for specific bookings).')
                     },
                     { 
                         name: 'estimated_service_time', 
-                        label: 'Estimated Duration (min)', 
+                        label: t('service.estimated_duration', 'Estimated Duration (min)'), 
                         type: 'number', 
                         min: 1, 
                         required: true,
-                        help: 'Average time per appointment. This is used for wait-time estimates and as a default timing for new slots.'
+                        help: t('service.estimated_duration_help', 'Average time per appointment. This is used for wait-time estimates and as a default timing for new slots.')
                     },
                 ]}
                 defaults={serviceModal.edit ? serviceModal.data : {
@@ -355,14 +357,14 @@ const ServiceManagement = () => {
             {/* ═══ RESOURCE MODAL ═══ */}
             <FormModal
                 open={resourceModal.open}
-                title={resourceModal.edit ? 'Edit Resource' : 'New Resource'}
+                title={resourceModal.edit ? t('service.edit_resource', 'Edit Resource') : t('service.new_resource', 'New Resource')}
                 onClose={() => setResourceModal({ open: false, edit: false, data: null, serviceId: null })}
                 onSubmit={handleResourceSubmit}
                 fields={[
-                    { name: 'name', label: 'Resource Name', type: 'text', required: true },
-                    { name: 'type', label: 'Type', type: 'select', options: ['staff', 'room', 'equipment', 'counter', 'machine'], required: true },
-                    { name: 'concurrent_capacity', label: 'Concurrent Capacity', type: 'number', min: 1, required: true },
-                    { name: 'description', label: 'Description', type: 'textarea' },
+                    { name: 'name', label: t('service.resource_name', 'Resource Name'), type: 'text', required: true },
+                    { name: 'type', label: t('common.type', 'Type'), type: 'select', options: ['staff', 'room', 'equipment', 'counter', 'machine'], required: true },
+                    { name: 'concurrent_capacity', label: t('service.concurrent_capacity', 'Concurrent Capacity'), type: 'number', min: 1, required: true },
+                    { name: 'description', label: t('common.description', 'Description'), type: 'textarea' },
                 ]}
                 defaults={resourceModal.edit ? resourceModal.data : { name: '', type: 'staff', description: '', concurrent_capacity: 1 }}
             />
@@ -458,7 +460,7 @@ const FormModal = ({ open, title, onClose, onSubmit, fields, defaults }) => {
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50"
                     >
                         {submitting ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                        {submitting ? 'Saving...' : 'Save'}
+                        {submitting ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
                     </button>
                 </form>
             </div>
