@@ -6,7 +6,7 @@ import {
     Calendar, CheckCircle, Clock, MapPin, ArrowRight, XCircle, Search, Activity, Users, Star,
     Building2, TrendingUp, Sparkles, Award, ChevronRight
 } from 'lucide-react';
-import { format, parseISO, formatDistanceToNow, isValid } from 'date-fns';
+import { format, parseISO, formatDistanceToNow, isValid, isToday, isTomorrow } from 'date-fns';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { useAuth } from '../../context/AuthContext';
 import { formatWaitTime } from '../../utils/format';
@@ -262,12 +262,24 @@ export default function UserDashboard() {
                                     
                                     <div className="w-full h-px bg-slate-100 mb-6" />
                                     
-                                    <div className="text-center">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Wait</p>
-                                        <p className="text-2xl font-black text-slate-900">
-                                            ~{nextApt.estimated_wait_time || '5'}<span className="text-sm ml-1 text-slate-500 uppercase">Mins</span>
-                                        </p>
-                                    </div>
+                                     <div className="text-center">
+                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Wait</p>
+                                         <p className="text-2xl font-black text-slate-900 flex items-baseline justify-center gap-1">
+                                             {(() => {
+                                                 const date = new Date(nextApt.start_time);
+                                                 if (!isToday(date)) {
+                                                     if (isTomorrow(date)) return <span className="text-xl">{t('common.tomorrow', 'Tomorrow')}</span>;
+                                                     return <span className="text-xl">{format(date, 'MMM d')}</span>;
+                                                 }
+                                                 return (
+                                                     <>
+                                                         <span className="text-indigo-600">~</span>
+                                                         {formatWaitTime(nextApt.estimated_wait_time)}
+                                                     </>
+                                                 );
+                                             })()}
+                                         </p>
+                                     </div>
 
                                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
                                         {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100" />)}

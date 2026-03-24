@@ -91,9 +91,9 @@ export default function OrganizationsList() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto space-y-10 pb-20">
-            {/* Elegant Hero Section */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-16 md:px-16 md:py-24 text-white">
+        <div className="max-w-7xl mx-auto space-y-8 pb-20">
+            {/* Elegant Compact Hero Section */}
+            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 px-6 py-10 md:px-12 md:py-14 text-white shadow-2xl shadow-indigo-100/20">
                 {/* Modern Abstract Background Elements */}
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-indigo-500/10 blur-[100px]" />
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-500/10 blur-[80px]" />
@@ -112,7 +112,7 @@ export default function OrganizationsList() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-6xl font-black tracking-tight mb-6 leading-[1.1]"
+                        className="text-3xl md:text-4xl font-black tracking-tight mb-4 leading-tight"
                     >
                         Professional Services, <br />
                         <span className="text-indigo-400">Simplified.</span>
@@ -122,7 +122,7 @@ export default function OrganizationsList() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-slate-400 text-lg md:text-xl font-medium mb-10 leading-relaxed"
+                        className="text-slate-400 text-sm md:text-base font-medium mb-8 leading-relaxed max-w-lg"
                     >
                         Connect with top-rated organizations and manage your appointments with our intelligent queue system.
                     </motion.p>
@@ -152,31 +152,31 @@ export default function OrganizationsList() {
                 </div>
             </div>
 
-            {/* Category Filter Section */}
-            <div className="space-y-6">
-                <div className="flex items-center justify-between px-2">
-                    <h2 className="text-xl font-black text-gray-900 tracking-tight">Browse Categories</h2>
-                    <div className="h-1 flex-1 mx-6 bg-gray-100 rounded-full hidden md:block" />
+            {/* Category Filter Section - Now as a Dropdown */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-indigo-600 rounded-full" />
+                    <h2 className="text-lg font-black text-gray-900 tracking-tight">Browse Categories</h2>
                 </div>
                 
-                <div className="flex items-center gap-3 overflow-x-auto pb-4 px-2 no-scrollbar">
-                    {categories.map((cat, idx) => (
-                        <motion.button
-                            key={cat.value}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            onClick={() => setFilter(cat.value)}
-                            className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-300 border shadow-sm
-                                ${filter === cat.value
-                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-100 scale-105'
-                                    : 'bg-white text-gray-600 border-gray-100 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50/30'
-                                }`}
-                        >
-                            <span className="text-base">{cat.icon}</span>
-                            {cat.label}
-                        </motion.button>
-                    ))}
+                <div className="relative min-w-[240px]">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500">
+                        <Filter className="h-4 w-4" />
+                    </div>
+                    <select
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                    >
+                        {categories.map((cat) => (
+                            <option key={cat.value} value={cat.value}>
+                                {cat.label}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <ChevronRight className="h-4 w-4 rotate-90" />
+                    </div>
                 </div>
             </div>
 

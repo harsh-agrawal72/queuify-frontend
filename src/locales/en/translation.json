@@ -101,7 +101,8 @@
     "tbd": "TBD",
     "back_to_home": "Back to home",
     "user": "I'm a User",
-    "business": "I'm a Business"
+    "business": "I'm a Business",
+    "tomorrow": "Tomorrow"
   },
   "templates": {
     "clinic": {

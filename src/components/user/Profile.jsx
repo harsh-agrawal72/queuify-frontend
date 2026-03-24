@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { motion } from 'framer-motion';
@@ -28,6 +28,8 @@ export default function Profile() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [stats, setStats] = useState(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const fileInputRef = useRef(null);
     const navigate = useNavigate();
 
     // Delete account states
@@ -46,6 +48,53 @@ export default function Profile() {
         };
         fetchStats();
     }, []);
+
+    const handleImageClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleImageChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validations
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select an image file');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image size should be less than 5MB');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('profile_picture', file);
+
+        setUploadingImage(true);
+        try {
+            const { data } = await api.post('/users/profile/image', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            // The backend returns { id, url }. The url is relative like /v1/users/profile/image/ID
+            // We need to make it absolute or relative to the API base URL
+            const absoluteUrl = `${api.defaults.baseURL}${data.url.replace('/v1', '')}`;
+            // Wait, api.defaults.baseURL might already include /v1
+            const finalUrl = data.url.startsWith('/') ? `${api.defaults.baseURL.replace('/v1', '')}${data.url}` : data.url;
+            
+            setProfilePictureUrl(finalUrl);
+            
+            // Also update the user in context immediately for the navbar/sidebar
+            updateUser({ ...user, profile_picture_url: finalUrl });
+            
+            toast.success('Photo uploaded successfully');
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to upload photo');
+        } finally {
+            setUploadingImage(false);
+        }
+    };
 
     const handleUpdate = async (e) => {
         e.preventDefault();
@@ -150,17 +199,29 @@ export default function Profile() {
 
                 <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-center gap-6">
                     {/* Avatar */}
-                    <div className="relative group">
-                        <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center text-white font-black text-3xl border-2 border-white/20 shadow-2xl overflow-hidden">
+                    <div className="relative group cursor-pointer" onClick={handleImageClick}>
+                        <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center text-white font-black text-3xl border-2 border-white/20 shadow-2xl overflow-hidden relative">
+                            {uploadingImage ? (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            ) : null}
                             {profilePictureUrl ? (
                                 <img src={profilePictureUrl} alt={user?.name} className="w-full h-full object-cover" />
                             ) : (
                                 initials
                             )}
                         </div>
-                        <div className="absolute -bottom-2 -right-2 bg-white text-indigo-600 p-2 rounded-xl shadow-lg border border-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute -bottom-2 -right-2 bg-white text-indigo-600 p-2 rounded-xl shadow-lg border border-indigo-50 group-hover:scale-110 transition-transform">
                             <Camera className="h-4 w-4" />
                         </div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageChange}
+                            className="hidden"
+                            accept="image/*"
+                        />
                     </div>
 
                     {/* Info */}
@@ -246,17 +307,15 @@ export default function Profile() {
                                      </div>
                                  </div>
                                  <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Photo URL</label>
-                                     <div className="relative">
-                                         <Camera className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                         <input
-                                             type="url"
-                                             value={profilePictureUrl}
-                                             onChange={e => setProfilePictureUrl(e.target.value)}
-                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder="https://example.com/photo.jpg"
-                                         />
-                                     </div>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Photo</label>
+                                     <button
+                                         type="button"
+                                         onClick={handleImageClick}
+                                         className="w-full flex items-center gap-3 px-4 py-3 border border-dashed border-gray-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-gray-500 text-sm font-medium"
+                                     >
+                                         <Camera className="h-4 w-4 text-indigo-500" />
+                                         {profilePictureUrl ? 'Change Profile Photo' : 'Upload Profile Photo'}
+                                     </button>
                                  </div>
                              </div>
 
