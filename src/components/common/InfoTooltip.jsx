@@ -37,22 +37,42 @@ const InfoTooltip = ({ text, position = 'top', align = 'center', className = "" 
         if (!triggerRef.current) return {};
         
         const rect = triggerRef.current.getBoundingClientRect();
+        const tooltipWidth = 256; // Matching w-64 (16rem = 256px)
+        const margin = 16;
         const styles = { position: 'fixed', zIndex: 9999 };
 
-        // Position logic
+        // Determine starting left position based on alignment
+        let left = align === 'center' ? rect.left + rect.width / 2 : 
+                   align === 'start' ? rect.left : rect.right;
+        
+        let translateX = align === 'center' ? '-50%' : 
+                         align === 'start' ? '0%' : '-100%';
+
+        // Adjust for viewport boundaries (Viewport Awareness)
+        const expectedLeft = align === 'center' ? left - tooltipWidth / 2 : 
+                             align === 'start' ? left : left - tooltipWidth;
+        const expectedRight = expectedLeft + tooltipWidth;
+
+        if (expectedRight > window.innerWidth - margin) {
+            // Shift left if overflowing right
+            const overflow = expectedRight - (window.innerWidth - margin);
+            left -= overflow;
+        } else if (expectedLeft < margin) {
+            // Shift right if overflowing left
+            const underflow = margin - expectedLeft;
+            left += underflow;
+        }
+
+        // Apply calculated positions
+        styles.left = left;
+
         if (position === 'top') {
             styles.top = rect.top - 10;
-            styles.left = align === 'center' ? rect.left + rect.width / 2 : 
-                         align === 'start' ? rect.left : rect.right;
-            styles.translateX = align === 'center' ? '-50%' : 
-                               align === 'start' ? '0%' : '-100%';
+            styles.translateX = translateX;
             styles.translateY = '-100%';
         } else if (position === 'bottom') {
             styles.top = rect.bottom + 10;
-            styles.left = align === 'center' ? rect.left + rect.width / 2 : 
-                         align === 'start' ? rect.left : rect.right;
-            styles.translateX = align === 'center' ? '-50%' : 
-                               align === 'start' ? '0%' : '-100%';
+            styles.translateX = translateX;
         } else if (position === 'left') {
             styles.top = rect.top + rect.height / 2;
             styles.left = rect.left - 10;
@@ -66,7 +86,6 @@ const InfoTooltip = ({ text, position = 'top', align = 'center', className = "" 
 
         return styles;
     };
-
     const tooltipStyles = getTooltipStyles();
 
     return (
@@ -114,7 +133,7 @@ const InfoTooltip = ({ text, position = 'top', align = 'center', className = "" 
                             }`} 
                             style={{
                                 left: (position === 'top' || position === 'bottom') ? 
-                                      (align === 'center' ? '50%' : align === 'start' ? '12px' : 'calc(100% - 12px)') : 
+                                      `${(coords.left + coords.width / 2) - tooltipStyles.left}px` : 
                                       (position === 'left' ? 'auto' : '-6px'),
                                 transform: (position === 'top' || position === 'bottom') ? 'translateX(-50%) rotate(45deg)' : ''
                             }}

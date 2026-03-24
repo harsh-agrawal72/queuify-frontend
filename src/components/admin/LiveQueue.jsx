@@ -21,7 +21,7 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { useTranslation } from 'react-i18next';
-
+import InfoTooltip from '../common/InfoTooltip';
 const AdminLiveQueue = () => {
     const { t } = useTranslation();
     const [queues, setQueues] = useState([]);
@@ -33,7 +33,9 @@ const AdminLiveQueue = () => {
     const [predictiveInsights, setPredictiveInsights] = useState(null);
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
     const [activeQueueForManual, setActiveQueueForManual] = useState(null);
-    const [manualEntryData, setManualEntryData] = useState({ customer_name: '', customer_phone: '' });
+    const [manualEntryData, setManualEntryData] = useState({ customer_name: '', customer_phone: '', resourceId: '', slotId: '' });
+    const [availableSlotsForManual, setAvailableSlotsForManual] = useState([]);
+    const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
     const fetchQueue = async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -58,6 +60,22 @@ const AdminLiveQueue = () => {
             setPredictiveInsights(res.data);
         } catch (error) {
             console.error('Failed to fetch predictions', error);
+        }
+    };
+
+    const fetchSlotsForResource = async (resourceId) => {
+        if (!resourceId) return;
+        setIsLoadingSlots(true);
+        try {
+            const res = await api.get(`/admin/slots?resourceId=${resourceId}`);
+            const today = new Date().toISOString().split('T')[0];
+            const todaySlots = res.data.filter(slot => slot.start_time.startsWith(today));
+            setAvailableSlotsForManual(todaySlots);
+        } catch (error) {
+            console.error('Failed to fetch slots', error);
+            toast.error("Failed to load slots for this professional");
+        } finally {
+            setIsLoadingSlots(false);
         }
     };
 
@@ -190,7 +208,15 @@ const AdminLiveQueue = () => {
 
     const handleAddWalkIn = (queue) => {
         setActiveQueueForManual(queue);
-        setManualEntryData({ customer_name: '', customer_phone: '' });
+        setManualEntryData({ 
+            customer_name: '', 
+            customer_phone: '', 
+            resourceId: queue?.resource_id || '',
+            slotId: ''
+        });
+        if (queue?.resource_id) {
+            fetchSlotsForResource(queue.resource_id);
+        }
         setIsManualModalOpen(true);
     };
 
@@ -198,10 +224,11 @@ const AdminLiveQueue = () => {
         e.preventDefault();
         const loadingToast = toast.loading(t('queue.adding_walkin', "Adding walk-in..."));
         try {
-            await api.post('/admin/appointments/manual', {
+            await api.post('/admin/appointments', {
                 ...manualEntryData,
                 serviceId: activeQueueForManual.service_id,
-                resourceId: activeQueueForManual.resource_id,
+                resourceId: manualEntryData.resourceId,
+                slotId: manualEntryData.slotId,
                 status: 'confirmed'
             });
             toast.success(t('queue.walkin_added', "Walk-in added!"), { id: loadingToast });
@@ -342,21 +369,26 @@ const AdminLiveQueue = () => {
                                         </div>
                                         
                                         <div className="flex items-center gap-3 self-stretch sm:self-auto">
-                                            <div className="flex-1 sm:flex-none flex gap-1.5">
-                                                <button
-                                                    onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
-                                                    className="flex-1 sm:flex-none p-2.5 bg-white text-slate-600 rounded-2xl hover:bg-slate-100 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
-                                                    title="Rebalance this queue"
-                                                >
-                                                    <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAddWalkIn(queue)}
-                                                    className="flex-1 sm:flex-none p-2.5 bg-white text-indigo-600 rounded-2xl hover:bg-indigo-50 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
-                                                    title={t('queue.add_walkin', "Add Walk-in")}
-                                                >
-                                                    <UserPlus className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                                                </button>
+                                            <div className="flex-1 sm:flex-none flex items-center gap-1.5">
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
+                                                        className="flex-1 sm:flex-none p-2.5 bg-white text-slate-600 rounded-2xl hover:bg-slate-100 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
+                                                    >
+                                                        <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+                                                    </button>
+                                                    <InfoTooltip text="Optimally redistribute pending appointments across available time slots to minimize wait times." />
+                                                </div>
+
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => handleAddWalkIn(queue)}
+                                                        className="flex-1 sm:flex-none p-2.5 bg-white text-indigo-600 rounded-2xl hover:bg-indigo-50 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
+                                                    >
+                                                        <UserPlus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                                    </button>
+                                                    <InfoTooltip text="Quickly add a walk-in customer who has arrived without a prior appointment." />
+                                                </div>
                                             </div>
 
                                             <div className="h-11 w-px bg-slate-200 hidden sm:block"></div>
@@ -593,6 +625,48 @@ const AdminLiveQueue = () => {
                             </div>
 
                             <form onSubmit={submitManualEntry} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.professional', 'Professional')}</label>
+                                    <select
+                                        required
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                                        value={manualEntryData.resourceId}
+                                        onChange={e => {
+                                            const newId = e.target.value;
+                                            setManualEntryData({ ...manualEntryData, resourceId: newId, slotId: '' });
+                                            fetchSlotsForResource(newId);
+                                        }}
+                                    >
+                                        <option value="">{t('queue.select_professional', 'Select professional')}</option>
+                                        {queues.map(q => (
+                                            <option key={q.resource_id} value={q.resource_id}>{q.resource_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.time_slot', 'Time Slot')}</label>
+                                    <select
+                                        required
+                                        disabled={!manualEntryData.resourceId || isLoadingSlots}
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 disabled:opacity-50 disabled:bg-slate-50"
+                                        value={manualEntryData.slotId}
+                                        onChange={e => setManualEntryData({ ...manualEntryData, slotId: e.target.value })}
+                                    >
+                                        <option value="">
+                                            {isLoadingSlots ? t('common.loading', 'Loading...') : t('queue.select_slot', 'Select time slot')}
+                                        </option>
+                                        {availableSlotsForManual.map(slot => (
+                                            <option key={slot.id} value={slot.id}>
+                                                {new Date(slot.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {manualEntryData.resourceId && availableSlotsForManual.length === 0 && !isLoadingSlots && (
+                                        <p className="text-[10px] text-rose-500 font-bold ml-1">{t('queue.no_slots_today', 'No slots available for today')}</p>
+                                    )}
+                                </div>
+
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.customer_name', 'Customer Name')}</label>
                                     <input

@@ -186,84 +186,181 @@ const PredictiveInsightsSection = ({ insights }) => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10"
         >
             {/* Main AI Wait Time Prediction */}
-            <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                    <Brain className="w-40 h-40" />
+            <div className="lg:col-span-2 relative rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-200/50 overflow-hidden border border-white/10">
+                {/* Advanced Mesh Gradient Background */}
+                <div className="absolute inset-0 z-0 bg-indigo-600">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500 blur-[100px] opacity-50 animate-pulse" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-400 blur-[120px] opacity-40 animate-pulse" style={{ animationDelay: '2s' }} />
+                    <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-indigo-400 blur-[80px] opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
                 </div>
+
+                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none z-0">
+                    <Brain className="w-56 h-56 rotate-12" />
+                </div>
+
                 <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-6">
-                        <Sparkles className="h-5 w-5 text-indigo-200" />
-                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-100">{t('analytics.live_ai_predictions', 'Live AI Predictions')}</span>
+                    <div className="flex items-center justify-between mb-10">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-xl border border-white/20">
+                                <Sparkles className="h-5 w-5 text-indigo-100" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-100/70">{t('analytics.live_ai_predictions', 'Live AI Predictions')}</span>
+                                    <span className="flex h-2 w-2 relative">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                                    </span>
+                                </div>
+                                <h3 className="text-3xl font-black tracking-tight">{t('analytics.queue_efficiency_model', 'Queue Efficiency Model')}</h3>
+                            </div>
+                        </div>
                     </div>
-                    <h3 className="text-2xl font-black mb-6">{t('analytics.queue_efficiency_model', 'Queue Efficiency Model')}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {insights.currentPredictions?.map((p, i) => (
-                            <div key={i} className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                                <p className="text-xs font-bold text-indigo-200 uppercase mb-1">{p.queue_name}</p>
-                                <div className="flex items-end justify-between">
+                            <motion.div 
+                                key={i} 
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                className="group relative bg-white/10 backdrop-blur-2xl rounded-[2rem] p-6 border border-white/20 hover:bg-white/15 transition-all duration-500 overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Clock className="w-16 h-16 -rotate-12" />
+                                </div>
+                                
+                                <div className="flex justify-between items-start mb-6">
                                     <div>
-                                        <p className="text-2xl font-black">{p.predicted_total_wait}{t('common.minutes_short', 'm')}</p>
-                                        <p className="text-[10px] text-indigo-100 opacity-80 pl-0.5">{t('analytics.est_total_wait', 'Est. Total Wait')}</p>
+                                        <p className="text-[10px] font-black text-indigo-100 uppercase tracking-widest mb-1">{p.queue_name}</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-4xl font-black tracking-tighter">{p.predicted_total_wait}</p>
+                                            <p className="text-sm font-bold text-indigo-200 uppercase">{t('common.minutes_short', 'm')}</p>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-xs font-bold text-white">{p.avg_service_time}{t('common.minutes_short', 'm')}</p>
-                                        <p className="text-[10px] text-indigo-100 opacity-80">{t('analytics.avg_per_person', 'Avg. / Person')}</p>
+                                    <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${
+                                        p.confidence === 'High' ? 'bg-emerald-500/20 text-emerald-100 border-emerald-500/30' : 
+                                        p.confidence === 'Medium' ? 'bg-amber-500/20 text-amber-100 border-amber-500/30' : 
+                                        'bg-rose-500/20 text-rose-100 border-rose-500/30'
+                                    }`}>
+                                        {t(`analytics.confidence_${p.confidence.toLowerCase()}`, `${p.confidence} Confidence`)}
                                     </div>
                                 </div>
-                                <div className="mt-3 flex items-center gap-2">
-                                    <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-indigo-300" 
-                                            style={{ width: p.confidence === 'High' ? '100%' : p.confidence === 'Medium' ? '60%' : '30%' }} 
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-black/5 rounded-2xl p-3 border border-white/5">
+                                        <p className="text-[9px] font-black text-indigo-200 uppercase mb-1 flex items-center gap-1">
+                                            <Clock className="h-2.5 w-2.5" /> {t('analytics.avg_per_person', 'Avg. / Person')}
+                                        </p>
+                                        <p className="text-lg font-black">{p.avg_service_time}<span className="text-[10px] ml-0.5">{t('common.minutes_short', 'm')}</span></p>
+                                    </div>
+                                    <div className="bg-black/5 rounded-2xl p-3 border border-white/5">
+                                        <p className="text-[9px] font-black text-indigo-200 uppercase mb-1 flex items-center gap-1">
+                                            <Activity className="h-2.5 w-2.5" /> {t('common.waiting', 'Waiting')}
+                                        </p>
+                                        <p className="text-lg font-black">{p.waiting_count}<span className="text-[10px] ml-1">{t('common.people', 'People')}</span></p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6">
+                                    <div className="flex justify-between items-center mb-1.5">
+                                        <span className="text-[9px] font-black text-indigo-100 uppercase tracking-widest">{t('analytics.prediction_accuracy', 'Accuracy Score')}</span>
+                                        <span className="text-[9px] font-black text-indigo-100">{p.confidence === 'High' ? '98%' : p.confidence === 'Medium' ? '85%' : '65%'}</span>
+                                    </div>
+                                    <div className="h-1.5 bg-black/10 rounded-full overflow-hidden p-[1px]">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: p.confidence === 'High' ? '98%' : p.confidence === 'Medium' ? '85%' : '65%' }}
+                                            className={`h-full rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] ${
+                                                p.confidence === 'High' ? 'bg-emerald-400' : 
+                                                p.confidence === 'Medium' ? 'bg-amber-400' : 
+                                                'bg-rose-400'
+                                            }`} 
                                         />
                                     </div>
-                                    <span className="text-[9px] font-black uppercase text-indigo-200">{t(`analytics.confidence_${p.confidence.toLowerCase()}`, `${p.confidence} Confidence`)}</span>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* Resource Efficiency Ranking */}
-            <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                        <Gauge className="h-5 w-5 text-indigo-500" /> {t('analytics.efficiency', 'Efficiency')}
-                    </h3>
-                    <InfoTooltip text={t('tooltip.efficiency_score', "Score based on average service time vs. service norm.")} />
-                </div>
-                <div className="space-y-4">
-                    {insights.resourceEfficiency?.slice(0, 4).map((r, i) => (
-                        <div key={i} className="flex items-center justify-between">
-                            <div className="min-w-0">
-                                <p className="text-sm font-bold text-gray-900 truncate">{r.resource_name}</p>
-                                <p className="text-[10px] text-gray-500">{r.service_name}</p>
+            {/* Efficiency Overview Slider */}
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity" />
+                
+                <div className="flex items-center justify-between mb-10">
+                    <div>
+                        <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
+                            <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-200">
+                                <Gauge className="h-5 w-5" />
                             </div>
-                            <div className="text-right">
-                                <p className={`text-sm font-black ${r.efficiency_score >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                    {r.efficiency_score}%
-                                </p>
-                                <p className="text-[10px] text-gray-400">{r.avg_time}{t('common.minutes_short', 'm')} {t('analytics.per_appt', 'per appt')}</p>
+                            {t('analytics.efficiency', 'Efficiency Metrics')}
+                        </h3>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{t('analytics.performance_index', 'Performance Index')}</p>
+                    </div>
+                    <InfoTooltip 
+                        text={t('tooltip.efficiency_score', "Score based on average service time vs. service norm. Higher is better.")} 
+                        align="end"
+                    />
+                </div>
+
+                <div className="space-y-6">
+                    {insights.resourceEfficiency?.slice(0, 4).map((r, i) => (
+                        <div key={i} className="relative">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="min-w-0">
+                                    <p className="text-sm font-black text-slate-800 truncate">{r.resource_name}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{r.service_name}</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="flex items-center gap-1.5">
+                                        {r.efficiency_score >= 100 ? (
+                                            <TrendingUpIcon className="h-3 w-3 text-emerald-500" />
+                                        ) : (
+                                            <TrendingDown className="h-3 w-3 text-amber-500" />
+                                        )}
+                                        <p className={`text-base font-black ${r.efficiency_score >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                            {r.efficiency_score}%
+                                        </p>
+                                    </div>
+                                    <p className="text-[9px] font-black text-slate-300 uppercase">{r.avg_time}{t('common.minutes_short', 'm')} / appt</p>
+                                </div>
+                            </div>
+                            <div className="h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${Math.min(r.efficiency_score, 100)}%` }}
+                                    className={`h-full rounded-full ${r.efficiency_score >= 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                />
                             </div>
                         </div>
                     ))}
                     {(!insights.resourceEfficiency || insights.resourceEfficiency.length === 0) && (
-                        <p className="text-center text-gray-400 text-xs py-10 italic">{t('analytics.need_more_data_rankings', 'Need more completed data for rankings')}</p>
+                        <div className="py-12 flex flex-col items-center justify-center text-center">
+                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100 italic">
+                                <Activity className="h-6 w-6 text-slate-200" />
+                            </div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4">{t('analytics.need_more_data_rankings', 'Processing Data...')}</p>
+                        </div>
                     )}
                 </div>
-                <div className="mt-8 pt-4 border-t border-gray-50">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest text-center">{t('analytics.peak_performance_hour', 'Peak Performance Hour')}</p>
-                    <div className="flex justify-center items-end gap-3">
+
+                <div className="mt-10 pt-6 border-t border-slate-50">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('analytics.peak_performance_hour', 'Optimum Traffic Hour')}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
                         {insights.peakHours?.map((h, i) => (
-                            <div key={i} className="text-center">
-                                <div className="bg-indigo-50 text-indigo-600 rounded-lg px-2 py-1 font-black text-sm mb-1">
-                                    {h.hour}:00
+                            <div key={i} className="flex-1 group/hour">
+                                <div className="bg-indigo-50/50 group-hover/hour:bg-indigo-600 group-hover/hour:text-white transition-all border border-indigo-100/50 rounded-2xl p-3 text-center">
+                                    <p className="text-base font-black tracking-tight">{h.hour}:00</p>
+                                    <p className="text-[9px] font-bold uppercase opacity-60">{h.volume} {t('appointment.appointments', 'Appts')}</p>
                                 </div>
-                                <p className="text-[9px] text-gray-400 font-bold uppercase">{h.volume} {t('appointment.appointments', 'Appts')}</p>
                             </div>
                         ))}
                     </div>

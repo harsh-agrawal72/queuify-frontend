@@ -191,110 +191,85 @@ export default function UserDashboard() {
                         {/* Premium Card Background with Animated Gradient */}
                         <div className={`absolute -inset-0.5 bg-gradient-to-r ${isServing ? 'from-emerald-500 to-teal-500' : 'from-indigo-600 to-purple-600'} rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-tilt`}></div>
                         
-                        <div className="relative bg-white rounded-[2rem] p-1 shadow-2xl shadow-indigo-100 overflow-hidden border border-gray-100">
-                            <div className={`rounded-[1.75rem] p-6 md:p-8 flex flex-col md:flex-row items-stretch justify-between gap-6 bg-slate-900 text-white relative overflow-hidden`}>
+                        <div className="relative bg-white rounded-[2rem] p-1 shadow-2xl shadow-indigo-100 overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-indigo-200/50">
+                            <div className="rounded-[1.75rem] p-5 md:p-6 flex flex-col sm:flex-row items-center justify-between gap-6 bg-slate-900 text-white relative overflow-hidden">
                                 {/* Abstract Shapes */}
                                 <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl opacity-50" />
                                 <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl opacity-30" />
 
-                                <div className="relative z-10 flex-1 space-y-8">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-3">
-                                            <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest">
+                                <div className="relative z-10 flex-1 w-full space-y-6">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest">
                                                 {nextApt.service_name}
                                             </span>
                                             {isServing && (
-                                                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest animate-pulse">
+                                                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest animate-pulse">
                                                     Currently Serving
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-none group-hover:text-indigo-300 transition-colors">
+                                        <h3 className="text-xl md:text-2xl font-black tracking-tight leading-tight group-hover:text-indigo-300 transition-colors">
                                             {nextApt.org_name}
                                         </h3>
-                                        <div className="flex flex-wrap items-center gap-6 text-slate-400 text-sm font-bold">
-                                            <div className="flex items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-4 text-slate-400 text-[13px] font-bold">
+                                            <div className="flex items-center gap-1.5">
                                                 <Calendar className="h-4 w-4 text-indigo-400" />
-                                                <span>{new Date(nextApt.start_time).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                                <span>{new Date(nextApt.start_time).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1.5">
                                                 <Clock className="h-4 w-4 text-indigo-400" />
                                                 <span>{new Date(nextApt.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1.5">
                                                 <MapPin className="h-4 w-4 text-indigo-400" />
-                                                <span className="truncate max-w-[200px]">{nextApt.org_address}</span>
+                                                <span className="truncate max-w-[150px]">{nextApt.org_address}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-wrap gap-4 pt-4 border-t border-white/5">
-                                        <div className="bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-3 border border-white/10">
-                                            <Users className="h-4 w-4 text-slate-400" />
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">People Ahead</p>
-                                                <p className="text-sm font-black text-white">{nextApt.people_ahead || 0}</p>
-                                            </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10">
+                                            <Users className="h-3.5 w-3.5 text-slate-400" />
+                                            <span className="text-[10px] font-black text-white">{nextApt.people_ahead || 0} Ahead</span>
                                         </div>
-                                        <div className="bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-3 border border-white/10">
-                                            <Sparkles className="h-4 w-4 text-indigo-400" />
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Now Serving</p>
-                                                <p className="text-sm font-black text-white">#{nextApt.current_serving_number || 0}</p>
-                                            </div>
+                                        <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10">
+                                            <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                                            <span className="text-[10px] font-black text-white">Serving #{nextApt.current_serving_number || 0}</span>
                                         </div>
                                     </div>
-                                </div>
+                                </div>                                {/* Unified Ticket Area */}
+                                <div className="relative z-10 flex flex-col bg-white rounded-3xl text-slate-900 shadow-2xl min-w-[180px] overflow-hidden border border-white">
+                                    <div className="p-5 text-center space-y-4">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t('dashboard.your_token', 'Your Token')}</p>
+                                            <span className="text-4xl font-black tracking-tighter text-indigo-600 block">
+                                                #{nextApt.queue_number || '1'}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="py-3 px-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('dashboard.estimated_wait', 'Estimated Wait')}</p>
+                                            <p className="text-xl font-black text-slate-900">
+                                                {(() => {
+                                                    const date = new Date(nextApt.start_time);
+                                                    if (!isToday(date)) return <span className="text-sm">{format(date, 'MMM d, p')}</span>;
+                                                    return formatWaitTime(nextApt.estimated_wait_time);
+                                                })()}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                {/* Premium Token Display */}
-                                <div className="relative z-10 flex flex-col items-center justify-center p-6 md:p-8 bg-white rounded-[1.5rem] text-slate-900 shadow-2xl shadow-indigo-900/40 min-w-[200px] border-4 border-slate-800">
-                                    <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1">
-                                        {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100" />)}
-                                    </div>
-                                    
-                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Your Token</p>
-                                    <div className="relative mb-4">
-                                        <span className="text-5xl font-black tracking-tighter text-indigo-600 block">
-                                            #{nextApt.queue_number || '1'}
-                                        </span>
-                                        <div className="absolute -inset-4 bg-indigo-500/10 blur-xl rounded-full -z-10" />
-                                    </div>
-                                    
-                                    <div className="w-full h-px bg-slate-100 mb-6" />
-                                    
-                                     <div className="text-center">
-                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Wait</p>
-                                         <p className="text-2xl font-black text-slate-900 flex items-baseline justify-center gap-1">
-                                             {(() => {
-                                                 const date = new Date(nextApt.start_time);
-                                                 if (!isToday(date)) {
-                                                     if (isTomorrow(date)) return <span className="text-xl">{t('common.tomorrow', 'Tomorrow')}</span>;
-                                                     return <span className="text-xl">{format(date, 'MMM d')}</span>;
-                                                 }
-                                                 return (
-                                                     <>
-                                                         <span className="text-indigo-600">~</span>
-                                                         {formatWaitTime(nextApt.estimated_wait_time)}
-                                                     </>
-                                                 );
-                                             })()}
-                                         </p>
-                                     </div>
-
-                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
-                                        {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100" />)}
-                                    </div>
+                                    <Link
+                                        to="/appointments"
+                                        className="w-full py-4 bg-indigo-600 text-white flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all font-black text-[10px] uppercase tracking-widest group/btn"
+                                    >
+                                        {t('common.manage_booking', 'Manage Booking')}
+                                        <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                                    </Link>
                                 </div>
                             </div>
                         </div>
-
-                        <Link
-                            to="/appointments"
-                            className="absolute -bottom-4 right-8 bg-indigo-600 text-white h-12 px-6 rounded-xl flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 font-black text-xs uppercase tracking-widest active:scale-95 group/btn"
-                        >
-                            Manage Booking
-                            <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                        </Link>
                     </div>
                 ) : (
                     <div className="bg-white border-2 border-dashed border-gray-100 rounded-[2.5rem] p-16 text-center group hover:border-indigo-100 transition-colors">

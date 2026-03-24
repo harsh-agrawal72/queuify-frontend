@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Building2, ArrowRight, Star, Clock, Shield, Filter, ChevronRight, Sparkles, Users, BadgeCheck, MessageCircle } from 'lucide-react';
+import { Search, MapPin, Building2, ArrowRight, Star, Clock, Shield, Filter, ChevronRight, Sparkles, Users, BadgeCheck, MessageCircle, Stethoscope, Scissors, Landmark, Library, Briefcase, GraduationCap, Wrench, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
@@ -19,6 +19,21 @@ const getIndustryTerminology = (type) => {
     }
 };
 
+const formatTime12h = (timeStr) => {
+    if (!timeStr || timeStr === '-') return null;
+    try {
+        const parts = timeStr.split(':');
+        if (parts.length < 2) return timeStr;
+        let [hours, minutes] = parts;
+        let h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h}:${minutes} ${ampm}`;
+    } catch (e) {
+        return timeStr;
+    }
+};
 const getTypeGradient = (type) => {
     switch (type) {
         case 'Hospital': case 'Clinic': return 'from-slate-700 to-slate-800';
@@ -66,15 +81,15 @@ export default function OrganizationsList() {
 
     const categories = [
         { label: 'All', value: '', icon: <Building2 className="h-4 w-4" /> },
-        { label: 'Clinic', value: 'Clinic', icon: '🩺' },
-        { label: 'Hospital', value: 'Hospital', icon: '🏥' },
-        { label: 'Salon', value: 'Salon', icon: '💇' },
-        { label: 'Bank', value: 'Bank', icon: '🏦' },
-        { label: 'Government', value: 'Government Office', icon: '🏛️' },
-        { label: 'Consultancy', value: 'Consultancy', icon: '💼' },
-        { label: 'Coaching', value: 'Coaching Institute', icon: '📚' },
-        { label: 'Service Center', value: 'Service Center', icon: '🔧' },
-        { label: 'Other', value: 'Other', icon: '📋' },
+        { label: 'Clinic', value: 'Clinic', icon: <Stethoscope className="h-4 w-4" /> },
+        { label: 'Hospital', value: 'Hospital', icon: <Building2 className="h-4 w-4" /> },
+        { label: 'Salon', value: 'Salon', icon: <Scissors className="h-4 w-4" /> },
+        { label: 'Bank', value: 'Bank', icon: <Landmark className="h-4 w-4" /> },
+        { label: 'Government', value: 'Government Office', icon: <Library className="h-4 w-4" /> },
+        { label: 'Consultancy', value: 'Consultancy', icon: <Briefcase className="h-4 w-4" /> },
+        { label: 'Coaching', value: 'Coaching Institute', icon: <GraduationCap className="h-4 w-4" /> },
+        { label: 'Service Center', value: 'Service Center', icon: <Wrench className="h-4 w-4" /> },
+        { label: 'Other', value: 'Other', icon: <ClipboardList className="h-4 w-4" /> },
     ];
 
     const renderStars = (rating) => {
@@ -94,36 +109,25 @@ export default function OrganizationsList() {
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-20">
             {/* Elegant Compact Hero Section */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 px-6 py-10 md:px-12 md:py-14 text-white shadow-2xl shadow-indigo-100/20">
+            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 px-6 py-8 md:px-10 md:py-10 text-white shadow-2xl shadow-indigo-100/20">
                 {/* Modern Abstract Background Elements */}
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-indigo-500/10 blur-[100px]" />
-                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-500/10 blur-[80px]" />
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-[80px]" />
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-blue-500/10 blur-[80px]" />
                 
                 <div className="relative z-10 max-w-2xl">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6"
-                    >
-                        <Sparkles className="h-3 w-3" />
-                        Explore Our Network
-                    </motion.div>
-                    
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-3xl md:text-4xl font-black tracking-tight mb-4 leading-tight"
+                        className="text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight"
                     >
-                        Professional Services, <br />
-                        <span className="text-indigo-400">Simplified.</span>
+                        Professional Services, <span className="text-indigo-400">Simplified.</span>
                     </motion.h1>
                     
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-slate-400 text-sm md:text-base font-medium mb-8 leading-relaxed max-w-lg"
+                        transition={{ delay: 0.1 }}
+                        className="text-slate-400 text-xs md:text-sm font-medium mb-6 leading-relaxed max-w-lg"
                     >
                         Connect with top-rated organizations and manage your appointments with our intelligent queue system.
                     </motion.p>
@@ -132,20 +136,20 @@ export default function OrganizationsList() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
+                        transition={{ delay: 0.2 }}
                         className="relative group max-w-xl"
                     >
-                        <div className="absolute inset-0 bg-indigo-500/20 rounded-2xl blur-xl group-focus-within:bg-indigo-500/40 transition-all" />
-                        <div className="relative flex items-center bg-white rounded-2xl p-1 shadow-2xl overflow-hidden">
-                            <Search className="h-6 w-6 text-gray-400 ml-4" />
+                        <div className="absolute inset-0 bg-indigo-500/20 rounded-xl blur-xl group-focus-within:bg-indigo-500/40 transition-all" />
+                        <div className="relative flex items-center bg-white rounded-xl p-0.5 shadow-2xl overflow-hidden">
+                            <Search className="h-5 w-5 text-gray-400 ml-3" />
                             <input
                                 type="text"
                                 placeholder="Search by name, category, or service..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 font-medium py-4 px-4 text-sm md:text-base placeholder-gray-400"
+                                className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 font-medium py-3 px-3 text-xs md:text-sm placeholder-gray-400"
                             />
-                            <button className="hidden md:flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition active:scale-95">
+                            <button className="hidden md:flex items-center gap-2 bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-indigo-700 transition active:scale-95 text-sm">
                                 Search
                             </button>
                         </div>
@@ -188,26 +192,30 @@ export default function OrganizationsList() {
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 5, scale: 1 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl shadow-indigo-100/50 overflow-hidden z-20 overflow-y-auto max-h-[300px] no-scrollbar"
+                                    className="absolute top-full right-0 w-[400px] mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl shadow-indigo-100/50 overflow-hidden z-20"
                                 >
-                                    {categories.map((cat) => (
-                                        <button
-                                            key={cat.value}
-                                            onClick={() => {
-                                                setFilter(cat.value);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-bold transition-colors hover:bg-indigo-50
-                                                ${filter === cat.value ? 'bg-indigo-50/50 text-indigo-600' : 'text-gray-600'}
-                                            `}
-                                        >
-                                            <span className="text-base grayscale group-hover:grayscale-0">{cat.icon}</span>
-                                            {cat.label}
-                                            {filter === cat.value && (
-                                                <BadgeCheck className="h-4 w-4 text-indigo-600 ml-auto" />
-                                            )}
-                                        </button>
-                                    ))}
+                                    <div className="grid grid-cols-2 p-2 gap-1">
+                                        {categories.map((cat) => (
+                                            <button
+                                                key={cat.value}
+                                                onClick={() => {
+                                                    setFilter(cat.value);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                                className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold transition-all rounded-xl hover:bg-indigo-50 group
+                                                    ${filter === cat.value ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600'}
+                                                `}
+                                            >
+                                                <div className={`p-1.5 rounded-lg transition-colors ${filter === cat.value ? 'bg-white shadow-sm' : 'bg-gray-50 group-hover:bg-white'}`}>
+                                                    <span className="text-indigo-500">{cat.icon}</span>
+                                                </div>
+                                                <span className="truncate">{cat.label}</span>
+                                                {filter === cat.value && (
+                                                    <BadgeCheck className="h-3.5 w-3.5 text-indigo-600 ml-auto" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </motion.div>
                             </>
                         )}
@@ -330,16 +338,27 @@ export default function OrganizationsList() {
                                                     <div className="flex items-center justify-between mt-2">
                                                         <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
                                                             <Clock className="h-3.5 w-3.5 text-gray-400" />
-                                                            <span>{org.open_time?.slice(0, 5)} - {org.close_time?.slice(0, 5)}</span>
+                                                            <span>
+                                                                {org.open_time && org.close_time ? (
+                                                                    `${formatTime12h(org.open_time)} - ${formatTime12h(org.close_time)}`
+                                                                ) : (
+                                                                    'Schedule not set'
+                                                                )}
+                                                            </span>
                                                         </div>
                                                         {(() => {
+                                                            if (!org.open_time || !org.close_time) return null;
                                                             const now = new Date();
-                                                            const currentStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                                                            const isOpen = currentStr >= (org.open_time?.slice(0, 5) || '00:00') && 
-                                                                         currentStr <= (org.close_time?.slice(0, 5) || '23:59');
+                                                            const currentMin = now.getHours() * 60 + now.getMinutes();
+                                                            const [oH, oM] = org.open_time.split(':').map(Number);
+                                                            const [cH, cM] = org.close_time.split(':').map(Number);
+                                                            const openMin = oH * 60 + (oM || 0);
+                                                            const closeMin = cH * 60 + (cM || 0);
+                                                            
+                                                            const isOpen = currentMin >= openMin && currentMin <= closeMin;
                                                             return (
-                                                                <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border ${
-                                                                    isOpen ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
+                                                                <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border shadow-sm ${
+                                                                    isOpen ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
                                                                 }`}>
                                                                     {isOpen ? 'Open Now' : 'Closed'}
                                                                 </span>
