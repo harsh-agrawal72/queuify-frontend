@@ -113,8 +113,8 @@ const AdminLiveQueue = () => {
     };
 
     const callPatient = (token) => {
-        toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-indigo-600 shadow-xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 text-white overflow-hidden`}>
+        toast.custom((toastObj) => (
+            <div className={`${toastObj.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-indigo-600 shadow-xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 text-white overflow-hidden`}>
                 <div className="flex-1 w-0 p-4">
                     <div className="flex items-center">
                         <div className="flex-shrink-0 bg-white/20 p-3 rounded-full">
@@ -219,53 +219,71 @@ const AdminLiveQueue = () => {
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-gray-100 pb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-2">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        <span className="relative flex h-4 w-4">
+                    <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-4">
+                        <div className="relative flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
-                        </span>
-                        {t('queue.dashboard_title', 'Real-time Queue Dashboard')}
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </div>
+                        {t('queue.dashboard_title', 'Live Queue Hub')}
                     </h1>
-                    <p className="text-gray-500 mt-2 flex items-center gap-2">
+                    <p className="text-slate-500 mt-2 font-medium flex items-center gap-2">
                         <Activity className="h-4 w-4 text-indigo-500" />
-                        {t('queue.managing_active', 'Managing {{count}} active service queues', { count: queues.length })}
+                        {t('queue.managing_active', 'Monitoring {{count}} active service streams', { count: queues.length })}
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white p-1.5 pl-4 rounded-2xl border border-gray-200 shadow-sm">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <input
-                        type="date"
-                        value={selectedDate}
-                        onChange={e => setSelectedDate(e.target.value)}
-                        className="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 cursor-pointer p-0 pr-4"
-                    />
-                    <div className="w-px h-6 bg-gray-200"></div>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 bg-white p-2 pl-4 rounded-2xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={e => setSelectedDate(e.target.value)}
+                            className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0 pr-4"
+                        />
+                    </div>
+                    
                     <button
                         onClick={handleRefresh}
-                        className={`p-2 rounded-xl hover:bg-gray-50 transition-all text-gray-500 ${refreshing ? 'animate-spin text-indigo-600' : ''}`}
+                        className={`p-3 bg-white border border-slate-200 rounded-2xl shadow-sm hover:bg-slate-50 transition-all text-slate-500 group ${refreshing ? 'cursor-not-allowed' : 'active:scale-95'}`}
+                        disabled={refreshing}
                     >
-                        <RefreshCw className="h-4 w-4" />
+                        <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin text-indigo-600' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
                     </button>
                 </div>
             </div>
 
             {/* Overall Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('queue.waiting_now', 'Waiting Now')}</p>
-                    <p className="text-3xl font-black text-orange-600 mt-1">{totalPending}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-orange-50 rounded-lg">
+                            <Users className="h-4 w-4 text-orange-600" />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.waiting_now', 'In Queue')}</p>
+                    </div>
+                    <p className="text-4xl font-black text-slate-900">{totalPending}</p>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('queue.currently_serving', 'Currently Serving')}</p>
-                    <p className="text-3xl font-black text-indigo-600 mt-1">{totalServing}</p>
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-indigo-50 rounded-lg">
+                            <Activity className="h-4 w-4 text-indigo-600" />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.currently_serving', 'Now Serving')}</p>
+                    </div>
+                    <p className="text-4xl font-black text-slate-900">{totalServing}</p>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hidden md:block">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('queue.avg_service_time', 'Avg. Service Time')}</p>
-                    <p className="text-3xl font-black text-emerald-600 mt-1">
-                        {predictiveInsights?.averageDurations?.[0]?.minutes || 15}{t('common.minutes_short', 'm')}
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow hidden md:block">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-emerald-50 rounded-lg">
+                            <Clock className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.avg_service_time', 'Avg. Session')}</p>
+                    </div>
+                    <p className="text-4xl font-black text-slate-900">
+                        {predictiveInsights?.averageDurations?.[0]?.minutes || 15}<span className="text-lg text-slate-400 ml-1">{t('common.minutes_short', 'm')}</span>
                     </p>
                 </div>
             </div>
@@ -304,47 +322,56 @@ const AdminLiveQueue = () => {
                                 className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[400px]"
                             >
                                 {/* Queue Header */}
-                                <div className="p-6 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
-                                            <User className="h-6 w-6" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-black text-slate-800 tracking-tight">
-                                                {queue.resource_name}
-                                            </h3>
-                                            <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                {queue.name} • {t('queue.active_today', 'Active Today')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
-                                            className="flex items-center gap-2 p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-gray-100 shadow-sm transition-all text-xs font-bold"
-                                            title="Rebalance this queue"
-                                        >
-                                            <RefreshCw className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">{t('common.rebalance', 'Rebalance')}</span>
-                                        </button>
-                                        <button
-                                            onClick={() => handleAddWalkIn(queue)}
-                                            className="flex items-center gap-2 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm transition-all text-xs font-bold"
-                                            title={t('queue.add_walkin', "Add Walk-in")}
-                                        >
-                                            <UserPlus className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">{t('queue.add_walkin', 'Add Walk-in')}</span>
-                                        </button>
-                                        <div className="flex gap-2">
-                                            <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100 text-center min-w-[80px]">
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{t('queue.waiting_status', 'Waiting')}</p>
-                                                <p className="text-xl font-black text-slate-800">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                                <div className="p-8 bg-slate-50/50 border-b border-slate-100">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                                        <div className="flex items-center gap-5">
+                                            <div className="h-14 w-14 bg-white shadow-sm border border-slate-200 rounded-2xl flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-transform">
+                                                <User className="h-7 w-7" />
                                             </div>
-                                            <div className="bg-indigo-600 px-4 py-2 rounded-2xl shadow-sm border border-indigo-500 text-center min-w-[80px]">
-                                                <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-tighter">{t('queue.est_wait', 'Est. Wait')}</p>
-                                                <p className="text-xl font-black text-white">
-                                                    {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || '??'}{t('common.minutes_short', 'm')}
-                                                </p>
+                                            <div>
+                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">
+                                                    {queue.resource_name}
+                                                </h3>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-md uppercase tracking-wider">{queue.name}</span>
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                        <Activity className="h-3 w-3" /> {t('queue.active_today', 'Active')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-3 self-stretch sm:self-auto">
+                                            <div className="flex-1 sm:flex-none flex gap-1.5">
+                                                <button
+                                                    onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
+                                                    className="flex-1 sm:flex-none p-2.5 bg-white text-slate-600 rounded-2xl hover:bg-slate-100 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
+                                                    title="Rebalance this queue"
+                                                >
+                                                    <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleAddWalkIn(queue)}
+                                                    className="flex-1 sm:flex-none p-2.5 bg-white text-indigo-600 rounded-2xl hover:bg-indigo-50 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
+                                                    title={t('queue.add_walkin', "Add Walk-in")}
+                                                >
+                                                    <UserPlus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                                </button>
+                                            </div>
+
+                                            <div className="h-11 w-px bg-slate-200 hidden sm:block"></div>
+
+                                            <div className="flex gap-2 flex-1 sm:flex-none">
+                                                <div className="flex-1 sm:min-w-[70px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center">
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-0.5">{t('queue.waiting_status', 'Wait')}</p>
+                                                    <p className="text-lg font-black text-slate-900 leading-none">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                                                </div>
+                                                <div className="flex-1 sm:min-w-[70px] bg-slate-900 px-3 py-2 rounded-2xl shadow-sm text-center">
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-0.5">{t('queue.est_wait', 'Est.')}</p>
+                                                    <p className="text-lg font-black text-white leading-none">
+                                                        {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || 0}<span className="text-[10px] ml-0.5 text-slate-400 uppercase font-black">m</span>
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -366,89 +393,102 @@ const AdminLiveQueue = () => {
                                             return (
                                                 <div key={appt.id}>
                                                     {showSeparator && (
-                                                        <div className="flex items-center gap-4 my-6 opacity-60">
-                                                            <div className="h-px bg-gray-200 flex-1"></div>
-                                                            <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">
-                                                                <Clock className="h-3 w-3" />
-                                                                {formatTime(appt.slot_start) || t('queue.next_available', 'Next Available')}
-                                                            </div>
-                                                            <div className="h-px bg-gray-200 flex-1"></div>
-                                                        </div>
-                                                    )}
-                                                    <motion.div
-                                                        layout
-                                                    className={`
-                                                        p-4 rounded-2xl border transition-all duration-300 flex items-center gap-4
-                                                        ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100 scale-[1.02] z-10' :
-                                                            isNext ? 'bg-indigo-50 border-indigo-200' :
-                                                                isCompleted ? 'bg-gray-50 opacity-50 border-gray-100' : 'bg-white border-gray-100'}
-                                                    `}
-                                                >
-                                                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-lg ${isServing ? 'bg-white/20' : 'bg-slate-100 text-slate-600'}`}>
-                                                        #{appt.queue_number}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                            <h4 className={`font-bold truncate ${isServing ? 'text-white' : 'text-slate-900'}`}>{appt.user_name}</h4>
-                                                            {appt.user_phone && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isServing ? 'bg-white/20 border-white/30 text-white' : 'bg-indigo-50 border-indigo-100 text-indigo-600'}`}>{appt.user_phone}</span>}
-                                                            {isServing && <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse tracking-wider">{t('status.serving', 'SERVING')}</span>}
-                                                            {isNext && <span className="text-[10px] font-black bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full tracking-wider">{t('status.next', 'NEXT')}</span>}
-                                                        </div>
-                                                        {appt.user_email && <p className={`text-[10px] font-medium truncate ${isServing ? 'text-indigo-100' : 'text-slate-500'}`}>{appt.user_email}</p>}
-                                                        <p className={`text-xs ${isServing ? 'text-indigo-100' : 'text-slate-400'} flex items-center gap-2 mt-0.5`}>
-                                                            <Clock className="h-3 w-3" />
-                                                            {appt.slot_start ? t('queue.slot_time', `{{time}} Slot`, { time: formatTime(appt.slot_start) }) : t('queue.no_slot', 'No Slot')} • {t('queue.ticket', 'Ticket')}: {appt.token_number}
-                                                        </p>
-                                                    </div>
+                                                                        <div className="flex items-center gap-4 my-8">
+                                                                            <div className="h-px bg-slate-200 flex-1"></div>
+                                                                            <div className="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 shadow-sm rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                                                                                <Clock className="h-3 w-3 text-indigo-500" />
+                                                                                {formatTime(appt.slot_start) || t('queue.next_available', 'Next Available')}
+                                                                            </div>
+                                                                            <div className="h-px bg-slate-200 flex-1"></div>
+                                                                        </div>
+                                                                    )}
+                                                                    <motion.div
+                                                                        layout
+                                                                        className={`
+                                                                            p-5 rounded-[1.5rem] border transition-all duration-300 flex items-center gap-5 group
+                                                                            ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02] z-10' :
+                                                                                isNext ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' :
+                                                                                    isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
+                                                                        `}
+                                                                    >
+                                                                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm ${isServing ? 'bg-white/20' : 'bg-white border border-slate-100 text-slate-400'}`}>
+                                                                            {appt.queue_number}
+                                                                        </div>
+                                                                        
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                                <h4 className={`text-lg font-bold truncate ${isServing ? 'text-white' : 'text-slate-900'}`}>{appt.user_name}</h4>
+                                                                                {isServing && (
+                                                                                    <span className="flex items-center gap-1 text-[9px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse tracking-widest">
+                                                                                        <div className="h-1 w-1 bg-white rounded-full"></div> {t('status.serving', 'SERVING')}
+                                                                                    </span>
+                                                                                )}
+                                                                                {isNext && (
+                                                                                    <span className="text-[9px] font-black bg-indigo-600 text-white px-2 py-0.5 rounded-full tracking-widest uppercase">{t('status.next', 'UP NEXT')}</span>
+                                                                                )}
+                                                                            </div>
+                                                                            
+                                                                            <div className="flex items-center gap-3 flex-wrap">
+                                                                                {appt.user_phone && (
+                                                                                    <span className={`text-[11px] font-semibold flex items-center gap-1.5 ${isServing ? 'text-indigo-100' : 'text-slate-500'}`}>
+                                                                                        <Users className="h-3 w-3" /> {appt.user_phone}
+                                                                                    </span>
+                                                                                )}
+                                                                                <span className={`text-[11px] font-semibold flex items-center gap-1.5 ${isServing ? 'text-indigo-100' : 'text-slate-400'}`}>
+                                                                                    <Clock className="h-3 w-3" /> {appt.slot_start ? formatTime(appt.slot_start) : t('queue.no_slot', 'No Slot')}
+                                                                                </span>
+                                                                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${isServing ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                                                                    {appt.token_number}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
 
-                                                    <div className="flex gap-2">
-                                                        {isServing ? (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => updateStatus(appt.id, 'completed')}
-                                                                    className="p-2.5 bg-white text-indigo-600 rounded-xl hover:bg-green-500 hover:text-white transition-all shadow-sm"
-                                                                    title="Mark Done"
-                                                                >
-                                                                    <CheckCircle className="h-5 w-5" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => updateStatus(appt.id, 'no_show')}
-                                                                    className="p-2.5 bg-white/10 text-white rounded-xl hover:bg-red-500 transition-all"
-                                                                    title="No Show / Skip"
-                                                                >
-                                                                    <SkipForward className="h-5 w-5" />
-                                                                </button>
-                                                            </>
-                                                        ) : (appt.status === 'confirmed' || appt.status === 'pending') ? (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        updateStatus(appt.id, 'serving');
-                                                                        callPatient(appt.token_number);
-                                                                    }}
-                                                                    className="p-2.5 bg-white border border-slate-200 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
-                                                                    title="Start Serving"
-                                                                >
-                                                                    <Play className="h-4 w-4 fill-current" />
-                                                                </button>
-                                                            </>
-                                                        ) : isCompleted && (
-                                                            <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md ${appt.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                                {appt.status.replace('_', ' ')}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    </motion.div>
-                                                </div>
+                                                                        <div className="flex gap-2">
+                                                                            {isServing ? (
+                                                                                <>
+                                                                                    <button
+                                                                                        onClick={() => updateStatus(appt.id, 'completed')}
+                                                                                        className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
+                                                                                        title="Mark Done"
+                                                                                    >
+                                                                                        <CheckCircle className="h-5 w-5" />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => updateStatus(appt.id, 'no_show')}
+                                                                                        className="h-11 w-11 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-all active:scale-95"
+                                                                                        title="No Show / Skip"
+                                                                                    >
+                                                                                        <SkipForward className="h-5 w-5" />
+                                                                                    </button>
+                                                                                </>
+                                                                            ) : (appt.status === 'confirmed' || appt.status === 'pending') ? (
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        updateStatus(appt.id, 'serving');
+                                                                                        callPatient(appt.token_number);
+                                                                                    }}
+                                                                                    className="h-11 w-11 bg-white border border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                                                    title="Start Serving"
+                                                                                >
+                                                                                    <Play className="h-4 w-4 fill-current" />
+                                                                                </button>
+                                                                            ) : isCompleted && (
+                                                                                <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${appt.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                                                                                    {appt.status.replace('_', ' ')}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </motion.div>
+                                                                </div>
                                             );
                                         })
                                     )}
                                 </div>
 
                                 {/* Queue Footer Action */}
-                                <div className="p-4 bg-white border-t border-gray-100">
+                                <div className="p-6 bg-white border-t border-slate-100">
                                     <button
-                                        className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-600 transition-colors"
+                                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-indigo-600 shadow-lg shadow-slate-200 hover:shadow-indigo-200 transition-all active:scale-[0.98]"
                                         onClick={() => handleCallNext(queue)}
                                     >
                                         <ArrowRightCircle className="h-5 w-5" />
@@ -469,47 +509,47 @@ const AdminLiveQueue = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
                             onClick={() => setTransitioningQueue(null)}
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative bg-white rounded-[2.5rem] p-8 shadow-2xl max-w-md w-full overflow-hidden"
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            className="relative bg-white rounded-[3rem] p-10 shadow-2xl max-w-md w-full overflow-hidden border border-slate-100"
                         >
-                            <div className="absolute top-0 left-0 w-full h-2 bg-indigo-600"></div>
+                            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-indigo-600"></div>
 
-                            <div className="text-center space-y-4">
-                                <div className="mx-auto w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mb-6">
-                                    <ArrowRightCircle className="h-10 w-10 text-indigo-600" />
+                            <div className="text-center">
+                                <div className="mx-auto w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-3">
+                                    <ArrowRightCircle className="h-12 w-12 text-indigo-600 -rotate-3" />
                                 </div>
 
-                                <h3 className="text-2xl font-black text-slate-900">{t('queue.transition_title', 'Queue Transition')}</h3>
-                                <p className="text-slate-500 leading-relaxed">
-                                    {t('queue.transition_message', `Customer #{{number}} is still marked as serving. How was their session ended?`, { number: transitioningQueue.currentAppt.queue_number })}
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-3">{t('queue.transition_title', 'Next in Line')}</h3>
+                                <p className="text-slate-500 font-medium leading-relaxed px-4">
+                                    {t('queue.transition_message', `Session for #{{number}} is ending. How should we record this?`, { number: transitioningQueue.currentAppt.queue_number })}
                                 </p>
 
-                                <div className="grid grid-cols-1 gap-3 pt-6">
+                                <div className="grid grid-cols-1 gap-4 pt-10">
                                     <button
                                         onClick={() => completeTransition('completed')}
-                                        className="w-full py-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-emerald-100 transition-all border border-emerald-100"
+                                        className="w-full py-5 bg-emerald-50 text-emerald-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100 shadow-sm active:scale-95"
                                     >
                                         <CheckCircle className="h-5 w-5" />
                                         {t('queue.completed_successfully', 'Completed Successfully')}
                                     </button>
                                     <button
                                         onClick={() => completeTransition('no_show')}
-                                        className="w-full py-4 bg-rose-50 text-rose-700 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-rose-100 transition-all border border-rose-100"
+                                        className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
                                     >
                                         <SkipForward className="h-5 w-5" />
-                                        {t('status.no_show', 'No Show')} / {t('status.cancelled', 'Cancelled')}
+                                        {t('status.no_show', 'Mark as No-Show')}
                                     </button>
                                     <button
                                         onClick={() => setTransitioningQueue(null)}
-                                        className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all"
+                                        className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all text-sm mt-2"
                                     >
-                                        {t('common.wait_cancel', "Wait, don't advance yet")}
+                                        {t('common.wait_cancel', "Cancel & Go Back")}
                                     </button>
                                 </div>
                             </div>
@@ -525,62 +565,64 @@ const AdminLiveQueue = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
                             onClick={() => setIsManualModalOpen(false)}
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative bg-white rounded-[2rem] p-8 shadow-2xl max-w-md w-full overflow-hidden"
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            className="relative bg-white rounded-[2.5rem] p-10 shadow-2xl max-w-md w-full overflow-hidden border border-slate-100"
                         >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                                    <UserPlus className="h-5 w-5 text-indigo-600" />
-                                    {t('queue.add_walkin', 'Add Walk-in')}
-                                </h3>
-                                <button onClick={() => setIsManualModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                    <X className="h-5 w-5 text-gray-400" />
+                            <div className="flex justify-between items-center mb-8">
+                                <div>
+                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">
+                                        {t('queue.add_walkin', 'Manual Entry')}
+                                    </h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('queue.direct_addition', 'Direct Queue Addition')}</p>
+                                </div>
+                                <button onClick={() => setIsManualModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors border border-slate-100 text-slate-400">
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
 
-                            <div className="bg-indigo-50 p-4 rounded-2xl mb-6">
-                                <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">{t('queue.target_queue', 'Target Queue')}</p>
-                                <p className="text-sm font-bold text-slate-700">{activeQueueForManual?.resource_name || activeQueueForManual?.name}</p>
-                                <p className="text-xs text-indigo-400">{activeQueueForManual?.name}</p>
+                            <div className="bg-slate-50 p-6 rounded-3xl mb-8 border border-slate-100">
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">{t('queue.target_queue', 'Target Stream')}</p>
+                                <p className="text-lg font-black text-indigo-600 leading-none">{activeQueueForManual?.resource_name || activeQueueForManual?.name}</p>
+                                <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">{activeQueueForManual?.name}</p>
                             </div>
 
-                            <form onSubmit={submitManualEntry} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">{t('common.customer_name', 'Customer Name')}</label>
+                            <form onSubmit={submitManualEntry} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.customer_name', 'Customer Name')}</label>
                                     <input
                                         required
                                         type="text"
-                                        placeholder={t('common.full_name', 'Full Name')}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                                        placeholder={t('common.full_name', 'Enter full name')}
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 placeholder:text-slate-300"
                                         value={manualEntryData.customer_name}
                                         onChange={e => setManualEntryData({ ...manualEntryData, customer_name: e.target.value })}
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">{t('common.phone_number', 'Phone Number')}</label>
+                                <div className="space-y-2">
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.phone_number', 'Mobile Contact')}</label>
                                     <input
                                         required
                                         type="tel"
-                                        placeholder="+91 00000 00000"
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                                        placeholder="+91"
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 placeholder:text-slate-300"
                                         value={manualEntryData.customer_phone}
                                         onChange={e => setManualEntryData({ ...manualEntryData, customer_phone: e.target.value })}
                                     />
                                 </div>
 
-                                <div className="pt-4">
+                                <div className="pt-6">
                                     <button
                                         type="submit"
-                                        className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 active:scale-95"
                                     >
-                                        {t('queue.add_to_queue', 'Add to Queue')}
-                                        <ArrowRightCircle className="h-5 w-5" />
+                                        <span>{t('queue.add_to_queue', 'Confirm & Add')}</span>
+                                        <ArrowRightCircle className="h-6 w-6" />
                                     </button>
                                 </div>
                             </form>

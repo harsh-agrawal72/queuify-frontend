@@ -5,6 +5,7 @@ import {
     Filter,
     Calendar,
     MoreVertical,
+    Check,
     CheckCircle,
     XCircle,
     Clock,
@@ -144,6 +145,18 @@ const AppointmentManager = () => {
         }
     };
 
+    const formatDate = (dateString, formatStr) => {
+        if (!dateString) return '-';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '-';
+            return format(date, formatStr);
+        } catch (error) {
+            console.error("Date formatting error:", error);
+            return '-';
+        }
+    };
+
     const getStatusBadge = (status, cancelledBy) => {
         const styles = {
             'pending': 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-100',
@@ -158,7 +171,7 @@ const AppointmentManager = () => {
             'pending': <Clock className="h-3 w-3" />,
             'booked': <Calendar className="h-3 w-3" />,
             'confirmed': <CheckCircle className="h-3 w-3" />,
-            'completed': <Check className="h-3 w-3" />,
+            'completed': <CheckCircle className="h-3 w-3" />, // Using CheckCircle for consistency
             'cancelled': <XCircle className="h-3 w-3" />
         };
 
@@ -323,11 +336,11 @@ const AppointmentManager = () => {
                                                 <div className="flex flex-col gap-1">
                                                     <div className="flex items-center gap-1.5 text-gray-900 font-medium text-sm">
                                                         <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                                                        {apt.start_time ? format(new Date(apt.start_time), 'MMM d, yyyy') : '-'}
+                                                        {formatDate(apt.start_time, 'MMM d, yyyy')}
                                                     </div>
                                                     <div className="flex items-center gap-1.5 text-gray-500 text-xs">
                                                         <Clock className="h-3.5 w-3.5" />
-                                                        {apt.start_time ? format(new Date(apt.start_time), 'h:mm a') : '-'}
+                                                        {formatDate(apt.start_time, 'h:mm a')}
                                                     </div>
                                                 </div>
                                             </td>
@@ -480,11 +493,11 @@ const AppointmentManager = () => {
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.date', 'Date')}</p>
-                                        <p className="text-xs font-semibold text-gray-800">{apt.start_time ? format(new Date(apt.start_time), 'MMM d, yyyy') : '-'}</p>
+                                        <p className="text-xs font-semibold text-gray-800">{formatDate(apt.start_time, 'MMM d, yyyy')}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.time', 'Time')}</p>
-                                        <p className="text-xs font-semibold text-gray-800 font-mono">{apt.start_time ? format(new Date(apt.start_time), 'h:mm a') : '-'}</p>
+                                        <p className="text-xs font-semibold text-gray-800 font-mono">{formatDate(apt.start_time, 'h:mm a')}</p>
                                     </div>
                                 </div>
 
