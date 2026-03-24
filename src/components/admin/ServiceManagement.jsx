@@ -179,7 +179,7 @@ const ServiceManagement = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {t('navigation.service_management', 'Service Management')}
-                        <InfoTooltip text={t('service.mgmt_tooltip', 'Services are the top-level categories of what you offer (e.g., Dental Checkup, Haircut). First create a Service, then add specific Resources (staff/rooms) to it.')} />
+                        <InfoTooltip align="start" text={t('service.mgmt_tooltip', 'Services are the top-level categories of what you offer (e.g., Dental Checkup, Haircut). First create a Service, then add specific Resources (staff/rooms) to it.')} />
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">{t('service.mgmt_subtitle', 'Create services and assign resources (staff, rooms, equipment) to them.')}</p>
                 </div>
@@ -254,7 +254,7 @@ const ServiceManagement = () => {
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
                                                 <Users className="h-4 w-4" /> {t('service.resources', 'Resources')}
-                                                <InfoTooltip text={t('service.resources_tooltip', "Resources are the actual assets or people who perform the service. Each resource can have their own schedule later in 'Slot Management'.")} />
+                                                <InfoTooltip align="start" text={t('service.resources_tooltip', "Resources are the actual assets or people who perform the service. Each resource can have their own schedule later in 'Slot Management'.")} />
                                             </h4>
                                             <button
                                                 onClick={() => setResourceModal({ open: true, edit: false, data: null, serviceId: service.id })}

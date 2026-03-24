@@ -101,9 +101,27 @@ export default function UserDashboard() {
     return (
         <div className="space-y-8">
             <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.welcome', 'Welcome back')}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! 👋</h1>
-                    <p className="text-gray-500 mt-1">{t('dashboard.subtitle', "Here's what's happening with your appointments.")}</p>
+                <div className="flex items-center gap-4 text-left">
+                    {user?.profile_picture_url ? (
+                        <div className="relative group">
+                             <img 
+                                src={user.profile_picture_url} 
+                                alt={user.name} 
+                                className="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-xl shadow-indigo-100/50 group-hover:scale-105 transition-transform duration-300" 
+                            />
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-white rounded-full"></div>
+                        </div>
+                    ) : (
+                        <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-black border-4 border-white shadow-xl shadow-indigo-100/50">
+                            {user?.name?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                    )}
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
+                            {t('dashboard.welcome', 'Welcome back')}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}! 👋
+                        </h1>
+                        <p className="text-gray-500 font-medium">{t('dashboard.subtitle', "Here's what's happening with your appointments.")}</p>
+                    </div>
                 </div>
                 {isServing && (
                     <motion.div
@@ -154,78 +172,130 @@ export default function UserDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
+                className="mb-8"
             >
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900">{t('dashboard.next_appointment', 'Next Appointment')}</h2>
+                <div className="flex items-center justify-between mb-6 px-2">
+                    <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-indigo-500" />
+                        {t('dashboard.next_appointment', 'Next Appointment')}
+                    </h2>
                     {nextApt && (
-                        <Link to="/appointments" className="text-indigo-600 text-sm font-medium hover:underline">
+                        <Link to="/appointments" className="text-indigo-600 text-sm font-black hover:underline px-4 py-2 bg-indigo-50 rounded-xl transition-colors">
                             {t('common.view_all', 'View All')}
                         </Link>
                     )}
                 </div>
 
                 {nextApt ? (
-                    <div className={`bg-gradient-to-r ${isServing ? 'from-emerald-600 to-teal-600' : 'from-indigo-600 to-purple-600'} rounded-3xl p-1 shadow-lg text-white transition-all duration-500`}>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-[20px] p-6 sm:p-8">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                <div className="space-y-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 text-white/80 mb-2">
-                                            <MapPin className="h-4 w-4" />
-                                            <span className="text-sm font-bold uppercase tracking-widest">{nextApt.org_name}</span>
+                    <div className="group relative">
+                        {/* Premium Card Background with Animated Gradient */}
+                        <div className={`absolute -inset-0.5 bg-gradient-to-r ${isServing ? 'from-emerald-500 to-teal-500' : 'from-indigo-600 to-purple-600'} rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-tilt`}></div>
+                        
+                        <div className="relative bg-white rounded-[2.5rem] p-1 shadow-2xl shadow-indigo-100 overflow-hidden border border-gray-100">
+                            <div className={`rounded-[2.25rem] p-8 md:p-10 flex flex-col md:flex-row items-stretch justify-between gap-10 bg-slate-900 text-white relative overflow-hidden`}>
+                                {/* Abstract Shapes */}
+                                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl opacity-50" />
+                                <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl opacity-30" />
+
+                                <div className="relative z-10 flex-1 space-y-8">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest">
+                                                {nextApt.service_name}
+                                            </span>
+                                            {isServing && (
+                                                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest animate-pulse">
+                                                    Currently Serving
+                                                </span>
+                                            )}
                                         </div>
-                                        <h3 className="text-3xl font-black mb-1">{nextApt.service_name}</h3>
-                                        <p className="text-white/60 text-xs font-mono">ID: {nextApt.token_number}</p>
+                                        <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none group-hover:text-indigo-300 transition-colors">
+                                            {nextApt.org_name}
+                                        </h3>
+                                        <div className="flex flex-wrap items-center gap-6 text-slate-400 text-sm font-bold">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="h-4 w-4 text-indigo-400" />
+                                                <span>{new Date(nextApt.start_time).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-indigo-400" />
+                                                <span>{new Date(nextApt.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="h-4 w-4 text-indigo-400" />
+                                                <span className="truncate max-w-[200px]">{nextApt.org_address}</span>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="flex gap-4">
-                                        <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                                            <Users className="h-3 w-3" />
-                                            <span className="text-xs font-bold flex items-center gap-1">
-                                                {t('appointment.people_ahead', '{{count}} Ahead', { count: nextApt.people_ahead || 0 })}
-                                                <InfoTooltip text={t('appointment.people_ahead_tooltip', "Number of confirmed bookings currently ahead of you in this specific slot.")} />
-                                            </span>
+                                    <div className="flex flex-wrap gap-4 pt-4 border-t border-white/5">
+                                        <div className="bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-3 border border-white/10">
+                                            <Users className="h-4 w-4 text-slate-400" />
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">People Ahead</p>
+                                                <p className="text-sm font-black text-white">{nextApt.people_ahead || 0}</p>
+                                            </div>
                                         </div>
-                                        <div className="bg-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                                            <Clock className="h-3 w-3" />
-                                            <span className="text-xs font-bold flex items-center gap-1">
-                                                {formatWaitTime(nextApt.estimated_wait_time)} {t('common.wait', 'wait')}
-                                                <InfoTooltip text={t('appointment.wait_time_tooltip', "Estimated time until your turn, based on real-time resource performance.")} />
-                                            </span>
+                                        <div className="bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-3 border border-white/10">
+                                            <Sparkles className="h-4 w-4 text-indigo-400" />
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Now Serving</p>
+                                                <p className="text-sm font-black text-white">#{nextApt.current_serving_number || 0}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4 bg-white shadow-2xl shadow-indigo-900/20 p-6 rounded-[2rem] text-slate-900 min-w-[200px]">
-                                    <div className="text-center flex-1 border-r border-slate-100 pr-4">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 flex items-center justify-center gap-1">
-                                            {t('appointment.your_token', 'Your Token')}
-                                            <InfoTooltip text={t('appointment.token_tooltip', "Your unique sequence number for this slot. Use this for tracking your position.")} />
-                                        </p>
-                                        <p className="text-4xl font-black text-indigo-600">#{nextApt.queue_number}</p>
+                                {/* Premium Token Display */}
+                                <div className="relative z-10 flex flex-col items-center justify-center p-8 md:p-12 bg-white rounded-[2rem] text-slate-900 shadow-2xl shadow-indigo-900/40 min-w-[240px] border-4 border-slate-800">
+                                    <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1">
+                                        {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100" />)}
                                     </div>
-                                    <Link
-                                        to={`/queue/${nextApt.id}`}
-                                        className="h-14 w-14 bg-indigo-600 text-white rounded-[1.25rem] flex items-center justify-center hover:bg-slate-900 transition-all shadow-lg shadow-indigo-200"
-                                    >
-                                        <ArrowRight className="h-6 w-6" />
-                                    </Link>
+                                    
+                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Your Token</p>
+                                    <div className="relative mb-6">
+                                        <span className="text-7xl font-black tracking-tighter text-indigo-600 block">
+                                            #{nextApt.queue_number || '1'}
+                                        </span>
+                                        <div className="absolute -inset-4 bg-indigo-500/10 blur-xl rounded-full -z-10" />
+                                    </div>
+                                    
+                                    <div className="w-full h-px bg-slate-100 mb-6" />
+                                    
+                                    <div className="text-center">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Estimated Wait</p>
+                                        <p className="text-2xl font-black text-slate-900">
+                                            ~{nextApt.estimated_wait_time || '5'}<span className="text-sm ml-1 text-slate-500 uppercase">Mins</span>
+                                        </p>
+                                    </div>
+
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
+                                        {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100" />)}
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <Link
+                            to="/appointments"
+                            className="absolute -bottom-4 right-12 bg-indigo-600 text-white h-16 px-8 rounded-2xl flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 font-black text-sm uppercase tracking-widest active:scale-95 group/btn"
+                        >
+                            Manage Booking
+                            <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
+                        </Link>
                     </div>
                 ) : (
-                    <div className="bg-white border rounded-2xl p-10 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Calendar className="h-8 w-8 text-gray-400" />
+                    <div className="bg-white border-2 border-dashed border-gray-100 rounded-[2.5rem] p-16 text-center group hover:border-indigo-100 transition-colors">
+                        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner group-hover:bg-indigo-50 transition-colors">
+                            <Calendar className="h-10 w-10 text-gray-200 group-hover:text-indigo-200 transition-colors" />
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">{t('appointment.no_upcoming', 'No upcoming appointments')}</h3>
-                        <p className="text-gray-500 mt-1 mb-6">{t('appointment.clear_schedule', 'Looks like your schedule is clear.')}</p>
+                        <h3 className="text-2xl font-black text-gray-900 mb-3">{t('appointment.no_upcoming', 'No upcoming appointments')}</h3>
+                        <p className="text-gray-500 font-medium max-w-sm mx-auto mb-10">{t('appointment.clear_schedule', 'Your schedule is currently clear. Explore professional services near you.')}</p>
                         <Link
                             to="/organizations"
-                            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition font-medium"
+                            className="inline-flex items-center gap-3 bg-indigo-600 text-white px-10 py-5 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 font-black text-sm uppercase tracking-widest active:scale-95"
                         >
-                            <Search className="h-4 w-4" />
+                            <Search className="h-5 w-5" />
                             {t('user.dashboard.find_and_book', 'Find & Book Appointment')}
                         </Link>
                     </div>

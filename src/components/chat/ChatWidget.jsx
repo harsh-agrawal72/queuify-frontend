@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { MessageCircle, X, Send, ChevronLeft } from 'lucide-react';
+import { MessageCircle, X, Send, ChevronLeft, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import EmojiPicker from 'emoji-picker-react';
 import { io } from 'socket.io-client';
 
 const ChatWidget = () => {
@@ -11,9 +12,12 @@ const ChatWidget = () => {
     const [conversations, setConversations] = useState([]);
     const [activeChat, setActiveChat] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [input, setInput] = useState('');
     const [socket, setSocket] = useState(null);
     const messagesEndRef = useRef(null);
+    const emojiPickerRef = useRef(null);
 
     // Initialize Socket
     useEffect(() => {
@@ -41,7 +45,21 @@ const ChatWidget = () => {
 
         const handleNewMessage = (msg) => {
             if (msg.conversation_id === activeChat.id) {
-                setMessages(prev => [...prev, msg]);
+                setMessages(prev => {
+                    // Deduplicate: check if message ID already exists
+                    if (prev.some(m => m.id === msg.id)) return prev;
+                    
+                    // Also check for matching content from same sender in last 10 seconds (for non-ID matches)
+                    const isDuplicateContent = prev.some(m => 
+                        m.content === msg.content && 
+                        m.sender_type === msg.sender_type &&
+                        (new Date(msg.created_at) - new Date(m.created_at)) < 10000 &&
+                        (m.id && isNaN(m.id)) // temporary ID check
+                    );
+                    if (isDuplicateContent) return prev;
+
+                    return [...prev, msg];
+                });
                 scrollToBottom();
                 
                 // If it's from admin, mark as read
@@ -59,10 +77,10 @@ const ChatWidget = () => {
         };
     }, [socket, activeChat]);
 
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+    const scrollToBottom = (behavior = 'smooth') => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior });
+        }
     };
 
     const fetchConversations = async () => {
@@ -80,6 +98,19 @@ const ChatWidget = () => {
             fetchConversations();
         }
     }, [isOpen, activeChat]);
+
+    // Handle Click Away for Emoji Picker
+    useEffect(() => {
+        const handleClickAway = (event) => {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+                setShowEmojiPicker(false);
+            }
+        };
+        if (showEmojiPicker) {
+            document.addEventListener('mousedown', handleClickAway);
+        }
+        return () => document.removeEventListener('mousedown', handleClickAway);
+    }, [showEmojiPicker]);
 
     // Handle global open-chat events
     useEffect(() => {
@@ -117,19 +148,22 @@ const ChatWidget = () => {
     const handleOpenChat = async (conv) => {
         setActiveChat(conv);
         setMessages([]);
+        setLoadingMessages(true);
         try {
             // Join chat room
             socket?.emit('join_chat', conv.id);
             
             // Mark read
-            await api.patch(`/chat/${conv.id}/read`, { readerType: 'user' });
+            api.patch(`/chat/${conv.id}/read`, { readerType: 'user' }).catch(console.error);
             
             // Fetch messages
             const res = await api.get(`/chat/${conv.id}/messages`);
             setMessages(res.data);
-            scrollToBottom();
+            setTimeout(() => scrollToBottom('auto'), 50);
         } catch (error) {
             console.error('Failed to fetch messages', error);
+        } finally {
+            setLoadingMessages(false);
         }
     };
 
@@ -149,11 +183,15 @@ const ChatWidget = () => {
         
         const content = input;
         setInput('');
+        setShowEmojiPicker(false);
+
+        // Use a unique temporary ID for the optimistic message
+        const tempId = `temp-${Date.now()}`;
 
         try {
             // Optimistic update
             const tempMsg = {
-                id: Date.now(),
+                id: tempId,
                 content,
                 sender_type: 'user',
                 created_at: new Date().toISOString()
@@ -161,21 +199,24 @@ const ChatWidget = () => {
             setMessages(prev => [...prev, tempMsg]);
             scrollToBottom();
 
-            // Actual send (this will also trigger the server to emit 'new_message' to everyone in room,
-            // but we might want to deduplicate or just let the server response handle it.
-            // For simplicity, we just post it. The socket will broadcast, but we already added optimistic.
-            // Wait, if socket broadcasts, we might see it twice. We will rely on REST response here or socket.
+            // Actual send
             const res = await api.post(`/chat/${activeChat.id}/messages`, {
                 content,
                 senderType: 'user'
             });
             
             // Replace optimistic with real
-            setMessages(prev => prev.map(m => m.id === tempMsg.id ? res.data : m));
+            setMessages(prev => prev.map(m => m.id === tempId ? res.data : m));
             
         } catch (error) {
             console.error('Failed to send message', error);
+            // Remove the optimistic message on failure
+            setMessages(prev => prev.filter(m => m.id !== tempId));
         }
+    };
+
+    const onEmojiClick = (emojiData) => {
+        setInput(prev => prev + emojiData.emoji);
     };
 
     // Calculate total unread
@@ -222,11 +263,16 @@ const ChatWidget = () => {
                             {activeChat ? (
                                 /* Active Chat View */
                                 <>
-                                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                                        {messages.length === 0 && (
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
+                                        {loadingMessages ? (
+                                            <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400">
+                                                <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider">Loading...</span>
+                                            </div>
+                                        ) : messages.length === 0 ? (
                                             <div className="text-center text-gray-400 text-sm mt-10">No messages yet. Say hi!</div>
-                                        )}
-                                        {messages.map((msg, i) => {
+                                        ) : null}
+                                        {!loadingMessages && messages.map((msg, i) => {
                                             const isMe = msg.sender_type === 'user';
                                             return (
                                                 <div key={msg.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
@@ -243,8 +289,28 @@ const ChatWidget = () => {
                                         })}
                                         <div ref={messagesEndRef} />
                                     </div>
-                                    <div className="p-3 bg-white border-t border-gray-100">
+                                    <div className="p-3 bg-white border-t border-gray-100 relative">
+                                        {showEmojiPicker && (
+                                            <div className="absolute bottom-full right-0 mb-2 z-50 shadow-2xl" ref={emojiPickerRef}>
+                                                <EmojiPicker 
+                                                    onEmojiClick={onEmojiClick}
+                                                    width={300}
+                                                    height={350}
+                                                    lazyLoadEmojis={true}
+                                                    searchDisabled={true}
+                                                    skinTonesDisabled={true}
+                                                    previewConfig={{ showPreview: false }}
+                                                />
+                                            </div>
+                                        )}
                                         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                                className={`p-2 rounded-full transition ${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-400 hover:bg-gray-100'}`}
+                                            >
+                                                <Smile className="h-5 w-5" />
+                                            </button>
                                             <input
                                                 type="text"
                                                 value={input}

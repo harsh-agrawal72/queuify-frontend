@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { motion } from 'framer-motion';
-import { User, Lock, Mail, Save, Shield, Bell, Calendar, CheckCircle, Award, Clock, Sparkles, Eye, EyeOff, Trash2, AlertTriangle, Phone } from 'lucide-react';
+import { User, Lock, Mail, Save, Shield, Bell, Calendar, CheckCircle, Award, Clock, Sparkles, Eye, EyeOff, Trash2, AlertTriangle, Phone, MapPin, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,11 @@ export default function Profile() {
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
     const [phone, setPhone] = useState(user?.phone || '');
+    const [address, setAddress] = useState(user?.address || '');
+    const [city, setCity] = useState(user?.city || '');
+    const [state, setState] = useState(user?.state || '');
+    const [pincode, setPincode] = useState(user?.pincode || '');
+    const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profile_picture_url || '');
     const [emailNotifications, setEmailNotifications] = useState(user?.email_notification_enabled ?? true);
     const [notificationAlerts, setNotificationAlerts] = useState(user?.notification_enabled ?? true);
     const [loading, setLoading] = useState(false);
@@ -49,6 +54,11 @@ export default function Profile() {
             await api.patch('/user/profile', {
                 name,
                 phone,
+                address,
+                city,
+                state,
+                pincode,
+                profile_picture_url: profilePictureUrl,
                 email_notification_enabled: emailNotifications,
                 notification_enabled: notificationAlerts
             });
@@ -56,6 +66,11 @@ export default function Profile() {
             updateUser({
                 name,
                 phone,
+                address,
+                city,
+                state,
+                pincode,
+                profile_picture_url: profilePictureUrl,
                 email_notification_enabled: emailNotifications,
                 notification_enabled: notificationAlerts
             });
@@ -135,8 +150,17 @@ export default function Profile() {
 
                 <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-center gap-6">
                     {/* Avatar */}
-                    <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center text-white font-black text-3xl border-2 border-white/20 shadow-2xl">
-                        {initials}
+                    <div className="relative group">
+                        <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center text-white font-black text-3xl border-2 border-white/20 shadow-2xl overflow-hidden">
+                            {profilePictureUrl ? (
+                                <img src={profilePictureUrl} alt={user?.name} className="w-full h-full object-cover" />
+                            ) : (
+                                initials
+                            )}
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-white text-indigo-600 p-2 rounded-xl shadow-lg border border-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Camera className="h-4 w-4" />
+                        </div>
                     </div>
 
                     {/* Info */}
@@ -207,22 +231,96 @@ export default function Profile() {
                             </div>
 
                              {/* Phone Field */}
-                             <div>
-                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                                 <div className="relative">
-                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                     <input
-                                         type="tel"
-                                         value={phone}
-                                         onChange={e => setPhone(e.target.value)}
-                                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                         placeholder="Your phone number"
-                                     />
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                 <div>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                                     <div className="relative">
+                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                         <input
+                                             type="tel"
+                                             value={phone}
+                                             onChange={e => setPhone(e.target.value)}
+                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                             placeholder="Your phone number"
+                                         />
+                                     </div>
                                  </div>
-                                 <p className="text-[11px] text-gray-400 mt-1.5 flex items-center gap-1">
-                                     For emergency communication with organizations
-                                 </p>
+                                 <div>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Photo URL</label>
+                                     <div className="relative">
+                                         <Camera className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                         <input
+                                             type="url"
+                                             value={profilePictureUrl}
+                                             onChange={e => setProfilePictureUrl(e.target.value)}
+                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                             placeholder="https://example.com/photo.jpg"
+                                         />
+                                     </div>
+                                 </div>
                              </div>
+
+                             {/* Address Field */}
+                             <div>
+                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Residential Address</label>
+                                 <div className="relative">
+                                     <MapPin className="absolute left-4 top-3 h-4 w-4 text-gray-400" />
+                                     <textarea
+                                         value={address}
+                                         onChange={e => setAddress(e.target.value)}
+                                         rows="2"
+                                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white resize-none"
+                                         placeholder="Enter your full address"
+                                     ></textarea>
+                                 </div>
+                             </div>
+
+                             {/* City, State, Pincode Grid */}
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                 <div>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                                     <div className="relative">
+                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                         <input
+                                             type="text"
+                                             value={city}
+                                             onChange={e => setCity(e.target.value)}
+                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                             placeholder="New Delhi"
+                                         />
+                                     </div>
+                                 </div>
+                                 <div>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">State</label>
+                                     <div className="relative">
+                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                         <input
+                                             type="text"
+                                             value={state}
+                                             onChange={e => setState(e.target.value)}
+                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                             placeholder="Delhi"
+                                         />
+                                     </div>
+                                 </div>
+                                 <div>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Pincode</label>
+                                     <div className="relative">
+                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                         <input
+                                             type="text"
+                                             value={pincode}
+                                             onChange={e => setPincode(e.target.value)}
+                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                             placeholder="110001"
+                                         />
+                                     </div>
+                                 </div>
+                             </div>
+                             
+                             <p className="text-[11px] text-gray-400 -mt-2 flex items-center gap-1">
+                                 Used for finding organizations in your local area first
+                             </p>
 
                          </div>
 

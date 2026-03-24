@@ -3,6 +3,7 @@ import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { Search, MapPin, Building2, ArrowRight, Star, Clock, Shield, Filter, ChevronRight, Sparkles, Users, BadgeCheck, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 
 const getIndustryTerminology = (type) => {
     switch (type) {
@@ -32,6 +33,7 @@ const getTypeGradient = (type) => {
 };
 
 export default function OrganizationsList() {
+    const { user } = useAuth();
     const [orgs, setOrgs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -44,6 +46,9 @@ export default function OrganizationsList() {
                 const params = new URLSearchParams();
                 if (search) params.append('search', search);
                 if (filter && filter !== 'All') params.append('type', filter);
+                if (user?.city) params.append('city', user.city);
+                if (user?.state) params.append('state', user.state);
+                if (user?.pincode) params.append('pincode', user.pincode);
                 params.append('status', 'active');
 
                 const { data } = await api.get(`/organizations?${params.toString()}`);
@@ -59,7 +64,7 @@ export default function OrganizationsList() {
     }, [search, filter]);
 
     const categories = [
-        { label: 'All', value: '', icon: '🏢' },
+        { label: 'All', value: '', icon: <Building2 className="h-4 w-4" /> },
         { label: 'Clinic', value: 'Clinic', icon: '🩺' },
         { label: 'Hospital', value: 'Hospital', icon: '🏥' },
         { label: 'Salon', value: 'Salon', icon: '💇' },
@@ -86,272 +91,277 @@ export default function OrganizationsList() {
     };
 
     return (
-        <div className="space-y-8">
-            {/* Hero Section */}
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative bg-slate-900 rounded-3xl p-8 md:p-10 text-white overflow-hidden border border-slate-800"
-            >
-                {/* Subtle Accents */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-slate-800/20 rounded-full -ml-16 -mb-16 blur-2xl" />
-
-                <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Network Directory</span>
-                    </div>
-                    <h1 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">Find & Book Instantly</h1>
-                    <p className="text-slate-400 text-sm md:text-lg max-w-xl mb-8 leading-relaxed">
-                        Access our network of verified professional services. Secure your appointment with precision and ease.
-                    </p>
-
-                    {/* Search Bar */}
-                    <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <div className="max-w-7xl mx-auto space-y-10 pb-20">
+            {/* Elegant Hero Section */}
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-16 md:px-16 md:py-24 text-white">
+                {/* Modern Abstract Background Elements */}
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-indigo-500/10 blur-[100px]" />
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-500/10 blur-[80px]" />
+                
+                <div className="relative z-10 max-w-2xl">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-6"
+                    >
+                        <Sparkles className="h-3 w-3" />
+                        Explore Our Network
+                    </motion.div>
+                    
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl md:text-6xl font-black tracking-tight mb-6 leading-[1.1]"
+                    >
+                        Professional Services, <br />
+                        <span className="text-indigo-400">Simplified.</span>
+                    </motion.h1>
+                    
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-slate-400 text-lg md:text-xl font-medium mb-10 leading-relaxed"
+                    >
+                        Connect with top-rated organizations and manage your appointments with our intelligent queue system.
+                    </motion.p>
+                    
+                    {/* Integrated Search Bar */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="relative group max-w-xl"
+                    >
+                        <div className="absolute inset-0 bg-indigo-500/20 rounded-2xl blur-xl group-focus-within:bg-indigo-500/40 transition-all" />
+                        <div className="relative flex items-center bg-white rounded-2xl p-1 shadow-2xl overflow-hidden">
+                            <Search className="h-6 w-6 text-gray-400 ml-4" />
                             <input
                                 type="text"
-                                placeholder="Search organizations, services, or staff..."
+                                placeholder="Search by name, category, or service..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-gray-900 placeholder-gray-400 font-medium text-sm focus:ring-4 focus:ring-white/20 outline-none shadow-xl shadow-indigo-900/20 transition-all"
+                                className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 font-medium py-4 px-4 text-sm md:text-base placeholder-gray-400"
                             />
+                            <button className="hidden md:flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition active:scale-95">
+                                Search
+                            </button>
                         </div>
-                    </div>
-
-                    {/* Stats Bar */}
-                    <div className="flex items-center gap-6 mt-8 pt-8 border-t border-slate-800/50 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-                        <div className="flex items-center gap-2">
-                            <Shield className="h-3.5 w-3.5 text-indigo-400" />
-                            <span>Verified</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Clock className="h-3.5 w-3.5 text-indigo-400" />
-                            <span>Real-time</span>
-                        </div>
-                        <div className="hidden sm:flex items-center gap-2">
-                            <Users className="h-3.5 w-3.5 text-indigo-400" />
-                            <span>{orgs.length}+ Organizations</span>
-                        </div>
-                    </div>
+                    </motion.div>
                 </div>
-            </motion.div>
+            </div>
 
-            {/* Category Filter Pills */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide"
-            >
-                <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                {categories.map((cat) => (
-                    <button
-                        key={cat.value}
-                        onClick={() => setFilter(cat.value)}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 border
-                            ${filter === cat.value
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200'
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50'
-                            }`}
-                    >
-                        <span className="text-sm">{cat.icon}</span>
-                        {cat.label}
-                    </button>
-                ))}
-            </motion.div>
-
-            {/* Results Count */}
-            {!loading && (
-                <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
-                        Showing <span className="font-bold text-gray-900">{orgs.length}</span> organization{orgs.length !== 1 ? 's' : ''}
-                        {filter && filter !== 'All' && <span> in <span className="font-semibold text-indigo-600">{filter}</span></span>}
-                        {search && <span> matching "<span className="font-semibold text-indigo-600">{search}</span>"</span>}
-                    </p>
+            {/* Category Filter Section */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between px-2">
+                    <h2 className="text-xl font-black text-gray-900 tracking-tight">Browse Categories</h2>
+                    <div className="h-1 flex-1 mx-6 bg-gray-100 rounded-full hidden md:block" />
                 </div>
-            )}
-
-            {/* Organization Grid */}
-            {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                            <div className="h-3 bg-gray-200 rounded-full animate-pulse" />
-                            <div className="p-6 space-y-4">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-14 h-14 bg-gray-100 rounded-2xl animate-pulse" />
-                                    <div className="flex-1 space-y-2">
-                                        <div className="h-5 w-3/4 bg-gray-100 rounded-lg animate-pulse" />
-                                        <div className="h-3 w-1/2 bg-gray-50 rounded-lg animate-pulse" />
-                                    </div>
-                                </div>
-                                <div className="h-12 bg-gray-100 rounded-xl animate-pulse" />
-                            </div>
-                        </div>
+                
+                <div className="flex items-center gap-3 overflow-x-auto pb-4 px-2 no-scrollbar">
+                    {categories.map((cat, idx) => (
+                        <motion.button
+                            key={cat.value}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            onClick={() => setFilter(cat.value)}
+                            className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-300 border shadow-sm
+                                ${filter === cat.value
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-100 scale-105'
+                                    : 'bg-white text-gray-600 border-gray-100 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50/30'
+                                }`}
+                        >
+                            <span className="text-base">{cat.icon}</span>
+                            {cat.label}
+                        </motion.button>
                     ))}
                 </div>
-            ) : orgs.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <AnimatePresence>
-                        {orgs.map((org, index) => {
-                            const term = getIndustryTerminology(org.type);
-                            const gradient = getTypeGradient(org.type);
-                            const hasRating = org.avg_rating > 0;
+            </div>
 
-                            return (
-                                <motion.div
-                                    key={org.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    transition={{ duration: 0.3, delay: index * 0.04 }}
-                                    className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-100 transition-all duration-300 group flex flex-col"
-                                >
-                                    {/* Top Color Bar */}
-                                    <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
+            {/* Organizations Grid */}
+            <div className="space-y-8">
+                {!loading && (
+                    <div className="flex items-center justify-between px-2">
+                        <p className="text-sm font-medium text-gray-500">
+                            Found <span className="text-gray-900 font-black">{orgs.length}</span> results
+                        </p>
+                        {search && (
+                            <button 
+                                onClick={() => setSearch('')}
+                                className="text-xs font-bold text-indigo-600 hover:underline"
+                            >
+                                Clear search
+                            </button>
+                        )}
+                    </div>
+                )}
 
-                                    <div className="p-6 sm:p-7 flex flex-col flex-1">
-                                        {/* Header Row: Avatar + Info */}
-                                        <div className="flex items-start gap-4 mb-5">
-                                            <div className={`w-16 h-16 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform overflow-hidden`}>
-                                                {org.logo_url ? (
-                                                    <img src={org.logo_url} alt={org.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    org.name[0]
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="bg-white rounded-[2.5rem] border border-gray-100 p-8 space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-2xl animate-pulse" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-5 w-3/4 bg-gray-100 rounded-full animate-pulse" />
+                                        <div className="h-3 w-1/2 bg-gray-50 rounded-full animate-pulse" />
+                                    </div>
+                                </div>
+                                <div className="h-12 bg-gray-100 rounded-2xl animate-pulse" />
+                            </div>
+                        ))}
+                    </div>
+                ) : orgs.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
+                        <AnimatePresence mode="popLayout">
+                            {orgs.map((org, index) => {
+                                const term = getIndustryTerminology(org.type);
+                                const gradient = getTypeGradient(org.type);
+                                const hasRating = org.avg_rating > 0;
+
+                                return (
+                                    <motion.div
+                                        key={org.id}
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                                        className="group bg-white rounded-[2.5rem] border border-gray-100 p-1 hover:border-indigo-100 hover:shadow-[0_20px_50px_rgba(79,70,229,0.08)] transition-all duration-500 flex flex-col h-full"
+                                    >
+                                        <div className="p-7 flex flex-col h-full">
+                                            {/* Header */}
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${gradient} p-0.5 shadow-lg group-hover:scale-110 transition-transform duration-500 overflow-hidden`}>
+                                                    <div className="w-full h-full bg-white rounded-[0.85rem] flex items-center justify-center overflow-hidden">
+                                                        {org.logo_url ? (
+                                                            <img src={org.logo_url} alt={org.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className={`text-2xl font-black bg-gradient-to-br ${gradient} bg-clip-text text-transparent`}>
+                                                                {org.name[0]}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {org.is_verified && (
+                                                    <div className="bg-blue-50 text-blue-600 p-2 rounded-xl border border-blue-100 shadow-sm">
+                                                        <BadgeCheck className="h-5 w-5" />
+                                                    </div>
                                                 )}
                                             </div>
-                                            <div className="flex-1 min-w-0 pt-1">
-                                                <div className="flex items-center gap-1.5 mb-1.5">
-                                                    <h3 className="text-xl font-black text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+
+                                            {/* Info */}
+                                            <div className="space-y-2 mb-6">
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="text-xl font-black text-gray-900 group-hover:text-indigo-600 transition-colors truncate">
                                                         {org.name}
                                                     </h3>
-                                                    {org.contact_phone && (
-                                                        <a
-                                                            href={`https://wa.me/${org.contact_phone.replace(/\D/g, '')}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className="p-1.5 rounded-full text-emerald-500 hover:bg-emerald-50 transition-colors flex-shrink-0"
-                                                            title="WhatsApp Chat"
-                                                        >
-                                                            <MessageCircle className="h-4 w-4" />
-                                                        </a>
-                                                    )}
-                                                    {org.is_verified && (
-                                                        <BadgeCheck className="h-5 w-5 text-blue-500 flex-shrink-0" title="Verified Organization" />
-                                                    )}
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <span className="text-[10px] font-bold text-gray-500 bg-gray-100/80 px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wide">
-                                                        {org.org_code}
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-lg">
+                                                        {org.type || 'Professional'}
                                                     </span>
-                                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200 shadow-sm`}>
-                                                        {org.type || 'General'}
+                                                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded-lg">
+                                                        ID: {org.org_code}
                                                     </span>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Rating Row */}
-                                        <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100/60">
-                                            {hasRating ? (
-                                                <div className="flex items-center bg-yellow-50/50 px-3 py-1.5 rounded-xl border border-yellow-100/50 w-fit">
-                                                    <div className="flex items-center gap-1 mr-2">
-                                                        {renderStars(parseFloat(org.avg_rating))}
+                                            {/* Details Section */}
+                                            <div className="space-y-4 mb-8 flex-1">
+                                                {hasRating ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-0.5">
+                                                            {renderStars(parseFloat(org.avg_rating))}
+                                                        </div>
+                                                        <span className="text-sm font-black text-gray-900 ml-1">{Number(org.avg_rating).toFixed(1)}</span>
+                                                        <span className="text-xs text-gray-400 font-medium">({org.total_reviews})</span>
                                                     </div>
-                                                    <span className="text-sm font-black text-gray-900">{Number(org.avg_rating).toFixed(1)}</span>
-                                                    <span className="text-xs text-gray-500 font-medium ml-1">({org.total_reviews} review{org.total_reviews !== 1 ? 's' : ''})</span>
+                                                ) : (
+                                                    <div className="text-xs text-gray-400 font-bold bg-gray-50/50 px-3 py-1.5 rounded-xl border border-gray-100 w-fit">
+                                                        No ratings yet
+                                                    </div>
+                                                )}
+
+                                                <div className="flex flex-col gap-2.5">
+                                                    {org.address && (
+                                                        <div className="flex items-start gap-2 text-xs text-gray-500 font-medium">
+                                                            <MapPin className="h-3.5 w-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                                            <span className="line-clamp-1">{org.address}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500 font-bold">
+                                                            <Clock className="h-3.5 w-3.5 text-gray-400" />
+                                                            <span>{org.open_time?.slice(0, 5)} - {org.close_time?.slice(0, 5)}</span>
+                                                        </div>
+                                                        {(() => {
+                                                            const now = new Date();
+                                                            const currentStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                                                            const isOpen = currentStr >= (org.open_time?.slice(0, 5) || '00:00') && 
+                                                                         currentStr <= (org.close_time?.slice(0, 5) || '23:59');
+                                                            return (
+                                                                <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border ${
+                                                                    isOpen ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
+                                                                }`}>
+                                                                    {isOpen ? 'Open Now' : 'Closed'}
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <span className="text-xs text-gray-400 font-medium bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">No reviews yet</span>
-                                            )}
+                                            </div>
+
+                                            {/* Professional CTA */}
+                                            <div className="flex items-center gap-3">
+                                                <Link
+                                                    to={`/organizations/${org.slug}`}
+                                                    className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black text-sm text-center transition-all duration-300 hover:bg-indigo-600 hover:shadow-xl hover:shadow-indigo-200 active:scale-95 flex items-center justify-center gap-2 group/btn"
+                                                >
+                                                    {term.action}
+                                                    <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                </Link>
+                                                {org.contact_phone && (
+                                                    <a
+                                                        href={`https://wa.me/${org.contact_phone.replace(/\D/g, '')}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-4 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                                                    >
+                                                        <MessageCircle className="h-5 w-5" />
+                                                    </a>
+                                                )}
+                                            </div>
                                         </div>
-
-                                        {/* Details */}
-                                        <div className="space-y-2.5 mb-5 flex-1">
-                                            {org.address && (
-                                                <div className="flex items-start gap-2 text-xs text-gray-500">
-                                                    <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
-                                                    <span className="line-clamp-2">{org.address}</span>
-                                                </div>
-                                            )}
-                                            {(org.open_time || org.close_time) && (
-                                                <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                    <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                                                    <span>
-                                                        {org.open_time?.slice(0, 5)} - {org.close_time?.slice(0, 5)}
-                                                    </span>
-                                                    {(() => {
-                                                        const now = new Date();
-                                                        const currentHours = now.getHours();
-                                                        const currentMinutes = now.getMinutes();
-                                                        const currentTimeStr = `${currentHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
-
-                                                        const isOpenTime = org.open_time ? org.open_time.slice(0, 5) : '00:00';
-                                                        const isCloseTime = org.close_time ? org.close_time.slice(0, 5) : '23:59';
-
-                                                        const isOpen = currentTimeStr >= isOpenTime && currentTimeStr <= isCloseTime;
-
-                                                        return isOpen ? (
-                                                            <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                                Open
-                                                            </span>
-                                                        ) : (
-                                                            <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                                                Closed
-                                                            </span>
-                                                        );
-                                                    })()}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* CTA Button */}
-                                        <Link
-                                            to={`/organizations/${org.slug}`}
-                                            className="mt-2 relative flex items-center justify-center gap-2 w-full bg-gray-900 text-white px-6 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md group-hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-[0.98] overflow-hidden group/btn"
-                                        >
-                                            <span className="relative z-10">{term.action}</span>
-                                            <ArrowRight className="h-4 w-4 relative z-10 group-hover/btn:translate-x-1 transition-transform" />
-                                            <div className="absolute inset-0 bg-white/0 hover:bg-white/10 transition-colors" />
-                                        </Link>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </AnimatePresence>
-                </div>
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center py-20"
-                >
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Building2 className="h-10 w-10 text-gray-300" />
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">No organizations found</h3>
-                    <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
-                        {search
-                            ? `We couldn't find any organizations matching "${search}". Try adjusting your search or filters.`
-                            : 'No organizations are currently available. Check back later!'}
-                    </p>
-                    {(search || filter) && (
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-24 bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100"
+                    >
+                        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-gray-200/50">
+                            <Building2 className="h-10 w-10 text-gray-200" />
+                        </div>
+                        <h3 className="text-2xl font-black text-gray-900 mb-2">No organizations found</h3>
+                        <p className="text-gray-500 font-medium max-w-sm mx-auto mb-8">
+                            We couldn't find any results matching your current filters. Try searching with different terms.
+                        </p>
                         <button
                             onClick={() => { setSearch(''); setFilter(''); }}
-                            className="inline-flex items-center gap-2 text-indigo-600 font-semibold text-sm hover:underline"
+                            className="bg-white text-indigo-600 px-8 py-3 rounded-xl font-bold border border-indigo-100 hover:bg-indigo-50 transition shadow-sm"
                         >
-                            Clear all filters
-                            <ChevronRight className="h-4 w-4" />
+                            Reset all filters
                         </button>
-                    )}
-                </motion.div>
-            )}
+                    </motion.div>
+                )}
+            </div>
         </div>
     );
 }

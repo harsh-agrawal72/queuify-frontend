@@ -112,7 +112,7 @@ export default function LiveQueue() {
                                     <p className="text-3xl font-black text-indigo-900">{status.people_ahead}</p>
                                     <p className="text-[10px] text-indigo-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
                                         People Ahead
-                                        <InfoTooltip text="Number of confirmed bookings currently ahead of you in this specific slot." />
+                                        <InfoTooltip align="start" text="Number of confirmed bookings currently ahead of you in this specific slot." />
                                     </p>
                                 </motion.div>
                                 
@@ -164,7 +164,7 @@ export default function LiveQueue() {
                                     </p>
                                     <p className="text-[10px] text-green-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
                                         Expected Turn
-                                        <InfoTooltip text="Dynamic estimate of when you will be called, updated in real-time." />
+                                        <InfoTooltip align="end" text="Dynamic estimate of when you will be called, updated in real-time." />
                                     </p>
                                 </motion.div>
                             </div>

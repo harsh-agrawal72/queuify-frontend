@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import Logo from '../common/Logo';
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
+    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
 
@@ -36,13 +38,31 @@ const Navbar = () => {
                     </div>
 
                     <div className="hidden md:flex items-center space-x-6 border-l border-gray-200 pl-6">
-                        <Link to="/login" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Login</Link>
-                        <Link
-                            to="/register"
-                            className="bg-gray-900 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-all hover:shadow-lg hover:shadow-gray-900/20"
-                        >
-                            Get Started
-                        </Link>
+                        {user ? (
+                            <Link to="/dashboard" className="flex items-center gap-3 group">
+                                <div className="text-right hidden lg:block">
+                                    <p className="text-xs font-bold text-gray-900 leading-none">{user.name}</p>
+                                    <p className="text-[10px] text-gray-500 font-medium">View Dashboard</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border-2 border-white shadow-sm overflow-hidden group-hover:border-indigo-100 transition-all">
+                                    {user.profile_picture_url ? (
+                                        <img src={user.profile_picture_url} alt={user.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        user.name?.[0] || 'U'
+                                    )}
+                                </div>
+                            </Link>
+                        ) : (
+                            <>
+                                <Link to="/login" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Login</Link>
+                                <Link
+                                    to="/register"
+                                    className="bg-gray-900 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-all hover:shadow-lg hover:shadow-gray-900/20"
+                                >
+                                    Get Started
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     <div className="md:hidden">
@@ -66,8 +86,26 @@ const Navbar = () => {
                                 {link.name}
                             </Link>
                         ))}
-                        <Link to="/login" className="text-gray-600 font-medium pt-2" onClick={() => setIsOpen(false)}>Login</Link>
-                        <Link to="/register" className="bg-gray-900 text-white px-5 py-3 rounded-lg font-medium text-center" onClick={() => setIsOpen(false)}>Get Started</Link>
+                        {user ? (
+                            <Link to="/dashboard" className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl" onClick={() => setIsOpen(false)}>
+                                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold overflow-hidden">
+                                    {user.profile_picture_url ? (
+                                        <img src={user.profile_picture_url} alt={user.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        user.name?.[0] || 'U'
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">{user.name}</p>
+                                    <p className="text-xs text-gray-500">Go to Dashboard</p>
+                                </div>
+                            </Link>
+                        ) : (
+                            <>
+                                <Link to="/login" className="text-gray-600 font-medium pt-2" onClick={() => setIsOpen(false)}>Login</Link>
+                                <Link to="/register" className="bg-gray-900 text-white px-5 py-3 rounded-lg font-medium text-center" onClick={() => setIsOpen(false)}>Get Started</Link>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
