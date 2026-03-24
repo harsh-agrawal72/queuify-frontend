@@ -761,31 +761,26 @@ const AnalyticsPanel = () => {
                 )}
             </AnimatePresence>
 
-            {/* ═══ AI Predictive Insights ═══ */}
-            <PredictiveInsightsSection insights={predictiveInsights} />
-
             {/* ═══ KPI Cards ═══ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {kpiCards.map((card, idx) => (
                     <motion.div
                         key={idx}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.08 }}
-                        className="relative bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/40 transition-all group overflow-hidden"
+                        transition={{ delay: idx * 0.05 }}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all"
                     >
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-slate-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                        
-                        <div className="flex items-center justify-between mb-6 relative z-10">
-                            <div className={`${card.lightBg} ${card.lightText} p-3.5 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
-                                <card.icon className="h-6 w-6" />
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={`${card.lightBg} ${card.lightText} p-3 rounded-xl`}>
+                                <card.icon className="h-5 w-5" />
                             </div>
                             <GrowthBadge value={card.growth} suffix={card.suffix || '%'} />
                         </div>
                         
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-1.5 mb-2">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{card.title}</p>
+                        <div>
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{card.title}</p>
                                 <InfoTooltip 
                                     text={
                                         card.title === t('dashboard.total_bookings', 'Total Bookings') ? t('tooltip.total_bookings', "Total number of appointments scheduled within the selected time range.") :
@@ -795,19 +790,16 @@ const AnalyticsPanel = () => {
                                 />
                             </div>
                             <div className="flex items-baseline gap-1">
-                                <p className="text-4xl font-black text-slate-900 tracking-tighter">{card.value}</p>
-                                {card.suffix && <span className="text-sm font-black text-slate-300 uppercase">{card.suffix}</span>}
-                            </div>
-                            <div className="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between">
-                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{t('analytics.vs_previous_period', 'vs previous period')}</p>
-                                <div className="h-1 w-12 bg-slate-50 rounded-full overflow-hidden">
-                                    <div className={`h-full bg-slate-200 rounded-full ${card.growth > 0 ? 'w-full' : 'w-1/2'}`} />
-                                </div>
+                                <p className="text-3xl font-bold text-gray-900 tracking-tight">{card.value}</p>
+                                {card.suffix && <span className="text-xs font-bold text-gray-400 uppercase">{card.suffix}</span>}
                             </div>
                         </div>
                     </motion.div>
                 ))}
             </div>
+
+            {/* ═══ AI Predictive Insights ═══ */}
+            <PredictiveInsightsSection insights={predictiveInsights} />
 
             {/* ═══ Charts Row 1: Trend + Status Pie ═══ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

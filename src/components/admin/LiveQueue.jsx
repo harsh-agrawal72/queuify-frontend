@@ -196,8 +196,9 @@ const AdminLiveQueue = () => {
     const handleRebalance = async (resourceId, resourceName) => {
         const loadingToast = toast.loading(t('queue.rebalancing_status', `Rebalancing {{resource}}'s schedule...`, { resource: resourceName }));
         try {
-            await api.post(`/admin/rebalance/${resourceId}?date=${selectedDate}`);
-            toast.success(t('queue.rebalanced_success', "Schedule rebalanced!"), { id: loadingToast });
+            const response = await api.post(`/admin/rebalance/${resourceId}?date=${selectedDate}`);
+            const moved = response.data.movedCount || 0;
+            toast.success(t('queue.rebalanced_success', "Schedule rebalanced! {{count}} appointments moved.", { count: moved }), { id: loadingToast });
             fetchQueue(true);
         } catch (error) {
             console.error('Rebalance failed:', error);

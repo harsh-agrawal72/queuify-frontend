@@ -376,6 +376,7 @@ const ServiceManagement = () => {
 // REUSABLE FORM MODAL
 // ═══════════════════════════════════════════
 const FormModal = ({ open, title, onClose, onSubmit, fields, defaults }) => {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState(defaults || {});
     const [submitting, setSubmitting] = useState(false);
 
