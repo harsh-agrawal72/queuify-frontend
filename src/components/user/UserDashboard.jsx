@@ -189,10 +189,10 @@ export default function UserDashboard() {
                 {nextApt ? (
                     <div className="group relative">
                         {/* Premium Card Background with Animated Gradient */}
-                        <div className={`absolute -inset-0.5 bg-gradient-to-r ${isServing ? 'from-emerald-500 to-teal-500' : 'from-indigo-600 to-purple-600'} rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-tilt`}></div>
+                        <div className={`absolute -inset-0.5 bg-gradient-to-r ${isServing ? 'from-emerald-500 to-teal-500' : 'from-indigo-600 to-purple-600'} rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-tilt`}></div>
                         
-                        <div className="relative bg-white rounded-[2.5rem] p-1 shadow-2xl shadow-indigo-100 overflow-hidden border border-gray-100">
-                            <div className={`rounded-[2.25rem] p-8 md:p-10 flex flex-col md:flex-row items-stretch justify-between gap-10 bg-slate-900 text-white relative overflow-hidden`}>
+                        <div className="relative bg-white rounded-[2rem] p-1 shadow-2xl shadow-indigo-100 overflow-hidden border border-gray-100">
+                            <div className={`rounded-[1.75rem] p-6 md:p-8 flex flex-col md:flex-row items-stretch justify-between gap-6 bg-slate-900 text-white relative overflow-hidden`}>
                                 {/* Abstract Shapes */}
                                 <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl opacity-50" />
                                 <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl opacity-30" />
@@ -209,7 +209,7 @@ export default function UserDashboard() {
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none group-hover:text-indigo-300 transition-colors">
+                                        <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-none group-hover:text-indigo-300 transition-colors">
                                             {nextApt.org_name}
                                         </h3>
                                         <div className="flex flex-wrap items-center gap-6 text-slate-400 text-sm font-bold">
@@ -247,14 +247,14 @@ export default function UserDashboard() {
                                 </div>
 
                                 {/* Premium Token Display */}
-                                <div className="relative z-10 flex flex-col items-center justify-center p-8 md:p-12 bg-white rounded-[2rem] text-slate-900 shadow-2xl shadow-indigo-900/40 min-w-[240px] border-4 border-slate-800">
+                                <div className="relative z-10 flex flex-col items-center justify-center p-6 md:p-8 bg-white rounded-[1.5rem] text-slate-900 shadow-2xl shadow-indigo-900/40 min-w-[200px] border-4 border-slate-800">
                                     <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1">
                                         {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100" />)}
                                     </div>
                                     
                                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Your Token</p>
-                                    <div className="relative mb-6">
-                                        <span className="text-7xl font-black tracking-tighter text-indigo-600 block">
+                                    <div className="relative mb-4">
+                                        <span className="text-5xl font-black tracking-tighter text-indigo-600 block">
                                             #{nextApt.queue_number || '1'}
                                         </span>
                                         <div className="absolute -inset-4 bg-indigo-500/10 blur-xl rounded-full -z-10" />
@@ -290,10 +290,10 @@ export default function UserDashboard() {
 
                         <Link
                             to="/appointments"
-                            className="absolute -bottom-4 right-12 bg-indigo-600 text-white h-16 px-8 rounded-2xl flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 font-black text-sm uppercase tracking-widest active:scale-95 group/btn"
+                            className="absolute -bottom-4 right-8 bg-indigo-600 text-white h-12 px-6 rounded-xl flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 font-black text-xs uppercase tracking-widest active:scale-95 group/btn"
                         >
                             Manage Booking
-                            <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
+                            <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
                         </Link>
                     </div>
                 ) : (

@@ -72,15 +72,14 @@ export default function Profile() {
 
         setUploadingImage(true);
         try {
-            const { data } = await api.post('/users/profile/image', formData, {
+            const { data } = await api.post('/user/profile/image', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
-            // The backend returns { id, url }. The url is relative like /v1/users/profile/image/ID
-            // We need to make it absolute or relative to the API base URL
-            const absoluteUrl = `${api.defaults.baseURL}${data.url.replace('/v1', '')}`;
-            // Wait, api.defaults.baseURL might already include /v1
-            const finalUrl = data.url.startsWith('/') ? `${api.defaults.baseURL.replace('/v1', '')}${data.url}` : data.url;
+            // The backend returns { id, url }. The url is relative like /v1/user/profile/image/ID
+            // We use the absolute API base URL for the prefix
+            const baseUrl = api.defaults.baseURL.replace(/\/v1$/, ''); // Get base without version
+            const finalUrl = data.url.startsWith('/') ? `${baseUrl}${data.url}` : data.url;
             
             setProfilePictureUrl(finalUrl);
             

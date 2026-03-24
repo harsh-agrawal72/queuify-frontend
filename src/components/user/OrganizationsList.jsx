@@ -38,6 +38,7 @@ export default function OrganizationsList() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     useEffect(() => {
         const fetchOrgs = async () => {
@@ -152,31 +153,65 @@ export default function OrganizationsList() {
                 </div>
             </div>
 
-            {/* Category Filter Section - Now as a Dropdown */}
+            {/* Category Filter Section - Now as a Custom Dropdown with Icons */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-6 bg-indigo-600 rounded-full" />
                     <h2 className="text-lg font-black text-gray-900 tracking-tight">Browse Categories</h2>
                 </div>
                 
-                <div className="relative min-w-[240px]">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500">
-                        <Filter className="h-4 w-4" />
-                    </div>
-                    <select
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                <div className="relative min-w-[260px] z-30">
+                    <button
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        className="w-full pl-11 pr-12 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all flex items-center justify-between hover:border-indigo-200"
                     >
-                        {categories.map((cat) => (
-                            <option key={cat.value} value={cat.value}>
-                                {cat.label}
-                            </option>
-                        ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        <ChevronRight className="h-4 w-4 rotate-90" />
-                    </div>
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500">
+                            <Filter className="h-4 w-4" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span>{categories.find(c => c.value === filter)?.icon}</span>
+                            <span>{categories.find(c => c.value === filter)?.label || 'All'}</span>
+                        </div>
+                        <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? '-rotate-90' : 'rotate-90'}`} />
+                    </button>
+
+                    <AnimatePresence>
+                        {isDropdownOpen && (
+                            <>
+                                {/* Click Away Backdrop */}
+                                <div 
+                                    className="fixed inset-0 z-10" 
+                                    onClick={() => setIsDropdownOpen(false)} 
+                                />
+                                
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 5, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl shadow-indigo-100/50 overflow-hidden z-20 overflow-y-auto max-h-[300px] no-scrollbar"
+                                >
+                                    {categories.map((cat) => (
+                                        <button
+                                            key={cat.value}
+                                            onClick={() => {
+                                                setFilter(cat.value);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-bold transition-colors hover:bg-indigo-50
+                                                ${filter === cat.value ? 'bg-indigo-50/50 text-indigo-600' : 'text-gray-600'}
+                                            `}
+                                        >
+                                            <span className="text-base grayscale group-hover:grayscale-0">{cat.icon}</span>
+                                            {cat.label}
+                                            {filter === cat.value && (
+                                                <BadgeCheck className="h-4 w-4 text-indigo-600 ml-auto" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
