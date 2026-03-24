@@ -67,13 +67,12 @@ const AdminLiveQueue = () => {
         if (!resourceId) return;
         setIsLoadingSlots(true);
         try {
-            const res = await api.get(`/admin/slots?resourceId=${resourceId}`);
-            const today = new Date().toISOString().split('T')[0];
-            const todaySlots = res.data.filter(slot => slot.start_time.startsWith(today));
-            setAvailableSlotsForManual(todaySlots);
+            // Get slots specifically for the selected date on the dashboard
+            const res = await api.get(`/admin/slots?resourceId=${resourceId}&date=${selectedDate}`);
+            setAvailableSlotsForManual(res.data);
         } catch (error) {
             console.error('Failed to fetch slots', error);
-            toast.error("Failed to load slots for this professional");
+            toast.error("Failed to load available slots for this date");
         } finally {
             setIsLoadingSlots(false);
         }
@@ -284,34 +283,40 @@ const AdminLiveQueue = () => {
 
             {/* Overall Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-orange-50 rounded-lg">
-                            <Users className="h-4 w-4 text-orange-600" />
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 bg-orange-50 rounded-xl group-hover:scale-110 transition-transform">
+                            <Users className="h-5 w-5 text-orange-600" />
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.waiting_now', 'In Queue')}</p>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.waiting_now', 'In Queue')}</p>
+                            <p className="text-2xl font-black text-slate-900 leading-none">{totalPending}</p>
+                        </div>
                     </div>
-                    <p className="text-4xl font-black text-slate-900">{totalPending}</p>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-indigo-50 rounded-lg">
-                            <Activity className="h-4 w-4 text-indigo-600" />
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 bg-indigo-50 rounded-xl group-hover:scale-110 transition-transform">
+                            <Activity className="h-5 w-5 text-indigo-600" />
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.currently_serving', 'Now Serving')}</p>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.currently_serving', 'Now Serving')}</p>
+                            <p className="text-2xl font-black text-slate-900 leading-none">{totalServing}</p>
+                        </div>
                     </div>
-                    <p className="text-4xl font-black text-slate-900">{totalServing}</p>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow hidden md:block">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-emerald-50 rounded-lg">
-                            <Clock className="h-4 w-4 text-emerald-600" />
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow hidden md:block group">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 bg-emerald-50 rounded-xl group-hover:scale-110 transition-transform">
+                            <Clock className="h-5 w-5 text-emerald-600" />
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.avg_service_time', 'Avg. Session')}</p>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.avg_service_time', 'Avg. Session')}</p>
+                            <p className="text-2xl font-black text-slate-900 leading-none">
+                                {predictiveInsights?.averageDurations?.[0]?.minutes || 15}<span className="text-xs text-slate-400 ml-1 uppercase">{t('common.minutes_short', 'min')}</span>
+                            </p>
+                        </div>
                     </div>
-                    <p className="text-4xl font-black text-slate-900">
-                        {predictiveInsights?.averageDurations?.[0]?.minutes || 15}<span className="text-lg text-slate-400 ml-1">{t('common.minutes_short', 'm')}</span>
-                    </p>
                 </div>
             </div>
 
@@ -368,40 +373,44 @@ const AdminLiveQueue = () => {
                                             </div>
                                         </div>
                                         
-                                        <div className="flex items-center gap-3 self-stretch sm:self-auto">
-                                            <div className="flex-1 sm:flex-none flex items-center gap-1.5">
-                                                <div className="flex items-center gap-1">
+                                        <div className="flex items-center gap-4 ml-auto self-stretch sm:self-auto">
+                                            {/* Action Buttons Group */}
+                                            <div className="flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 shadow-inner">
+                                                <div className="flex items-center">
                                                     <button
                                                         onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
-                                                        className="flex-1 sm:flex-none p-2.5 bg-white text-slate-600 rounded-2xl hover:bg-slate-100 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
+                                                        className="p-2.5 bg-white text-slate-600 rounded-xl hover:bg-slate-50 border border-slate-100 shadow-sm transition-all h-10 w-10 flex items-center justify-center group/btn"
                                                     >
-                                                        <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+                                                        <RefreshCw className="h-4 w-4 group-hover/btn:rotate-180 transition-transform duration-500" />
                                                     </button>
-                                                    <InfoTooltip text="Optimally redistribute pending appointments across available time slots to minimize wait times." />
+                                                    <InfoTooltip text={t('queue.rebalance_tooltip', "Optimally redistribute pending appointments across available time slots to minimize wait times.")} />
                                                 </div>
 
-                                                <div className="flex items-center gap-1">
+                                                <div className="w-px h-6 bg-slate-200 mx-0.5"></div>
+
+                                                <div className="flex items-center">
                                                     <button
                                                         onClick={() => handleAddWalkIn(queue)}
-                                                        className="flex-1 sm:flex-none p-2.5 bg-white text-indigo-600 rounded-2xl hover:bg-indigo-50 border border-slate-200 shadow-sm transition-all h-11 w-11 flex items-center justify-center group"
+                                                        className="p-2.5 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-slate-100 shadow-sm transition-all h-10 w-10 flex items-center justify-center group/btn"
                                                     >
-                                                        <UserPlus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                                        <UserPlus className="h-4 w-4 group-hover/btn:scale-110 transition-transform" />
                                                     </button>
-                                                    <InfoTooltip text="Quickly add a walk-in customer who has arrived without a prior appointment." />
+                                                    <InfoTooltip text={t('queue.walkin_tooltip', "Quickly add a walk-in customer who has arrived without a prior appointment.")} />
                                                 </div>
                                             </div>
 
-                                            <div className="h-11 w-px bg-slate-200 hidden sm:block"></div>
+                                            <div className="h-10 w-px bg-slate-200 hidden sm:block"></div>
 
-                                            <div className="flex gap-2 flex-1 sm:flex-none">
-                                                <div className="flex-1 sm:min-w-[70px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center">
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-0.5">{t('queue.waiting_status', 'Wait')}</p>
-                                                    <p className="text-lg font-black text-slate-900 leading-none">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                                            {/* Stats Cards Group */}
+                                            <div className="flex gap-2">
+                                                <div className="min-w-[64px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center">
+                                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-tighter mb-0.5">{t('queue.waiting_status', 'Wait')}</p>
+                                                    <p className="text-base font-black text-slate-900 leading-none">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
                                                 </div>
-                                                <div className="flex-1 sm:min-w-[70px] bg-slate-900 px-3 py-2 rounded-2xl shadow-sm text-center">
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-0.5">{t('queue.est_wait', 'Est.')}</p>
-                                                    <p className="text-lg font-black text-white leading-none">
-                                                        {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || 0}<span className="text-[10px] ml-0.5 text-slate-400 uppercase font-black">m</span>
+                                                <div className="min-w-[64px] bg-slate-900 px-3 py-2 rounded-2xl shadow-sm text-center">
+                                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-tighter mb-0.5">{t('queue.est_wait', 'Est.')}</p>
+                                                    <p className="text-base font-black text-white leading-none">
+                                                        {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || 0}<span className="text-[9px] ml-0.5 text-slate-400 uppercase font-black">m</span>
                                                     </p>
                                                 </div>
                                             </div>

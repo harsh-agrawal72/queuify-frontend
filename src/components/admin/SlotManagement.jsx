@@ -10,6 +10,7 @@ import {
     Clock,
     Filter,
     AlertCircle,
+    AlertTriangle,
     Users,
     Pencil,
     Info
@@ -557,7 +558,7 @@ const SlotManagement = () => {
                         {/* Step indicator */}
                         <div className="px-6 pt-4 flex gap-1">
                             {[t('common.service', 'Service'), t('common.resource', 'Resource'), t('slot.date_time', 'Date & Time')].map((label, i) => (
-                                <div key={label} className="flex-1">
+                                <div key={`${label}-${i}`} className="flex-1">
                                     <div className={`h-1 rounded-full transition-all ${i + 1 <= modalStep ? 'bg-indigo-600' : 'bg-gray-200'}`} />
                                     <p className={`text-[10px] mt-1 text-center ${i + 1 <= modalStep ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>{label}</p>
                                 </div>

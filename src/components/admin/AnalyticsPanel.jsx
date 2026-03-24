@@ -98,7 +98,8 @@ const InsightCard = ({ insight }) => {
 };
 
 // ─── Quick Start Guide ───
-const QuickStartGuide = ({ type = 'Other' }) => {
+// ─── Quick Start Guide ───
+const QuickStartGuide = ({ type = 'Other', onDismiss }) => {
     const { t } = useTranslation();
     const config = {
         'Clinic': {
@@ -154,11 +155,20 @@ const QuickStartGuide = ({ type = 'Other' }) => {
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95, height: 0 }}
             className="bg-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200 relative overflow-hidden mb-8"
         >
             <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                 <Zap className="w-48 h-48" />
             </div>
+            
+            <button 
+                onClick={onDismiss}
+                className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-md transition-all active:scale-95"
+            >
+                <X className="h-5 w-5" />
+            </button>
+
             <div className="relative z-10">
                 <h2 className="text-2xl font-bold mb-2">{s.title}</h2>
                 <p className="text-indigo-100 mb-6 max-w-2xl">{s.description}</p>
@@ -177,196 +187,100 @@ const QuickStartGuide = ({ type = 'Other' }) => {
     );
 };
 
-// ─── AI Predictive Insights Section ───
+// ─── AI Intelligence Pulse ───
 const PredictiveInsightsSection = ({ insights }) => {
     const { t } = useTranslation();
     if (!insights) return null;
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10"
-        >
-            {/* Main AI Wait Time Prediction */}
-            <div className="lg:col-span-2 relative rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-200/50 overflow-hidden border border-white/10">
-                {/* Advanced Mesh Gradient Background */}
-                <div className="absolute inset-0 z-0 bg-indigo-600">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500 blur-[100px] opacity-50 animate-pulse" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-400 blur-[120px] opacity-40 animate-pulse" style={{ animationDelay: '2s' }} />
-                    <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-indigo-400 blur-[80px] opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
-                </div>
-
-                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none z-0">
-                    <Brain className="w-56 h-56 rotate-12" />
-                </div>
-
-                <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-10">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-xl border border-white/20">
-                                <Sparkles className="h-5 w-5 text-indigo-100" />
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-100/70">{t('analytics.live_ai_predictions', 'Live AI Predictions')}</span>
-                                    <span className="flex h-2 w-2 relative">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                                    </span>
-                                </div>
-                                <h3 className="text-3xl font-black tracking-tight">{t('analytics.queue_efficiency_model', 'Queue Efficiency Model')}</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {insights.currentPredictions?.map((p, i) => (
-                            <motion.div 
-                                key={i} 
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.1 }}
-                                className="group relative bg-white/10 backdrop-blur-2xl rounded-[2rem] p-6 border border-white/20 hover:bg-white/15 transition-all duration-500 overflow-hidden"
-                            >
-                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <Clock className="w-16 h-16 -rotate-12" />
-                                </div>
-                                
-                                <div className="flex justify-between items-start mb-6">
-                                    <div>
-                                        <p className="text-[10px] font-black text-indigo-100 uppercase tracking-widest mb-1">{p.queue_name}</p>
-                                        <div className="flex items-baseline gap-1">
-                                            <p className="text-4xl font-black tracking-tighter">{p.predicted_total_wait}</p>
-                                            <p className="text-sm font-bold text-indigo-200 uppercase">{t('common.minutes_short', 'm')}</p>
-                                        </div>
-                                    </div>
-                                    <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                                        p.confidence === 'High' ? 'bg-emerald-500/20 text-emerald-100 border-emerald-500/30' : 
-                                        p.confidence === 'Medium' ? 'bg-amber-500/20 text-amber-100 border-amber-500/30' : 
-                                        'bg-rose-500/20 text-rose-100 border-rose-500/30'
-                                    }`}>
-                                        {t(`analytics.confidence_${p.confidence.toLowerCase()}`, `${p.confidence} Confidence`)}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-black/5 rounded-2xl p-3 border border-white/5">
-                                        <p className="text-[9px] font-black text-indigo-200 uppercase mb-1 flex items-center gap-1">
-                                            <Clock className="h-2.5 w-2.5" /> {t('analytics.avg_per_person', 'Avg. / Person')}
-                                        </p>
-                                        <p className="text-lg font-black">{p.avg_service_time}<span className="text-[10px] ml-0.5">{t('common.minutes_short', 'm')}</span></p>
-                                    </div>
-                                    <div className="bg-black/5 rounded-2xl p-3 border border-white/5">
-                                        <p className="text-[9px] font-black text-indigo-200 uppercase mb-1 flex items-center gap-1">
-                                            <Activity className="h-2.5 w-2.5" /> {t('common.waiting', 'Waiting')}
-                                        </p>
-                                        <p className="text-lg font-black">{p.waiting_count}<span className="text-[10px] ml-1">{t('common.people', 'People')}</span></p>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6">
-                                    <div className="flex justify-between items-center mb-1.5">
-                                        <span className="text-[9px] font-black text-indigo-100 uppercase tracking-widest">{t('analytics.prediction_accuracy', 'Accuracy Score')}</span>
-                                        <span className="text-[9px] font-black text-indigo-100">{p.confidence === 'High' ? '98%' : p.confidence === 'Medium' ? '85%' : '65%'}</span>
-                                    </div>
-                                    <div className="h-1.5 bg-black/10 rounded-full overflow-hidden p-[1px]">
-                                        <motion.div 
-                                            initial={{ width: 0 }}
-                                            animate={{ width: p.confidence === 'High' ? '98%' : p.confidence === 'Medium' ? '85%' : '65%' }}
-                                            className={`h-full rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] ${
-                                                p.confidence === 'High' ? 'bg-emerald-400' : 
-                                                p.confidence === 'Medium' ? 'bg-amber-400' : 
-                                                'bg-rose-400'
-                                            }`} 
-                                        />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* Efficiency Overview Slider */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity" />
-                
-                <div className="flex items-center justify-between mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 mt-6">
+            {/* Efficiency Rankings */}
+            <div className="md:col-span-2 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
-                            <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-200">
-                                <Gauge className="h-5 w-5" />
-                            </div>
-                            {t('analytics.efficiency', 'Efficiency Metrics')}
+                        <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 uppercase tracking-tight">
+                            <Zap className="h-5 w-5 text-indigo-600" />
+                            {t('analytics.performance_rankings', 'Resource Performance Analysis')}
                         </h3>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{t('analytics.performance_index', 'Performance Index')}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('analytics.efficiency_index', 'Efficiency & Service Velocity')}</p>
                     </div>
-                    <InfoTooltip 
-                        text={t('tooltip.efficiency_score', "Score based on average service time vs. service norm. Higher is better.")} 
-                        align="end"
-                    />
                 </div>
 
-                <div className="space-y-6">
-                    {insights.resourceEfficiency?.slice(0, 4).map((r, i) => (
-                        <div key={i} className="relative">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                    {insights.resourceEfficiency?.slice(0, 6).map((r, i) => (
+                        <div key={i} className="group/item">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="min-w-0">
                                     <p className="text-sm font-black text-slate-800 truncate">{r.resource_name}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{r.service_name}</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{r.service_name}</p>
                                 </div>
                                 <div className="text-right">
-                                    <div className="flex items-center gap-1.5">
-                                        {r.efficiency_score >= 100 ? (
-                                            <TrendingUpIcon className="h-3 w-3 text-emerald-500" />
-                                        ) : (
-                                            <TrendingDown className="h-3 w-3 text-amber-500" />
-                                        )}
-                                        <p className={`text-base font-black ${r.efficiency_score >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                    <div className="flex items-center gap-1">
+                                        <p className={`text-sm font-black ${r.efficiency_score >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
                                             {r.efficiency_score}%
                                         </p>
                                     </div>
-                                    <p className="text-[9px] font-black text-slate-300 uppercase">{r.avg_time}{t('common.minutes_short', 'm')} / appt</p>
+                                    <p className="text-[9px] font-black text-slate-300 uppercase">{r.avg_time}m / appt</p>
                                 </div>
                             </div>
-                            <div className="h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                            <div className="h-1.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-[1px]">
                                 <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${Math.min(r.efficiency_score, 100)}%` }}
-                                    className={`h-full rounded-full ${r.efficiency_score >= 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                    className={`h-full rounded-full ${r.efficiency_score >= 100 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'}`}
                                 />
                             </div>
                         </div>
                     ))}
                     {(!insights.resourceEfficiency || insights.resourceEfficiency.length === 0) && (
-                        <div className="py-12 flex flex-col items-center justify-center text-center">
-                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100 italic">
-                                <Activity className="h-6 w-6 text-slate-200" />
-                            </div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4">{t('analytics.need_more_data_rankings', 'Processing Data...')}</p>
+                        <div className="col-span-full py-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                             {t('analytics.analyzing_patterns', 'Analyzing Service Patterns...')}
                         </div>
                     )}
                 </div>
+            </div>
 
-                <div className="mt-10 pt-6 border-t border-slate-50">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Clock className="h-3.5 w-3.5 text-indigo-500" />
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('analytics.peak_performance_hour', 'Optimum Traffic Hour')}</p>
+            {/* AI Traffic Hotspots */}
+            <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-6 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-700">
+                    <TrendingUpIcon className="w-32 h-32" />
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col">
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">{t('analytics.smart_traffic', 'Traffic Pulse')}</span>
+                            <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+                        <h3 className="text-xl font-black">{t('analytics.optimum_windows', 'Peak Traffic Windows')}</h3>
                     </div>
-                    <div className="flex items-center gap-3">
+
+                    <div className="space-y-3 flex-1">
                         {insights.peakHours?.map((h, i) => (
-                            <div key={i} className="flex-1 group/hour">
-                                <div className="bg-indigo-50/50 group-hover/hour:bg-indigo-600 group-hover/hour:text-white transition-all border border-indigo-100/50 rounded-2xl p-3 text-center">
-                                    <p className="text-base font-black tracking-tight">{h.hour}:00</p>
-                                    <p className="text-[9px] font-bold uppercase opacity-60">{h.volume} {t('appointment.appointments', 'Appts')}</p>
+                            <div key={i} className="flex items-center justify-between p-3.5 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-default">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-500/20 rounded-xl text-indigo-400">
+                                        <Clock className="h-4 w-4" />
+                                    </div>
+                                    <span className="text-sm font-black tracking-tight">{h.hour}:00</span>
+                                </div>
+                                <div className="text-right">
+                                     <p className="text-xs font-black">{h.volume} <span className="text-[9px] text-white/40 uppercase ml-0.5">{t('appointment.appointments', 'Appts')}</span></p>
                                 </div>
                             </div>
                         ))}
                     </div>
+
+                    <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
+                        <div>
+                             <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">{t('analytics.overall_forecast', 'Overall Forecast')}</p>
+                             <p className="text-sm font-black">Stable Demand</p>
+                        </div>
+                        <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse" />
+                    </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 
@@ -389,6 +303,9 @@ const AnalyticsPanel = () => {
     const [serviceId, setServiceId] = useState('');
     const [resourceId, setResourceId] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [showQuickStart, setShowQuickStart] = useState(() => {
+        return localStorage.getItem('hideQuickStart') !== 'true';
+    });
     const [lastUpdated, setLastUpdated] = useState(null);
 
     // Chart Refs
@@ -723,9 +640,19 @@ const AnalyticsPanel = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-12">
             {/* Quick Start Guide for New Orgs */}
-            <QuickStartGuide type={stats.orgType} />
+            <AnimatePresence>
+                {showQuickStart && (
+                    <QuickStartGuide 
+                        type={stats.orgType} 
+                        onDismiss={() => {
+                            setShowQuickStart(false);
+                            localStorage.setItem('hideQuickStart', 'true');
+                        }} 
+                    />
+                )}
+            </AnimatePresence>
 
             {/* ═══ Header ═══ */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -838,33 +765,46 @@ const AnalyticsPanel = () => {
             <PredictiveInsightsSection insights={predictiveInsights} />
 
             {/* ═══ KPI Cards ═══ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {kpiCards.map((card, idx) => (
                     <motion.div
                         key={idx}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.08 }}
-                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all group"
+                        className="relative bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/40 transition-all group overflow-hidden"
                     >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`${card.lightBg} ${card.lightText} p-2.5 rounded-xl group-hover:scale-110 transition-transform`}>
-                                <card.icon className="h-5 w-5" />
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-slate-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                        
+                        <div className="flex items-center justify-between mb-6 relative z-10">
+                            <div className={`${card.lightBg} ${card.lightText} p-3.5 rounded-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                                <card.icon className="h-6 w-6" />
                             </div>
                             <GrowthBadge value={card.growth} suffix={card.suffix || '%'} />
                         </div>
-                        <div className="flex items-center gap-1.5 mb-1">
-                            <p className="text-sm text-gray-500 font-medium">{card.title}</p>
-                            <InfoTooltip 
-                                text={
-                                    card.title === t('dashboard.total_bookings', 'Total Bookings') ? t('tooltip.total_bookings', "Total number of appointments scheduled within the selected time range.") :
-                                    card.title === t('dashboard.utilization', 'Slot Utilization') ? t('tooltip.slot_utilization', "Percentage of available time slots that have been filled by bookings.") :
-                                    t('tooltip.cancellation_rate', "Percentage of total bookings that were cancelled during this period.")
-                                } 
-                            />
+                        
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-1.5 mb-2">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{card.title}</p>
+                                <InfoTooltip 
+                                    text={
+                                        card.title === t('dashboard.total_bookings', 'Total Bookings') ? t('tooltip.total_bookings', "Total number of appointments scheduled within the selected time range.") :
+                                        card.title === t('dashboard.utilization', 'Slot Utilization') ? t('tooltip.slot_utilization', "Percentage of available time slots that have been filled by bookings.") :
+                                        t('tooltip.cancellation_rate', "Percentage of total bookings that were cancelled during this period.")
+                                    } 
+                                />
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                                <p className="text-4xl font-black text-slate-900 tracking-tighter">{card.value}</p>
+                                {card.suffix && <span className="text-sm font-black text-slate-300 uppercase">{card.suffix}</span>}
+                            </div>
+                            <div className="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between">
+                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{t('analytics.vs_previous_period', 'vs previous period')}</p>
+                                <div className="h-1 w-12 bg-slate-50 rounded-full overflow-hidden">
+                                    <div className={`h-full bg-slate-200 rounded-full ${card.growth > 0 ? 'w-full' : 'w-1/2'}`} />
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                        <p className="text-xs text-gray-400 mt-2">{t('analytics.vs_previous_period', 'vs previous period')}</p>
                     </motion.div>
                 ))}
             </div>

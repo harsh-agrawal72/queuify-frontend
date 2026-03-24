@@ -108,19 +108,20 @@ const InfoTooltip = ({ text, position = 'top', align = 'center', className = "" 
                 <Info size={11} strokeWidth={3} />
             </div>
             
-            <AnimatePresence>
-                {isVisible && (
-                    <Portal>
+            <Portal>
+                <AnimatePresence>
+                    {isVisible && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: position === 'top' ? 8 : -8 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: position === 'top' ? 8 : -8 }}
-                            className={`fixed z-[9999] w-64 p-4 bg-slate-900 border border-white/10 text-white text-xs font-medium leading-relaxed rounded-2xl shadow-2xl pointer-events-none select-none`}
+                            className="fixed z-[9999] w-64 p-4 bg-slate-900 border border-white/10 text-white text-xs font-medium leading-relaxed rounded-2xl shadow-2xl pointer-events-none select-none"
                             style={{ 
-                                top: tooltipStyles.top,
-                                left: tooltipStyles.left,
+                                top: tooltipStyles.top || 0,
+                                left: tooltipStyles.left || 0,
                                 transform: `translate(${tooltipStyles.translateX || '0%'}, ${tooltipStyles.translateY || '0%'})`,
-                                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))' 
+                                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))',
+                                visibility: tooltipStyles.top === undefined ? 'hidden' : 'visible'
                             }}
                         >
                             {text}
@@ -133,15 +134,15 @@ const InfoTooltip = ({ text, position = 'top', align = 'center', className = "" 
                             }`} 
                             style={{
                                 left: (position === 'top' || position === 'bottom') ? 
-                                      `${(coords.left + coords.width / 2) - tooltipStyles.left}px` : 
+                                      `${((coords.left || 0) + (coords.width || 0) / 2) - (tooltipStyles.left || 0)}px` : 
                                       (position === 'left' ? 'auto' : '-6px'),
                                 transform: (position === 'top' || position === 'bottom') ? 'translateX(-50%) rotate(45deg)' : ''
                             }}
                             />
                         </motion.div>
-                    </Portal>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>
+            </Portal>
         </div>
     );
 };

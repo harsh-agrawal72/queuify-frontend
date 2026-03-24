@@ -227,7 +227,7 @@ const ServiceManagement = () => {
                                     <div className="flex items-center gap-1 sm:gap-2">
                                         {resources.length > 0 && (
                                             <span className="hidden sm:inline-block text-xs font-medium px-2.5 py-1 bg-purple-50 text-purple-600 rounded-full">
-                                                {t('service.resource_count', '{{count}} resource', { count: resources.length, defaultValue: resources.length > 1 ? `${resources.length} resources` : `${resources.length} resource` })}
+                                                {t('service.resource_count', { count: resources.length, defaultValue: resources.length === 1 ? '1 resource' : `${resources.length} resources` })}
                                             </span>
                                         )}
                                         <button
