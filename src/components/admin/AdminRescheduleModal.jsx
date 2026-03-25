@@ -105,18 +105,30 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
                         <div>
                             <p className="text-[11px] font-bold text-orange-500 uppercase tracking-wide mb-1">Current Slot</p>
                             <p className="text-sm font-bold text-gray-800">
-                                {format(parseISO(appointment.start_time), 'EEE, MMM d')} @ {format(parseISO(appointment.start_time), 'h:mm a')}
+                                {appointment.start_time ? (
+                                    <>
+                                        {format(parseISO(appointment.start_time), 'EEE, MMM d')} @ {format(parseISO(appointment.start_time), 'h:mm a')}
+                                    </>
+                                ) : (
+                                    <span className="text-orange-600 italic">Waitlisted / Not Scheduled</span>
+                                )}
                             </p>
                         </div>
                         <ArrowRight className="h-5 w-5 text-orange-300" />
                         <div className="text-right">
                             <p className="text-[11px] font-bold text-orange-500 uppercase tracking-wide mb-1">New Selection</p>
                             <p className="text-sm font-bold text-indigo-600">
-                                {selectedSlotId ? (
-                                    <>
-                                        {format(selectedDate, 'MMM d')} @ {format(parseISO(slots.find(s => s.id === selectedSlotId)?.start_time), 'h:mm a')}
-                                    </>
-                                ) : 'Not selected'}
+                                {(() => {
+                                    const selectedSlot = slots.find(s => s.id === selectedSlotId);
+                                    if (selectedSlotId && selectedSlot?.start_time) {
+                                        return (
+                                            <>
+                                                {format(selectedDate, 'MMM d')} @ {format(parseISO(selectedSlot.start_time), 'h:mm a')}
+                                            </>
+                                        );
+                                    }
+                                    return 'Not selected';
+                                })()}
                             </p>
                         </div>
                     </div>
