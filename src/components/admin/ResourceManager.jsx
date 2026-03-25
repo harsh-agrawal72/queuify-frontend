@@ -27,6 +27,7 @@ const ResourceManager = () => {
         type: 'staff',
         description: '',
         concurrent_capacity: 1,
+        is_active: true,
         serviceIds: []
     });
 
@@ -64,6 +65,7 @@ const ResourceManager = () => {
             type: 'staff',
             description: '',
             concurrent_capacity: 1,
+            is_active: true,
             serviceIds: []
         });
         setIsModalOpen(true);
@@ -77,6 +79,7 @@ const ResourceManager = () => {
             type: res.type,
             description: res.description || '',
             concurrent_capacity: res.concurrent_capacity || 1,
+            is_active: res.is_active !== false,
             serviceIds: res.service_ids || []
         });
         setIsModalOpen(true);
@@ -101,6 +104,7 @@ const ResourceManager = () => {
                     type: formData.type,
                     description: formData.description,
                     concurrent_capacity: formData.concurrent_capacity,
+                    is_active: formData.is_active,
                     serviceIds: formData.serviceIds
                 };
                 await api.patch(`/resources/${currentId}`, updatePayload);
@@ -154,6 +158,12 @@ const ResourceManager = () => {
                                 <button onClick={() => handleDelete(resource.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
                                     <Trash2 className="h-4 w-4" />
                                 </button>
+                            </div>
+
+                            <div className="absolute bottom-4 right-4">
+                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${resource.is_active !== false ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                                    {resource.is_active !== false ? 'Active' : 'Inactive'}
+                                </span>
                             </div>
 
                             <div className="flex items-start gap-4">
@@ -224,6 +234,19 @@ const ResourceManager = () => {
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                                         <textarea placeholder="e.g. Senior expert in dermatology..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" rows="2" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-900">Resource Status</p>
+                                            <p className="text-xs text-gray-500">Only active resources appear in the appointment booking filter.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.is_active ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
