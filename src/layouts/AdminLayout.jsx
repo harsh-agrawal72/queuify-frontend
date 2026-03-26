@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { useQueueSocket } from '../hooks/useQueueSocket';
+import { useUserSocket } from '../hooks/useUserSocket';
+import { toast } from 'react-hot-toast';
 import {
     LayoutDashboard,
     CalendarClock,
@@ -33,6 +36,8 @@ import LanguageSwitcher from '../components/common/LanguageSwitcher';
 
 const AdminLayout = () => {
     const { user, logout } = useAuth();
+    const { queueData } = useQueueSocket(user?.org_id);
+    const { notification } = useUserSocket(user?.id);
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
@@ -115,6 +120,33 @@ const AdminLayout = () => {
         const interval = setInterval(fetchNotifications, 60000);
         return () => clearInterval(interval);
     }, []);
+
+    // Global WebSocket Listener for Notifications
+    useEffect(() => {
+        if (queueData) {
+            toast.success(t('queue.queue_updated', 'Active queue updated!'), {
+                icon: '🔔',
+                duration: 4000,
+            });
+            fetchNotifications(); // instantly update the bell icon count
+        }
+    }, [queueData, t]);
+
+    // Global WebSocket Listener for Personal Admin Notifications
+    useEffect(() => {
+        if (notification) {
+            toast(
+                (tElement) => (
+                    <div>
+                        <p className="font-bold text-sm text-gray-900">{notification.title}</p>
+                        <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                    </div>
+                ),
+                { duration: 5000, icon: '📩' }
+            );
+            fetchNotifications();
+        }
+    }, [notification]);
 
     const menuItems = [
         { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics', 'Analytics') },

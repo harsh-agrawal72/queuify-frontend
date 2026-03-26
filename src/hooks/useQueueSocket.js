@@ -20,7 +20,7 @@ export const useQueueSocket = (orgId, serviceId = null, resourceId = null) => {
 
         const socket = socketInstance;
 
-        socket.on('connect', () => {
+        const onConnect = () => {
             setConnected(true);
             console.log('Connected to queue socket');
 
@@ -28,25 +28,27 @@ export const useQueueSocket = (orgId, serviceId = null, resourceId = null) => {
             socket.emit('join_org', orgId);
             if (serviceId) socket.emit('join_service', serviceId);
             if (resourceId) socket.emit('join_resource', resourceId);
-        });
+        };
 
-        socket.on('disconnect', () => {
+        const onDisconnect = () => {
             setConnected(false);
             console.log('Disconnected from queue socket');
-        });
+        };
 
-        socket.on('queue_update', (data) => {
+        const onQueueUpdate = (data) => {
             console.log('Queue update received:', data);
             setQueueData(data);
-        });
+        };
+
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+        socket.on('queue_update', onQueueUpdate);
 
         return () => {
-            // We don't necessarily want to disconnect the singleton, 
-            // but we might want to leave rooms if needed.
-            // For now, simple cleanup is enough.
-            socket.off('connect');
-            socket.off('disconnect');
-            socket.off('queue_update');
+            // Unregister specifically these handlers so we don't kill other components' listeners
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+            socket.off('queue_update', onQueueUpdate);
         };
     }, [orgId, serviceId, resourceId]);
 

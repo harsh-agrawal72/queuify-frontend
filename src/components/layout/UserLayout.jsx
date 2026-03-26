@@ -12,6 +12,8 @@ import NotificationPanel from '../user/NotificationPanel';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import ChatWidget from '../chat/ChatWidget';
+import { useUserSocket } from '../../hooks/useUserSocket';
+import { toast } from 'react-hot-toast';
 
 export default function UserLayout() {
     const { user, logout } = useAuth();
@@ -20,6 +22,8 @@ export default function UserLayout() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isNotifOpen, setNotifOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    const { notification } = useUserSocket(user?.id);
 
     const fetchUnreadCount = async () => {
         try {
@@ -38,6 +42,22 @@ export default function UserLayout() {
         const interval = setInterval(fetchUnreadCount, 30000); // Check every 30s
         return () => clearInterval(interval);
     }, [user]);
+
+    // Global WebSocket Listener for User Notifications
+    useEffect(() => {
+        if (notification) {
+            toast(
+                (tElement) => (
+                    <div>
+                        <p className="font-bold text-sm text-gray-900">{notification.title}</p>
+                        <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                    </div>
+                ),
+                { duration: 6000, icon: '📫' }
+            );
+            fetchUnreadCount();
+        }
+    }, [notification]);
 
     const handleLogout = () => {
         logout();
