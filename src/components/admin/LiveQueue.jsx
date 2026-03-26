@@ -367,8 +367,8 @@ const AdminLiveQueue = () => {
                                 className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[400px]"
                             >
                                 {/* Queue Header */}
-                                 <div className="p-8 bg-slate-50/50 border-b border-slate-100">
-                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-6 gap-x-4 flex-wrap">
+                                 <div className="p-6 bg-slate-50/50 border-b border-slate-100">
+                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-4 gap-x-4 flex-wrap">
                                          <div className="flex items-center gap-5 min-w-0">
                                               <div className="h-14 w-14 bg-gradient-to-br from-white to-slate-50 shadow-md border border-slate-200/60 rounded-2xl flex-shrink-0 flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-all duration-300 group-hover:shadow-indigo-100">
                                                  <User className="h-7 w-7" />

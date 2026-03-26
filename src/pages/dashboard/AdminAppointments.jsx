@@ -110,8 +110,13 @@ const AdminAppointments = () => {
                                                 <span className="font-medium text-gray-900">{format(new Date(app.start_time), 'MMM d')}</span><br />
                                                 <span className="text-xs text-gray-400">{format(new Date(app.start_time), 'h:mm a')}</span>
                                             </>
+                                        ) : app.preferred_date ? (
+                                            <>
+                                                <span className="font-medium text-amber-700">{format(new Date(app.preferred_date), 'MMM d')}</span><br />
+                                                <span className="text-xs text-amber-500 font-bold italic">Waitlisted</span>
+                                            </>
                                         ) : (
-                                            <span className="text-amber-600 font-bold italic">Unassigned (Today)</span>
+                                            <span className="text-amber-600 font-bold italic">Unassigned</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
