@@ -22,6 +22,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { useTranslation } from 'react-i18next';
 import InfoTooltip from '../common/InfoTooltip';
+
+const formatName = (name) => {
+    if (!name) return '';
+    let n = name.toLowerCase().trim();
+    if (n.startsWith('dr ')) {
+        n = 'Dr. ' + n.substring(3);
+    } else if (n.startsWith('dr.')) {
+        n = 'Dr. ' + n.substring(3).trim();
+    }
+    return n.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 const AdminLiveQueue = () => {
     const { t } = useTranslation();
     const [queues, setQueues] = useState([]);
@@ -358,17 +370,18 @@ const AdminLiveQueue = () => {
                                 <div className="p-8 bg-slate-50/50 border-b border-slate-100">
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                                         <div className="flex items-center gap-5">
-                                            <div className="h-14 w-14 bg-white shadow-sm border border-slate-200 rounded-2xl flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-transform">
+                                             <div className="h-14 w-14 bg-gradient-to-br from-white to-slate-50 shadow-md border border-slate-200/60 rounded-2xl flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-all duration-300 group-hover:shadow-indigo-100">
                                                 <User className="h-7 w-7" />
                                             </div>
                                             <div>
-                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">
-                                                    {queue.resource_name}
+                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-2">
+                                                    {formatName(queue.resource_name)}
                                                 </h3>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-md uppercase tracking-wider">{queue.name}</span>
-                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        <Activity className="h-3 w-3" /> {t('queue.active_today', 'Active')}
+                                                    <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-indigo-100/50 shadow-sm">{queue.name}</span>
+                                                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+                                                        <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                                        {t('queue.active_today', 'Active')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -382,7 +395,7 @@ const AdminLiveQueue = () => {
                                                      className="p-2 bg-white text-slate-600 rounded-xl hover:bg-slate-50 border border-slate-100 shadow-sm transition-all h-9 w-9 flex items-center justify-center group/btn relative"
                                                  >
                                                      <RefreshCw className="h-4 w-4 group-hover/btn:rotate-180 transition-transform duration-500" />
-                                                     <div className="absolute -top-1 -right-1">
+                                                     <div className="absolute -top-1.5 -right-1.5 scale-75 origin-bottom-left">
                                                          <InfoTooltip text={t('queue.rebalance_tooltip', "Optimally redistribute pending appointments across available time slots.")} />
                                                      </div>
                                                  </button>
@@ -394,7 +407,7 @@ const AdminLiveQueue = () => {
                                                      className="p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-slate-100 shadow-sm transition-all h-9 w-9 flex items-center justify-center group/btn relative"
                                                  >
                                                      <UserPlus className="h-4 w-4 group-hover/btn:scale-110 transition-transform" />
-                                                     <div className="absolute -top-1 -right-1">
+                                                     <div className="absolute -top-1.5 -right-1.5 scale-75 origin-bottom-left">
                                                          <InfoTooltip text={t('queue.walkin_tooltip', "Quickly add a walk-in customer who has arrived without a prior appointment.")} />
                                                      </div>
                                                  </button>
@@ -453,49 +466,49 @@ const AdminLiveQueue = () => {
                                                                                     isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
                                                                         `}
                                                                     >
-                                                                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm ${isServing ? 'bg-white/20' : 'bg-white border border-slate-100 text-slate-400'}`}>
-                                                                            {appt.queue_number}
-                                                                        </div>
-                                                                        
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <div className="flex items-center gap-2 mb-1">
-                                                                                <h4 className={`text-lg font-bold truncate ${isServing ? 'text-white' : 'text-slate-900'}`}>{appt.user_name}</h4>
-                                                                                {isServing && (
-                                                                                    <span className="flex items-center gap-1 text-[9px] font-black bg-white/20 px-2 py-0.5 rounded-full animate-pulse tracking-widest">
-                                                                                        <div className="h-1 w-1 bg-white rounded-full"></div> {t('status.serving', 'SERVING')}
-                                                                                    </span>
-                                                                                )}
-                                                                                {isNext && (
-                                                                                    <span className="text-[9px] font-black bg-indigo-600 text-white px-2 py-0.5 rounded-full tracking-widest uppercase">{t('status.next', 'UP NEXT')}</span>
-                                                                                )}
-                                                                            </div>
-                                                                            
-                                                                            <div className="flex items-center gap-3 flex-wrap">
-                                                                                {appt.user_phone && (
-                                                                                    <span className={`text-[11px] font-semibold flex items-center gap-1.5 ${isServing ? 'text-indigo-100' : 'text-slate-500'}`}>
-                                                                                        <Users className="h-3 w-3" /> {appt.user_phone}
-                                                                                    </span>
-                                                                                )}
-                                                                                 <span className={`text-[11px] font-semibold flex items-center gap-1.5 ${isServing ? 'text-indigo-100' : 'text-slate-400'}`}>
-                                                                                     <Clock className="h-3 w-3" /> {appt.slot_start ? formatTime(appt.slot_start) : t('queue.no_slot', 'No Slot')}
-                                                                                 </span>
-                                                                                 {!isServing && !isCompleted && (
-                                                                                     <span className={`text-[11px] font-bold flex items-center gap-1 ${isNext ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                                                                         <div className="w-1 h-1 rounded-full bg-current opacity-40"></div>
-                                                                                         Wait: {(() => {
-                                                                                             const ahead = queue.appointments.filter((a, idx) => 
-                                                                                                 idx < i && (a.status === 'confirmed' || a.status === 'pending' || a.status === 'serving' || a.status === 'waitlisted_urgent')
-                                                                                             ).length;
-                                                                                             const avg = predictiveInsights?.averageDurations?.find(d => d.resource === appt.resource_name)?.minutes || 15;
-                                                                                             return ahead * avg;
-                                                                                         })()}m
+                                                                         <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-all duration-300 ${isServing ? 'bg-white/20 scale-110' : 'bg-white border border-slate-100 text-slate-400 group-hover:border-indigo-200 group-hover:text-indigo-500'}`}>
+                                                                             {appt.queue_number}
+                                                                         </div>
+                                                                         
+                                                                         <div className="flex-1 min-w-0">
+                                                                             <div className="flex items-center gap-2 mb-1.5">
+                                                                                 <h4 className={`text-lg font-bold truncate tracking-tight ${isServing ? 'text-white' : 'text-slate-900'}`}>{formatName(appt.user_name)}</h4>
+                                                                                 {isServing && (
+                                                                                     <span className="flex items-center gap-1 text-[9px] font-black bg-white/20 px-2.5 py-1 rounded-full animate-pulse tracking-widest border border-white/10">
+                                                                                         <div className="h-1 w-1 bg-white rounded-full"></div> {t('status.serving', 'SERVING')}
                                                                                      </span>
                                                                                  )}
-                                                                                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${isServing ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                                                                     {appt.token_number}
-                                                                                 </span>
-                                                                            </div>
-                                                                        </div>
+                                                                                 {isNext && (
+                                                                                     <span className="text-[9px] font-black bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-2.5 py-1 rounded-full tracking-widest uppercase shadow-sm shadow-indigo-200">{t('status.next', 'UP NEXT')}</span>
+                                                                                 )}
+                                                                             </div>
+                                                                            
+                                                                             <div className="flex items-center gap-3 flex-wrap">
+                                                                                 {appt.user_phone && (
+                                                                                     <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
+                                                                                         <Users className="h-3 w-3 opacity-60" /> {appt.user_phone}
+                                                                                     </span>
+                                                                                 )}
+                                                                                  <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
+                                                                                      <Clock className="h-3 w-3 opacity-60" /> {appt.slot_start ? formatTime(appt.slot_start) : <span className="text-[10px] uppercase tracking-tighter opacity-70">{t('queue.no_slot', 'No Slot')}</span>}
+                                                                                  </span>
+                                                                                  {!isServing && !isCompleted && (
+                                                                                      <span className={`text-[11px] font-black flex items-center gap-1.5 transition-colors ${isNext ? 'text-indigo-600' : 'text-slate-400 opacity-80'}`}>
+                                                                                          <div className={`h-1.5 w-1.5 rounded-full ${isNext ? 'bg-indigo-500 animate-pulse' : 'bg-current opacity-30'}`}></div>
+                                                                                          {t('queue.wait_label', 'Wait')}: {(() => {
+                                                                                              const ahead = queue.appointments.filter((a, idx) => 
+                                                                                                  idx < i && (a.status === 'confirmed' || a.status === 'pending' || a.status === 'serving' || a.status === 'waitlisted_urgent')
+                                                                                              ).length;
+                                                                                              const avg = predictiveInsights?.averageDurations?.find(d => d.resource === appt.resource_name)?.minutes || 15;
+                                                                                              return ahead * avg;
+                                                                                          })()}m
+                                                                                      </span>
+                                                                                  )}
+                                                                                  <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border transition-all ${isServing ? 'bg-white/10 text-white border-white/20' : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100/50'}`}>
+                                                                                      {appt.token_number}
+                                                                                  </span>
+                                                                             </div>
+                                                                         </div>
 
                                                                         <div className="flex gap-2">
                                                                             {isServing ? (
