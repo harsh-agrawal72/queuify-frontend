@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
-
-const rawApiUrl = import.meta.env.VITE_API_URL || '';
-const SOCKET_URL = rawApiUrl.replace(/\/v1\/?$/, '');
-
-let socketInstance = null;
+import { getSocket } from '../services/socketService';
 
 export const useUserSocket = (userId) => {
     const [connected, setConnected] = useState(false);
@@ -14,11 +9,7 @@ export const useUserSocket = (userId) => {
     useEffect(() => {
         if (!userId) return;
 
-        if (!socketInstance) {
-            socketInstance = io(SOCKET_URL);
-        }
-
-        const socket = socketInstance;
+        const socket = getSocket();
 
         const onConnect = () => {
             console.log('User socket connected');

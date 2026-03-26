@@ -1,11 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
-
-// Extract the base URL without /v1 for socket connections
-const rawApiUrl = import.meta.env.VITE_API_URL || '';
-const SOCKET_URL = rawApiUrl.replace(/\/v1\/?$/, '');
-
-let socketInstance = null;
+import { getSocket } from '../services/socketService';
 
 export const useQueueSocket = (orgId, serviceId = null, resourceId = null) => {
     const [queueData, setQueueData] = useState(null);
@@ -14,11 +8,7 @@ export const useQueueSocket = (orgId, serviceId = null, resourceId = null) => {
     useEffect(() => {
         if (!orgId) return;
 
-        if (!socketInstance) {
-            socketInstance = io(SOCKET_URL);
-        }
-
-        const socket = socketInstance;
+        const socket = getSocket();
 
         const onConnect = () => {
             setConnected(true);
@@ -53,8 +43,9 @@ export const useQueueSocket = (orgId, serviceId = null, resourceId = null) => {
     }, [orgId, serviceId, resourceId]);
 
     const emitStatusChange = useCallback((appointmentId, status) => {
-        if (socketInstance) {
-            socketInstance.emit('status_change', { appointmentId, status, orgId });
+        const socket = getSocket();
+        if (socket) {
+            socket.emit('status_change', { appointmentId, status, orgId });
         }
     }, [orgId]);
 
