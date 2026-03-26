@@ -79,8 +79,8 @@ const Contact = () => {
                                     <div className="ml-6">
                                         <h3 className="text-lg font-bold text-gray-900 tracking-tight">Email us</h3>
                                         <p className="mt-1 text-sm text-gray-500 font-medium">Direct line to our support team.</p>
-                                        <a href="mailto:harsagrawal7270@gmail.com" className="mt-3 inline-flex text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors border-b border-blue-200 hover:border-blue-600 pb-0.5 break-all">
-                                            harsagrawal7270@gmail.com
+                                        <a href="mailto:support@queuify.in" className="mt-3 inline-flex text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors border-b border-blue-200 hover:border-blue-600 pb-0.5 break-all">
+                                            support@queuify.in
                                         </a>
                                     </div>
                                 </div>

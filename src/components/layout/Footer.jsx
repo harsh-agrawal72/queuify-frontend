@@ -52,7 +52,7 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3 text-slate-400">
                                 <Mail className="w-5 h-5 text-indigo-400 shrink-0" />
-                                <a href="mailto:harsagrawal7270@gmail.com" className="hover:text-indigo-300 transition-colors">harsagrawal7270@gmail.com</a>
+                                <a href="mailto:support@queuify.in" className="hover:text-indigo-300 transition-colors">support@queuify.in</a>
                             </li>
                             <li className="flex items-center gap-3 text-slate-400">
                                 <Phone className="w-5 h-5 text-indigo-400 shrink-0" />
