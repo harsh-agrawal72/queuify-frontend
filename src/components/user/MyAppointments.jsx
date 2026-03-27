@@ -80,6 +80,17 @@ export default function MyAppointments() {
         return acc;
     }, { upcoming: 0, history: 0, cancelled: 0 });
 
+    const handleRespond = async (id, action) => {
+        try {
+            await apiService.respondToReschedule(id, { action });
+            toast.success(`Proposal ${action}ed`);
+            fetchAppointments();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Failed to respond');
+        }
+    };
+
     const filteredAppointments = appointments.filter(appt => {
         const isHistoryStatus = ['completed', 'no_show'].includes(appt.status);
         const isCancelledStatus = appt.status === 'cancelled';
@@ -207,7 +218,7 @@ export default function MyAppointments() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     transition={{ duration: 0.25, delay: idx * 0.03 }}
-                                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group"
+                                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
                                 >
                                     <div className="flex flex-col md:flex-row">
                                         {/* Date Block */}
@@ -227,6 +238,40 @@ export default function MyAppointments() {
                                                 </span>
                                             </div>
                                         </div>
+
+                                        {/* Proposal Banner */}
+                                        {appt.reschedule_status === 'pending' && (
+                                            <div className="absolute top-0 right-0 left-0 bg-amber-50 border-b border-amber-100 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 z-10 animate-in slide-in-from-top duration-300">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="bg-amber-100 p-2 rounded-lg">
+                                                        <Clock className="h-4 w-4 text-amber-600" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-amber-900">Reschedule Proposed by Business</p>
+                                                        <p className="text-[10px] text-amber-700 font-medium">
+                                                            New Time: <span className="font-bold">{appt.proposed_start_time ? format(parseISO(appt.proposed_start_time), 'PPp') : 'TBD'}</span>
+                                                        </p>
+                                                        {appt.reschedule_reason && (
+                                                            <p className="text-[10px] text-amber-600 italic mt-0.5">"{appt.reschedule_reason}"</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleRespond(appt.id, 'accept'); }}
+                                                        className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-700 transition-all flex items-center gap-1.5 shadow-sm"
+                                                    >
+                                                        <Star className="h-3 w-3 fill-white" /> Accept & Get Priority #1
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleRespond(appt.id, 'decline'); }}
+                                                        className="bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-50 transition-all"
+                                                    >
+                                                        Keep Original
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Content */}
                                         <div className="flex-1 p-5 flex flex-col md:flex-row gap-4">
@@ -293,12 +338,14 @@ export default function MyAppointments() {
                                                         >
                                                             <XCircle className="h-4 w-4" /> {t('appointment.cancel')}
                                                         </button>
-                                                        <button
-                                                            onClick={() => setReschedulingAppt(appt)}
-                                                            className="flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all shadow-sm"
-                                                        >
-                                                            <Calendar className="h-4 w-4" /> {t('appointment.reschedule')}
-                                                        </button>
+                                                        {(!appt.reschedule_count || appt.reschedule_count < 1) && (
+                                                            <button
+                                                                onClick={() => setReschedulingAppt(appt)}
+                                                                className="flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all shadow-sm"
+                                                            >
+                                                                <Calendar className="h-4 w-4" /> {t('appointment.reschedule')}
+                                                            </button>
+                                                        )}
                                                         <button
                                                             onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id, orgName: appt.org_name, orgAvatar: null } }))}
                                                             className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"

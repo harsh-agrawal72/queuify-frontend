@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../services/api';
+import { api, apiService } from '../../services/api';
 import {
     Calendar, Clock, X, ArrowRight
 } from 'lucide-react';
@@ -15,6 +15,7 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [selectedSlotId, setSelectedSlotId] = useState(null);
     const [rescheduling, setRescheduling] = useState(false);
+    const [reason, setReason] = useState('');
 
     // Fetch resources for this service to allow filtering
     useEffect(() => {
@@ -49,19 +50,23 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
         fetchSlots();
     }, [selectedDate, selectedResourceId, appointment]);
 
-    const handleTransfer = async () => {
-        if (!selectedSlotId) return;
+    const handlePropose = async () => {
+        if (!selectedSlotId || !reason) {
+            toast.error('Please select a slot and provide a reason');
+            return;
+        }
         setRescheduling(true);
-        const loadingToast = toast.loading('Transferring appointment...');
+        const loadingToast = toast.loading('Sending reschedule proposal...');
         try {
-            await api.patch(`/appointments/${appointment.id}/reschedule`, {
-                newSlotId: selectedSlotId
+            await apiService.proposeReschedule(appointment.id, {
+                newSlotId: selectedSlotId,
+                reason: reason
             });
-            toast.success('Appointment transferred successfully!', { id: loadingToast });
+            toast.success('Proposal sent to user!', { id: loadingToast });
             onSuccess();
         } catch (error) {
             console.error(error);
-            toast.error(error.response?.data?.message || 'Transfer failed', { id: loadingToast });
+            toast.error(error.response?.data?.message || 'Failed to send proposal', { id: loadingToast });
         } finally {
             setRescheduling(false);
         }
@@ -90,9 +95,9 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                             <Clock className="h-5 w-5 text-indigo-600" />
-                            Transfer Appointment
+                            Propose Reschedule
                         </h2>
-                        <p className="text-gray-500 text-sm mt-1">Move <span className="font-semibold text-gray-700">{appointment.user_name}</span> to a new slot</p>
+                        <p className="text-gray-500 text-sm mt-1">Suggest a new time for <span className="font-semibold text-gray-700">{appointment.user_name}</span></p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <X className="h-5 w-5 text-gray-400" />
@@ -218,6 +223,20 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
                             </div>
                         )}
                     </div>
+
+                    {/* Reason Field */}
+                    {selectedSlotId && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Reason for proposal (Shown to user)</label>
+                            <textarea
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                placeholder="Example: Unexpected maintenance, Staff emergency..."
+                                className="w-full p-4 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 transition-all min-h-[80px]"
+                            />
+                            <p className="text-[10px] text-amber-600 font-medium italic">* Accepting this will grant the user Priority #1 and reset their reschedule limit.</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}
@@ -230,11 +249,11 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
                         Cancel
                     </button>
                     <button
-                        onClick={handleTransfer}
-                        disabled={!selectedSlotId || rescheduling}
+                        onClick={handlePropose}
+                        disabled={!selectedSlotId || !reason || rescheduling}
                         className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 disabled:opacity-50 flex items-center gap-2"
                     >
-                        {rescheduling ? 'Transferring...' : 'Confirm Transfer'}
+                        {rescheduling ? 'Sending...' : 'Send Proposal'}
                     </button>
                 </div>
             </motion.div>

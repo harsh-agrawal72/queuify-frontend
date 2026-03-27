@@ -93,6 +93,10 @@ const apiService = {
     // Reviews
     submitReview: (data) => api.post('/reviews', data),
     getOrgReviews: (orgId) => api.get(`/reviews/organization/${orgId}`),
+
+    // Rescheduling Proposal
+    proposeReschedule: (appointmentId, data) => api.patch(`/appointments/${appointmentId}/propose-reschedule`, data),
+    respondToReschedule: (appointmentId, data) => api.patch(`/appointments/${appointmentId}/respond-reschedule`, data),
 };
 
 export { api, apiService };

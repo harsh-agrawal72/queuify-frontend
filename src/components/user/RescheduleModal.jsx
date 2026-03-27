@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api } from '../../services/api';
+import { api, apiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import {
     Calendar, Clock, X, CheckCircle2, ChevronRight, 
     ChevronLeft, Loader2, AlertCircle, ArrowRight
@@ -14,8 +15,13 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
     const [selectedResourceId, setSelectedResourceId] = useState('ANY');
     const [slots, setSlots] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
-    const [selectedSlotId, setSelectedSlotId] = useState(null);
     const [rescheduling, setRescheduling] = useState(false);
+    const [notificationTime, setNotificationTime] = useState('');
+    const [requestingNotification, setRequestingNotification] = useState(false);
+    const [selectedSlotId, setSelectedSlotId] = useState(null);
+    const [reason, setReason] = useState('');
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
 
     // Fetch resources for this service to allow filtering
     useEffect(() => {
@@ -53,19 +59,29 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
         fetchSlots();
     }, [selectedDate, selectedResourceId, appointment]);
 
-    const handleReschedule = async () => {
+    const handleAction = async () => {
         if (!selectedSlotId) return;
+        if (isAdmin && !reason) return toast.error("Please provide a reason for the proposal");
+
         setRescheduling(true);
-        const loadingToast = toast.loading('Rescheduling appointment...');
+        const loadingToast = toast.loading(isAdmin ? 'Proposing reschedule...' : 'Rescheduling appointment...');
         try {
-            await api.patch(`/appointments/${appointment.id}/reschedule`, {
-                newSlotId: selectedSlotId
-            });
-            toast.success('Appointment rescheduled successfully!', { id: loadingToast });
+            if (isAdmin) {
+                await apiService.proposeReschedule(appointment.id, { 
+                    newSlotId: selectedSlotId,
+                    reason 
+                });
+                toast.success('Reschedule proposal sent to user!', { id: loadingToast });
+            } else {
+                await api.patch(`/appointments/${appointment.id}/reschedule`, {
+                    newSlotId: selectedSlotId
+                });
+                toast.success('Appointment rescheduled successfully!', { id: loadingToast });
+            }
             onSuccess();
         } catch (error) {
             console.error(error);
-            toast.error(error.response?.data?.message || 'Rescheduling failed', { id: loadingToast });
+            toast.error(error.response?.data?.message || 'Action failed', { id: loadingToast });
         } finally {
             setRescheduling(false);
         }
@@ -96,7 +112,9 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                             <Clock className="h-6 w-6 text-indigo-600" />
                             Reschedule Appointment
                         </h2>
-                        <p className="text-gray-500 text-sm mt-1">Select a new available time for {appointment.service_name}</p>
+                        <p className="text-gray-500 text-sm mt-1">
+                            {isAdmin ? `Suggest a better time for ${appointment.user_name || 'Customer'}` : `Select a new available time for ${appointment.service_name}`}
+                        </p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <X className="h-6 w-6 text-gray-400" />
@@ -197,11 +215,14 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                                 {slots.map(slot => (
                                     <button
                                         key={slot.id}
-                                        onClick={() => setSelectedSlotId(slot.id)}
-                                        className={`py-3 rounded-2xl text-sm font-bold transition-all border flex flex-col items-center ${
+                                        onClick={() => {
+                                            setSelectedSlotId(slot.id);
+                                            setNotificationTime('');
+                                        }}
+                                        className={`py-3 rounded-2xl text-sm font-bold transition-all border flex flex-col items-center shadow-sm ${
                                             selectedSlotId === slot.id
-                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                                : 'bg-gray-50 border-transparent text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-indigo-200'
+                                                : 'bg-white border-gray-100 text-gray-600 hover:border-indigo-200 hover:text-indigo-600'
                                         }`}
                                     >
                                         {format(parseISO(slot.start_time), 'h:mm a')}
@@ -219,15 +240,93 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                             </div>
                         )}
                     </div>
+
+                    {/* Dynamic Time Estimation & Notification */}
+                    {selectedSlotId && slots.find(s => s.id === selectedSlotId) && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-5 bg-indigo-50 rounded-3xl border border-indigo-100 space-y-4"
+                        >
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+                                <div className="space-y-3">
+                                    <p className="text-sm text-indigo-900 leading-relaxed font-medium">
+                                        {slots.find(s => s.id === selectedSlotId).descriptive_message?.split('**').map((part, i) => 
+                                            i % 2 === 1 ? <strong key={i} className="text-indigo-700 font-extrabold">{part}</strong> : part
+                                        )}
+                                    </p>
+                                    
+                                    <div className="pt-2 border-t border-indigo-100">
+                                        <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">Not free at this time?</p>
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="time" 
+                                                value={notificationTime}
+                                                onChange={(e) => setNotificationTime(e.target.value)}
+                                                className="text-sm border-gray-200 rounded-lg p-1.5 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                            />
+                                            <button
+                                                onClick={async () => {
+                                                    if (!notificationTime) return toast.error("Please pick a time");
+                                                    setRequestingNotification(true);
+                                                    try {
+                                                        const [hours, minutes] = notificationTime.split(':');
+                                                        const desiredDate = new Date();
+                                                        desiredDate.setHours(hours, minutes, 0, 0);
+                                                        
+                                                        await apiService.requestSlotNotification(selectedSlotId, desiredDate.toISOString());
+                                                        toast.success("We'll notify you when it reaches your time!");
+                                                        setNotificationTime('');
+                                                    } catch (e) {
+                                                        toast.error("Failed to set notification");
+                                                    } finally {
+                                                        setRequestingNotification(false);
+                                                    }
+                                                }}
+                                                disabled={requestingNotification}
+                                                className="text-xs bg-white text-indigo-600 border border-indigo-200 px-3 py-2 rounded-lg font-bold hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                                            >
+                                                {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : 'Notify Me'}
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-indigo-400 mt-2 italic">We'll alert you if the estimated time moves to your preference.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Admin Reason Field */}
+                    {isAdmin && selectedSlotId && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="space-y-3"
+                        >
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                                Why are you proposing this change? (Required)
+                            </label>
+                            <textarea
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                placeholder="Example: Doctor emergency, Staff unavailable, etc."
+                                className="w-full p-4 rounded-3xl bg-amber-50 border border-amber-100 placeholder-amber-200 text-amber-900 text-sm focus:ring-amber-500 focus:border-amber-500 transition-all min-h-[100px]"
+                            />
+                            <p className="text-[10px] text-amber-500 font-medium italic">
+                                * The user will be rewarded with Priority #1 if they accept this change.
+                            </p>
+                        </motion.div>
+                    )}
                 </div>
 
                 {/* Footer */}
                 <div className="p-8 bg-gray-50 border-t border-gray-100">
                     <button
                         disabled={!selectedSlotId || rescheduling}
-                        onClick={handleReschedule}
+                        onClick={handleAction}
                         className={`w-full py-4 rounded-2xl font-black text-white shadow-lg transition-all flex items-center justify-center gap-3 ${
-                            selectedSlotId && !rescheduling
+                            selectedSlotId && !rescheduling && (!isAdmin || reason)
                                 ? 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0'
                                 : 'bg-gray-300 cursor-not-allowed'
                         }`}
@@ -239,8 +338,8 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                             </>
                         ) : (
                             <>
-                                Confirm New Time
-                                <CheckCircle2 className="h-5 w-5" />
+                                {isAdmin ? 'Send Reschedule Proposal' : 'Confirm New Time'}
+                                <ArrowRight className="h-5 w-5" />
                             </>
                         )}
                     </button>

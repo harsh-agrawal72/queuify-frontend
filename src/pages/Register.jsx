@@ -92,12 +92,14 @@ const businessTemplates = [
 ];
 import { GoogleLogin } from '@react-oauth/google';
 import Logo from '../components/common/Logo';
+import TermsModal from '../components/common/TermsModal';
 
 const Register = () => {
     const { t } = useTranslation();
     const [signupType, setSignupType] = useState('user'); // 'user' or 'org'
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
+    const [showTerms, setShowTerms] = useState(false);
 
     // Combined form data
     const [formData, setFormData] = useState({
@@ -163,11 +165,19 @@ const Register = () => {
     };
 
     const handleOrgSignup = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
+        
+        // Validation before showing terms
         if (formData.password !== formData.confirmPassword) {
             return toast.error(t('auth.passwords_not_match', 'Admin passwords do not match'));
         }
 
+        // Show terms modal
+        setShowTerms(true);
+    };
+
+    const finalizeOrgSignup = async () => {
+        setShowTerms(false);
         setSubmitting(true);
         try {
             const user = await registerOrg({
@@ -412,6 +422,13 @@ const Register = () => {
                         )}
                     </AnimatePresence>
                 </motion.div>
+
+                {/* Terms Modal for Orgs */}
+                <TermsModal 
+                    isOpen={showTerms}
+                    onClose={() => setShowTerms(false)}
+                    onAgree={finalizeOrgSignup}
+                />
 
                 <p className="mt-8 text-center text-gray-500 text-sm font-medium">
                     {t('auth.already_have_account', 'Already have an account?')}{' '}
