@@ -55,7 +55,8 @@ const OrganizationAbout = () => {
         linkedin_url: '',
         trustScore: 0,
         images: [],
-        email_verified: false
+        email_verified: false,
+        keywords: ''
     });
     const [verifyingEmail, setVerifyingEmail] = useState(false);
 
@@ -104,7 +105,8 @@ const OrganizationAbout = () => {
                 total_staff,
                 facebook_url,
                 instagram_url,
-                linkedin_url
+                linkedin_url,
+                keywords
             } = profile;
 
             await api.patch('/organizations/profile', {
@@ -123,7 +125,8 @@ const OrganizationAbout = () => {
                 total_staff,
                 facebook_url,
                 instagram_url,
-                linkedin_url
+                linkedin_url,
+                keywords
             });
             toast.success(t('admin.about.save_success', 'Profile updated successfully'));
             fetchData(); // Refresh to get updated trust score
@@ -250,6 +253,24 @@ const OrganizationAbout = () => {
                                     placeholder={t('admin.about.description_placeholder', 'Tell your customers about your organization, history, and mission...')}
                                     className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {t('admin.about.keywords', 'Search Keywords & Hashtags')}
+                                    <InfoTooltip text={t('admin.about.keywords_tooltip', 'Enter comma-separated tags and hashtags like #doctor, #heartspecialist, etc. This helps users find you more easily in search results.')} />
+                                </label>
+                                <textarea
+                                    name="keywords"
+                                    value={profile.keywords || ''}
+                                    onChange={handleChange}
+                                    rows={2}
+                                    placeholder={t('admin.about.keywords_placeholder', 'e.g. #heart, #specialist, clinic, best care...')}
+                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none"
+                                />
+                                <p className="text-[10px] text-gray-500 mt-1 italic tracking-tight">
+                                    Separate each keyword or hashtag with a comma. These act as SEO tags for your profile.
+                                </p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -9,10 +9,12 @@ const QueueVisualization = ({ appointment }) => {
         serving_token: serving, 
         status,
         total_in_slot: total,
-        estimated_service_time: svcTime
+        estimated_service_time: svcTime,
+        time_drift_minutes: driftMins
     } = appointment;
 
     const avgTime = svcTime || 15;
+    const waitMins = appointment.estimated_wait_time ?? (ahead * avgTime);
 
     // If appointment is completed or cancelled, don't show visualization
     if (['completed', 'cancelled'].includes(status)) return null;
@@ -131,19 +133,47 @@ const QueueVisualization = ({ appointment }) => {
                 <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase leading-none mb-1">Estimated Wait</p>
                     <p className="text-sm font-bold text-gray-900">
-                        {status === 'serving' ? 'Instant Access' : `Approx. ${ahead * avgTime} - ${ahead * (avgTime + 5)} mins`}
+                        {status === 'serving' ? 'Instant Access' : (waitMins !== undefined ? (waitMins > 60 ? `${Math.floor(waitMins/60)}h ${waitMins%60}m` : `${waitMins} mins`) : 'Calculating...')}
                     </p>
                 </div>
-                <div className="ml-auto">
-                    <div className="flex -space-x-2">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
-                                <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
             </div>
+
+            {/* Smart Drift Alert */}
+            {driftMins >= 10 && (
+                <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    className="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-3"
+                >
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                        <Sparkles className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-amber-800 uppercase leading-none mb-1">Smart AI Prediction</p>
+                        <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                            Queue is moving slightly slower. You can arrive **{Math.floor(driftMins/5)*5} mins** later than planned.
+                        </p>
+                    </div>
+                </motion.div>
+            )}
+
+            {driftMins <= -7 && (
+                <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    className="mt-4 p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-start gap-3"
+                >
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <Sparkles className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-emerald-800 uppercase leading-none mb-1">System Optimization</p>
+                        <p className="text-xs text-emerald-700 font-medium leading-relaxed">
+                            Queue is moving faster today! Please arrive **{Math.abs(Math.floor(driftMins/5)*5)} mins** earlier than scheduled.
+                        </p>
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 };

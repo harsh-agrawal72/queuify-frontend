@@ -126,9 +126,19 @@ const MyAppointments = () => {
                                                         <Calendar className="h-4 w-4 text-gray-400" />
                                                         {format(new Date(appt.start_time), 'EEEE, MMMM d, yyyy')}
                                                     </div>
-                                                    <div className="flex items-center gap-1.5">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
                                                         <Clock className="h-4 w-4 text-gray-400" />
-                                                        {format(new Date(appt.start_time), 'h:mm a')} - {format(new Date(appt.end_time), 'h:mm a')}
+                                                        <span>{format(new Date(appt.start_time), 'h:mm a')} - {format(new Date(appt.end_time), 'h:mm a')}</span>
+                                                        {appt.time_drift_minutes >= 10 && (
+                                                            <span className="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-black rounded-full uppercase tracking-tighter animate-pulse text-center">
+                                                                AI Predicted Delay: {Math.floor(appt.time_drift_minutes/5)*5}m
+                                                            </span>
+                                                        )}
+                                                        {appt.time_drift_minutes <= -7 && (
+                                                            <span className="ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-tighter animate-pulse text-center">
+                                                                AI: Moving Faster ({Math.abs(Math.floor(appt.time_drift_minutes/5)*5)}m ahead)
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
