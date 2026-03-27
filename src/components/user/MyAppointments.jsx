@@ -267,12 +267,12 @@ export default function MyAppointments() {
                                             </div>
 
                                             {/* Actions */}
-                                            <div className="flex md:flex-col gap-2 justify-end items-stretch flex-shrink-0 md:min-w-[150px]">
+                                            <div className="grid grid-cols-2 md:flex md:flex-col gap-2 justify-end items-stretch flex-shrink-0 md:min-w-[150px]">
                                                 {filter === 'upcoming' && appt.status !== 'cancelled' && (
                                                     <>
                                                         <Link
                                                             to={`/queue/${appt.id}`}
-                                                            className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-200"
+                                                            className="col-span-2 flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-200"
                                                         >
                                                             <Zap className="h-4 w-4" /> {t('appointment.live_queue')}
                                                         </Link>

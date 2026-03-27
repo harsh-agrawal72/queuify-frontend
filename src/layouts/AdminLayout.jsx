@@ -135,15 +135,18 @@ const AdminLayout = () => {
     // Global WebSocket Listener for Personal Admin Notifications
     useEffect(() => {
         if (notification) {
-            toast(
-                (tElement) => (
-                    <div>
-                        <p className="font-bold text-sm text-gray-900">{notification.title}</p>
-                        <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                    </div>
-                ),
-                { duration: 5000, icon: '📩' }
-            );
+            // Only show admin-specific notifications in admin layout
+            if (notification.link && notification.link.startsWith('/admin')) {
+                toast(
+                    (tElement) => (
+                        <div>
+                            <p className="font-bold text-sm text-gray-900">{notification.title}</p>
+                            <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                        </div>
+                    ),
+                    { duration: 5000, icon: '📩' }
+                );
+            }
             fetchNotifications();
         }
     }, [notification]);

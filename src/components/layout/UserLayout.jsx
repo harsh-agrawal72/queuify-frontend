@@ -46,15 +46,18 @@ export default function UserLayout() {
     // Global WebSocket Listener for User Notifications
     useEffect(() => {
         if (notification) {
-            toast(
-                (tElement) => (
-                    <div>
-                        <p className="font-bold text-sm text-gray-900">{notification.title}</p>
-                        <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                    </div>
-                ),
-                { duration: 6000, icon: '📫' }
-            );
+            // Only show user-specific notifications in user layout (skip admin links)
+            if (!notification.link || !notification.link.startsWith('/admin')) {
+                toast(
+                    (tElement) => (
+                        <div>
+                            <p className="font-bold text-sm text-gray-900">{notification.title}</p>
+                            <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                        </div>
+                    ),
+                    { duration: 6000, icon: '📫' }
+                );
+            }
             fetchUnreadCount();
         }
     }, [notification]);
