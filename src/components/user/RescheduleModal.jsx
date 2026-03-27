@@ -17,6 +17,7 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [rescheduling, setRescheduling] = useState(false);
     const [notificationTime, setNotificationTime] = useState('');
+    const [autoBook, setAutoBook] = useState(false);
     const [requestingNotification, setRequestingNotification] = useState(false);
     const [selectedSlotId, setSelectedSlotId] = useState(null);
     const [reason, setReason] = useState('');
@@ -259,38 +260,67 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                                     
                                     <div className="pt-2 border-t border-indigo-100">
                                         <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">Not free at this time?</p>
-                                        <div className="flex items-center gap-2">
-                                            <input 
-                                                type="time" 
-                                                value={notificationTime}
-                                                onChange={(e) => setNotificationTime(e.target.value)}
-                                                className="text-sm border-gray-200 rounded-lg p-1.5 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                                            />
-                                            <button
-                                                onClick={async () => {
-                                                    if (!notificationTime) return toast.error("Please pick a time");
-                                                    setRequestingNotification(true);
-                                                    try {
-                                                        const [hours, minutes] = notificationTime.split(':');
-                                                        const desiredDate = new Date();
-                                                        desiredDate.setHours(hours, minutes, 0, 0);
-                                                        
-                                                        await apiService.requestSlotNotification(selectedSlotId, desiredDate.toISOString());
-                                                        toast.success("We'll notify you when it reaches your time!");
-                                                        setNotificationTime('');
-                                                    } catch (e) {
-                                                        toast.error("Failed to set notification");
-                                                    } finally {
-                                                        setRequestingNotification(false);
-                                                    }
-                                                }}
-                                                disabled={requestingNotification}
-                                                className="text-xs bg-white text-indigo-600 border border-indigo-200 px-3 py-2 rounded-lg font-bold hover:bg-indigo-100 transition-colors disabled:opacity-50"
-                                            >
-                                                {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : 'Notify Me'}
-                                            </button>
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-indigo-400 font-bold uppercase ml-1 mb-0.5">Desired Time</span>
+                                                    <input 
+                                                        type="time" 
+                                                        value={notificationTime}
+                                                        min={slots.find(s => s.id === selectedSlotId)?.start_time ? format(parseISO(slots.find(s => s.id === selectedSlotId)?.start_time), 'HH:mm') : ''}
+                                                        max={slots.find(s => s.id === selectedSlotId)?.end_time ? format(parseISO(slots.find(s => s.id === selectedSlotId)?.end_time), 'HH:mm') : ''}
+                                                        onChange={(e) => setNotificationTime(e.target.value)}
+                                                        className="text-sm border-gray-200 rounded-lg p-1.5 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!notificationTime) return toast.error("Please pick a time");
+                                                        setRequestingNotification(true);
+                                                        try {
+                                                            const [hours, minutes] = notificationTime.split(':');
+                                                            const slot = slots.find(s => s.id === selectedSlotId);
+                                                            const slotDate = parseISO(slot.start_time);
+                                                            const desiredDate = new Date(slotDate);
+                                                            desiredDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                                                            
+                                                            await apiService.requestSlotNotification(selectedSlotId, {
+                                                                desiredTime: desiredDate.toISOString(),
+                                                                serviceId: appointment.service_id,
+                                                                resourceId: slot.resource_id,
+                                                                autoBook,
+                                                                customerPhone: null
+                                                            });
+                                                            const modeMsg = autoBook ? "We'll auto-book your reschedule" : "We'll notify you";
+                                                            toast.success(`${modeMsg} when it reaches your time!`);
+                                                            setNotificationTime('');
+                                                        } catch (e) {
+                                                            toast.error(e.response?.data?.message || "Failed to set notification");
+                                                        } finally {
+                                                            setRequestingNotification(false);
+                                                        }
+                                                    }}
+                                                    disabled={requestingNotification}
+                                                    className="mt-4 text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
+                                                >
+                                                    {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : (autoBook ? 'Auto-Book' : 'Notify Me')}
+                                                </button>
+                                            </div>
+
+                                            {/* Auto-Book Toggle */}
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={autoBook}
+                                                    onChange={(e) => setAutoBook(e.target.checked)}
+                                                    className="rounded text-indigo-600 h-4 w-4"
+                                                />
+                                                <div>
+                                                    <p className="text-[11px] font-black text-indigo-700 uppercase tracking-tight">Auto-Book for me</p>
+                                                    <p className="text-[9px] text-indigo-400">Wins you the spot automatically.</p>
+                                                </div>
+                                            </label>
                                         </div>
-                                        <p className="text-[10px] text-indigo-400 mt-2 italic">We'll alert you if the estimated time moves to your preference.</p>
                                     </div>
                                 </div>
                             </div>

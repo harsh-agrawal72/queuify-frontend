@@ -157,7 +157,18 @@ const AppointmentManager = () => {
         }
     };
 
-    const getStatusBadge = (status, cancelledBy) => {
+    const getStatusBadge = (apt) => {
+        const { status, cancelled_by, reschedule_status } = apt;
+        
+        if (reschedule_status === 'pending') {
+            return (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-orange-200 bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-100 animate-pulse">
+                    <Clock className="h-3 w-3" />
+                    {t('status.reschedule_pending', 'Reschedule Proposed')}
+                </span>
+            );
+        }
+
         const styles = {
             'pending': 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-100',
             'booked': 'bg-indigo-50 text-indigo-700 border-indigo-200 ring-indigo-100',
@@ -171,13 +182,13 @@ const AppointmentManager = () => {
             'pending': <Clock className="h-3 w-3" />,
             'booked': <Calendar className="h-3 w-3" />,
             'confirmed': <CheckCircle className="h-3 w-3" />,
-            'completed': <CheckCircle className="h-3 w-3" />, // Using CheckCircle for consistency
+            'completed': <CheckCircle className="h-3 w-3" />,
             'cancelled': <XCircle className="h-3 w-3" />
         };
 
         let displayLabel = t(`status.${status}`, status);
-        if (status === 'cancelled' && cancelledBy) {
-            displayLabel = cancelledBy === 'admin' ? t('status.cancelled_by_admin', 'Cancelled by Admin') : t('status.cancelled_by_user', 'Cancelled by User');
+        if (status === 'cancelled' && cancelled_by) {
+            displayLabel = cancelled_by === 'admin' ? t('status.cancelled_by_admin', 'Cancelled by Admin') : t('status.cancelled_by_user', 'Cancelled by User');
         }
 
         return (
@@ -350,8 +361,8 @@ const AppointmentManager = () => {
                                                     <span className="text-sm font-medium text-gray-700">{apt.resource_name || t('common.unassigned', 'Unassigned')}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                {getStatusBadge(apt.status, apt.cancelled_by)}
+                                             <td className="px-6 py-4">
+                                                {getStatusBadge(apt)}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="relative inline-block text-left" ref={activeActionId === apt.id ? dropdownRef : null}>
@@ -468,8 +479,8 @@ const AppointmentManager = () => {
                                             {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        {getStatusBadge(apt.status, apt.cancelled_by)}
+                                     <div className="flex flex-col items-end gap-2">
+                                        {getStatusBadge(apt)}
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
