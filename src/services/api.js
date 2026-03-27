@@ -80,7 +80,7 @@ const apiService = {
     getSlotsForResource: (orgId, resourceId, serviceId) => api.get(`/organizations/${orgId}/resources/${resourceId}/slots`, { 
         params: serviceId ? { serviceId } : {} 
     }),
-    requestSlotNotification: (slotId, desiredTime) => api.post(`/slots/${slotId}/notify`, { desiredTime }),
+    requestSlotNotification: (slotId, data) => api.post(`/slots/${slotId}/notify`, data),
 
     // Notifications
     getNotifications: () => api.get('/notifications'),

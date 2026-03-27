@@ -256,6 +256,7 @@ const AppointmentManager = () => {
                         >
                             <option value="">{t('common.all_status', 'All Status')}</option>
                             <option value="pending">{t('status.pending', 'Pending')}</option>
+                            <option value="reschedule_proposed">{t('status.reschedule_proposed', 'Reschedule Proposed')}</option>
                             <option value="confirmed">{t('status.confirmed', 'Confirmed')}</option>
                             <option value="completed">{t('status.completed', 'Completed')}</option>
                             <option value="cancelled">{t('status.cancelled', 'Cancelled')}</option>

@@ -19,6 +19,30 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
     const [notificationTime, setNotificationTime] = useState('');
     const [autoBook, setAutoBook] = useState(false);
     const [requestingNotification, setRequestingNotification] = useState(false);
+
+    // Helper to generate time intervals between slot boundaries
+    const getTimeOptions = (slot) => {
+        if (!slot?.start_time || !slot?.end_time) return [];
+        const start = parseISO(slot.start_time);
+        const end = parseISO(slot.end_time);
+        const options = [];
+        let curr = new Date(start);
+        
+        while (curr <= end) {
+            options.push({
+                value: format(curr, 'HH:mm'),
+                label: format(curr, 'h:mm a'),
+                date: new Date(curr)
+            });
+            curr = new Date(curr.getTime() + 15 * 60000);
+        }
+        
+        const lastVal = format(end, 'HH:mm');
+        if (options.length === 0 || options[options.length-1].value !== lastVal) {
+            options.push({ value: lastVal, label: format(end, 'h:mm a'), date: new Date(end) });
+        }
+        return options;
+    };
     const [selectedSlotId, setSelectedSlotId] = useState(null);
     const [reason, setReason] = useState('');
     const { user } = useAuth();
@@ -262,28 +286,29 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                                         <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">Not free at this time?</p>
                                         <div className="flex flex-col gap-3">
                                             <div className="flex items-center gap-2">
-                                                <div className="flex flex-col">
+                                                <div className="flex flex-col flex-1">
                                                     <span className="text-[10px] text-indigo-400 font-bold uppercase ml-1 mb-0.5">Desired Time</span>
-                                                    <input 
-                                                        type="time" 
+                                                    <select
                                                         value={notificationTime}
-                                                        min={slots.find(s => s.id === selectedSlotId)?.start_time ? format(parseISO(slots.find(s => s.id === selectedSlotId)?.start_time), 'HH:mm') : ''}
-                                                        max={slots.find(s => s.id === selectedSlotId)?.end_time ? format(parseISO(slots.find(s => s.id === selectedSlotId)?.end_time), 'HH:mm') : ''}
                                                         onChange={(e) => setNotificationTime(e.target.value)}
-                                                        className="text-sm border-gray-200 rounded-lg p-1.5 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                                                    />
+                                                        className="text-sm border-gray-200 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                                    >
+                                                        <option value="">Select Time...</option>
+                                                        {getTimeOptions(slots.find(s => s.id === selectedSlotId)).map(opt => (
+                                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                        ))}
+                                                    </select>
                                                 </div>
                                                 <button
                                                     onClick={async () => {
                                                         if (!notificationTime) return toast.error("Please pick a time");
                                                         setRequestingNotification(true);
                                                         try {
-                                                            const [hours, minutes] = notificationTime.split(':');
                                                             const slot = slots.find(s => s.id === selectedSlotId);
-                                                            const slotDate = parseISO(slot.start_time);
-                                                            const desiredDate = new Date(slotDate);
-                                                            desiredDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-                                                            
+                                                            const desiredOption = getTimeOptions(slot).find(o => o.value === notificationTime);
+                                                            const desiredDate = desiredOption ? desiredOption.date : null;
+                                                            if (!desiredDate) return toast.error("Invalid time selected");
+
                                                             await apiService.requestSlotNotification(selectedSlotId, {
                                                                 desiredTime: desiredDate.toISOString(),
                                                                 serviceId: appointment.service_id,
