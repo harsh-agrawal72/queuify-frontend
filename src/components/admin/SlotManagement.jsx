@@ -157,18 +157,15 @@ const SlotManagement = () => {
             end.setHours(endH, endM, 0, 0);
 
             let durationMinutes = (end - start) / (1000 * 60);
-            // Handle cross-day slots (though unlikely for admin slots, safety first)
             if (durationMinutes < 0) durationMinutes += 24 * 60;
 
             const service = modalServices.find(s => s.id === selectedModalService);
-            // Use resource inherent duration if exists, otherwise service estimated time
-            const serviceTime = selectedModalResource.duration_minutes || service?.estimated_service_time || 30;
+            // Priority Fix: Use Service Estimted Time first, as Resource duration defaults to 30 in DB
+            const serviceTime = service?.estimated_service_time || selectedModalResource.duration_minutes || 30;
             const resourceCapacity = selectedModalResource.concurrent_capacity || 1;
 
             if (durationMinutes > 0) {
                 const calculatedCapacity = Math.max(1, Math.floor((durationMinutes / serviceTime) * resourceCapacity));
-                
-                // Only auto-update if it's a new slot (to avoid overwriting manual edits on existing slots)
                 if (!editingSlotId) {
                     setSlotCapacity(calculatedCapacity);
                 }
@@ -775,9 +772,11 @@ const SlotManagement = () => {
                                                         const end = new Date(`${slotDate}T${slotEndTime}`);
                                                         const duration = (end - start) / (1000 * 60);
                                                         const service = modalServices.find(s => s.id === selectedModalService);
-                                                        const sTime = selectedModalResource.duration_minutes || service?.estimated_service_time || 30;
+                                                        // Explicit Labels for Admin
+                                                        const sTime = service?.estimated_service_time || selectedModalResource.duration_minutes || 30;
+                                                        const timeLabel = service?.estimated_service_time ? 'service' : 'resource';
                                                         const cap = selectedModalResource.concurrent_capacity || 1;
-                                                        return `(${duration}m duration / ${sTime}m service) × ${cap} staff = ${Math.floor((duration / sTime) * cap)} total capacity.`;
+                                                        return `(${duration}m duration / ${sTime}m ${timeLabel} time) × ${cap} staff = ${Math.floor((duration / sTime) * cap)} total capacity.`;
                                                     })()}
                                                 </span>
                                             </div>
