@@ -352,7 +352,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                                                 onChange={(e) => setNotificationTime(e.target.value)}
                                                 className="text-sm border-gray-200 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                                             >
-                                                <option value="">{t('common.select_time', 'Select Time...')}</option>
+                                                <option value="">Select Time...</option>
                                                 {getTimeOptions(selectedSlot).map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                                 ))}
