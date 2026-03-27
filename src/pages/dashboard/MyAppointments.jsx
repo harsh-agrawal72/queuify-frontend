@@ -6,6 +6,8 @@ import { Calendar, Clock, MapPin, XCircle, ChevronRight, Building, RefreshCw } f
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { Link } from 'react-router-dom';
+import QueueVisualization from '../../components/user/QueueVisualization';
+import { getSocket } from '../../services/socketService';
 
 const MyAppointments = () => {
     const [appointments, setAppointments] = useState([]);
@@ -24,6 +26,21 @@ const MyAppointments = () => {
 
     useEffect(() => {
         fetchAppointments();
+
+        const socket = getSocket();
+        
+        const handleUpdate = (data) => {
+            console.log('Real-time update received:', data);
+            fetchAppointments();
+        };
+
+        socket.on('queue_update', handleUpdate);
+        socket.on('appointment_update', handleUpdate);
+
+        return () => {
+            socket.off('queue_update', handleUpdate);
+            socket.off('appointment_update', handleUpdate);
+        };
     }, []);
 
     const handleCancel = async (id) => {
@@ -93,42 +110,47 @@ const MyAppointments = () => {
                                 transition={{ delay: index * 0.1 }}
                                 className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group"
                             >
-                                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                                            <Building className="h-6 w-6" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <h3 className="font-bold text-gray-900 text-lg">{appt.org_name}</h3>
-                                                <StatusBadge status={appt.status} />
+                                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                                        <div className="flex items-start gap-4">
+                                            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                                <Building className="h-6 w-6" />
                                             </div>
+                                            <div>
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <h3 className="font-bold text-gray-900 text-lg">{appt.org_name}</h3>
+                                                    <StatusBadge status={appt.status} />
+                                                </div>
 
-                                            <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-2">
-                                                <div className="flex items-center gap-1.5">
-                                                    <Calendar className="h-4 w-4 text-gray-400" />
-                                                    {format(new Date(appt.start_time), 'EEEE, MMMM d, yyyy')}
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Clock className="h-4 w-4 text-gray-400" />
-                                                    {format(new Date(appt.start_time), 'h:mm a')} - {format(new Date(appt.end_time), 'h:mm a')}
+                                                <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-2">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Calendar className="h-4 w-4 text-gray-400" />
+                                                        {format(new Date(appt.start_time), 'EEEE, MMMM d, yyyy')}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Clock className="h-4 w-4 text-gray-400" />
+                                                        {format(new Date(appt.start_time), 'h:mm a')} - {format(new Date(appt.end_time), 'h:mm a')}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {appt.status !== 'cancelled' && appt.status !== 'completed' && (
+                                            <div className="flex items-center gap-3 border-t md:border-t-0 pt-4 md:pt-0">
+                                                <button
+                                                    onClick={() => handleCancel(appt.id)}
+                                                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2"
+                                                >
+                                                    <XCircle className="h-4 w-4" />
+                                                    Cancel Booking
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {appt.status !== 'cancelled' && appt.status !== 'completed' && (
-                                        <div className="flex items-center gap-3 border-t md:border-t-0 pt-4 md:pt-0">
-                                            <button
-                                                onClick={() => handleCancel(appt.id)}
-                                                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2"
-                                            >
-                                                <XCircle className="h-4 w-4" />
-                                                Cancel Booking
-                                            </button>
-                                        </div>
+                                    {/* Queue Visualization for Active/Confirmed Appointments */}
+                                    {['confirmed', 'pending', 'serving'].includes(appt.status) && (
+                                        <QueueVisualization appointment={appt} />
                                     )}
-                                </div>
                             </motion.div>
                         ))
                     ) : (

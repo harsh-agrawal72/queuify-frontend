@@ -319,6 +319,7 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                                                             const modeMsg = autoBook ? "We'll auto-book your reschedule" : "We'll notify you";
                                                             toast.success(`${modeMsg} when it reaches your time!`);
                                                             setNotificationTime('');
+                                                            onClose();
                                                         } catch (e) {
                                                             toast.error(e.response?.data?.message || "Failed to set notification");
                                                         } finally {
