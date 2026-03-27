@@ -378,10 +378,10 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                 {/* Footer */}
                 <div className="p-8 bg-gray-50 border-t border-gray-100">
                     <button
-                        disabled={!selectedSlotId || rescheduling}
+                        disabled={!selectedSlotId || rescheduling || (notificationTime && !isAdmin)}
                         onClick={handleAction}
                         className={`w-full py-4 rounded-2xl font-black text-white shadow-lg transition-all flex items-center justify-center gap-3 ${
-                            selectedSlotId && !rescheduling && (!isAdmin || reason)
+                            selectedSlotId && !rescheduling && (!isAdmin || reason) && !(notificationTime && !isAdmin)
                                 ? 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0'
                                 : 'bg-gray-300 cursor-not-allowed'
                         }`}

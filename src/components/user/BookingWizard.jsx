@@ -635,9 +635,9 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                             disabled={
                                 (step === 1 && !selectedService) ||
                                 (step === 2 && !selectedResource) ||
-                                (step === 3 && showTimeStep && !selectedSlot)
+                                (step === 3 && showTimeStep && (!selectedSlot || notificationTime))
                             }
-                            className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50"
+                            className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed`}
                         >
                             Next Step <ChevronRight className="h-4 w-4" />
                         </button>
