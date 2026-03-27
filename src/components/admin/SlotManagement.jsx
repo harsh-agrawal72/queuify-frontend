@@ -140,10 +140,49 @@ const SlotManagement = () => {
         fetchModalResources();
     }, [selectedModalService]);
 
-    // When resource is selected in modal, set default capacity
+    // ═══════════════════════════════════════════
+    // SMART CAPACITY CALCULATION
+    // ═══════════════════════════════════════════
+    useEffect(() => {
+        if (!isModalOpen || !slotTime || !slotEndTime || !selectedModalResource || !selectedModalService) return;
+
+        try {
+            const [startH, startM] = slotTime.split(':').map(Number);
+            const [endH, endM] = slotEndTime.split(':').map(Number);
+            
+            const start = new Date();
+            start.setHours(startH, startM, 0, 0);
+            
+            const end = new Date();
+            end.setHours(endH, endM, 0, 0);
+
+            let durationMinutes = (end - start) / (1000 * 60);
+            // Handle cross-day slots (though unlikely for admin slots, safety first)
+            if (durationMinutes < 0) durationMinutes += 24 * 60;
+
+            const service = modalServices.find(s => s.id === selectedModalService);
+            // Use resource inherent duration if exists, otherwise service estimated time
+            const serviceTime = selectedModalResource.duration_minutes || service?.estimated_service_time || 30;
+            const resourceCapacity = selectedModalResource.concurrent_capacity || 1;
+
+            if (durationMinutes > 0) {
+                const calculatedCapacity = Math.max(1, Math.floor((durationMinutes / serviceTime) * resourceCapacity));
+                
+                // Only auto-update if it's a new slot (to avoid overwriting manual edits on existing slots)
+                if (!editingSlotId) {
+                    setSlotCapacity(calculatedCapacity);
+                }
+            }
+        } catch (e) {
+            console.error("Capacity calculation failed", e);
+        }
+    }, [slotTime, slotEndTime, selectedModalResource, selectedModalService, isModalOpen]);
+
+    // When resource is selected in modal, set base capacity
     const handleSelectResource = (resourceId) => {
         const res = modalResources.find(r => r.id === resourceId);
         setSelectedModalResource(res);
+        // Initial set - will be refined by the useEffect above
         if (res) {
             setSlotCapacity(res.concurrent_capacity || 1);
         }
@@ -722,10 +761,26 @@ const SlotManagement = () => {
                                     </div>
 
                                     {/* Guidance message */}
-                                    {slotDate && slotTime && (
-                                        <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-700">
-                                            <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                                            <span>{t('admin.slots.end_time_hint', 'The end time is pre-filled based on your service duration ({{duration}} mins), but you can change it manually.', { duration: modalServices.find(s => s.id === selectedModalService)?.estimated_service_time || 30 })}</span>
+                                    {slotDate && slotTime && slotEndTime && selectedModalResource && (
+                                        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 space-y-2">
+                                            <div className="flex items-start gap-2 text-xs text-indigo-700">
+                                                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                                <span>{t('admin.slots.end_time_hint', 'The end time is pre-filled based on your service duration ({{duration}} mins).', { duration: modalServices.find(s => s.id === selectedModalService)?.estimated_service_time || 30 })}</span>
+                                            </div>
+                                            <div className="flex items-start gap-2 text-[11px] text-indigo-600 bg-white/50 p-2 rounded-lg">
+                                                <div className="font-bold py-0.5 px-1.5 bg-indigo-600 text-white rounded mr-1">Smart Logic</div>
+                                                <span>
+                                                    {(() => {
+                                                        const start = new Date(`${slotDate}T${slotTime}`);
+                                                        const end = new Date(`${slotDate}T${slotEndTime}`);
+                                                        const duration = (end - start) / (1000 * 60);
+                                                        const service = modalServices.find(s => s.id === selectedModalService);
+                                                        const sTime = selectedModalResource.duration_minutes || service?.estimated_service_time || 30;
+                                                        const cap = selectedModalResource.concurrent_capacity || 1;
+                                                        return `(${duration}m duration / ${sTime}m service) × ${cap} staff = ${Math.floor((duration / sTime) * cap)} total capacity.`;
+                                                    })()}
+                                                </span>
+                                            </div>
                                         </div>
                                     )}
 
