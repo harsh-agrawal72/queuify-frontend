@@ -9,7 +9,8 @@ import {
     RefreshCw,
     ExternalLink,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -80,7 +81,7 @@ const GlobalMonitor = () => {
                 {[
                     { label: 'Active Queues', value: stats.totalActiveQueues, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                     { label: 'Total Waiting', value: stats.totalWaiting, icon: TrendingUp, color: 'text-orange-600', bg: 'bg-orange-50' },
-                    { label: 'Avg System Wait', value: `${stats.avgWaitTime}m`, icon: Clock, color: 'text-teal-600', bg: 'bg-teal-50' },
+                    { label: 'Active Staff', value: stats.totalProfessionals, icon: ShieldCheck, color: 'text-teal-600', bg: 'bg-teal-50' },
                     { label: 'System Status', value: stats.systemLoad, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                 ].map((stat, i) => (
                     <motion.div
@@ -151,13 +152,21 @@ const GlobalMonitor = () => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 mb-8">
-                                <div className="bg-slate-50 p-4 rounded-3xl">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Waiting</p>
-                                    <p className="text-2xl font-black text-slate-900">{org.waiting}</p>
+                                <div className="bg-slate-50 p-4 rounded-3xl relative overflow-hidden">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Waitlist</p>
+                                    <div className="flex items-end gap-2">
+                                        <p className="text-2xl font-black text-slate-900">{org.waiting}</p>
+                                        {org.urgent > 0 && (
+                                            <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full mb-1">
+                                                {org.urgent} Urgent
+                                            </span>
+                                        )}
+                                    </div>
+                                    {org.urgent > 0 && <div className="absolute top-0 right-0 h-1 w-full bg-red-500/20" />}
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-3xl">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Serving</p>
-                                    <p className="text-2xl font-black text-slate-900">{org.serving}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">Active Staff</p>
+                                    <p className="text-2xl font-black text-slate-900">{org.active_professionals || 0}</p>
                                 </div>
                             </div>
 

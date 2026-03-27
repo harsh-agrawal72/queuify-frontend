@@ -20,10 +20,15 @@ export default function UserDashboard() {
     const [recentAppointments, setRecentAppointments] = useState([]);
     const { user } = useAuth();
 
-    const fetchStats = async () => {
+    const fetchData = async () => {
+        setLoading(true);
         try {
-            const { data } = await api.get('/user/stats');
-            setStats(data);
+            const [statsRes, appointmentsRes] = await Promise.all([
+                api.get('/user/stats'),
+                api.get('/appointments/my')
+            ]);
+            setStats(statsRes.data);
+            setRecentAppointments(appointmentsRes.data.slice(0, 5));
         } catch (err) {
             console.error(err);
         } finally {
@@ -31,18 +36,8 @@ export default function UserDashboard() {
         }
     };
 
-    const fetchRecentAppointments = async () => {
-        try {
-            const { data } = await api.get('/appointments/my');
-            setRecentAppointments(data.slice(0, 5));
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     useEffect(() => {
-        fetchStats();
-        fetchRecentAppointments();
+        fetchData();
     }, []);
 
     // WebSocket Integration for real-time updates on dashboard
@@ -51,19 +46,16 @@ export default function UserDashboard() {
 
     useEffect(() => {
         if (queueData) {
-            fetchStats();
+            // Re-fetch only stats on socket update to keep dashboard fresh
+            api.get('/user/stats').then(res => setStats(res.data)).catch(console.error);
         }
     }, [queueData]);
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-96">
-                <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-            </div>
-        );
-    }
+    const Shimmer = ({ className }) => (
+        <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />
+    );
 
-    const StatCard = ({ title, value, icon: Icon, color, bg }) => (
+    const StatCard = ({ title, value, icon: Icon, color, bg, isLoading }) => (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -72,7 +64,11 @@ export default function UserDashboard() {
             <div className="flex justify-between items-start">
                 <div>
                     <p className="text-gray-500 text-sm font-medium">{title}</p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
+                    {isLoading ? (
+                        <Shimmer className="h-8 w-16 mt-2" />
+                    ) : (
+                        <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
+                    )}
                 </div>
                 <div className={`p-3 rounded-xl ${bg}`}>
                     <Icon className={`h-6 w-6 ${color}`} />
@@ -143,6 +139,7 @@ export default function UserDashboard() {
                     icon={Calendar}
                     color="text-indigo-600"
                     bg="bg-indigo-50"
+                    isLoading={loading}
                 />
                 <StatCard
                     title={t('dashboard.completed', 'Completed')}
@@ -150,6 +147,7 @@ export default function UserDashboard() {
                     icon={CheckCircle}
                     color="text-emerald-600"
                     bg="bg-emerald-50"
+                    isLoading={loading}
                 />
                 <StatCard
                     title={t('dashboard.cancelled', 'Cancelled')}
@@ -157,6 +155,7 @@ export default function UserDashboard() {
                     icon={XCircle}
                     color="text-red-600"
                     bg="bg-red-50"
+                    isLoading={loading}
                 />
                 <StatCard
                     title={t('dashboard.total_visits', 'Total Visits')}
@@ -164,6 +163,7 @@ export default function UserDashboard() {
                     icon={TrendingUp}
                     color="text-blue-600"
                     bg="bg-blue-50"
+                    isLoading={loading}
                 />
             </div>
 
@@ -186,7 +186,11 @@ export default function UserDashboard() {
                     )}
                 </div>
 
-                {nextApt ? (
+                {loading ? (
+                    <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex gap-6 items-center">
+                        <Shimmer className="h-40 w-full" />
+                    </div>
+                ) : nextApt ? (
                     <div className="group relative">
                         {/* Premium Card Background with Animated Gradient */}
                         <div className={`absolute -inset-0.5 bg-gradient-to-r ${isServing ? 'from-emerald-500 to-teal-500' : 'from-indigo-600 to-purple-600'} rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-tilt`}></div>
@@ -309,7 +313,22 @@ export default function UserDashboard() {
                         </Link>
                     </div>
 
-                    {recentAppointments.length > 0 ? (
+                    {loading ? (
+                        <div className="divide-y divide-gray-50">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="px-5 py-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <Shimmer className="w-10 h-10" />
+                                        <div>
+                                            <Shimmer className="h-4 w-32" />
+                                            <Shimmer className="h-3 w-48 mt-2" />
+                                        </div>
+                                    </div>
+                                    <Shimmer className="w-16 h-6" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : recentAppointments.length > 0 ? (
                         <div className="divide-y divide-gray-50">
                             {recentAppointments.map((apt, idx) => (
                                 <motion.div

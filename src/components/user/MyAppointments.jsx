@@ -41,12 +41,23 @@ export default function MyAppointments() {
 
     const handleCancel = async (id) => {
         if (!window.confirm(t('appointment.cancel_confirm', 'Are you sure you want to cancel this appointment?'))) return;
+        
+        // Optimistic UI Update
+        const previousAppointments = [...appointments];
+        setAppointments(prev => prev.map(appt => 
+            appt.id === id ? { ...appt, status: 'cancelled', cancelled_by: 'user' } : appt
+        ));
+
         try {
             await api.post(`/appointments/${id}/cancel`);
             toast.success('Appointment cancelled');
-            fetchAppointments();
+            // No need to fetchAppointments() here as we already updated state optimistically, 
+            // but we can if we want to ensure total sync. 
+            // fetchAppointments(); 
         } catch (err) {
             console.error(err);
+            // Revert on error
+            setAppointments(previousAppointments);
             toast.error(err.response?.data?.message || 'Failed to cancel');
         }
     };

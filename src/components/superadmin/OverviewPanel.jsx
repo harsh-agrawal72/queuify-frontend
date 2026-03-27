@@ -54,14 +54,16 @@ const OverviewPanel = () => {
 
     const kpiCards = [
         { title: 'Active Organizations', value: stats.activeOrganizations, icon: Building, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-        { title: 'Platform Fill Rate', value: `${stats.fillRate}%`, icon: Activity, color: 'text-orange-600', bg: 'bg-orange-50' },
+        { title: 'Urgent Waitlist', value: stats.totalUrgent, sub: `${stats.todayUrgent} new today`, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50' },
+        { title: 'Avg Platform Fill', value: `${stats.fillRate}%`, icon: Activity, color: 'text-orange-600', bg: 'bg-orange-50' },
+        { title: 'Platform MRR', value: `$${stats.mrr.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ];
 
     const secondaryCards = [
         { title: 'Total Bookings', value: stats.totalBookings, sub: `+${stats.todayBookings} today` },
+        { title: 'Pending Waitlist', value: stats.totalPending },
         { title: 'End Users', value: stats.totalUsers },
         { title: 'Org Admins', value: stats.totalAdmins },
-        { title: 'Suspended Orgs', value: stats.suspendedOrganizations, alert: stats.suspendedOrganizations > 0 },
     ];
 
     return (

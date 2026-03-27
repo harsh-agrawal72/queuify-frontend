@@ -12,6 +12,8 @@ import PlanManager from '../components/superadmin/PlanManager';
 import GlobalAppointments from '../components/superadmin/GlobalAppointments';
 import SystemHealth from '../components/superadmin/SystemHealth';
 import GlobalMonitor from '../components/superadmin/GlobalMonitor';
+import GlobalAuditLog from '../components/superadmin/GlobalAuditLog';
+import PremiumAnalytics from '../components/superadmin/PremiumAnalytics';
 
 const SuperadminDashboard = () => {
     const location = useLocation();
@@ -28,6 +30,8 @@ const SuperadminDashboard = () => {
         { id: '', label: 'Overview', icon: LayoutDashboard },
         { id: 'monitor', label: 'Live Monitor', icon: Activity },
         { id: 'organizations', label: 'Organizations', icon: Users },
+        { id: 'analytics', label: 'Premium Intelligence', icon: Activity },
+        { id: 'audit', label: 'Audit Trail', icon: ShieldCheck },
         { id: 'plans', label: 'Plans & Billing', icon: CreditCard },
         { id: 'appointments', label: 'Global Bookings', icon: Calendar },
         { id: 'admins', label: 'System Admins', icon: ShieldCheck },
@@ -86,6 +90,8 @@ const SuperadminDashboard = () => {
                         <Route index element={<OverviewPanel />} />
                         <Route path="monitor" element={<GlobalMonitor />} />
                         <Route path="organizations" element={<OrganizationManager />} />
+                        <Route path="analytics" element={<PremiumAnalytics />} />
+                        <Route path="audit" element={<GlobalAuditLog />} />
                         <Route path="plans" element={<PlanManager />} />
                         <Route path="appointments" element={<GlobalAppointments />} />
                         <Route path="admins" element={<AdminManager />} />

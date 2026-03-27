@@ -1,15 +1,16 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { lazy } from 'react';
 import AdminLayout from '../layouts/AdminLayout';
 
-import AppointmentManager from '../components/admin/AppointmentManager';
-import ServiceManagement from '../components/admin/ServiceManagement';
-import SlotManagement from '../components/admin/SlotManagement';
-import LiveQueue from '../components/admin/LiveQueue';
-import AnalyticsPanel from '../components/admin/AnalyticsPanel';
-import SettingsPanel from '../components/admin/SettingsPanel';
-import OrganizationAbout from '../components/admin/OrganizationAbout';
-import AdminReviews from '../components/admin/AdminReviews';
-import SupportInbox from './dashboard/SupportInbox';
+const AppointmentManager = lazy(() => import('../components/admin/AppointmentManager'));
+const ServiceManagement = lazy(() => import('../components/admin/ServiceManagement'));
+const SlotManagement = lazy(() => import('../components/admin/SlotManagement'));
+const LiveQueue = lazy(() => import('../components/admin/LiveQueue'));
+const AnalyticsPanel = lazy(() => import('../components/admin/AnalyticsPanel'));
+const SettingsPanel = lazy(() => import('../components/admin/SettingsPanel'));
+const OrganizationAbout = lazy(() => import('../components/admin/OrganizationAbout'));
+const AdminReviews = lazy(() => import('../components/admin/AdminReviews'));
+const SupportInbox = lazy(() => import('./dashboard/SupportInbox'));
 
 const AdminDashboard = () => {
     return (
