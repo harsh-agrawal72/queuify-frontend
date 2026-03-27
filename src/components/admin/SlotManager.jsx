@@ -19,6 +19,7 @@ import InfoTooltip from '../common/InfoTooltip';
 const SlotManager = () => {
     const [slots, setSlots] = useState([]);
     const [resources, setResources] = useState([]);
+    const [services, setServices] = useState([]); // Added services state
     const [selectedResource, setSelectedResource] = useState('');
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,11 +40,21 @@ const SlotManager = () => {
             const res = await api.get('/resources');
             setResources(res.data);
             if (res.data.length > 0 && !selectedResource) {
-                setSelectedResource(res.data[0].id); // Default to first resource
+                setSelectedResource(res.data[0].id);
             }
         } catch (error) {
             console.error(error);
             toast.error("Failed to load resources");
+        }
+    };
+
+    // Fetch Services (to get estimated times)
+    const fetchServices = async () => {
+        try {
+            const res = await api.get('/services');
+            setServices(res.data);
+        } catch (error) {
+            console.error("Failed to fetch services:", error);
         }
     };
 
@@ -52,8 +63,6 @@ const SlotManager = () => {
         if (!selectedResource) return;
         setLoading(true);
         try {
-            // Updated API call to support resource filtering if backend supports it
-            // Backend `admin.service.js` was updated to accept `resourceId`
             const res = await api.get(`/slots?resource_id=${selectedResource}`);
             setSlots(res.data);
         } catch (error) {
@@ -66,6 +75,7 @@ const SlotManager = () => {
 
     useEffect(() => {
         fetchResources();
+        fetchServices(); // Initial fetch
     }, []);
 
     useEffect(() => {
@@ -73,6 +83,40 @@ const SlotManager = () => {
             fetchSlots();
         }
     }, [selectedResource]);
+
+    // Smart Capacity Calculation Logic
+    useEffect(() => {
+        if (!isModalOpen || !formData.start_time || !formData.end_time || !formData.resource_id) return;
+
+        // Don't auto-calculate if in edit mode (respect existing choice)
+        // unless times have actually changed
+        const start = new Date(formData.start_time);
+        const end = new Date(formData.end_time);
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) return;
+
+        const durationMinutes = (end - start) / (1000 * 60);
+        const resource = resources.find(r => r.id === formData.resource_id);
+        
+        // Find relevant service duration
+        // Prefer resource's inherent duration, otherwise use the first linked service's estimated time
+        const linkedServiceId = resource?.service_id || (resource?.service_ids && resource.service_ids[0]);
+        const service = services.find(s => s.id === linkedServiceId);
+        const serviceTime = resource?.duration_minutes || service?.estimated_service_time || 30;
+        const resourceCapacity = resource?.concurrent_capacity || 1;
+
+        if (durationMinutes > 0) {
+            const calculatedCapacity = Math.max(1, Math.floor((durationMinutes / serviceTime) * resourceCapacity));
+            
+            // Only update if it's a new slot OR if we want to provide a real-time hint
+            // Let's update it ONLY if the user hasn't manually touched it? 
+            // Or just update it once when times are first set.
+            // For now, let's update it automatically to make it "Smart"
+            if (!isEditMode) {
+                setFormData(prev => ({ ...prev, max_capacity: calculatedCapacity }));
+            }
+        }
+    }, [formData.start_time, formData.end_time, formData.resource_id, isModalOpen]);
 
     const handleCreateSlot = () => {
         setIsEditMode(false);
@@ -116,7 +160,7 @@ const SlotManager = () => {
                 ...formData,
                 start_time: new Date(formData.start_time).toISOString(),
                 end_time: new Date(formData.end_time).toISOString(),
-                resource_id: selectedResource
+                resource_id: formData.resource_id // Use resource_id from formData
             };
 
             if (isEditMode) {
@@ -133,6 +177,24 @@ const SlotManager = () => {
             toast.error(error.response?.data?.message || "Operation failed");
         }
     };
+
+    // Helper to get calculation info for UI
+    const getCapacityIntel = () => {
+        if (!formData.start_time || !formData.end_time || !formData.resource_id) return null;
+        const start = new Date(formData.start_time);
+        const end = new Date(formData.end_time);
+        const resource = resources.find(r => r.id === formData.resource_id);
+        const linkedServiceId = resource?.service_id || (resource?.service_ids && resource.service_ids[0]);
+        const service = services.find(s => s.id === linkedServiceId);
+        const serviceTime = resource?.duration_minutes || service?.estimated_service_time || 30;
+        const resourceCapacity = resource?.concurrent_capacity || 1;
+        const duration = (end - start) / (1000 * 60);
+
+        if (duration <= 0) return null;
+        return { duration, serviceTime, resourceCapacity };
+    };
+
+    const intel = getCapacityIntel();
 
     return (
         <div className="space-y-6">
@@ -285,7 +347,7 @@ const SlotManager = () => {
                                 </div>
                             </div>
 
-                            <div>
+                            <div className="relative">
                                 <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
                                     Max Capacity
                                     <InfoTooltip text="The maximum number of bookings allowed within this specific time slot." />
@@ -298,6 +360,14 @@ const SlotManager = () => {
                                     onChange={e => setFormData({ ...formData, max_capacity: parseInt(e.target.value) })}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                                 />
+                                {intel && (
+                                    <div className="mt-2 p-2.5 bg-indigo-50/50 rounded-lg border border-indigo-100/50 flex items-start gap-2">
+                                        <Info className="h-3.5 w-3.5 text-indigo-500 mt-0.5" />
+                                        <p className="text-[11px] leading-relaxed text-indigo-700">
+                                            Smart Logic: <strong>{intel.duration}m</strong> slot ÷ <strong>{intel.serviceTime}m</strong> service × <strong>{intel.resourceCapacity}</strong> staff = <strong>{Math.floor((intel.duration / intel.serviceTime) * intel.resourceCapacity)}</strong> capacity.
+                                        </p>
+                                    </div>
+                                )}
                                 <p className="text-xs text-gray-500 mt-1">Maximum number of appointments allowed for this slot.</p>
                             </div>
 
