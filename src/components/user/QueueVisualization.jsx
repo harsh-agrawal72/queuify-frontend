@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { User, Users, Play, CheckCircle2, Clock } from 'lucide-react';
+import { User, Users, Play, CheckCircle2, Clock, Sparkles } from 'lucide-react';
 
 const QueueVisualization = ({ appointment }) => {
     const { 
-        live_queue_number: myToken, 
+        live_queue_number, 
+        myRank,
         people_ahead: ahead, 
         serving_token: serving, 
         status,
@@ -12,6 +13,8 @@ const QueueVisualization = ({ appointment }) => {
         estimated_service_time: svcTime,
         time_drift_minutes: driftMins
     } = appointment;
+
+    const myToken = live_queue_number || myRank;
 
     const avgTime = svcTime || 15;
     const waitMins = appointment.estimated_wait_time ?? (ahead * avgTime);
