@@ -9,6 +9,7 @@ import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { formatWaitTime } from '../../utils/format';
 import { isValid, parseISO } from 'date-fns';
 import InfoTooltip from '../common/InfoTooltip';
+import QueueVisualization from './QueueVisualization';
 
 export default function LiveQueue() {
     const { appointmentId } = useParams();
@@ -168,6 +169,9 @@ export default function LiveQueue() {
                                     </p>
                                 </motion.div>
                             </div>
+
+                            {/* Live Queue Visualization (The Progress Map) */}
+                            <QueueVisualization appointment={status} />
 
                             <div className="bg-slate-50 rounded-2xl p-6 flex items-center justify-between border border-slate-100">
                                 <div className="flex items-center gap-4">
