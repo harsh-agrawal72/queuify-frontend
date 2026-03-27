@@ -77,7 +77,10 @@ const apiService = {
     // Booking Flow (user-facing, org-scoped)
     getOrgServices: (orgId) => api.get(`/organizations/${orgId}/services`),
     getResourcesForService: (orgId, serviceId) => api.get(`/organizations/${orgId}/services/${serviceId}/resources`),
-    getSlotsForResource: (orgId, resourceId) => api.get(`/organizations/${orgId}/resources/${resourceId}/slots`),
+    getSlotsForResource: (orgId, resourceId, serviceId) => api.get(`/organizations/${orgId}/resources/${resourceId}/slots`, { 
+        params: serviceId ? { serviceId } : {} 
+    }),
+    requestSlotNotification: (slotId, desiredTime) => api.post(`/slots/${slotId}/notify`, { desiredTime }),
 
     // Notifications
     getNotifications: () => api.get('/notifications'),

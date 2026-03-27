@@ -44,6 +44,8 @@ const BookingWizard = ({ orgId, service, onClose }) => {
     const [loadingCreation, setLoadingCreation] = useState(false);
     const [prefResource, setPrefResource] = useState('ANY');
     const [prefTime, setPrefTime] = useState('FLEXIBLE');
+    const [notificationTime, setNotificationTime] = useState('');
+    const [requestingNotification, setRequestingNotification] = useState(false);
 
     // Derived State
     const showTimeStep = true;
@@ -103,7 +105,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
         const fetchSlots = async () => {
             setLoadingSlots(true);
             try {
-                const res = await apiService.getSlotsForResource(orgId, selectedResource.id);
+                const res = await apiService.getSlotsForResource(orgId, selectedResource.id, selectedService?.id);
                 setAvailableSlots(res.data);
             } catch (error) {
                 console.error('[BookingWizard] Failed to load slots', error);
@@ -294,6 +296,57 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                             </div>
                         </button>
                     ))}
+                </div>
+            )}
+
+            {selectedSlot && (
+                <div className="mt-6 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+                        <div className="space-y-3">
+                            <p className="text-sm text-indigo-900 leading-relaxed font-medium">
+                                {selectedSlot.descriptive_message?.split('**').map((part, i) => 
+                                    i % 2 === 1 ? <strong key={i} className="text-indigo-700 font-extrabold">{part}</strong> : part
+                                )}
+                            </p>
+                            
+                            <div className="pt-2 border-t border-indigo-100">
+                                <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">Not free at this time?</p>
+                                <div className="flex items-center gap-2">
+                                    <input 
+                                        type="time" 
+                                        value={notificationTime}
+                                        onChange={(e) => setNotificationTime(e.target.value)}
+                                        className="text-sm border-gray-200 rounded-lg p-1.5 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            if (!notificationTime) return toast.error("Please pick a time");
+                                            setRequestingNotification(true);
+                                            try {
+                                                const [hours, minutes] = notificationTime.split(':');
+                                                const desiredDate = new Date();
+                                                desiredDate.setHours(hours, minutes, 0, 0);
+                                                
+                                                await apiService.requestSlotNotification(selectedSlot.id, desiredDate.toISOString());
+                                                toast.success("We'll notify you when it reaches your time!");
+                                                setNotificationTime('');
+                                            } catch (e) {
+                                                toast.error("Failed to set notification");
+                                            } finally {
+                                                setRequestingNotification(false);
+                                            }
+                                        }}
+                                        disabled={requestingNotification}
+                                        className="text-xs bg-white text-indigo-600 border border-indigo-200 px-3 py-2 rounded-lg font-bold hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                                    >
+                                        {requestingNotification ? 'Setting...' : 'Notify Me'}
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-indigo-400 mt-2 italic">We'll send you an email and app notification when the estimated time reaches your preference.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
