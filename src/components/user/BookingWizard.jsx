@@ -44,6 +44,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
     const [loadingCreation, setLoadingCreation] = useState(false);
     const [prefResource, setPrefResource] = useState('ANY');
     const [prefTime, setPrefTime] = useState('FLEXIBLE');
+    const [notificationTime, setNotificationTime] = useState('');
     const [autoBook, setAutoBook] = useState(false);
     const [requestingNotification, setRequestingNotification] = useState(false);
 
