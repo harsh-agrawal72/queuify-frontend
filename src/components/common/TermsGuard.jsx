@@ -11,26 +11,27 @@ import toast from 'react-hot-toast';
  */
 const TermsGuard = ({ children }) => {
     const { user, updateUser } = useAuth();
-    const [showTerms, setShowTerms] = useState(user && user.terms_accepted === false);
-
     const handleAgree = async () => {
         try {
             // Update on backend
             await api.patch('/users/profile', { terms_accepted: true });
             
-            // Update local state
+            // Update local state in context (this will trigger re-render and hide guard)
             updateUser({ terms_accepted: true });
             
-            setShowTerms(false);
             toast.success('Thank you for accepting our Terms of Service!');
         } catch (error) {
+            console.error('[TermsGuard] Agreement failed:', error);
             toast.error('Failed to save agreement. Please try again.');
         }
     };
 
+    const handleReject = () => {
+        logout();
+        toast('Terms rejected. You have been logged out.', { icon: '🚫' });
+    };
+
     // If no user or already accepted, just render children
-    // Exception: If user role is admin/superadmin, we might assume they accepted during org signup,
-    // but the DB column is the source of truth.
     if (!user || user.terms_accepted !== false) {
         return children;
     }
@@ -45,18 +46,13 @@ const TermsGuard = ({ children }) => {
             {children}
             
             <TermsModal 
-                isOpen={showTerms}
-                onClose={() => {
-                    // Prevent closing for mandatory agreement
-                    toast('Please accept the terms to continue using Queuify', { icon: 'ℹ️' });
-                }}
+                isOpen={true}
+                onClose={handleReject}
                 onAgree={handleAgree}
             />
             
             {/* Semi-transparent backdrop to block interaction while modal is open */}
-            {showTerms && (
-                <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[9998]" />
-            )}
+            <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[9998]" />
         </>
     );
 };
