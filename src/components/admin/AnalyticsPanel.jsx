@@ -10,7 +10,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
     BarChart, Bar, PieChart, Pie, Cell, Legend 
 } from 'recharts';
-import api from '../../utils/api';
+import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import ExcelJS from 'exceljs';

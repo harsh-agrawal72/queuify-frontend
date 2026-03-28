@@ -6,7 +6,7 @@ import {
     Activity, Calendar, RefreshCw, Volume2, User, UserPlus, ArrowRightCircle,
     XCircle, Loader2, Info
 } from 'lucide-react';
-import api from '../../utils/api';
+import api from '../../services/api';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { toast } from 'react-hot-toast';
 
