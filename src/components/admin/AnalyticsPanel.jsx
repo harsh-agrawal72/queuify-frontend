@@ -28,8 +28,39 @@ import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import ExcelJS from 'exceljs';
+// ─── Global Constants ───
+const COLORS = {
+    primary: '#4f46e5',
+    secondary: '#7c3aed',
+    accent: '#06b6d4',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444'
+};
 
-// ─── Memoized Growth Badge ───
+const SERVICE_COLORS = ['#4f46e5', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
+
+const STATUS_CONFIG = {
+    pending: { color: '#f59e0b', label: 'Pending' },
+    confirmed: { color: '#4f46e5', label: 'Confirmed' },
+    serving: { color: '#8b5cf6', label: 'Serving' },
+    completed: { color: '#10b981', label: 'Completed' },
+    cancelled: { color: '#ef4444', label: 'Cancelled' }
+};
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+const customTooltipStyle = {
+    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '12px',
+    padding: '12px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(4px)',
+    color: '#fff'
+};
+
 const GrowthBadge = memo(({ value, suffix = '%' }) => {
     if (value === 0 || value === undefined) return <span className="text-xs text-gray-400 ml-2">—</span>;
     const isPositive = value > 0;
