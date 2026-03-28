@@ -33,6 +33,7 @@ const Profile = lazy(() => import('./components/user/Profile'));
 
 import ScrollToTop from './components/ScrollToTop';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import TermsGuard from './components/common/TermsGuard';
 
 // Premium Shimmer Loader for Suspense
 const PremiumLoader = () => (
@@ -81,16 +82,12 @@ function App() {
                     <SuperadminDashboard />
                   </ProtectedRoute>
                 } />
-                <Route path="/admin/*" element={
-                  <ProtectedRoute role="admin">
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } />
-
                 {/* User Dashboard Routes */}
                 <Route element={
                   <ProtectedRoute roles={['user']}>
-                    <UserLayout />
+                    <TermsGuard>
+                      <UserLayout />
+                    </TermsGuard>
                   </ProtectedRoute>
                 }>
                   <Route path="/dashboard" element={<UserDashboard />} />
@@ -100,6 +97,14 @@ function App() {
                   <Route path="/queue/:appointmentId" element={<LiveQueue />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
+
+                <Route path="/admin/*" element={
+                  <ProtectedRoute role="admin">
+                    <TermsGuard>
+                      <AdminDashboard />
+                    </TermsGuard>
+                  </ProtectedRoute>
+                } />
 
                 <Route path="/dashboard" element={<Navigate to="/login" replace />} />
               </Routes>

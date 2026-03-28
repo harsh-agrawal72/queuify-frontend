@@ -147,6 +147,12 @@ const Register = () => {
             return toast.error(t('auth.passwords_not_match', 'Passwords do not match'));
         }
 
+        // Show terms modal for users too
+        setShowTerms(true);
+    };
+
+    const finalizeUserSignup = async () => {
+        setShowTerms(false);
         setSubmitting(true);
         try {
             await register({
@@ -294,16 +300,25 @@ const Register = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex justify-center w-full">
-                                    <GoogleLogin
-                                        onSuccess={handleGoogleSuccess}
-                                        onError={() => toast.error('Google Sign Up failed')}
-                                        shape="pill"
-                                        theme="outline"
-                                        width="100%"
-                                        size="large"
-                                        text="signup_with"
-                                    />
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="flex justify-center w-full">
+                                        <GoogleLogin
+                                            onSuccess={handleGoogleSuccess}
+                                            onError={() => toast.error('Google Sign Up failed')}
+                                            shape="pill"
+                                            theme="outline"
+                                            width="100%"
+                                            size="large"
+                                            text="signup_with"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 text-center max-w-[280px] leading-relaxed">
+                                        By signing up with Google, you agree to our{' '}
+                                        <button type="button" onClick={() => setShowTerms(true)} className="text-gray-600 font-bold hover:underline">
+                                            Terms of Service
+                                        </button>{' '}
+                                        and Privacy Policy.
+                                    </p>
                                 </div>
                             </motion.form>
                         ) : (
@@ -427,7 +442,7 @@ const Register = () => {
                 <TermsModal 
                     isOpen={showTerms}
                     onClose={() => setShowTerms(false)}
-                    onAgree={finalizeOrgSignup}
+                    onAgree={signupType === 'org' ? finalizeOrgSignup : finalizeUserSignup}
                 />
 
                 <p className="mt-8 text-center text-gray-500 text-sm font-medium">
