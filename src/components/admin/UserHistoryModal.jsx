@@ -65,18 +65,30 @@ const UserHistoryModal = ({ userId, isOpen, onClose, userName }) => {
                                     <div className="text-2xl font-black text-indigo-700">{loyalty?.visitCount || 0}</div>
                                     <div className="text-[10px] uppercase tracking-wider text-indigo-500 font-bold">Total Visits</div>
                                 </div>
-                                <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 text-center">
-                                    <div className="text-sm font-black text-green-700 flex items-center justify-center gap-1">
+                                <div className={clsx(
+                                    "p-4 rounded-2xl border text-center shadow-sm transition-all",
+                                    loyalty?.loyaltyTier === 'Diamond' ? "bg-cyan-50 border-cyan-100 ring-1 ring-cyan-200/50" :
+                                    loyalty?.loyaltyTier === 'Gold' ? "bg-amber-50 border-amber-100 ring-1 ring-amber-200/50" :
+                                    loyalty?.loyaltyTier === 'Silver' ? "bg-slate-50 border-slate-100 ring-1 ring-slate-200/50" :
+                                    loyalty?.loyaltyTier === 'Bronze' ? "bg-orange-50 border-orange-100 ring-1 ring-orange-200/50" : "bg-gray-50 border-gray-100"
+                                )}>
+                                    <div className={clsx(
+                                        "text-sm font-black mb-1 flex items-center justify-center gap-1.5 uppercase tracking-tighter",
+                                        loyalty?.loyaltyTier === 'Diamond' ? "text-cyan-700" :
+                                        loyalty?.loyaltyTier === 'Gold' ? "text-amber-700" :
+                                        loyalty?.loyaltyTier === 'Silver' ? "text-slate-700" :
+                                        loyalty?.loyaltyTier === 'Bronze' ? "text-orange-700" : "text-gray-700"
+                                    )}>
                                         <Award className="h-4 w-4" />
-                                        {loyalty?.loyaltyTier || 'Bronze'}
+                                        {loyalty?.loyaltyTier || 'None'}
                                     </div>
-                                    <div className="text-[10px] uppercase tracking-wider text-green-500 font-bold">Loyalty Tier</div>
+                                    <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold opacity-70">Loyalty Tier</div>
                                 </div>
-                                <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100 text-center">
-                                    <div className="text-sm font-black text-amber-700">
-                                        {loyalty?.lastVisit ? format(new Date(loyalty.lastVisit), 'MMM d') : 'Never'}
+                                <div className="bg-white p-4 rounded-2xl border border-gray-100 text-center shadow-sm">
+                                    <div className="text-sm font-black text-gray-700">
+                                        {loyalty?.lastVisit ? format(new Date(loyalty.lastVisit), 'MMM d, yyyy') : 'Never'}
                                     </div>
-                                    <div className="text-[10px] uppercase tracking-wider text-amber-500 font-bold">Last Visit</div>
+                                    <div className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Last Visit</div>
                                 </div>
                                 <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100 text-center">
                                     <div className="text-2xl font-black text-red-700">
@@ -157,9 +169,16 @@ const UserHistoryModal = ({ userId, isOpen, onClose, userName }) => {
                 {/* Footer */}
                 <div className="p-6 border-t border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div className="flex items-center gap-2">
-                        {loyalty?.isFrequentVisitor && (
-                            <div className="bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-indigo-200 animate-bounce">
-                                <Award className="h-3 w-3" /> FREQUENT VISITOR
+                        {loyalty?.visitCount > 0 && (
+                            <div className={clsx(
+                                "text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg transition-transform hover:scale-105 uppercase tracking-widest",
+                                loyalty?.loyaltyTier === 'Diamond' ? "bg-cyan-600 text-white shadow-cyan-200" :
+                                loyalty?.loyaltyTier === 'Gold' ? "bg-amber-500 text-white shadow-amber-200" :
+                                loyalty?.loyaltyTier === 'Silver' ? "bg-slate-500 text-white shadow-slate-200" :
+                                "bg-orange-600 text-white shadow-orange-200"
+                            )}>
+                                <Award className="h-3.5 w-3.5" /> 
+                                {loyalty?.loyaltyTier} MEMBER
                             </div>
                         )}
                         {loyalty?.userCancellationCount > 2 && (

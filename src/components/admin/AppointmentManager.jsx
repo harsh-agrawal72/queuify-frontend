@@ -203,6 +203,25 @@ const AppointmentManager = () => {
         );
     };
 
+    const getLoyaltyBadge = (count) => {
+        if (!count || count < 1) return null;
+        
+        let tier = { 
+            name: 'Bronze', 
+            color: 'bg-orange-50 text-orange-700 border-orange-200', 
+            icon: <Award className="h-2.5 w-2.5" /> 
+        };
+        if (count >= 10) tier = { name: 'Diamond', color: 'bg-cyan-50 text-cyan-700 border-cyan-200', icon: <Award className="h-2.5 w-2.5" /> };
+        else if (count >= 5) tier = { name: 'Gold', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: <Award className="h-2.5 w-2.5" /> };
+        else if (count >= 3) tier = { name: 'Silver', color: 'bg-slate-50 text-slate-700 border-slate-200', icon: <Award className="h-2.5 w-2.5" /> };
+
+        return (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border shadow-sm ${tier.color}`}>
+                {tier.icon} {tier.name}
+            </span>
+        );
+    };
+
     return (
         <div className="w-full space-y-8">
             {/* Header with improved styling */}
@@ -339,11 +358,7 @@ const AppointmentManager = () => {
                                                     <div>
                                                         <div className="flex items-center gap-2">
                                                             <p className="font-semibold text-gray-900 text-sm">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
-                                                            {apt.is_frequent_visitor && (
-                                                                <span className="bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm shadow-indigo-100">
-                                                                    <Award className="h-2.5 w-2.5" /> LOYAL
-                                                                </span>
-                                                            )}
+                                                            {getLoyaltyBadge(apt.completed_count)}
                                                         </div>
                                                         <p className="text-xs text-gray-500 font-mono">{apt.user_email || '-'}</p>
                                                         {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
@@ -499,8 +514,12 @@ const AppointmentManager = () => {
                                         <div className="flex flex-col">
                                             <div className="flex items-center gap-2">
                                                 <p className="font-bold text-gray-900 leading-tight">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
-                                                {apt.is_frequent_visitor && (
-                                                    <Award className="h-3 w-3 text-indigo-600" />
+                                                {apt.completed_count > 0 && (
+                                                    <Award className={`h-3 w-3 ${
+                                                        apt.completed_count >= 10 ? "text-cyan-500" :
+                                                        apt.completed_count >= 5 ? "text-amber-500" :
+                                                        apt.completed_count >= 3 ? "text-slate-400" : "text-orange-500"
+                                                    }`} />
                                                 )}
                                             </div>
                                             <p className="text-[10px] text-gray-500 mt-0.5">{apt.user_email || '-'}</p>
