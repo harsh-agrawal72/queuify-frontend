@@ -1,4 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { 
+    TrendingUp, TrendingDown, AlertTriangle, AlertCircle, Info, CheckCircle2, 
+    Calendar, RefreshCw, Activity, Users, Clock, ArrowRight, ChevronRight,
+    BarChart3, PieChart as PieIcon, Timer, Target, LayoutDashboard, Download,
+    Search, Filter, Layers, Settings2
+} from 'lucide-react';
+import { 
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+    BarChart, Bar, PieChart, Pie, Cell, Legend 
+} from 'recharts';
+import api from '../../utils/api';
+import { toast } from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import ExcelJS from 'exceljs';
 
 // ─── Memoized Growth Badge ───
 const GrowthBadge = memo(({ value, suffix = '%' }) => {

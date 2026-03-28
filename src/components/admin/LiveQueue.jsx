@@ -1,3 +1,27 @@
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Users, Clock, CheckCircle, SkipForward, Play, 
+    Activity, Calendar, RefreshCw, Volume2, User, UserPlus, ArrowRightCircle,
+    XCircle, Loader2, Info
+} from 'lucide-react';
+import api from '../../utils/api';
+import { useQueueSocket } from '../../hooks/useQueueSocket';
+import { toast } from 'react-hot-toast';
+
+const InfoTooltip = ({ text }) => (
+    <div className="group relative">
+        <div className="cursor-help text-slate-300 hover:text-indigo-500 transition-colors">
+            <Info className="h-4 w-4" />
+        </div>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-900 text-white text-[10px] leading-relaxed rounded-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] shadow-2xl border border-white/10">
+            {text}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+        </div>
+    </div>
+);
+
 const formatName = (name) => {
     if (!name) return '';
     let n = name.toLowerCase().trim();
