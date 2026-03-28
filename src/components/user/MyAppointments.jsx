@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket,
-    ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap, MessageCircle, Navigation
+    ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -40,20 +40,25 @@ export default function MyAppointments() {
     }, []);
 
     const handleCancel = async (id) => {
-        if (!window.confirm(t('appointment.cancel_confirm', 'Are you sure you want to cancel this appointment?'))) return;
+        const confirmMsg = t('appointment.cancel_confirm', 'Are you sure you want to cancel this appointment?');
+        if (!window.confirm(confirmMsg)) return;
         
+        const reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
+        if (reason === null) return; // User cancelled prompt
+        if (!reason.trim()) {
+            toast.error(t('appointment.reason_required', 'Cancellation reason is required'));
+            return;
+        }
+
         // Optimistic UI Update
         const previousAppointments = [...appointments];
         setAppointments(prev => prev.map(appt => 
-            appt.id === id ? { ...appt, status: 'cancelled', cancelled_by: 'user' } : appt
+            appt.id === id ? { ...appt, status: 'cancelled', cancelled_by: 'user', cancellation_reason: reason } : appt
         ));
 
         try {
-            await api.post(`/appointments/${id}/cancel`);
+            await api.post(`/appointments/${id}/cancel`, { reason });
             toast.success('Appointment cancelled');
-            // No need to fetchAppointments() here as we already updated state optimistically, 
-            // but we can if we want to ensure total sync. 
-            // fetchAppointments(); 
         } catch (err) {
             console.error(err);
             // Revert on error
@@ -328,6 +333,26 @@ export default function MyAppointments() {
                                                         </span>
                                                     )}
                                                 </div>
+
+                                                {/* Cancellation Reason Description */}
+                                                {appt.status === 'cancelled' && appt.cancellation_reason && (
+                                                    <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl relative overflow-hidden group/reason">
+                                                        <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/reason:opacity-20 transition-opacity">
+                                                            <AlertCircle className="h-12 w-12 text-rose-500 -rotate-12" />
+                                                        </div>
+                                                        <p className="text-[10px] font-bold text-rose-800 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                                            <XCircle className="h-3 w-3" /> {t('appointment.cancellation_reason', 'Cancellation Reason')}
+                                                        </p>
+                                                        <p className="text-sm text-rose-700 font-medium leading-relaxed italic">
+                                                            "{appt.cancellation_reason}"
+                                                        </p>
+                                                        {appt.cancelled_by && (
+                                                            <div className="mt-2 text-[9px] font-bold text-rose-400 uppercase tracking-tighter">
+                                                                {appt.cancelled_by === 'admin' ? t('appointment.cancelled_by_admin', 'Cancelled by Provider') : t('appointment.cancelled_by_you', 'Cancelled by You')}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Actions */}

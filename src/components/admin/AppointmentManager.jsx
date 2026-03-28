@@ -101,11 +101,21 @@ const AppointmentManager = () => {
 
     const handleStatusUpdate = async (id, newStatus) => {
         setActiveActionId(null);
+        let reason = null;
+        if (newStatus === 'cancelled') {
+            reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
+            if (reason === null) return; // Cancelled prompt
+            if (!reason.trim()) {
+                toast.error(t('appointment.reason_required', 'Cancellation reason is required'));
+                return;
+            }
+        }
+        
         setProcessingId(id);
         try {
-            await api.patch(`/admin/appointments/${id}`, { status: newStatus });
+            await api.patch(`/admin/appointments/${id}`, { status: newStatus, reason });
             setAppointments(prev => prev.map(apt =>
-                apt.id === id ? { ...apt, status: newStatus } : apt
+                apt.id === id ? { ...apt, status: newStatus, cancellation_reason: reason, cancelled_by: 'admin' } : apt
             ));
             toast.success(t('appointment.status_updated', 'Status updated to {{status}}', { status: newStatus }));
         } catch (error) {
@@ -126,9 +136,19 @@ const AppointmentManager = () => {
 
         if (!window.confirm(confirmMessage)) return;
 
+        let reason = null;
+        if (!isCancelled) {
+            reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
+            if (reason === null) return; // User cancelled prompt
+            if (!reason.trim()) {
+                toast.error(t('appointment.reason_required', 'Cancellation reason is required'));
+                return;
+            }
+        }
+
         setProcessingId(apt.id);
         try {
-            await api.delete(`/admin/appointments/${apt.id}`);
+            await api.delete(`/admin/appointments/${apt.id}`, { data: { reason } });
             
             if (isCancelled) {
                 // Permanently hidden, remove from list
@@ -137,7 +157,7 @@ const AppointmentManager = () => {
             } else {
                 // Just cancelled, update status in list
                 setAppointments(prev => prev.map(a => 
-                    a.id === apt.id ? { ...a, status: 'cancelled', cancelled_by: 'admin' } : a
+                    a.id === apt.id ? { ...a, status: 'cancelled', cancelled_by: 'admin', cancellation_reason: reason } : a
                 ));
                 toast.success(t('appointment.cancelled_success', "Appointment cancelled successfully"));
             }
