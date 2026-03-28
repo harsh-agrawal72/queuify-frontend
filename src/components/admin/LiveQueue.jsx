@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Users, Clock, CheckCircle, SkipForward, Play, 
     Activity, Calendar, RefreshCw, Volume2, User, UserPlus, ArrowRightCircle,
-    XCircle, Loader2, Info
+    XCircle, X, Loader2, Info
 } from 'lucide-react';
 import api from '../../services/api';
 import { useQueueSocket } from '../../hooks/useQueueSocket';

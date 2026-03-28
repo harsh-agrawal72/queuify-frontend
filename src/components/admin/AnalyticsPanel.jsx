@@ -4,8 +4,22 @@ import {
     TrendingUp, TrendingDown, AlertTriangle, AlertCircle, Info, CheckCircle2, 
     Calendar, RefreshCw, Activity, Users, Clock, ArrowRight, ChevronRight,
     BarChart3, PieChart as PieIcon, Timer, Target, LayoutDashboard, Download,
-    Search, Filter, Layers, Settings2, CalendarDays, XCircle
+    Search, Filter, Layers, Settings2, CalendarDays, XCircle, Zap, X, Sparkles,
+    ChevronDown, Lightbulb, TrendingUp as TrendingUpIcon, ChevronDown as ChevronDownIcon
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const InfoTooltip = ({ text }) => (
+    <div className="group relative">
+        <div className="cursor-help text-slate-300 hover:text-indigo-500 transition-colors">
+            <Info className="h-4 w-4" />
+        </div>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-900 text-white text-[10px] leading-relaxed rounded-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] shadow-2xl border border-white/10">
+            {text}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+        </div>
+    </div>
+);
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
     BarChart, Bar, PieChart, Pie, Cell, Legend 
