@@ -11,13 +11,13 @@ import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { toast } from 'react-hot-toast';
 
 const InfoTooltip = ({ text }) => (
-    <div className="group relative">
-        <div className="cursor-help text-slate-300 hover:text-indigo-500 transition-colors">
-            <Info className="h-4 w-4" />
+    <div className="group relative inline-block">
+        <div className="cursor-help text-slate-300 hover:text-indigo-500 transition-colors p-1">
+            <Info className="h-3.5 w-3.5" />
         </div>
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-900 text-white text-[10px] leading-relaxed rounded-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] shadow-2xl border border-white/10">
+        <div className="absolute top-full right-0 mt-3 w-72 p-4 bg-slate-900 text-white text-[11px] leading-relaxed rounded-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[9999] shadow-2xl border border-white/10">
             {text}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+            <div className="absolute bottom-full right-3 border-8 border-transparent border-b-slate-900"></div>
         </div>
     </div>
 );
@@ -747,9 +747,8 @@ const AdminLiveQueue = () => {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.phone_number', 'Mobile Contact')}</label>
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.phone_number', 'Mobile Contact')} <span className="opacity-50 text-[9px]">({t('common.optional', 'Optional')})</span></label>
                                     <input
-                                        required
                                         type="tel"
                                         placeholder="+91"
                                         className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 placeholder:text-slate-300"

@@ -195,7 +195,8 @@ const Register = () => {
                 type: formData.type,
                 adminName: formData.name,
                 adminEmail: formData.email,
-                password: formData.password
+                password: formData.password,
+                terms_accepted: true
             });
             toast.success(t('auth.org_register_success', 'Organization {{name}} registered!', { name: formData.orgName }));
             navigate('/admin');
