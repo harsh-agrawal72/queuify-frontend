@@ -4,7 +4,7 @@ import {
     TrendingUp, TrendingDown, AlertTriangle, AlertCircle, Info, CheckCircle2, 
     Calendar, RefreshCw, Activity, Users, Clock, ArrowRight, ChevronRight,
     BarChart3, PieChart as PieIcon, Timer, Target, LayoutDashboard, Download,
-    Search, Filter, Layers, Settings2
+    Search, Filter, Layers, Settings2, CalendarDays, XCircle
 } from 'lucide-react';
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
