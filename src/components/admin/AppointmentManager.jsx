@@ -45,6 +45,15 @@ const AppointmentManager = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
 
+    // Debounce search
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
     // Logic for clicking outside to close dropdown
     const dropdownRef = useRef(null);
     useEffect(() => {
@@ -64,7 +73,7 @@ const AppointmentManager = () => {
                 params: {
                     page,
                     limit: 10,
-                    search,
+                    search: debouncedSearch,
                     status: statusFilter,
                     resourceId: selectedResourceId,
                     date: selectedDate
@@ -89,15 +98,22 @@ const AppointmentManager = () => {
         }
     };
 
+    // Main data fetch effect
     useEffect(() => {
         fetchAppointments();
-        fetchResources();
-    }, [page, search, statusFilter, selectedResourceId, selectedDate]);
+    }, [page, debouncedSearch, statusFilter, selectedResourceId, selectedDate]);
 
-    // Reset page when filters change
+    // Fetch resources only on mount
     useEffect(() => {
-        setPage(1);
-    }, [search, statusFilter, selectedResourceId, selectedDate]);
+        fetchResources();
+    }, []);
+
+    // Reset to page 1 ONLY if we are not already on page 1 when filters change
+    useEffect(() => {
+        if (page !== 1) {
+            setPage(1);
+        }
+    }, [debouncedSearch, statusFilter, selectedResourceId, selectedDate]);
 
     const handleStatusUpdate = async (id, newStatus) => {
         setActiveActionId(null);

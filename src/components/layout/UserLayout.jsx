@@ -26,12 +26,16 @@ export default function UserLayout() {
     const { notification } = useUserSocket(user?.id);
 
     const fetchUnreadCount = async () => {
+        if (!user) return;
         try {
             const res = await api.get('/notifications');
-            const unread = res.data.filter(n => !n.is_read).length;
-            setUnreadCount(unread);
+            if (res.data && Array.isArray(res.data)) {
+                const unread = res.data.filter(n => !n.is_read).length;
+                setUnreadCount(unread);
+            }
         } catch (error) {
-            console.error('Failed to fetch unread count');
+            // Silently fail to avoid console clutter during transient network issues
+            console.warn('Notification fetch paused: service temporarily unavailable');
         }
     };
 

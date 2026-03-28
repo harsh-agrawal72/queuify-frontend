@@ -95,11 +95,14 @@ const AdminLayout = () => {
     const fetchNotifications = async () => {
         try {
             const res = await api.get('/admin/notifications');
-            setNotifications(res.data);
-            const unread = res.data.filter(n => !n.is_read).length;
-            setUnreadCount(unread);
+            if (res.data && Array.isArray(res.data)) {
+                setNotifications(res.data);
+                const unread = res.data.filter(n => !n.is_read).length;
+                setUnreadCount(unread);
+            }
         } catch (error) {
-            console.error("Failed to fetch notifications", error);
+            // Silently log or warning to avoid console clutter
+            console.warn("Failed to fetch notifications: service temporarily unavailable");
         }
     };
 

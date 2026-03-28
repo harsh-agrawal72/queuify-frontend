@@ -1,56 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { api } from '../../services/api';
-import ExcelJS from 'exceljs';
-import html2canvas from 'html2canvas';
-import {
-    Loader2, TrendingUp, TrendingDown, DollarSign, Activity, AlertCircle,
-    Download, CalendarDays, BarChart3, PieChart as PieIcon, Zap,
-    CheckCircle2, XCircle, Clock, Filter, X, Lightbulb, AlertTriangle, Info, ChevronDown,
-    Brain, Sparkles, TrendingUp as TrendingUpIcon, Gauge
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart
-} from 'recharts';
-import InfoTooltip from '../common/InfoTooltip';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 
-// ─── Color Palette ───
-const COLORS = {
-    primary: '#6366f1',
-    primaryLight: '#818cf8',
-    success: '#10b981',
-    successLight: '#34d399',
-    danger: '#ef4444',
-    dangerLight: '#f87171',
-    warning: '#f59e0b',
-    warningLight: '#fbbf24',
-    info: '#3b82f6',
-    infoLight: '#60a5fa',
-    purple: '#8b5cf6',
-    pink: '#ec4899',
-    teal: '#14b8a6',
-    slate: '#64748b',
-};
-
-const SERVICE_COLORS = [COLORS.primary, COLORS.success, COLORS.warning, COLORS.pink, COLORS.teal, COLORS.purple, COLORS.info, COLORS.dangerLight];
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const HOURS = Array.from({ length: 13 }, (_, i) => i + 7); // 7am to 7pm
-
-// ─── Tooltip Styles ───
-const customTooltipStyle = {
-    backgroundColor: '#1e293b',
-    border: 'none',
-    borderRadius: '12px',
-    padding: '12px 16px',
-    boxShadow: '0 20px 25px -5px rgba(0,0,0,.3)',
-    color: '#fff',
-    fontSize: '13px',
-};
-
-// ─── Growth Badge ───
-const GrowthBadge = ({ value, suffix = '%' }) => {
+// ─── Memoized Growth Badge ───
+const GrowthBadge = memo(({ value, suffix = '%' }) => {
     if (value === 0 || value === undefined) return <span className="text-xs text-gray-400 ml-2">—</span>;
     const isPositive = value > 0;
     return (
@@ -59,10 +10,11 @@ const GrowthBadge = ({ value, suffix = '%' }) => {
             {isPositive ? '+' : ''}{value}{suffix}
         </span>
     );
-};
+});
+GrowthBadge.displayName = 'GrowthBadge';
 
 // ─── Custom Recharts Tooltip ───
-const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => {
+const CustomTooltip = memo(({ active, payload, label, prefix = '', suffix = '' }) => {
     if (!active || !payload?.length) return null;
     return (
         <div style={customTooltipStyle}>
@@ -74,10 +26,11 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => 
             ))}
         </div>
     );
-};
+});
+CustomTooltip.displayName = 'CustomTooltip';
 
 // ─── Insight Card ───
-const InsightCard = ({ insight }) => {
+const InsightCard = memo(({ insight }) => {
     const styles = {
         warning: { bg: 'bg-amber-50', border: 'border-amber-200', icon: AlertTriangle, iconColor: 'text-amber-500' },
         danger: { bg: 'bg-red-50', border: 'border-red-200', icon: AlertCircle, iconColor: 'text-red-500' },
@@ -95,7 +48,8 @@ const InsightCard = ({ insight }) => {
             </div>
         </div>
     );
-};
+});
+InsightCard.displayName = 'InsightCard';
 
 // ─── Quick Start Guide ───
 // ─── Quick Start Guide ───
@@ -569,6 +523,28 @@ const AnalyticsPanel = () => {
         URL.revokeObjectURL(u);
     };
 
+    // ─── Memoized KPI Cards Data ───
+    const kpiCards = useMemo(() => {
+        if (!stats) return [];
+        return [
+            {
+                title: t('dashboard.total_bookings', 'Total Bookings'), value: stats.totalBookings,
+                growth: stats.growth?.bookings, icon: CalendarDays,
+                color: 'from-indigo-500 to-purple-600', lightBg: 'bg-indigo-50', lightText: 'text-indigo-600'
+            },
+            {
+                title: t('dashboard.utilization', 'Slot Utilization'), value: `${stats.utilization}%`,
+                growth: stats.growth?.utilization, suffix: 'pt', icon: Activity,
+                color: 'from-blue-500 to-cyan-600', lightBg: 'bg-blue-50', lightText: 'text-blue-600'
+            },
+            {
+                title: t('dashboard.cancellation_rate', 'Cancellation Rate'), value: `${stats.cancellationRate}%`,
+                growth: stats.growth?.cancellation, suffix: 'pt', invertGrowth: true, icon: XCircle,
+                color: 'from-rose-500 to-pink-600', lightBg: 'bg-rose-50', lightText: 'text-rose-600'
+            },
+        ];
+    }, [stats, t]);
+
     // ─── Loading state ───
     if (loading) {
         return (
@@ -602,24 +578,8 @@ const AnalyticsPanel = () => {
         );
     }
 
-    // ─── KPI Cards ───
-    const kpiCards = [
-        {
-            title: t('dashboard.total_bookings', 'Total Bookings'), value: stats.totalBookings,
-            growth: stats.growth?.bookings, icon: CalendarDays,
-            color: 'from-indigo-500 to-purple-600', lightBg: 'bg-indigo-50', lightText: 'text-indigo-600'
-        },
-        {
-            title: t('dashboard.utilization', 'Slot Utilization'), value: `${stats.utilization}%`,
-            growth: stats.growth?.utilization, suffix: 'pt', icon: Activity,
-            color: 'from-blue-500 to-cyan-600', lightBg: 'bg-blue-50', lightText: 'text-blue-600'
-        },
-        {
-            title: t('dashboard.cancellation_rate', 'Cancellation Rate'), value: `${stats.cancellationRate}%`,
-            growth: stats.growth?.cancellation, suffix: 'pt', invertGrowth: true, icon: XCircle,
-            color: 'from-rose-500 to-pink-600', lightBg: 'bg-rose-50', lightText: 'text-rose-600'
-        },
-    ];
+    // ─── Heatmap ───
+    // const heatmapData = stats.peakHoursHeatmap || []; // Handled inside return for simplicity or move to useMemo
 
     // ─── Heatmap ───
     const heatmapData = stats.peakHoursHeatmap || [];

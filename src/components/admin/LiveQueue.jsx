@@ -1,28 +1,3 @@
-import { useState, useEffect } from 'react';
-import { api } from '../../services/api';
-import {
-    Loader2,
-    User,
-    Clock,
-    Play,
-    CheckCircle,
-    XCircle,
-    RefreshCw,
-    Volume2,
-    Users,
-    Activity,
-    Calendar,
-    ArrowRightCircle,
-    SkipForward,
-    UserPlus,
-    X
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useQueueSocket } from '../../hooks/useQueueSocket';
-import { useTranslation } from 'react-i18next';
-import InfoTooltip from '../common/InfoTooltip';
-
 const formatName = (name) => {
     if (!name) return '';
     let n = name.toLowerCase().trim();
@@ -33,6 +8,117 @@ const formatName = (name) => {
     }
     return n.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
+
+const formatTime = (isoString) => {
+    if (!isoString) return '--:--';
+    try {
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return '--:--';
+        return new Intl.DateTimeFormat('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }).format(date);
+    } catch (e) {
+        return '--:--';
+    }
+};
+
+// ─── Memoized Appointment Card ───
+const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, onUpdateStatus, onCallPatient, t, predictiveInsights }) => {
+    return (
+        <motion.div
+            layout
+            className={`
+                p-5 rounded-[1.5rem] border transition-all duration-300 flex items-center gap-5 group
+                ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02] z-10' :
+                    isNext ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' :
+                        isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
+            `}
+        >
+            <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-all duration-300 ${isServing ? 'bg-white/20 scale-110' : 'bg-white border border-slate-100 text-slate-400 group-hover:border-indigo-200 group-hover:text-indigo-500'}`}>
+                {appt.queue_number}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1.5">
+                    <h4 className={`text-lg font-bold truncate tracking-tight ${isServing ? 'text-white' : 'text-slate-900'}`}>{formatName(appt.user_name)}</h4>
+                    {isServing && (
+                        <span className="flex items-center gap-1 text-[9px] font-black bg-white/20 px-2.5 py-1 rounded-full animate-pulse tracking-widest border border-white/10">
+                            <div className="h-1 w-1 bg-white rounded-full"></div> {t('status.serving', 'SERVING')}
+                        </span>
+                    )}
+                    {isNext && (
+                        <span className="text-[9px] font-black bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-2.5 py-1 rounded-full tracking-widest uppercase shadow-sm shadow-indigo-200">{t('status.next', 'UP NEXT')}</span>
+                    )}
+                </div>
+               
+                <div className="flex items-center gap-3 flex-wrap">
+                    {appt.user_phone && (
+                        <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
+                            <Users className="h-3 w-3 opacity-60" /> {appt.user_phone}
+                        </span>
+                    )}
+                     <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
+                         <Clock className="h-3 w-3 opacity-60" /> {appt.slot_start ? formatTime(appt.slot_start) : <span className="text-[10px] uppercase tracking-tighter opacity-70">{t('queue.no_slot', 'No Slot')}</span>}
+                     </span>
+                     {!isServing && !isCompleted && (
+                         <span className={`text-[11px] font-black flex items-center gap-1.5 transition-colors ${isNext ? 'text-indigo-600' : 'text-slate-400 opacity-80'}`}>
+                             <div className={`h-1.5 w-1.5 rounded-full ${isNext ? 'bg-indigo-500 animate-pulse' : 'bg-current opacity-30'}`}></div>
+                             {t('queue.wait_label', 'Wait')}: {(() => {
+                                 const ahead = queue.appointments.filter((a, idx) => 
+                                     idx < i && (a.status === 'confirmed' || a.status === 'pending' || a.status === 'serving' || a.status === 'waitlisted_urgent')
+                                 ).length;
+                                 const avg = predictiveInsights?.averageDurations?.find(d => d.resource === appt.resource_name)?.minutes || 15;
+                                 return ahead * avg;
+                             })()}m
+                         </span>
+                     )}
+                     <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border transition-all ${isServing ? 'bg-white/10 text-white border-white/20' : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100/50'}`}>
+                         {appt.token_number}
+                     </span>
+                </div>
+            </div>
+
+            <div className="flex gap-2">
+                {isServing ? (
+                    <>
+                        <button
+                            onClick={() => onUpdateStatus(appt.id, 'completed')}
+                            className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
+                            title="Mark Done"
+                        >
+                            <CheckCircle className="h-5 w-5" />
+                        </button>
+                        <button
+                            onClick={() => onUpdateStatus(appt.id, 'no_show')}
+                            className="h-11 w-11 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-all active:scale-95"
+                            title="No Show / Skip"
+                        >
+                            <SkipForward className="h-5 w-5" />
+                        </button>
+                    </>
+                ) : (appt.status === 'confirmed' || appt.status === 'pending') ? (
+                    <button
+                        onClick={() => {
+                            onUpdateStatus(appt.id, 'serving');
+                            onCallPatient(appt.token_number);
+                        }}
+                        className="h-11 w-11 bg-white border border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm active:scale-95 md:opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="Start Serving"
+                    >
+                        <Play className="h-4 w-4 fill-current" />
+                    </button>
+                ) : isCompleted && (
+                    <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${appt.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                        {appt.status.replace('_', ' ')}
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+});
+AppointmentCard.displayName = 'AppointmentCard';
 
 const AdminLiveQueue = () => {
     const { t } = useTranslation();
@@ -126,7 +212,7 @@ const AdminLiveQueue = () => {
         fetchQueue(true);
     };
 
-    const updateStatus = async (id, status, silent = false) => {
+    const updateStatus = useCallback(async (id, status, silent = false) => {
         try {
             await api.patch(`/admin/appointments/${id}`, { status });
             if (!silent) toast.success(t('appointment.status_updated_generic', `Updated status to {{status}}`, { status: t(`status.${status}`, status.replace('_', ' ')) }));
@@ -139,9 +225,9 @@ const AdminLiveQueue = () => {
             if (!silent) toast.error(error.response?.data?.message || t('common.action_failed', "Action failed"));
             throw error;
         }
-    };
+    }, [t, emitStatusChange]);
 
-    const callPatient = (token) => {
+    const callPatient = useCallback((token) => {
         toast.custom((toastObj) => (
             <div className={`${toastObj.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-indigo-600 shadow-xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 text-white overflow-hidden`}>
                 <div className="flex-1 w-0 p-4">
@@ -159,7 +245,7 @@ const AdminLiveQueue = () => {
         ), { duration: 5000 });
 
         // In real app, this would trigger an announcement system
-    };
+    }, [t]);
 
     const handleCallNext = async (queue) => {
         const currentlyServing = queue.appointments.find(a => a.status === 'serving');
@@ -252,8 +338,8 @@ const AdminLiveQueue = () => {
     };
 
     // Stats
-    const totalPending = queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length, 0);
-    const totalServing = queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'serving').length, 0);
+    const totalPending = useMemo(() => queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length, 0), [queues]);
+    const totalServing = useMemo(() => queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'serving').length, 0), [queues]);
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
@@ -448,105 +534,28 @@ const AdminLiveQueue = () => {
                                             return (
                                                 <div key={appt.id}>
                                                     {showSeparator && (
-                                                                        <div className="flex items-center gap-4 my-8">
-                                                                            <div className="h-px bg-slate-200 flex-1"></div>
-                                                                            <div className="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 shadow-sm rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">
-                                                                                <Clock className="h-3 w-3 text-indigo-500" />
-                                                                                {formatTime(appt.slot_start) || t('queue.next_available', 'Next Available')}
-                                                                            </div>
-                                                                            <div className="h-px bg-slate-200 flex-1"></div>
-                                                                        </div>
-                                                                    )}
-                                                                    <motion.div
-                                                                        layout
-                                                                        className={`
-                                                                            p-5 rounded-[1.5rem] border transition-all duration-300 flex items-center gap-5 group
-                                                                            ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02] z-10' :
-                                                                                isNext ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' :
-                                                                                    isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
-                                                                        `}
-                                                                    >
-                                                                         <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-all duration-300 ${isServing ? 'bg-white/20 scale-110' : 'bg-white border border-slate-100 text-slate-400 group-hover:border-indigo-200 group-hover:text-indigo-500'}`}>
-                                                                             {appt.queue_number}
-                                                                         </div>
-                                                                         
-                                                                         <div className="flex-1 min-w-0">
-                                                                             <div className="flex items-center gap-2 mb-1.5">
-                                                                                 <h4 className={`text-lg font-bold truncate tracking-tight ${isServing ? 'text-white' : 'text-slate-900'}`}>{formatName(appt.user_name)}</h4>
-                                                                                 {isServing && (
-                                                                                     <span className="flex items-center gap-1 text-[9px] font-black bg-white/20 px-2.5 py-1 rounded-full animate-pulse tracking-widest border border-white/10">
-                                                                                         <div className="h-1 w-1 bg-white rounded-full"></div> {t('status.serving', 'SERVING')}
-                                                                                     </span>
-                                                                                 )}
-                                                                                 {isNext && (
-                                                                                     <span className="text-[9px] font-black bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-2.5 py-1 rounded-full tracking-widest uppercase shadow-sm shadow-indigo-200">{t('status.next', 'UP NEXT')}</span>
-                                                                                 )}
-                                                                             </div>
-                                                                            
-                                                                             <div className="flex items-center gap-3 flex-wrap">
-                                                                                 {appt.user_phone && (
-                                                                                     <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
-                                                                                         <Users className="h-3 w-3 opacity-60" /> {appt.user_phone}
-                                                                                     </span>
-                                                                                 )}
-                                                                                  <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
-                                                                                      <Clock className="h-3 w-3 opacity-60" /> {appt.slot_start ? formatTime(appt.slot_start) : <span className="text-[10px] uppercase tracking-tighter opacity-70">{t('queue.no_slot', 'No Slot')}</span>}
-                                                                                  </span>
-                                                                                  {!isServing && !isCompleted && (
-                                                                                      <span className={`text-[11px] font-black flex items-center gap-1.5 transition-colors ${isNext ? 'text-indigo-600' : 'text-slate-400 opacity-80'}`}>
-                                                                                          <div className={`h-1.5 w-1.5 rounded-full ${isNext ? 'bg-indigo-500 animate-pulse' : 'bg-current opacity-30'}`}></div>
-                                                                                          {t('queue.wait_label', 'Wait')}: {(() => {
-                                                                                              const ahead = queue.appointments.filter((a, idx) => 
-                                                                                                  idx < i && (a.status === 'confirmed' || a.status === 'pending' || a.status === 'serving' || a.status === 'waitlisted_urgent')
-                                                                                              ).length;
-                                                                                              const avg = predictiveInsights?.averageDurations?.find(d => d.resource === appt.resource_name)?.minutes || 15;
-                                                                                              return ahead * avg;
-                                                                                          })()}m
-                                                                                      </span>
-                                                                                  )}
-                                                                                  <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border transition-all ${isServing ? 'bg-white/10 text-white border-white/20' : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100/50'}`}>
-                                                                                      {appt.token_number}
-                                                                                  </span>
-                                                                             </div>
-                                                                         </div>
-
-                                                                        <div className="flex gap-2">
-                                                                            {isServing ? (
-                                                                                <>
-                                                                                    <button
-                                                                                        onClick={() => updateStatus(appt.id, 'completed')}
-                                                                                        className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
-                                                                                        title="Mark Done"
-                                                                                    >
-                                                                                        <CheckCircle className="h-5 w-5" />
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={() => updateStatus(appt.id, 'no_show')}
-                                                                                        className="h-11 w-11 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-all active:scale-95"
-                                                                                        title="No Show / Skip"
-                                                                                    >
-                                                                                        <SkipForward className="h-5 w-5" />
-                                                                                    </button>
-                                                                                </>
-                                                                            ) : (appt.status === 'confirmed' || appt.status === 'pending') ? (
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        updateStatus(appt.id, 'serving');
-                                                                                        callPatient(appt.token_number);
-                                                                                    }}
-                                                                                    className="h-11 w-11 bg-white border border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                                                                    title="Start Serving"
-                                                                                >
-                                                                                    <Play className="h-4 w-4 fill-current" />
-                                                                                </button>
-                                                                            ) : isCompleted && (
-                                                                                <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${appt.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-                                                                                    {appt.status.replace('_', ' ')}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </motion.div>
-                                                                </div>
+                                                        <div className="flex items-center gap-4 my-8">
+                                                            <div className="h-px bg-slate-200 flex-1"></div>
+                                                            <div className="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 shadow-sm rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                                                                <Clock className="h-3 w-3 text-indigo-500" />
+                                                                {formatTime(appt.slot_start) || t('queue.next_available', 'Next Available')}
+                                                            </div>
+                                                            <div className="h-px bg-slate-200 flex-1"></div>
+                                                        </div>
+                                                    )}
+                                                    <AppointmentCard
+                                                        appt={appt}
+                                                        i={i}
+                                                        queue={queue}
+                                                        isNext={isNext}
+                                                        isServing={isServing}
+                                                        isCompleted={isCompleted}
+                                                        onUpdateStatus={updateStatus}
+                                                        onCallPatient={callPatient}
+                                                        t={t}
+                                                        predictiveInsights={predictiveInsights}
+                                                    />
+                                                </div>
                                             );
                                         })
                                     )}

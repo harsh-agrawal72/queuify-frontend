@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -12,6 +12,72 @@ import { useAuth } from '../../context/AuthContext';
 import { formatWaitTime } from '../../utils/format';
 import InfoTooltip from '../common/InfoTooltip';
 import { useTranslation } from 'react-i18next';
+
+// ─── Memoized Sub-components ───
+const Shimmer = memo(({ className }) => (
+    <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />
+));
+Shimmer.displayName = 'Shimmer';
+
+const StatCard = memo(({ title, value, icon: Icon, color, bg, isLoading }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+    >
+        <div className="flex justify-between items-start">
+            <div>
+                <p className="text-gray-500 text-sm font-medium">{title}</p>
+                {isLoading ? (
+                    <Shimmer className="h-8 w-16 mt-2" />
+                ) : (
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
+                )}
+            </div>
+            <div className={`p-3 rounded-xl ${bg}`}>
+                <Icon className={`h-6 w-6 ${color}`} />
+            </div>
+        </div>
+    </motion.div>
+));
+StatCard.displayName = 'StatCard';
+
+const RecentAppointmentItem = memo(({ apt, idx, t, getStatusColor }) => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: idx * 0.05 }}
+        className="px-5 py-4 hover:bg-gray-50/50 transition-colors flex items-center justify-between"
+    >
+        <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+                <p className="font-medium text-gray-900 text-sm">{apt.service_name || t('appointment.title', 'Appointment')}</p>
+                <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
+                    <MapPin className="h-3 w-3" /> {apt.org_name || t('appointment.organization', 'Organization')}
+                    {(() => {
+                        const d = apt.start_time ? parseISO(apt.start_time) : null;
+                        if (d && isValid(d)) {
+                            return (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                    {format(d, 'dd MMM yyyy, hh:mm a')}
+                                </>
+                            );
+                        }
+                        return null;
+                    })()}
+                </p>
+            </div>
+        </div>
+        <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize ${getStatusColor(apt.status)}`}>
+            {t(`status.${apt.status}`, apt.status)}
+        </span>
+    </motion.div>
+));
+RecentAppointmentItem.displayName = 'RecentAppointmentItem';
 
 export default function UserDashboard() {
     const { t } = useTranslation();
@@ -51,36 +117,11 @@ export default function UserDashboard() {
         }
     }, [queueData]);
 
-    const Shimmer = ({ className }) => (
-        <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />
-    );
-
-    const StatCard = ({ title, value, icon: Icon, color, bg, isLoading }) => (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
-        >
-            <div className="flex justify-between items-start">
-                <div>
-                    <p className="text-gray-500 text-sm font-medium">{title}</p>
-                    {isLoading ? (
-                        <Shimmer className="h-8 w-16 mt-2" />
-                    ) : (
-                        <h3 className="text-3xl font-bold text-gray-900 mt-2">{value}</h3>
-                    )}
-                </div>
-                <div className={`p-3 rounded-xl ${bg}`}>
-                    <Icon className={`h-6 w-6 ${color}`} />
-                </div>
-            </div>
-        </motion.div>
-    );
 
     const nextApt = stats?.nextAppointment;
     const isServing = nextApt?.status === 'serving';
 
-    const getStatusColor = (status) => {
+    const getStatusColor = useMemo(() => (status) => {
         switch (status) {
             case 'completed': return 'bg-emerald-100 text-emerald-700';
             case 'confirmed': return 'bg-blue-100 text-blue-700';
@@ -90,9 +131,9 @@ export default function UserDashboard() {
             case 'no_show': return 'bg-gray-100 text-gray-700';
             default: return 'bg-gray-100 text-gray-700';
         }
-    };
+    }, []);
 
-    const totalAppointments = stats?.total || 0;
+    const totalAppointments = useMemo(() => stats?.total || 0, [stats]);
 
     return (
         <div className="space-y-8">
@@ -331,40 +372,13 @@ export default function UserDashboard() {
                     ) : recentAppointments.length > 0 ? (
                         <div className="divide-y divide-gray-50">
                             {recentAppointments.map((apt, idx) => (
-                                <motion.div
+                                <RecentAppointmentItem
                                     key={apt.id}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    className="px-5 py-4 hover:bg-gray-50/50 transition-colors flex items-center justify-between"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                            <Building2 className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900 text-sm">{apt.service_name || t('appointment.title', 'Appointment')}</p>
-                                            <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
-                                                <MapPin className="h-3 w-3" /> {apt.org_name || t('appointment.organization', 'Organization')}
-                                                {(() => {
-                                                    const d = apt.start_time ? parseISO(apt.start_time) : null;
-                                                    if (d && isValid(d)) {
-                                                        return (
-                                                            <>
-                                                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                                                                {format(d, 'dd MMM yyyy, hh:mm a')}
-                                                            </>
-                                                        );
-                                                    }
-                                                    return null;
-                                                })()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize ${getStatusColor(apt.status)}`}>
-                                        {t(`status.${apt.status}`, apt.status)}
-                                    </span>
-                                </motion.div>
+                                    apt={apt}
+                                    idx={idx}
+                                    t={t}
+                                    getStatusColor={getStatusColor}
+                                />
                             ))}
                         </div>
                     ) : (

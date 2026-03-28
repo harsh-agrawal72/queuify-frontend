@@ -159,7 +159,7 @@ const Login = () => {
                                 onError={() => toast.error(t('auth.google_failed', 'Google Sign In failed'))}
                                 shape="pill"
                                 theme="outline"
-                                width="100%"
+                                width={400}
                                 size="large"
                                 text="signin_with"
                             />
