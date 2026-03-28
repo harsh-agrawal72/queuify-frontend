@@ -16,7 +16,7 @@ const TermsGuard = ({ children }) => {
     const handleAgree = async () => {
         try {
             // Update on backend
-            await api.patch('/users/me', { terms_accepted: true });
+            await api.patch('/users/profile', { terms_accepted: true });
             
             // Update local state
             updateUser({ terms_accepted: true });
