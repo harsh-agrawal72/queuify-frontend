@@ -24,16 +24,16 @@ const QueueVisualization = ({ appointment }) => {
     const isServing = status === 'serving';
 
     return (
-        <div className="mt-8 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden relative">
+        <div className="mt-8 p-5 sm:p-8 bg-white rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden relative">
             {/* Ambient Background Glows */}
             <div className="absolute -top-24 -left-24 w-64 h-64 bg-indigo-100/30 rounded-full blur-[100px]" />
             <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-100/30 rounded-full blur-[100px]" />
 
             <div className="relative z-10">
-                <div className="flex justify-between items-start mb-12">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 sm:gap-4 mb-10 sm:mb-12">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+                            <h4 className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
                                 Live Queue Status
                             </h4>
                             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-50 rounded-full border border-green-100">
@@ -41,14 +41,14 @@ const QueueVisualization = ({ appointment }) => {
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                 </span>
-                                <span className="text-[10px] font-black text-green-600 uppercase">Live</span>
+                                <span className="text-[9px] sm:text-[10px] font-black text-green-600 uppercase">Live</span>
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-slate-900 tracking-tight">
+                        <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
                             {isServing ? "It's your turn now!" : (ahead === 0 ? "You're next in line" : `${ahead} people ahead`)}
                         </p>
                     </div>
-                    <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 text-center min-w-[100px]">
+                    <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 text-center min-w-[120px] w-full sm:w-auto shadow-sm">
                         <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Your Token</span>
                         <span className="text-3xl font-black text-indigo-600">#{myToken}</span>
                     </div>
@@ -125,9 +125,9 @@ const QueueVisualization = ({ appointment }) => {
                                             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-indigo-600 rotate-45" />
                                         </motion.div>
                                     </div>
-                                    <div className="w-18 h-18 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-300 ring-8 ring-white">
+                                    <div className="w-14 h-14 sm:w-18 sm:h-18 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-300 ring-4 sm:ring-8 ring-white">
                                         <div className="relative">
-                                            <User className="h-8 w-8" />
+                                            <User className="h-6 w-6 sm:h-8 sm:w-8" />
                                             {ahead > 0 && (
                                                 <div className="absolute -right-1 -top-1 w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black">
                                                     {ahead}
@@ -159,22 +159,22 @@ const QueueVisualization = ({ appointment }) => {
                 </div>
 
                 {/* Wait Time Sentiment Card */}
-                <div className="mt-12 p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex items-center justify-between">
+                <div className="mt-12 p-5 sm:p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-600">
-                            <Clock className="h-7 w-7" />
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-600">
+                            <Clock className="h-6 w-6 sm:h-7 sm:w-7" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Estimated Arrival</p>
-                            <p className="text-xl font-black text-slate-900">
+                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Estimated Arrival</p>
+                            <p className="text-lg sm:text-xl font-black text-slate-900">
                                 {isServing ? 'Ready for Service' : (waitMins > 60 ? `${Math.floor(waitMins/60)}h ${waitMins%60}m` : `${waitMins} mins`)}
                             </p>
                         </div>
                     </div>
                     {driftMins !== 0 && (
-                        <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 ${driftMins > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                        <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start ${driftMins > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
                             {driftMins > 0 ? <Sparkles className="h-4 w-4" /> : <Play className="h-4 w-4 rotate-90" />}
-                            <span className="text-xs font-bold whitespace-nowrap">
+                            <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap">
                                 {driftMins > 0 ? 'AI: Moving Slower' : 'AI: Moving Faster'}
                             </span>
                         </div>

@@ -97,6 +97,9 @@ const apiService = {
     // Rescheduling Proposal
     proposeReschedule: (appointmentId, data) => api.patch(`/appointments/${appointmentId}/propose-reschedule`, data),
     respondToReschedule: (appointmentId, data) => api.patch(`/appointments/${appointmentId}/respond-reschedule`, data),
+    
+    // Admin Direct Move / Status Update
+    adminUpdateAppointment: (appointmentId, data) => api.patch(`/admin/appointments/${appointmentId}`, data),
 };
 
 export { api, apiService };

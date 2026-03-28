@@ -72,6 +72,32 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
         }
     };
 
+    const handleForceMove = async () => {
+        if (!selectedSlotId) {
+            toast.error('Please select a slot');
+            return;
+        }
+        
+        if (!window.confirm('This will immediately move the user to the new slot without their approval. Continue?')) {
+            return;
+        }
+
+        setRescheduling(true);
+        const loadingToast = toast.loading('Executing direct move...');
+        try {
+            await apiService.adminUpdateAppointment(appointment.id, {
+                slotId: selectedSlotId
+            });
+            toast.success('Appointment moved successfully!', { id: loadingToast });
+            onSuccess();
+        } catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || 'Failed to move appointment', { id: loadingToast });
+        } finally {
+            setRescheduling(false);
+        }
+    };
+
     const dateOptions = Array.from({ length: 14 }).map((_, i) => addDays(startOfDay(new Date()), i));
 
     return (
@@ -251,9 +277,16 @@ const AdminRescheduleModal = ({ appointment, onClose, onSuccess }) => {
                     <button
                         onClick={handlePropose}
                         disabled={!selectedSlotId || !reason || rescheduling}
+                        className="px-6 py-2.5 bg-orange-100 text-orange-700 rounded-xl text-sm font-bold hover:bg-orange-200 transition-all disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {rescheduling ? '...' : 'Send Proposal'}
+                    </button>
+                    <button
+                        onClick={handleForceMove}
+                        disabled={!selectedSlotId || rescheduling}
                         className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 disabled:opacity-50 flex items-center gap-2"
                     >
-                        {rescheduling ? 'Sending...' : 'Send Proposal'}
+                        {rescheduling ? 'Moving...' : 'Force Move'}
                     </button>
                 </div>
             </motion.div>

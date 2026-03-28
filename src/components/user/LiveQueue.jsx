@@ -43,10 +43,9 @@ export default function LiveQueue() {
 
     useEffect(() => {
         if (queueData) {
-            // Check if this update applies to our service/resource
-            if (queueData.type === 'queue_advancement' || queueData.type === 'status_change') {
-                fetchQueueStatus(); // Re-fetch for full consistency
-            }
+            // Re-fetch on ANY queue update in this org to ensure consistency
+            console.log('[LiveQueue] Signal received, re-fetching...', queueData);
+            fetchQueueStatus();
         }
     }, [queueData]);
 
@@ -71,19 +70,29 @@ export default function LiveQueue() {
                 <Link to="/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-2 text-sm font-medium">
                     <ArrowLeft className="h-4 w-4" /> Back to Dashboard
                 </Link>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <RefreshCw className="h-3 w-3" /> Updated {lastUpdated.toLocaleTimeString()}
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={fetchQueueStatus}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold hover:bg-indigo-100 transition-all border border-indigo-100 shadow-sm shadow-indigo-100/50 disabled:opacity-50"
+                    >
+                        <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
+                        Updated {lastUpdated.toLocaleTimeString()}
+                    </div>
                 </div>
             </div>
 
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 max-w-2xl mx-auto"
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border border-gray-100 max-w-2xl mx-auto"
             >
-                <div className={`${isCompleted ? 'bg-green-600' : isServing ? 'bg-indigo-600' : 'bg-slate-800'} p-10 text-center text-white relative transition-colors duration-500`}>
-                    <p className="text-white/60 uppercase tracking-widest text-xs font-bold mb-2">My Ticket Number</p>
-                    <h1 className="text-8xl font-black tracking-tighter mb-4">#{status.myRank}</h1>
+                <div className={`${isCompleted ? 'bg-green-600' : isServing ? 'bg-indigo-600' : 'bg-slate-800'} p-6 sm:p-10 text-center text-white relative transition-colors duration-500`}>
+                    <p className="text-white/60 uppercase tracking-widest text-[10px] sm:text-xs font-bold mb-2">My Ticket Number</p>
+                    <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-4">#{status.myRank}</h1>
 
                     <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20">
                         <span className={`w-2.5 h-2.5 rounded-full ${isServing ? 'bg-green-400 animate-pulse' : !hasStarted ? 'bg-orange-400' : 'bg-blue-400'}`} />
@@ -91,7 +100,7 @@ export default function LiveQueue() {
                     </div>
                 </div>
 
-                <div className="p-10 space-y-8">
+                <div className="p-6 sm:p-10 space-y-6 sm:space-y-8">
                     {isCompleted ? (
                         <div className="text-center py-6">
                             <CheckCircle2 className="h-20 w-20 text-green-500 mx-auto mb-4" />
@@ -143,14 +152,14 @@ export default function LiveQueue() {
                                 </motion.div>
                             )}
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                                 <motion.div 
                                     whileHover={{ y: -5 }}
-                                    className="bg-indigo-50/50 p-4 rounded-3xl text-center border border-indigo-100"
+                                    className="bg-indigo-50/50 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-3xl text-center border border-indigo-100"
                                 >
-                                    <Users className="h-6 w-6 text-indigo-600 mx-auto mb-1" />
-                                    <p className="text-3xl font-black text-indigo-900">{status.people_ahead}</p>
-                                    <p className="text-[10px] text-indigo-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 mx-auto mb-1" />
+                                    <p className="text-2xl sm:text-3xl font-black text-indigo-900">{status.people_ahead}</p>
+                                    <p className="text-[9px] sm:text-[10px] text-indigo-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
                                         People Ahead
                                         <InfoTooltip align="start" text="Number of confirmed bookings currently ahead of you in this specific slot." />
                                     </p>
@@ -158,34 +167,34 @@ export default function LiveQueue() {
                                 
                                 <motion.div 
                                     whileHover={{ y: -5 }}
-                                    className="bg-blue-50/50 p-4 rounded-3xl text-center border border-blue-100"
+                                    className="bg-blue-50/50 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-3xl text-center border border-blue-100"
                                 >
-                                    <Clock className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                                    <p className="text-3xl font-black text-blue-900">
+                                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mx-auto mb-1" />
+                                    <p className="text-2xl sm:text-3xl font-black text-blue-900">
                                         {formatWaitTime(status.estimated_wait_time)}
                                     </p>
-                                    <p className="text-[10px] text-blue-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                    <p className="text-[9px] sm:text-[10px] text-blue-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
                                         Est. Wait
                                         <InfoTooltip text="Estimated time until your turn, calculated by our Smart AI model based on real-time performance." />
                                     </p>
                                     <div className="flex items-center justify-center gap-1 mt-1">
-                                        <Sparkles className="h-3 w-3 text-blue-400" />
+                                        <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-400" />
                                         <span className="text-[8px] font-black text-blue-400 uppercase tracking-tighter">AI Powered</span>
                                     </div>
                                 </motion.div>
 
                                 <motion.div 
                                     whileHover={{ y: -5 }}
-                                    className="bg-slate-50 p-4 rounded-3xl text-center border border-slate-100"
+                                    className="bg-slate-50 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-3xl text-center border border-slate-100"
                                 >
-                                    <PlayCircle className="h-6 w-6 text-slate-600 mx-auto mb-1" />
-                                    <p className="text-xl font-bold text-slate-900">
+                                    <PlayCircle className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600 mx-auto mb-1" />
+                                    <p className="text-lg sm:text-xl font-bold text-slate-900">
                                         {(() => {
                                             const d = status.slot_start_time ? parseISO(status.slot_start_time) : null;
                                             return (d && isValid(d)) ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
                                         })()}
                                     </p>
-                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                    <p className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
                                         Slot Time
                                         <InfoTooltip text="The scheduled start time for this resource's availability slot." />
                                     </p>
@@ -193,16 +202,16 @@ export default function LiveQueue() {
 
                                 <motion.div 
                                     whileHover={{ y: -5 }}
-                                    className="bg-green-50 p-4 rounded-3xl text-center border border-green-100"
+                                    className="bg-green-50 p-3 sm:p-4 rounded-[1.5rem] sm:rounded-3xl text-center border border-green-100"
                                 >
-                                    <CheckCircle2 className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                                    <p className="text-xl font-bold text-green-900">
+                                    <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mx-auto mb-1" />
+                                    <p className="text-lg sm:text-xl font-bold text-green-900">
                                         {(() => {
                                             const d = status.expected_start_time ? parseISO(status.expected_start_time) : null;
                                             return (d && isValid(d)) ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
                                         })()}
                                     </p>
-                                    <p className="text-[10px] text-green-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
+                                    <p className="text-[9px] sm:text-[10px] text-green-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
                                         Expected Turn
                                         <InfoTooltip align="end" text="Dynamic estimate of when you will be called, updated in real-time." />
                                     </p>
@@ -212,21 +221,21 @@ export default function LiveQueue() {
                             {/* Live Queue Visualization (The Progress Map) */}
                             <QueueVisualization appointment={status} />
 
-                            <div className="bg-slate-50 rounded-2xl p-6 flex items-center justify-between border border-slate-100">
+                             <div className="bg-slate-50 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-100 text-center sm:text-left">
                                 <div className="flex items-center gap-4">
                                     <div className="bg-white p-3 rounded-xl shadow-sm">
-                                        <PlayCircle className="h-6 w-6 text-slate-400" />
+                                        <PlayCircle className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Currently Serving</p>
-                                        <p className="text-2xl font-black text-slate-800">
+                                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-0">Currently Serving</p>
+                                        <p className="text-xl sm:text-2xl font-black text-slate-800 leading-none">
                                             {status.current_serving_number > 0 ? `#${status.current_serving_number}` : 'No one yet'}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Status</p>
-                                    <p className={`text-sm font-bold ${hasStarted ? 'text-green-600' : 'text-orange-600'}`}>
+                                <div className="sm:text-right">
+                                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-0">Status</p>
+                                    <p className={`text-sm font-bold ${hasStarted ? 'text-green-600' : 'text-orange-600'} leading-none`}>
                                         {hasStarted ? 'Live' : 'Waiting to start'}
                                     </p>
                                 </div>

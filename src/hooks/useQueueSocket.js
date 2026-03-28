@@ -13,12 +13,21 @@ export const useQueueSocket = (orgId, serviceId = null, resourceId = null) => {
         const onConnect = () => {
             setConnected(true);
             console.log('Connected to queue socket');
+            joinRooms();
+        };
 
-            // Join relevant rooms
+        const joinRooms = () => {
+            console.log('Joining rooms for org:', orgId);
             socket.emit('join_org', orgId);
             if (serviceId) socket.emit('join_service', serviceId);
             if (resourceId) socket.emit('join_resource', resourceId);
         };
+
+        // If already connected, join rooms immediately
+        if (socket.connected) {
+            setConnected(true);
+            joinRooms();
+        }
 
         const onDisconnect = () => {
             setConnected(false);
