@@ -18,8 +18,11 @@ import {
     MoreHorizontal,
     User,
     CreditCard,
-    CalendarClock
+    CalendarClock,
+    Award,
+    History
 } from 'lucide-react';
+import UserHistoryModal from './UserHistoryModal';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,6 +43,7 @@ const AppointmentManager = () => {
     const [resources, setResources] = useState([]);
     const [selectedResourceId, setSelectedResourceId] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
 
     // Logic for clicking outside to close dropdown
     const dropdownRef = useRef(null);
@@ -333,7 +337,14 @@ const AppointmentManager = () => {
                                                         {apt.user_name?.[0]?.toUpperCase() || 'G'}
                                                     </div>
                                                     <div>
-                                                        <p className="font-semibold text-gray-900 text-sm">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-semibold text-gray-900 text-sm">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
+                                                            {apt.is_frequent_visitor && (
+                                                                <span className="bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm shadow-indigo-100">
+                                                                    <Award className="h-2.5 w-2.5" /> LOYAL
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <p className="text-xs text-gray-500 font-mono">{apt.user_email || '-'}</p>
                                                         {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                                     </div>
@@ -404,6 +415,17 @@ const AppointmentManager = () => {
                                                                     >
                                                                         <CalendarClock className="h-4 w-4 text-indigo-500" /> {t('appointment.transfer_slot', 'Transfer Slot')}
                                                                     </button>
+                                                                    {apt.user_id && (
+                                                                        <button 
+                                                                            onClick={() => {
+                                                                                setHistoryModal({ isOpen: true, userId: apt.user_id, userName: apt.user_name });
+                                                                                setActiveActionId(null);
+                                                                            }} 
+                                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
+                                                                        >
+                                                                            <History className="h-4 w-4 text-indigo-500" /> {t('appointment.view_history', 'View Visit History')}
+                                                                        </button>
+                                                                    )}
                                                                 </div>
                                                                 <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
                                                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.update_status', 'Update Status')}</p>
@@ -474,8 +496,13 @@ const AppointmentManager = () => {
                                         <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm">
                                             {apt.user_name?.[0]?.toUpperCase() || 'G'}
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 leading-tight">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold text-gray-900 leading-tight">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
+                                                {apt.is_frequent_visitor && (
+                                                    <Award className="h-3 w-3 text-indigo-600" />
+                                                )}
+                                            </div>
                                             <p className="text-[10px] text-gray-500 mt-0.5">{apt.user_email || '-'}</p>
                                             {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                         </div>
@@ -528,15 +555,28 @@ const AppointmentManager = () => {
                                                     <XCircle className="h-4 w-4 text-gray-400" />
                                                 </button>
                                             </div>
-                                            <button 
-                                                onClick={() => {
-                                                    setReschedulingAppt(apt);
-                                                    setActiveActionId(null);
-                                                }}
-                                                className="mb-3 w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                <CalendarClock className="h-4 w-4" /> {t('appointment.transfer_slot', 'Transfer Slot')}
-                                            </button>
+                                            <div className="flex flex-col gap-2 mb-3">
+                                                <button 
+                                                    onClick={() => {
+                                                        setReschedulingAppt(apt);
+                                                        setActiveActionId(null);
+                                                    }}
+                                                    className="w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <CalendarClock className="h-4 w-4" /> {t('appointment.transfer_slot', 'Transfer Slot')}
+                                                </button>
+                                                {apt.user_id && (
+                                                    <button 
+                                                        onClick={() => {
+                                                            setHistoryModal({ isOpen: true, userId: apt.user_id, userName: apt.user_name });
+                                                            setActiveActionId(null);
+                                                        }}
+                                                        className="w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-100/50 border border-indigo-200 rounded-xl hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <History className="h-4 w-4" /> {t('appointment.view_history', 'Visit History')}
+                                                    </button>
+                                                )}
+                                            </div>
                                             <div className="grid grid-cols-2 gap-2 flex-grow">
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
@@ -593,6 +633,13 @@ const AppointmentManager = () => {
                     />
                 )}
             </AnimatePresence>
+
+            <UserHistoryModal 
+                isOpen={historyModal.isOpen}
+                userId={historyModal.userId}
+                userName={historyModal.userName}
+                onClose={() => setHistoryModal({ ...historyModal, isOpen: false })}
+            />
         </div>
     );
 };
