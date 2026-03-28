@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { CheckCircle, XCircle, Clock, Info } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Info, Award, History } from 'lucide-react';
 import clsx from 'clsx';
 import InfoTooltip from '../../components/common/InfoTooltip';
+import UserHistoryModal from '../../components/admin/UserHistoryModal';
 
 const AdminAppointments = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
 
     const fetchAppointments = async () => {
         try {
@@ -98,7 +100,14 @@ const AdminAppointments = () => {
                                         #{app.token_number || app.id.slice(-6).toUpperCase()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-semibold text-gray-900">{app.user_name || 'Guest'}</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="text-sm font-semibold text-gray-900">{app.user_name || 'Guest'}</div>
+                                            {app.is_frequent_visitor && (
+                                                <div className="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm shadow-indigo-200">
+                                                    <Award className="h-3 w-3" /> LOYAL
+                                                </div>
+                                            )}
+                                        </div>
                                         <div className="text-xs text-gray-500">{app.user_email}</div>
                                         {app.user_phone && (
                                             <div className="text-xs text-indigo-600 font-medium">{app.user_phone}</div>
@@ -133,7 +142,16 @@ const AdminAppointments = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex justify-end gap-3">
-                                            {(app.status === 'confirmed' || app.status === 'waitlisted_urgent') && (
+                                            {app.user_id && (
+                                                <button
+                                                    onClick={() => setHistoryModal({ isOpen: true, userId: app.user_id, userName: app.user_name })}
+                                                    className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                    title="View Visit History"
+                                                >
+                                                    <History className="h-5 w-5" />
+                                                </button>
+                                            )}
+                                            {(app.status === 'confirmed' || app.status === 'waitlisted_urgent' || app.status === 'pending') && (
                                                 <>
                                                     <button
                                                         onClick={() => handleStatusUpdate(app.id, 'completed')}
@@ -159,6 +177,13 @@ const AdminAppointments = () => {
                     </table>
                 </div>
             </div>
+
+            <UserHistoryModal 
+                isOpen={historyModal.isOpen}
+                userId={historyModal.userId}
+                userName={historyModal.userName}
+                onClose={() => setHistoryModal({ ...historyModal, isOpen: false })}
+            />
         </div>
     );
 };

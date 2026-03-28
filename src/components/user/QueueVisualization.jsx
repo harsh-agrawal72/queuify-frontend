@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { User, Users, Play, CheckCircle2, Clock, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Users, Play, CheckCircle2, Clock, Sparkles, ChevronRight } from 'lucide-react';
 
 const QueueVisualization = ({ appointment }) => {
     const { 
@@ -9,174 +9,178 @@ const QueueVisualization = ({ appointment }) => {
         people_ahead: ahead, 
         serving_token: serving, 
         status,
-        total_in_slot: total,
         estimated_service_time: svcTime,
         time_drift_minutes: driftMins
     } = appointment;
 
     const myToken = live_queue_number || myRank;
-
     const avgTime = svcTime || 15;
     const waitMins = appointment.estimated_wait_time ?? (ahead * avgTime);
 
-    // If appointment is completed or cancelled, don't show visualization
     if (['completed', 'cancelled'].includes(status)) return null;
 
-    // Calculate progress percentage
-    // If serving is 5 and myToken is 10, people ahead is 5.
-    // Progress could be (Serving / MyToken) * 100
+    // Progress calculation for the track
     const progress = serving ? Math.min(Math.round((serving / myToken) * 100), 100) : 0;
-
-    // Create an array of "people" to show
-    // We'll show up to 5 people ahead to keep UI clean
-    const displayAhead = Math.min(ahead, 4);
-    const hasMoreAhead = ahead > 4;
+    const isServing = status === 'serving';
 
     return (
-        <div className="mt-6 p-6 bg-gradient-to-br from-indigo-50 to-white rounded-3xl border border-indigo-100 shadow-sm overflow-hidden relative">
-            {/* Background Decoration */}
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-200/20 rounded-full blur-3xl" />
-            
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <h4 className="text-sm font-black text-indigo-900 uppercase tracking-widest mb-1 flex items-center gap-2">
-                        Live Queue Status
-                        <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    </h4>
-                    <p className="text-xs text-indigo-500 font-medium italic">
-                        {status === 'serving' ? "You're up! Go to the counter." : `${ahead} people ahead of you`}
-                    </p>
-                </div>
-                <div className="text-right">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">Your Token</span>
-                    <p className="text-2xl font-black text-indigo-600 leading-none">#{myToken}</p>
-                </div>
-            </div>
+        <div className="mt-8 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden relative">
+            {/* Ambient Background Glows */}
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-indigo-100/30 rounded-full blur-[100px]" />
+            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-100/30 rounded-full blur-[100px]" />
 
-            {/* The Visualization Track */}
-            <div className="relative h-20 flex items-center mb-6">
-                {/* Track Line */}
-                <div className="absolute inset-x-0 h-1 bg-gray-100 rounded-full overflow-hidden">
-                    <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        className="h-full bg-indigo-500"
-                    />
+            <div className="relative z-10">
+                <div className="flex justify-between items-start mb-12">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+                                Live Queue Status
+                            </h4>
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-50 rounded-full border border-green-100">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                                <span className="text-[10px] font-black text-green-600 uppercase">Live</span>
+                            </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 tracking-tight">
+                            {isServing ? "It's your turn now!" : (ahead === 0 ? "You're next in line" : `${ahead} people ahead`)}
+                        </p>
+                    </div>
+                    <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 text-center min-w-[100px]">
+                        <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Your Token</span>
+                        <span className="text-3xl font-black text-indigo-600">#{myToken}</span>
+                    </div>
                 </div>
 
-                {/* People Icons */}
-                <div className="absolute inset-x-0 flex justify-between items-center px-2">
-                    {/* Serving Person */}
-                    <div className="relative">
+                {/* Main Queue Track */}
+                <div className="relative py-12">
+                    {/* Track Background */}
+                    <div className="absolute top-1/2 left-0 w-full h-3 bg-slate-100 rounded-full -translate-y-1/2 overflow-hidden">
                         <motion.div 
-                            animate={{ scale: [1, 1.1, 1] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${status === 'serving' ? 'bg-green-500 text-white' : 'bg-white text-indigo-600 border-2 border-indigo-100'}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1, ease: "circOut" }}
+                            className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 relative"
                         >
-                            {status === 'serving' ? <Play className="h-5 w-5 fill-current" /> : <Users className="h-5 w-5" />}
+                            <div className="absolute top-0 right-0 w-8 h-full bg-white/30 skew-x-[30deg] animate-pulse" />
                         </motion.div>
-                        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-400 uppercase whitespace-nowrap">
-                            {status === 'serving' ? 'Serving You' : `Serving #${serving || '...'}`}
-                        </span>
                     </div>
 
-                    {/* Intermediate People (Dynamic) */}
-                    {displayAhead > 0 && Array.from({ length: displayAhead }).map((_, i) => (
-                        <div key={i} className="relative hidden sm:block opacity-40">
-                            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center">
-                                <User className="h-4 w-4 text-gray-300" />
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* Has More Indicator */}
-                    {hasMoreAhead && (
-                        <div className="relative group">
-                            <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-400">
-                                +{ahead - displayAhead}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* YOU */}
-                    {status !== 'serving' && (
+                    {/* Checkpoints & Icons */}
+                    <div className="relative flex justify-between items-center px-2">
+                        {/* 1. START / SERVING */}
                         <div className="relative">
                             <motion.div 
-                                layoutId="user-icon"
-                                className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-xl shadow-indigo-200 ring-4 ring-white"
+                                animate={{ 
+                                    boxShadow: isServing ? "0 0 20px rgba(34, 197, 94, 0.4)" : "0 0 0px rgba(0,0,0,0)",
+                                    scale: isServing ? 1.1 : 1
+                                }}
+                                className={`w-14 h-14 rounded-2xl flex items-center justify-center relative z-20 transition-colors duration-500 ${isServing ? 'bg-green-500 text-white' : 'bg-white text-slate-400 border-2 border-slate-100 shadow-sm'}`}
                             >
-                                <User className="h-6 w-6" />
+                                {isServing ? <Play className="h-6 w-6 fill-current" /> : <Users className="h-6 w-6" />}
+                                
+                                {isServing && (
+                                    <motion.div 
+                                        animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
+                                        transition={{ repeat: Infinity, duration: 2 }}
+                                        className="absolute inset-0 rounded-2xl bg-green-400 -z-10"
+                                    />
+                                )}
                             </motion.div>
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-indigo-700 text-white text-[8px] font-black rounded uppercase whitespace-nowrap">
-                                You
+                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 uppercase whitespace-nowrap tracking-wider">
+                                {isServing ? 'Current' : `Serving #${serving || '...'}`}
                             </div>
-                            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-indigo-600 uppercase whitespace-nowrap">
-                                Token #{myToken}
+                        </div>
+
+                        {/* 2. PROGRESS NODES (Visual Filler) */}
+                        <div className="flex-1 flex justify-evenly items-center mx-4 group">
+                            {[1, 2, 3].map((i) => (
+                                <motion.div 
+                                    key={i}
+                                    initial={{ opacity: 0.2 }}
+                                    animate={{ opacity: ahead > i ? 0.4 : 0.1 }}
+                                    className="w-2 h-2 rounded-full bg-slate-300"
+                                />
+                            ))}
+                        </div>
+
+                        {/* 3. YOU */}
+                        <AnimatePresence mode="wait">
+                            {!isServing && (
+                                <motion.div 
+                                    initial={{ scale: 0, opacity: 0, y: 20 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0, opacity: 0, y: -20 }}
+                                    className="relative z-30"
+                                >
+                                    <div className="absolute -top-12 left-1/2 -translate-x-1/2">
+                                        <motion.div 
+                                            animate={{ y: [0, -4, 0] }}
+                                            transition={{ repeat: Infinity, duration: 2 }}
+                                            className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-lg shadow-lg shadow-indigo-200 uppercase"
+                                        >
+                                            You
+                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-indigo-600 rotate-45" />
+                                        </motion.div>
+                                    </div>
+                                    <div className="w-18 h-18 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-300 ring-8 ring-white">
+                                        <div className="relative">
+                                            <User className="h-8 w-8" />
+                                            {ahead > 0 && (
+                                                <div className="absolute -right-1 -top-1 w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black">
+                                                    {ahead}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-indigo-600 uppercase whitespace-nowrap tracking-wider">
+                                        Ticket #{myToken}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="flex-1 flex justify-center items-center">
+                             <ChevronRight className="h-4 w-4 text-slate-200 animate-pulse" />
+                        </div>
+
+                        {/* 4. GOAL */}
+                        <div className="relative">
+                            <div className="w-14 h-14 rounded-full bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300">
+                                <CheckCircle2 className="h-6 w-6" />
+                            </div>
+                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-300 uppercase whitespace-nowrap tracking-wider">
+                                Finish
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Wait Time Sentiment Card */}
+                <div className="mt-12 p-6 bg-slate-50/50 rounded-3xl border border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-600">
+                            <Clock className="h-7 w-7" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Estimated Arrival</p>
+                            <p className="text-xl font-black text-slate-900">
+                                {isServing ? 'Ready for Service' : (waitMins > 60 ? `${Math.floor(waitMins/60)}h ${waitMins%60}m` : `${waitMins} mins`)}
+                            </p>
+                        </div>
+                    </div>
+                    {driftMins !== 0 && (
+                        <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 ${driftMins > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                            {driftMins > 0 ? <Sparkles className="h-4 w-4" /> : <Play className="h-4 w-4 rotate-90" />}
+                            <span className="text-xs font-bold whitespace-nowrap">
+                                {driftMins > 0 ? 'AI: Moving Slower' : 'AI: Moving Faster'}
                             </span>
                         </div>
                     )}
-
-                    {/* Goal */}
-                    <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300">
-                            <CheckCircle2 className="h-5 w-5" />
-                        </div>
-                        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-300 uppercase whitespace-nowrap">
-                            Done
-                        </span>
-                    </div>
                 </div>
             </div>
-
-            {/* Bottom Info */}
-            <div className="mt-10 flex items-center gap-4 p-3 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/50">
-                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-                    <Clock className="h-5 w-5" />
-                </div>
-                <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase leading-none mb-1">Estimated Wait</p>
-                    <p className="text-sm font-bold text-gray-900">
-                        {status === 'serving' ? 'Instant Access' : (waitMins !== undefined ? (waitMins > 60 ? `${Math.floor(waitMins/60)}h ${waitMins%60}m` : `${waitMins} mins`) : 'Calculating...')}
-                    </p>
-                </div>
-            </div>
-
-            {/* Smart Drift Alert */}
-            {driftMins >= 10 && (
-                <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-3"
-                >
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                        <Sparkles className="h-4 w-4" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-amber-800 uppercase leading-none mb-1">Smart AI Prediction</p>
-                        <p className="text-xs text-amber-700 font-medium leading-relaxed">
-                            Queue is moving slightly slower. You can arrive **{Math.floor(driftMins/5)*5} mins** later than planned.
-                        </p>
-                    </div>
-                </motion.div>
-            )}
-
-            {driftMins <= -7 && (
-                <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="mt-4 p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-start gap-3"
-                >
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                        <Sparkles className="h-4 w-4" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-emerald-800 uppercase leading-none mb-1">System Optimization</p>
-                        <p className="text-xs text-emerald-700 font-medium leading-relaxed">
-                            Queue is moving faster today! Please arrive **{Math.abs(Math.floor(driftMins/5)*5)} mins** earlier than scheduled.
-                        </p>
-                    </div>
-                </motion.div>
-            )}
         </div>
     );
 };

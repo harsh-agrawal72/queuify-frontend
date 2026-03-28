@@ -124,10 +124,14 @@ const AdminLayout = () => {
     // Global WebSocket Listener for Notifications
     useEffect(() => {
         if (queueData) {
-            toast.success(t('queue.queue_updated', 'Active queue updated!'), {
-                icon: '🔔',
-                duration: 4000,
-            });
+            // Only show generic toast for non-booking updates (like cancellations)
+            // since bookings trigger a personal notification toast with details
+            if (queueData.type !== 'new_booking') {
+                toast.success(t('queue.queue_updated', 'Active queue updated!'), {
+                    icon: '🔔',
+                    duration: 4000,
+                });
+            }
             fetchNotifications(); // instantly update the bell icon count
         }
     }, [queueData, t]);

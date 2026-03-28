@@ -105,37 +105,39 @@ export default function LiveQueue() {
                     ) : (
                         <>
                             {/* Proactive Drift Alert (Premium UX) */}
-                            {status.time_drift_minutes >= 10 && (
+                            {hasStarted && !isServing && status.time_drift_minutes >= 10 && (
                                 <motion.div 
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    className="mb-8 p-5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl text-white shadow-lg shadow-orange-200 border-none flex items-center gap-4"
+                                    initial={{ y: -20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="mb-8 p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-[2rem] text-white shadow-xl shadow-orange-200 border-none flex items-center gap-5 relative overflow-hidden"
                                 >
-                                    <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
-                                        <Sparkles className="h-6 w-6 text-white" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                                    <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-md shrink-0">
+                                        <Sparkles className="h-7 w-7 text-white" />
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 leading-none mb-1">Smart Arrival Recommendation</p>
-                                        <p className="text-sm font-bold">
-                                            Queue is slightly delayed. You may arrive **{Math.floor(status.time_drift_minutes/5)*5} mins** later than planned.
+                                    <div className="relative z-10">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 leading-none mb-2">Smart Arrival Recommendation</p>
+                                        <p className="text-base font-bold leading-tight">
+                                            Queue is slightly delayed. You may arrive <span className="underline decoration-white/50 underline-offset-4">{Math.floor(status.time_drift_minutes/5)*5} mins</span> later than planned.
                                         </p>
                                     </div>
                                 </motion.div>
                             )}
 
-                            {status.time_drift_minutes <= -7 && (
+                            {hasStarted && !isServing && status.time_drift_minutes <= -7 && (
                                 <motion.div 
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    className="mb-8 p-5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl text-white shadow-lg shadow-emerald-200 border-none flex items-center gap-4"
+                                    initial={{ y: -20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="mb-8 p-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2rem] text-white shadow-xl shadow-emerald-200 border-none flex items-center gap-5 relative overflow-hidden"
                                 >
-                                    <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
-                                        <Sparkles className="h-6 w-6 text-white" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                                    <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-md shrink-0">
+                                        <Sparkles className="h-7 w-7 text-white" />
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 leading-none mb-1">Smart Arrival Recommendation</p>
-                                        <p className="text-sm font-bold">
-                                            Queue is moving faster today! Please arrive **{Math.abs(Math.floor(status.time_drift_minutes/5)*5)} mins** earlier than planned.
+                                    <div className="relative z-10">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 leading-none mb-2">Smart Arrival Recommendation</p>
+                                        <p className="text-base font-bold leading-tight">
+                                            Queue is moving faster today! Please arrive <span className="underline decoration-white/50 underline-offset-4">{Math.abs(Math.floor(status.time_drift_minutes/5)*5)} mins</span> earlier than planned.
                                         </p>
                                     </div>
                                 </motion.div>

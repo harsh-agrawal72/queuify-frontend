@@ -208,8 +208,9 @@ export default function MyAppointments() {
                     <AnimatePresence mode="popLayout">
                         {filteredAppointments.map((appt, idx) => {
                             const statusConfig = getStatusConfig(appt.status);
-                            const startDate = appt.start_time ? parseISO(appt.start_time) : null;
+                            const startDate = appt.start_time ? parseISO(appt.start_time) : (appt.preferred_date ? parseISO(appt.preferred_date) : null);
                             const isDateValid = startDate && isValid(startDate);
+                            const isPendingReassignment = appt.status === 'pending' && !appt.slot_id;
 
                             return (
                                 <motion.div
@@ -222,19 +223,19 @@ export default function MyAppointments() {
                                 >
                                     <div className="flex flex-col md:flex-row">
                                         {/* Date Block */}
-                                        <div className="flex md:flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 w-full md:w-28 py-3 md:py-6 gap-2 md:gap-0 flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-100">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">
+                                         <div className={`flex md:flex-col items-center justify-center w-full md:w-28 py-3 md:py-6 gap-2 md:gap-0 flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-100 ${isPendingReassignment ? 'bg-gradient-to-br from-amber-50 to-orange-50' : 'bg-gradient-to-br from-indigo-50 to-purple-50'}`}>
+                                            <span className={`text-[10px] font-bold uppercase tracking-widest ${isPendingReassignment ? 'text-amber-500' : 'text-indigo-500'}`}>
                                                 {isDateValid ? format(startDate, 'EEE') : '---'}
                                             </span>
                                             <span className="text-3xl font-black text-gray-900">
                                                 {isDateValid ? format(startDate, 'd') : '??'}
                                             </span>
-                                            <span className="text-xs font-bold text-indigo-600">
+                                            <span className={`text-xs font-bold ${isPendingReassignment ? 'text-amber-600' : 'text-indigo-600'}`}>
                                                 {isDateValid ? format(startDate, 'MMM yyyy') : t('common.date_tbd', 'Date TBD')}
                                             </span>
                                             <div className="hidden md:block mt-2 bg-white/80 px-2.5 py-1 rounded-lg">
                                                 <span className="text-[11px] font-bold text-gray-700">
-                                                    {isDateValid ? format(startDate, 'h:mm a') : t('common.no_time', 'No Time')}
+                                                    {appt.start_time ? format(parseISO(appt.start_time), 'h:mm a') : (isPendingReassignment ? 'Slot Pending' : t('common.no_time', 'No Time'))}
                                                 </span>
                                             </div>
                                         </div>
@@ -299,10 +300,17 @@ export default function MyAppointments() {
                                                     </span>
 
                                                     {/* Queue Number */}
-                                                    {(appt.live_queue_number || appt.queue_number) && (
+                                                    {(appt.live_queue_number || appt.queue_number) && !isPendingReassignment && (
                                                         <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-gray-100">
                                                             <Ticket className="h-3 w-3" />
                                                             {t('appointment.token_label', 'Queue #')}{(appt.live_queue_number && appt.live_queue_number > 0) ? appt.live_queue_number : appt.queue_number}
+                                                        </span>
+                                                    )}
+
+                                                    {isPendingReassignment && (
+                                                        <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-amber-100 animate-pulse">
+                                                            <RefreshCw className="h-3 w-3" />
+                                                            Waiting for New Slot
                                                         </span>
                                                     )}
 

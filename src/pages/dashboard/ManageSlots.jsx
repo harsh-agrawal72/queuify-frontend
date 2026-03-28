@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { Trash2, Plus, RefreshCw, Info } from 'lucide-react';
+import { Trash2, Plus, RefreshCw, Info, AlertTriangle } from 'lucide-react';
 import InfoTooltip from '../../components/common/InfoTooltip';
 
 const ManageSlots = () => {
@@ -71,6 +71,33 @@ const ManageSlots = () => {
             fetchSlots();
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to rebalance slots', { id: loadingToast });
+        }
+    };
+
+    const handleEmergencyMode = async (resourceId, startTime) => {
+        if (!resourceId) {
+            toast.error('Resource information missing');
+            return;
+        }
+
+        const date = format(new Date(startTime), 'yyyy-MM-dd');
+        if (!window.confirm(`EMERGENCY MODE: This will CANCEL ALL SLOTS for this resource on ${date} and move all appointments to 'Pending' for automated rescheduling. Are you sure?`)) {
+            return;
+        }
+
+        const loadingToast = toast.loading(`Triggering Emergency Mode for ${date}...`);
+        try {
+            const res = await api.post('/appointments/emergency-mode', {
+                resourceId,
+                date
+            });
+            toast.success(`${res.data.deactivatedSlotsCount} slots cleared. ${res.data.affectedAppointmentsCount} appointments moved to reassignment queue.`, { 
+                id: loadingToast,
+                duration: 5000 
+            });
+            fetchSlots();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to trigger emergency mode', { id: loadingToast });
         }
     };
 
@@ -150,9 +177,16 @@ const ManageSlots = () => {
                                     <button 
                                         onClick={() => handleRebalance(slot.resource_id, slot.start_time)}
                                         className="text-primary-600 hover:text-primary-900 mr-4"
-                                        title="Redistribute appointments fairly for this doctor today"
+                                        title="Redistribute appointments fairly for this resource today"
                                     >
                                         <RefreshCw className="h-5 w-5" />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleEmergencyMode(slot.resource_id, slot.start_time)}
+                                        className="text-amber-600 hover:text-amber-800 mr-4"
+                                        title="Emergency: Cancel all slots for this resource today & reschedule"
+                                    >
+                                        <AlertTriangle className="h-5 w-5" />
                                     </button>
                                     <button onClick={() => handleDelete(slot.id)} className="text-red-600 hover:text-red-900">
                                         <Trash2 className="h-5 w-5" />
