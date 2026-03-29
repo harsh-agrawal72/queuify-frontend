@@ -587,18 +587,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 </label>
             </div>
 
-            <button
-                onClick={handleNext}
-                disabled={loadingCreation}
-                className="w-full flex items-center justify-center gap-3 p-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50"
-            >
-                {loadingCreation ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                    <>
-                        <span>{ (selectedResource?.price || selectedService?.price || 0) > 0 ? "Continue to Payment" : "Join Queue Now"}</span>
-                        <ArrowRight className="h-5 w-5" />
-                    </>
-                )}
-            </button>
+            {/* Primary Action Button removed from here as it is unified in the footer */}
         </div>
     );
 
@@ -801,7 +790,17 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             }
                             className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50 disabled:bg-gray-300 disabled:cursor-not-allowed`}
                         >
-                            Next Step <ChevronRight className="h-4 w-4" />
+                            {step === 4 ? (
+                                <>
+                                    <span>{(selectedResource?.price || selectedService?.price || 0) > 0 ? "Continue to Payment" : "Join Queue Now"}</span>
+                                    <ArrowRight className="h-4 w-4" />
+                                </>
+                            ) : (
+                                <>
+                                    <span>Next Step</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                </>
+                            )}
                         </button>
                     </div>
                 )}
