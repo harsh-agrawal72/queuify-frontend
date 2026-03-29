@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import clsx from 'clsx';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useUserSocket } from '../hooks/useUserSocket';
@@ -6,8 +7,10 @@ import { MessageCircle } from 'lucide-react';
 import OrganizationCard from '../components/OrganizationCard';
 import SlotList from '../components/SlotList';
 import BookingWizard from '../components/user/BookingWizard';
-import MyBookings from '../components/MyBookings';
 import { api } from '../services/api';
+import { LayoutDashboard, Calendar, History, Search, TrendingUp } from 'lucide-react';
+import UserPayments from '../components/user/UserPayments';
+import MyBookings from '../components/MyBookings';
 
 const UserDashboard = () => {
     const { user } = useAuth();
@@ -21,6 +24,7 @@ const UserDashboard = () => {
     const [bookingSlot, setBookingSlot] = useState(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [confirmedBooking, setConfirmedBooking] = useState(null);
+    const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'bookings', 'payments'
 
     const { update } = useUserSocket(user?.id);
 
@@ -149,59 +153,130 @@ const UserDashboard = () => {
     };
 
     return (
-        <div className="w-full px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8 text-gray-800">User Dashboard</h1>
-
-            {/* My Bookings Section */}
-            <section className="mb-12">
-                <h2 className="text-2xl font-semibold mb-4 text-gray-700">My Bookings</h2>
-                <MyBookings bookings={myBookings} onCancel={handleCancelBooking} />
-            </section>
-
-            {/* Organization Search & List */}
-            <section>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <h2 className="text-2xl font-semibold text-gray-700">Find Organizations</h2>
-                    <div className="flex gap-2 w-full md:w-auto">
-                        <select
-                            value={selectedType}
-                            onChange={handleTypeChange}
-                            className="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        <div className="w-full px-4 py-8 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <h1 className="text-3xl font-black mb-0 text-gray-900 tracking-tight">User Dashboard</h1>
+                
+                {/* Modern Navigation Tabs */}
+                <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-2xl border border-gray-200 backdrop-blur-sm self-stretch md:self-auto">
+                    {[
+                        { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
+                        { id: 'bookings', icon: Calendar, label: 'My Bookings' },
+                        { id: 'payments', icon: History, label: 'Payment History' }
+                    ].map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={clsx(
+                                "flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all duration-300",
+                                activeTab === tab.id 
+                                    ? "bg-white text-indigo-600 shadow-sm" 
+                                    : "text-gray-500 hover:text-gray-800 hover:bg-white/50"
+                            )}
                         >
-                            <option value="All">All Types</option>
-                            <option value="Clinic">Clinic</option>
-                            <option value="Hospital">Hospital</option>
-                            <option value="Salon">Salon</option>
-                            <option value="Bank">Bank</option>
-                            <option value="Government Office">Government Office</option>
-                            <option value="Consultancy">Consultancy</option>
-                            <option value="Coaching Institute">Coaching Institute</option>
-                            <option value="Service Center">Service Center</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Search businesses..."
-                            value={searchQuery}
-                            onChange={handleSearch}
-                            className="p-2 border border-gray-300 rounded-md flex-grow md:w-64 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
+                            <tab.icon className="h-4 w-4" />
+                            <span className="hidden sm:inline">{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Overviews (Counts & Quick Action) if on Overview tab */}
+            {activeTab === 'overview' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                        <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 rounded-3xl text-white shadow-xl shadow-indigo-200">
+                            <p className="text-xs text-indigo-100 font-black uppercase tracking-widest opacity-80 mb-1">Active Bookings</p>
+                            <div className="flex justify-between items-end">
+                                <h3 className="text-4xl font-black">{myBookings.filter(b => ['pending', 'confirmed', 'serving'].includes(b.status)).length}</h3>
+                                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                                    <Calendar className="h-6 w-6" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                            <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-1">Lifetime Spent</p>
+                            <div className="flex justify-between items-end">
+                                <h3 className="text-4xl font-black text-gray-900">₹{myBookings.filter(b => b.payment_status === 'paid').reduce((sum, b) => sum + parseFloat(b.price || 0), 0).toLocaleString()}</h3>
+                                <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                                    <TrendingUp className="h-6 w-6" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                            <button 
+                                onClick={() => setActiveTab('bookings')}
+                                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                            >
+                                <History className="h-5 w-5" /> Manage Calendar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Find Organizations</h2>
+                        <div className="hidden sm:flex items-center gap-3">
+                            <select
+                                value={selectedType}
+                                onChange={handleTypeChange}
+                                className="bg-white border-none rounded-xl px-4 py-2 text-sm font-bold text-gray-600 focus:ring-2 focus:ring-indigo-500 transition-all outline-none shadow-sm"
+                            >
+                                <option value="All">All Types</option>
+                                <option value="Clinic">Clinic</option>
+                                <option value="Hospital">Hospital</option>
+                                <option value="Salon">Salon</option>
+                                <option value="Bank">Bank</option>
+                                <option value="Government Office">Government Office</option>
+                                <option value="Consultancy">Consultancy</option>
+                                <option value="Coaching Institute">Coaching Institute</option>
+                                <option value="Service Center">Service Center</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={searchQuery}
+                                    onChange={handleSearch}
+                                    className="pl-10 pr-4 py-2 bg-white border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none shadow-sm"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {organizations.map(org => (
+                            <OrganizationCard
+                                key={org.id}
+                                org={org}
+                                onViewSlots={handleViewSlots}
+                            />
+                        ))}
                     </div>
                 </div>
+            )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {organizations.map(org => (
-                        <OrganizationCard
-                            key={org.id}
-                            org={org}
-                            onViewSlots={handleViewSlots}
-                        />
-                    ))}
-                    {organizations.length === 0 && (
-                        <p className="col-span-full text-center text-gray-500">No organizations found.</p>
-                    )}
+            {/* My Bookings Tab */}
+            {activeTab === 'bookings' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">My Recent Appointments</h2>
+                    </div>
+                    <MyBookings bookings={myBookings} onCancel={handleCancelBooking} />
                 </div>
-            </section>
+            )}
+
+            {/* Payment History Tab (Analytical) */}
+            {activeTab === 'payments' && (
+                <UserPayments bookings={myBookings} />
+            )}
+
+
+            {/* Slots Modal/Section */}
 
             {/* Slots Modal/Section (Displaying as a modal or separate section? Requirement said "View available slots". Let's use a modal or expand the card. 
                The design was "Sections: ... Org cards grid". 
