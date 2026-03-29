@@ -20,13 +20,15 @@ import {
     CreditCard,
     CalendarClock,
     Award,
-    History
+    History,
+    ShieldCheck
 } from 'lucide-react';
 import UserHistoryModal from './UserHistoryModal';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminRescheduleModal from './AdminRescheduleModal';
+import OtpVerificationModal from './OtpVerificationModal';
 import { useTranslation } from 'react-i18next';
 
 const AppointmentManager = () => {
@@ -44,6 +46,7 @@ const AppointmentManager = () => {
     const [selectedResourceId, setSelectedResourceId] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
+    const [otpModal, setOtpModal] = useState({ isOpen: false, appointmentId: null });
 
     // Debounce search
     const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -477,6 +480,17 @@ const AppointmentManager = () => {
                                                                             <History className="h-4 w-4 text-indigo-500" /> {t('appointment.view_history', 'View Visit History')}
                                                                         </button>
                                                                     )}
+                                                                    {apt.price > 0 && apt.status !== 'completed' && apt.status !== 'cancelled' && (
+                                                                        <button 
+                                                                            onClick={() => {
+                                                                                setOtpModal({ isOpen: true, appointmentId: apt.id });
+                                                                                setActiveActionId(null);
+                                                                            }} 
+                                                                            className="w-full text-left px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
+                                                                        >
+                                                                            <ShieldCheck className="h-4 w-4" /> {t('appointment.verify_checkin', 'Verify & Complete')}
+                                                                        </button>
+                                                                    )}
                                                                 </div>
                                                                 <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
                                                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.update_status', 'Update Status')}</p>
@@ -631,6 +645,17 @@ const AppointmentManager = () => {
                                                         <History className="h-4 w-4" /> {t('appointment.view_history', 'Visit History')}
                                                     </button>
                                                 )}
+                                                {apt.price > 0 && apt.status !== 'completed' && apt.status !== 'cancelled' && (
+                                                    <button 
+                                                        onClick={() => {
+                                                            setOtpModal({ isOpen: true, appointmentId: apt.id });
+                                                            setActiveActionId(null);
+                                                        }}
+                                                        className="w-full py-2.5 text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <ShieldCheck className="h-4 w-4" /> {t('appointment.verify_checkin', 'Verify & Complete')}
+                                                    </button>
+                                                )}
                                             </div>
                                             <div className="grid grid-cols-2 gap-2 flex-grow">
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
@@ -694,6 +719,14 @@ const AppointmentManager = () => {
                 userId={historyModal.userId}
                 userName={historyModal.userName}
                 onClose={() => setHistoryModal({ ...historyModal, isOpen: false })}
+            />
+            <OtpVerificationModal 
+                isOpen={otpModal.isOpen}
+                appointmentId={otpModal.appointmentId}
+                onVerified={() => {
+                    fetchAppointments();
+                }}
+                onClose={() => setOtpModal({ ...otpModal, isOpen: false })}
             />
         </div>
     );

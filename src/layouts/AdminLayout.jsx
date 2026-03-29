@@ -17,14 +17,9 @@ import {
     BarChart3,
     ListVideo,
     Bell,
-    User,
-    ChevronDown,
-    Search,
-    Briefcase,
-    Clock,
-    ShieldOff,
     Star,
-    MessageCircle
+    MessageCircle,
+    Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileModal from '../components/common/ProfileModal';
@@ -168,6 +163,7 @@ const AdminLayout = () => {
         { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews', 'Patient Reviews') },
         { path: '/admin/about', icon: Building2, label: t('navigation.about_organization', 'About Organization') },
         { path: '/admin/settings', icon: Settings, label: t('navigation.settings', 'Settings') },
+        { path: '/admin/wallet', icon: Wallet, label: t('navigation.wallet', 'Wallet') },
     ];
 
     const getIndustryTerminology = (type) => {

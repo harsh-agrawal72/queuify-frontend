@@ -11,6 +11,8 @@ const SettingsPanel = lazy(() => import('../components/admin/SettingsPanel'));
 const OrganizationAbout = lazy(() => import('../components/admin/OrganizationAbout'));
 const AdminReviews = lazy(() => import('../components/admin/AdminReviews'));
 const SupportInbox = lazy(() => import('./dashboard/SupportInbox'));
+const WalletDashboard = lazy(() => import('./admin/WalletDashboard'));
+
 
 const AdminDashboard = () => {
     return (
@@ -26,6 +28,7 @@ const AdminDashboard = () => {
                 <Route path="reviews" element={<AdminReviews />} />
                 <Route path="settings" element={<SettingsPanel />} />
                 <Route path="inbox" element={<SupportInbox />} />
+                <Route path="wallet" element={<WalletDashboard />} />
                 <Route path="*" element={<Navigate to="/admin/analytics" replace />} />
             </Route>
         </Routes>

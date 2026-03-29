@@ -20,6 +20,7 @@ import {
 import toast from 'react-hot-toast';
 import { format, parseISO, isValid } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import RazorpayModal from '../common/RazorpayModal';
 
 const BookingWizard = ({ orgId, service, onClose }) => {
     const navigate = useNavigate();
@@ -47,6 +48,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
     const [notificationTime, setNotificationTime] = useState('');
     const [autoBook, setAutoBook] = useState(false);
     const [requestingNotification, setRequestingNotification] = useState(false);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     // Helper to generate time intervals between slot boundaries
     const getTimeOptions = (slot) => {
@@ -178,17 +180,23 @@ const BookingWizard = ({ orgId, service, onClose }) => {
             const apptData = {
                 id: res.data.appointmentId,
                 queueNumber: res.data.queueNumber,
+                price: res.data.appointment.price, // Ensure price is included
                 ...res.data
             };
 
             setPendingAppointment(apptData);
 
-            setBookingResult({
-                success: true,
-                queueNumber: res.data.queueNumber,
-                appointmentId: res.data.appointmentId
-            });
-            setStep(confirmationStep + 1);
+            // Check if payment is required
+            if (parseFloat(apptData.price) > 0) {
+                setIsPaymentModalOpen(true);
+            } else {
+                setBookingResult({
+                    success: true,
+                    queueNumber: res.data.queueNumber,
+                    appointmentId: res.data.appointmentId
+                });
+                setStep(confirmationStep + 1);
+            }
 
         } catch (error) {
             console.error(error);
@@ -202,6 +210,28 @@ const BookingWizard = ({ orgId, service, onClose }) => {
             }
         } finally {
             setLoadingCreation(false);
+        }
+    };
+
+    const handlePaymentComplete = async (paymentData) => {
+        try {
+            setLoading(true);
+            await apiService.api.post('/payments/verify-payment', {
+                appointmentId: pendingAppointment.id,
+                ...paymentData
+            });
+            
+            setBookingResult({
+                success: true,
+                queueNumber: pendingAppointment.queueNumber,
+                appointmentId: pendingAppointment.id
+            });
+            setStep(confirmationStep + 1);
+            toast.success("Payment Verified & Ticket Generated!");
+        } catch (error) {
+            toast.error("Payment verification failed. Please contact support.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -645,6 +675,14 @@ const BookingWizard = ({ orgId, service, onClose }) => {
                     </div>
                 )}
             </motion.div>
+
+            <RazorpayModal 
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                amount={pendingAppointment?.price || 0}
+                orgName={orgId} // You might want to pass the actual org name here
+                onPaymentSuccess={handlePaymentComplete}
+            />
         </div>
     );
 };

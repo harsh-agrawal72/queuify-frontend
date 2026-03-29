@@ -208,6 +208,15 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                         <Navigation className="h-4 w-4" /> {t('appointment.view_map')}
                                     </button>
                                 )}
+                                {parseFloat(appt.price) > 0 && ['confirmed', 'pending', 'serving'].includes(appt.status) && (
+                                    <div className="col-span-2 mt-2 p-4 bg-gray-900 text-white rounded-2xl border-2 border-dashed border-gray-700">
+                                        <div className="flex flex-col items-center">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Check-in OTP</p>
+                                            <p className="text-4xl font-black tracking-[0.2em] text-indigo-400 font-mono">{appt.otp || '****'}</p>
+                                            <p className="text-[9px] text-gray-500 mt-2 text-center">Show this to staff to verify your check-in.</p>
+                                        </div>
+                                    </div>
+                                )}
                             </>
                         )}
 
