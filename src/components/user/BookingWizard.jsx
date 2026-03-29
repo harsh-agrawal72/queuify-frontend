@@ -796,14 +796,6 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                     </div>
                 )}
             </motion.div>
-
-            <RazorpayModal 
-                isOpen={isPaymentModalOpen}
-                onClose={() => setIsPaymentModalOpen(false)}
-                amount={pendingAppointment?.price || 0}
-                orgName={orgId} // You might want to pass the actual org name here
-                onPaymentSuccess={handlePaymentComplete}
-            />
         </div>
     );
 };
