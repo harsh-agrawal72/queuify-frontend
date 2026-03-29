@@ -9,6 +9,8 @@ import {
 import api from '../../services/api';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { toast } from 'react-hot-toast';
+import OtpVerificationModal from './OtpVerificationModal';
+import { ShieldCheck } from 'lucide-react';
 
 const InfoTooltip = ({ text }) => (
     <div className="group relative inline-block">
@@ -49,7 +51,7 @@ const formatTime = (isoString) => {
 };
 
 // ─── Memoized Appointment Card ───
-const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, onUpdateStatus, onCallPatient, t, predictiveInsights }) => {
+const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, onUpdateStatus, onCallPatient, t, predictiveInsights, onVerifyCheckin }) => {
     return (
         <motion.div
             layout
@@ -108,9 +110,16 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                 {isServing ? (
                     <>
                         <button
+                            onClick={() => onVerifyCheckin(appt.id)}
+                            className="h-11 w-11 bg-white text-emerald-600 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-700/20 active:scale-95"
+                            title="Verify & Complete"
+                        >
+                            <ShieldCheck className="h-5 w-5" />
+                        </button>
+                        <button
                             onClick={() => onUpdateStatus(appt.id, 'completed')}
-                            className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
-                            title="Mark Done"
+                            className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
+                            title="Quick Complete (No OTP)"
                         >
                             <CheckCircle className="h-5 w-5" />
                         </button>
@@ -158,6 +167,7 @@ const AdminLiveQueue = () => {
     const [manualEntryData, setManualEntryData] = useState({ customer_name: '', customer_phone: '', resourceId: '', slotId: '' });
     const [availableSlotsForManual, setAvailableSlotsForManual] = useState([]);
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+    const [otpModal, setOtpModal] = useState({ isOpen: false, appointmentId: null });
 
     const fetchQueue = async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -578,6 +588,7 @@ const AdminLiveQueue = () => {
                                                         onCallPatient={callPatient}
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
+                                                        onVerifyCheckin={(id) => setOtpModal({ isOpen: true, appointmentId: id })}
                                                     />
                                                 </div>
                                             );
@@ -771,6 +782,16 @@ const AdminLiveQueue = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            <OtpVerificationModal 
+                isOpen={otpModal.isOpen}
+                appointmentId={otpModal.appointmentId}
+                onVerified={() => {
+                    fetchQueue(true);
+                    setOtpModal({ isOpen: false, appointmentId: null });
+                }}
+                onClose={() => setOtpModal({ isOpen: false, appointmentId: null })}
+            />
         </div>
     );
 };
