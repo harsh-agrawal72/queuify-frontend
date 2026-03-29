@@ -100,6 +100,10 @@ const apiService = {
     
     // Admin Direct Move / Status Update
     adminUpdateAppointment: (appointmentId, data) => api.patch(`/admin/appointments/${appointmentId}`, data),
+
+    // User Presence & Disputes
+    markArrived: (id) => api.post(`/appointments/${id}/arrive`),
+    flagDispute: (id, reason) => api.post(`/appointments/${id}/dispute`, { reason }),
 };
 
 export { api, apiService };

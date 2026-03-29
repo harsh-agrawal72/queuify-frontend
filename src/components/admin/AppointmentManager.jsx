@@ -658,6 +658,24 @@ const AppointmentManager = () => {
                                                         <ShieldCheck className="h-4 w-4" /> {t('appointment.verify_checkin', 'Verify & Complete')}
                                                     </button>
                                                 )}
+                                                {apt.status === 'confirmed' && (
+                                                    <button 
+                                                        onClick={async () => {
+                                                            if (window.confirm('Mark this user as No-Show? Funds will be settled accordingly.')) {
+                                                                try {
+                                                                    await api.patch(`/admin/appointments/${apt.id}/status`, { status: 'no_show' });
+                                                                    fetchAppointments();
+                                                                    setActiveActionId(null);
+                                                                } catch (err) {
+                                                                    alert('Failed to mark no-show');
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="w-full py-2.5 text-sm font-bold text-orange-700 bg-orange-50 border border-orange-100 rounded-xl hover:bg-orange-100 transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <AlertTriangle className="h-4 w-4" /> Mark No-Show
+                                                    </button>
+                                                )}
                                             </div>
                                             <div className="grid grid-cols-2 gap-2 flex-grow">
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>

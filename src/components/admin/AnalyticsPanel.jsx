@@ -814,7 +814,7 @@ const AnalyticsPanel = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all"
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all group overflow-hidden relative"
                     >
                         <div className="flex items-center justify-between mb-4">
                             <div className={`${card.lightBg} ${card.lightText} p-3 rounded-xl`}>
@@ -826,17 +826,31 @@ const AnalyticsPanel = () => {
                         <div>
                             <div className="flex items-center gap-1.5 mb-1">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{card.title}</p>
-                                <InfoTooltip 
-                                    text={
-                                        card.title === t('dashboard.total_bookings', 'Total Bookings') ? t('tooltip.total_bookings', "Total number of appointments scheduled within the selected time range.") :
-                                        card.title === t('dashboard.utilization', 'Slot Utilization') ? t('tooltip.slot_utilization', "Percentage of available time slots that have been filled by bookings.") :
-                                        t('tooltip.cancellation_rate', "Percentage of total bookings that were cancelled during this period.")
-                                    } 
-                                />
                             </div>
-                            <div className="flex items-baseline gap-1">
-                                <p className="text-3xl font-bold text-gray-900 tracking-tight">{card.value}</p>
-                                {card.suffix && <span className="text-xs font-bold text-gray-400 uppercase">{card.suffix}</span>}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-baseline gap-1">
+                                    <p className="text-3xl font-bold text-gray-900 tracking-tight">{card.value}</p>
+                                    {card.suffix && <span className="text-xs font-bold text-gray-400 uppercase">{card.suffix}</span>}
+                                </div>
+                                
+                                {card.title === t('dashboard.available_balance', 'Available Balance') && parseFloat(wallet?.balance) > 0 && (
+                                    <button
+                                        onClick={async () => {
+                                            if (window.confirm(`Withdraw ₹${wallet.balance} to your linked bank account?`)) {
+                                                try {
+                                                    await api.post('/payments/withdraw', { amount: wallet.balance });
+                                                    alert('Withdrawal request processed successfully!');
+                                                    window.location.reload();
+                                                } catch (err) {
+                                                    alert(err.response?.data?.message || 'Withdrawal failed');
+                                                }
+                                            }
+                                        }}
+                                        className="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full hover:bg-green-700 transition-colors shadow-sm"
+                                    >
+                                        Withdraw
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </motion.div>
