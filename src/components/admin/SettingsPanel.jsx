@@ -17,7 +17,8 @@ import {
     UserPlus,
     Trash2,
     AlertTriangle,
-    Info
+    Info,
+    CreditCard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -50,7 +51,12 @@ const SettingsPanel = () => {
         address: '',
         openTime: '09:00',
         closeTime: '17:00',
-        queue_mode_default: 'CENTRAL'
+        queue_mode_default: 'CENTRAL',
+        payout_bank_name: '',
+        payout_account_holder: '',
+        payout_account_number: '',
+        payout_ifsc: '',
+        payout_upi_id: ''
     });
 
     const [notifications, setNotifications] = useState({
@@ -70,7 +76,12 @@ const SettingsPanel = () => {
                         address: res.data.address || '',
                         openTime: res.data.open_time || '09:00',
                         closeTime: res.data.close_time || '17:00',
-                        queue_mode_default: res.data.queue_mode_default || 'CENTRAL'
+                        queue_mode_default: res.data.queue_mode_default || 'CENTRAL',
+                        payout_bank_name: res.data.payout_bank_name || '',
+                        payout_account_holder: res.data.payout_account_holder || '',
+                        payout_account_number: res.data.payout_account_number || '',
+                        payout_ifsc: res.data.payout_ifsc || '',
+                        payout_upi_id: res.data.payout_upi_id || ''
                     });
                     setOrgName(res.data.name || '');
                     setNotifications({
@@ -143,7 +154,12 @@ const SettingsPanel = () => {
                 closeTime: formData.closeTime,
                 queue_mode_default: formData.queue_mode_default,
                 email_notification: notifications.emailAlerts,
-                new_booking_notification: notifications.newBookingNotify
+                new_booking_notification: notifications.newBookingNotify,
+                payout_bank_name: formData.payout_bank_name,
+                payout_account_holder: formData.payout_account_holder,
+                payout_account_number: formData.payout_account_number,
+                payout_ifsc: formData.payout_ifsc,
+                payout_upi_id: formData.payout_upi_id
             });
             toast.success(t('settings.save_success', "Settings updated successfully"));
         } catch (error) {
@@ -307,6 +323,77 @@ const SettingsPanel = () => {
                         </div>
                     </div>
                 );
+            case 'payout':
+                return (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="border-b border-gray-100 pb-4 mb-4">
+                            <h2 className="text-lg font-semibold text-gray-800">Payout & Bank Settings</h2>
+                            <p className="text-sm text-gray-500">Securely store your account details for faster withdrawals.</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Bank Name</label>
+                                <input
+                                    type="text"
+                                    name="payout_bank_name"
+                                    value={formData.payout_bank_name}
+                                    onChange={handleChange}
+                                    placeholder="e.g. HDFC Bank"
+                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Account Holder Name</label>
+                                <input
+                                    type="text"
+                                    name="payout_account_holder"
+                                    value={formData.payout_account_holder}
+                                    onChange={handleChange}
+                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">Account Number</label>
+                                <input
+                                    type="text"
+                                    name="payout_account_number"
+                                    value={formData.payout_account_number}
+                                    onChange={handleChange}
+                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">IFSC Code</label>
+                                <input
+                                    type="text"
+                                    name="payout_ifsc"
+                                    value={formData.payout_ifsc}
+                                    onChange={handleChange}
+                                    placeholder="e.g. HDFC0001234"
+                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pt-4 mt-4 border-t border-gray-50">
+                            <div className="space-y-2 max-w-md">
+                                <label className="text-sm font-medium text-gray-700">UPI ID (Alternative)</label>
+                                <input
+                                    type="text"
+                                    name="payout_upi_id"
+                                    value={formData.payout_upi_id}
+                                    onChange={handleChange}
+                                    placeholder="e.g. name@upi"
+                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
             case 'admins':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -445,7 +532,15 @@ const SettingsPanel = () => {
             <div className="flex flex-col md:grid md:grid-cols-12 gap-6 md:gap-8">
                 {/* Navigation/Sidebar */}
                 <div className="md:col-span-3 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                    {[{ id: 'general', icon: Building2, label: t('settings.tabs.general', 'General') }, { id: 'hours', icon: Clock, label: t('settings.tabs.hours', 'Hours') }, { id: 'notifications', icon: Bell, label: t('settings.tabs.alerts', 'Alerts') }, { id: 'security', icon: Shield, label: t('settings.tabs.security', 'Security') }, { id: 'admins', icon: Users, label: t('settings.tabs.admins', 'Admins') }, { id: 'danger', icon: AlertTriangle, label: t('settings.tabs.danger', 'Danger') }].map(tab => (
+                    {[
+                        { id: 'general', icon: Building2, label: t('settings.tabs.general', 'General') },
+                        { id: 'hours', icon: Clock, label: t('settings.tabs.hours', 'Hours') },
+                        { id: 'notifications', icon: Bell, label: t('settings.tabs.alerts', 'Alerts') },
+                        { id: 'payout', icon: CreditCard, label: 'Payout' },
+                        { id: 'security', icon: Shield, label: t('settings.tabs.security', 'Security') },
+                        { id: 'admins', icon: Users, label: t('settings.tabs.admins', 'Admins') },
+                        { id: 'danger', icon: AlertTriangle, label: t('settings.tabs.danger', 'Danger') }
+                    ].map(tab => (
                         <button
                             key={tab.id}
                             type="button"

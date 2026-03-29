@@ -31,18 +31,35 @@ const WalletDashboard = () => {
         bankDetails: {
             accountHolder: '',
             accountNumber: '',
-            ifsc: ''
+            ifsc: '',
+            bankName: '',
+            upiId: ''
         }
     });
 
     const fetchWalletData = async () => {
         try {
-            const [walletRes, transRes] = await Promise.all([
+            const [walletRes, transRes, orgRes] = await Promise.all([
                 api.get('/payments/status'),
-                api.get('/payments/transactions')
+                api.get('/payments/transactions'),
+                api.get('/admin/org')
             ]);
             setWallet(walletRes.data);
             setTransactions(transRes.data.transactions || []);
+            
+            // Pre-fill payout form if bank details are saved
+            if (orgRes.data && (orgRes.data.payout_account_number || orgRes.data.payout_upi_id)) {
+                setPayoutForm(prev => ({
+                    ...prev,
+                    bankDetails: {
+                        accountHolder: orgRes.data.payout_account_holder || '',
+                        accountNumber: orgRes.data.payout_account_number || '',
+                        ifsc: orgRes.data.payout_ifsc || '',
+                        bankName: orgRes.data.payout_bank_name || '',
+                        upiId: orgRes.data.payout_upi_id || ''
+                    }
+                }));
+            }
         } catch (error) {
             toast.error('Failed to load wallet data');
             console.error(error);
@@ -342,6 +359,20 @@ const WalletDashboard = () => {
                                             onChange={(e) => setPayoutForm({
                                                 ...payoutForm, 
                                                 bankDetails: {...payoutForm.bankDetails, ifsc: e.target.value}
+                                            })}
+                                        />
+                                        <div className="relative flex items-center gap-2">
+                                            <div className="h-px flex-1 bg-gray-100" />
+                                            <span className="text-[10px] font-bold text-gray-400">OR</span>
+                                            <div className="h-px flex-1 bg-gray-100" />
+                                        </div>
+                                        <input 
+                                            placeholder="UPI ID (Alternative)"
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
+                                            value={payoutForm.bankDetails.upiId}
+                                            onChange={(e) => setPayoutForm({
+                                                ...payoutForm, 
+                                                bankDetails: {...payoutForm.bankDetails, upiId: e.target.value}
                                             })}
                                         />
                                     </div>
