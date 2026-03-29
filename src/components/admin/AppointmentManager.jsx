@@ -502,9 +502,11 @@ const AppointmentManager = () => {
                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
                                                                         <div className="w-2 h-2 rounded-full bg-blue-500"></div> {t('status.confirmed', 'Confirmed')}
                                                                     </button>
-                                                                    <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
-                                                                    </button>
+                                                                    {(!(apt.price > 0)) && (
+                                                                        <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
+                                                                        </button>
+                                                                    )}
                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
                                                                         <div className="w-2 h-2 rounded-full bg-rose-500"></div> {t('status.cancelled', 'Cancelled')}
                                                                     </button>
@@ -660,7 +662,9 @@ const AppointmentManager = () => {
                                             <div className="grid grid-cols-2 gap-2 flex-grow">
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">{t('status.completed', 'Completed')}</button>
+                                                {(!(apt.price > 0)) && (
+                                                    <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">{t('status.completed', 'Completed')}</button>
+                                                )}
                                                 <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">{t('status.cancelled', 'Cancelled')}</button>
                                             </div>
                                             <button

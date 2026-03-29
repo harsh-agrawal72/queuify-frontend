@@ -22,10 +22,15 @@ import { format, parseISO, isValid } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import RazorpayModal from '../common/RazorpayModal';
 
-const BookingWizard = ({ orgId, service, onClose }) => {
+const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }) => {
     const navigate = useNavigate();
-    // If service provided, start at step 2 (Resource), else step 1 (Service)
-    const [step, setStep] = useState(service ? 2 : 1);
+    // If slot/resource provided, start at step 4 (Review) or 3 (Time/Slot)
+    const getInitialStep = () => {
+        if (initialSlot || initialResource) return 4;
+        if (service) return 2;
+        return 1;
+    };
+    const [step, setStep] = useState(getInitialStep());
     const [loading, setLoading] = useState(false);
 
     // Data
@@ -34,8 +39,8 @@ const BookingWizard = ({ orgId, service, onClose }) => {
 
     // Selection
     const [selectedService, setSelectedService] = useState(service || null);
-    const [selectedResource, setSelectedResource] = useState(null);
-    const [selectedSlot, setSelectedSlot] = useState(null);
+    const [selectedResource, setSelectedResource] = useState(initialResource || null);
+    const [selectedSlot, setSelectedSlot] = useState(initialSlot || null);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
 
@@ -180,7 +185,7 @@ const BookingWizard = ({ orgId, service, onClose }) => {
             const apptData = {
                 id: res.data.appointmentId,
                 queueNumber: res.data.queueNumber,
-                price: res.data.appointment.price, // Ensure price is included
+                price: res.data.appointment?.price || res.data.price || 0, // Ensure price is included
                 ...res.data
             };
 

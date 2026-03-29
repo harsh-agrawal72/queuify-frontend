@@ -5,7 +5,8 @@ import { useUserSocket } from '../hooks/useUserSocket';
 import { MessageCircle } from 'lucide-react';
 import OrganizationCard from '../components/OrganizationCard';
 import SlotList from '../components/SlotList';
-import BookingModal from '../components/BookingModal';
+import SlotList from '../components/SlotList';
+import BookingWizard from '../components/user/BookingWizard';
 import MyBookings from '../components/MyBookings';
 
 const UserDashboard = () => {
@@ -239,16 +240,16 @@ const UserDashboard = () => {
                 </div>
             )}
 
-            {/* Booking Confirmation Modal */}
-            <BookingModal
-                isOpen={showBookingModal}
-                onClose={closeBookingModal}
-                onConfirm={confirmBooking}
-                slot={bookingSlot}
-                orgName={selectedOrg?.name}
-                orgType={selectedOrg?.type}
-                bookingData={confirmedBooking}
-            />
+            {/* Booking Wizard (Advanced Pay-to-Book Flow) */}
+            {showBookingModal && (
+                <BookingWizard
+                    orgId={selectedOrg?.id}
+                    service={bookingSlot ? { id: bookingSlot.service_id, name: bookingSlot.service_name } : null}
+                    initialResource={bookingSlot ? { id: bookingSlot.resource_id, name: bookingSlot.resource_name, type: bookingSlot.resource_type } : null}
+                    initialSlot={bookingSlot ? { id: bookingSlot.slot_id, ...bookingSlot } : null}
+                    onClose={closeBookingModal}
+                />
+            )}
 
         </div>
     );

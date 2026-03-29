@@ -133,7 +133,8 @@ const ServiceManagement = () => {
                     name: formData.name,
                     type: formData.type,
                     description: formData.description,
-                    concurrent_capacity: formData.concurrent_capacity
+                    concurrent_capacity: formData.concurrent_capacity,
+                    serviceIds: [{ id: serviceId, price: formData.price || 0 }]
                 };
                 await api.patch(`/resources/${resourceModal.data.id}`, updatePayload);
                 toast.success(t('resource.updated', "Resource updated"));
@@ -143,7 +144,7 @@ const ServiceManagement = () => {
                     type: formData.type,
                     description: formData.description,
                     concurrent_capacity: formData.concurrent_capacity,
-                    serviceIds: [serviceId]
+                    serviceIds: [{ id: serviceId, price: formData.price || 0 }]
                 });
                 toast.success(t('resource.created', "Resource created"));
             }
@@ -296,7 +297,7 @@ const ServiceManagement = () => {
                                                         </div>
                                                         <div className="flex items-center gap-1.5">
                                                             <button
-                                                                onClick={() => setResourceModal({ open: true, edit: true, data: resource, serviceId: service.id })}
+                                                                onClick={() => setResourceModal({ open: true, edit: true, data: { ...resource, price: resource.price || 0 }, serviceId: service.id })}
                                                                 className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
                                                             >
                                                                 <Edit2 className="h-3.5 w-3.5" />
@@ -364,9 +365,10 @@ const ServiceManagement = () => {
                     { name: 'name', label: t('service.resource_name', 'Resource Name'), type: 'text', required: true },
                     { name: 'type', label: t('common.type', 'Type'), type: 'select', options: ['staff', 'room', 'equipment', 'counter', 'machine'], required: true },
                     { name: 'concurrent_capacity', label: t('service.concurrent_capacity', 'Concurrent Capacity'), type: 'number', min: 1, required: true },
+                    { name: 'price', label: t('service.price', 'Fee / Price (₹)'), type: 'number', min: 0, required: false, help: t('service.price_help', 'Set a fee for this service. Users will be asked to pay this amount during booking.') },
                     { name: 'description', label: t('common.description', 'Description'), type: 'textarea' },
                 ]}
-                defaults={resourceModal.edit ? resourceModal.data : { name: '', type: 'staff', description: '', concurrent_capacity: 1 }}
+                defaults={resourceModal.edit ? resourceModal.data : { name: '', type: 'staff', description: '', concurrent_capacity: 1, price: 0 }}
             />
         </div>
     );

@@ -24,6 +24,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
     BarChart, Bar, PieChart, Pie, Cell, Legend 
 } from 'recharts';
+import { IndianRupee, Lock, CreditCard } from 'lucide-react';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
@@ -309,6 +310,7 @@ const AnalyticsPanel = () => {
     const [error, setError] = useState(null);
     const [services, setServices] = useState([]);
     const [resources, setResources] = useState([]);
+    const [wallet, setWallet] = useState(null);
 
     // Filters
     const [preset, setPreset] = useState('7d');
@@ -395,6 +397,17 @@ const AnalyticsPanel = () => {
     useEffect(() => { 
         fetchAnalytics();
         fetchPredictiveInsights();
+        
+        // Fetch Wallet Balance
+        const fetchWallet = async () => {
+            try {
+                const res = await api.get('/payments/status');
+                setWallet(res.data);
+            } catch (err) {
+                console.error('Wallet fetch failed', err);
+            }
+        };
+        fetchWallet();
     }, [fetchAnalytics, fetchPredictiveInsights]);
 
     // Helper to capture chart as base64
@@ -602,8 +615,20 @@ const AnalyticsPanel = () => {
                 growth: stats.growth?.cancellation, suffix: 'pt', invertGrowth: true, icon: XCircle,
                 color: 'from-rose-500 to-pink-600', lightBg: 'bg-rose-50', lightText: 'text-rose-600'
             },
+            ...(wallet ? [
+                {
+                    title: t('dashboard.available_balance', 'Available Balance'), value: `₹${wallet.balance}`,
+                    icon: IndianRupee, color: 'from-emerald-500 to-teal-600', 
+                    lightBg: 'bg-emerald-50', lightText: 'text-emerald-600'
+                },
+                {
+                    title: t('dashboard.locked_funds', 'Locked (Escrow)'), value: `₹${wallet.locked_funds}`,
+                    icon: Lock, color: 'from-amber-500 to-orange-600', 
+                    lightBg: 'bg-amber-50', lightText: 'text-amber-600'
+                }
+            ] : [])
         ];
-    }, [stats, t]);
+    }, [stats, wallet, t]);
 
     // ─── Loading state ───
     if (loading) {
