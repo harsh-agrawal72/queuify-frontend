@@ -19,7 +19,12 @@ import {
     Bell,
     Star,
     MessageCircle,
-    Wallet
+    Wallet,
+    Briefcase,
+    Clock,
+    ChevronDown,
+    User,
+    ShieldOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileModal from '../components/common/ProfileModal';
