@@ -117,9 +117,9 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                             <ShieldCheck className="h-5 w-5" />
                         </button>
                         <button
-                            onClick={() => onUpdateStatus(appt.id, 'completed')}
+                            onClick={() => onVerifyCheckin(appt.id)}
                             className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
-                            title="Quick Complete (No OTP)"
+                            title={t('appointment.verify_complete', 'Verify & Complete')}
                         >
                             <CheckCircle className="h-5 w-5" />
                         </button>
@@ -169,7 +169,7 @@ const AdminLiveQueue = () => {
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
     const [otpModal, setOtpModal] = useState({ isOpen: false, appointmentId: null });
 
-    const fetchQueue = async (isBackground = false) => {
+    const fetchQueue = useCallback(async (isBackground = false) => {
         if (!isBackground) setLoading(true);
         setError(null);
         try {
@@ -184,7 +184,7 @@ const AdminLiveQueue = () => {
             if (!isBackground) setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, [selectedDate, t]);
 
     const fetchPredictiveInsights = async () => {
         try {
@@ -259,7 +259,7 @@ const AdminLiveQueue = () => {
             if (!silent) toast.error(error.response?.data?.message || t('common.action_failed', "Action failed"));
             throw error;
         }
-    }, [t, emitStatusChange]);
+    }, [t, emitStatusChange, fetchQueue]);
 
     const callPatient = useCallback((token) => {
         toast.custom((toastObj) => (
@@ -643,7 +643,14 @@ const AdminLiveQueue = () => {
 
                                 <div className="grid grid-cols-1 gap-4 pt-10">
                                     <button
-                                        onClick={() => completeTransition('completed')}
+                                        onClick={() => {
+                                            if (parseFloat(transitioningQueue.currentAppt.price) > 0) {
+                                                setOtpModal({ isOpen: true, appointmentId: transitioningQueue.currentAppt.id });
+                                                setTransitioningQueue(null);
+                                            } else {
+                                                completeTransition('completed');
+                                            }
+                                        }}
                                         className="w-full py-5 bg-emerald-50 text-emerald-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100 shadow-sm active:scale-95"
                                     >
                                         <CheckCircle className="h-5 w-5" />

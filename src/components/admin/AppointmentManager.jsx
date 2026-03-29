@@ -15,6 +15,7 @@ import {
     Loader2,
     Trash2,
     AlertCircle,
+    AlertTriangle,
     MoreHorizontal,
     User,
     CreditCard,
@@ -122,6 +123,15 @@ const AppointmentManager = () => {
         setActiveActionId(null);
         let reason = null;
         if (newStatus === 'cancelled') {
+            const apt = appointments.find(a => a.id === id);
+            const isPaid = apt?.payment_status === 'paid' && apt?.price > 0;
+            
+            const confirmMsg = isPaid 
+                ? t('appointment.confirm_cancel_paid', 'Are you sure? This is a PAID appointment and a 100% REFUND will be issued automatically.')
+                : t('appointment.confirm_cancel_generic', 'Are you sure you want to cancel this appointment?');
+                
+            if (!window.confirm(confirmMsg)) return;
+
             reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
             if (reason === null) return; // Cancelled prompt
             if (!reason.trim()) {
@@ -139,7 +149,7 @@ const AppointmentManager = () => {
             toast.success(t('appointment.status_updated', 'Status updated to {{status}}', { status: newStatus }));
         } catch (error) {
             console.error(error);
-            toast.error("Failed to update status");
+            toast.error(error.response?.data?.message || t('appointment.update_failed', "Failed to update status"));
         } finally {
             setProcessingId(null);
         }
@@ -149,9 +159,15 @@ const AppointmentManager = () => {
         setActiveActionId(null);
         
         const isCancelled = apt.status === 'cancelled';
-        const confirmMessage = isCancelled 
+        const isPaid = apt.payment_status === 'paid' && apt.price > 0;
+
+        let confirmMessage = isCancelled 
             ? t('appointment.confirm_hide', "This appointment is already cancelled. Are you sure you want to permanently hide it from the dashboard?")
             : t('appointment.confirm_cancel', "Are you sure you want to cancel and delete this appointment?");
+
+        if (!isCancelled && isPaid) {
+            confirmMessage += "\n\n" + t('appointment.refund_notice', "IMPORTANT: A 100% REFUND will be issued to the user automatically.");
+        }
 
         if (!window.confirm(confirmMessage)) return;
 
@@ -507,6 +523,13 @@ const AppointmentManager = () => {
                                                                             <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
                                                                         </button>
                                                                     )}
+                                                                    <button onClick={() => {
+                                                                            if (window.confirm('Mark this user as No-Show?')) {
+                                                                                handleStatusUpdate(apt.id, 'no_show');
+                                                                            }
+                                                                        }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                        <div className="w-2 h-2 rounded-full bg-orange-500"></div> {t('status.no_show', 'No-Show')}
+                                                                    </button>
                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
                                                                         <div className="w-2 h-2 rounded-full bg-rose-500"></div> {t('status.cancelled', 'Cancelled')}
                                                                     </button>
@@ -660,15 +683,9 @@ const AppointmentManager = () => {
                                                 )}
                                                 {apt.status === 'confirmed' && (
                                                     <button 
-                                                        onClick={async () => {
+                                                        onClick={() => {
                                                             if (window.confirm('Mark this user as No-Show? Funds will be settled accordingly.')) {
-                                                                try {
-                                                                    await api.patch(`/admin/appointments/${apt.id}/status`, { status: 'no_show' });
-                                                                    fetchAppointments();
-                                                                    setActiveActionId(null);
-                                                                } catch (err) {
-                                                                    alert('Failed to mark no-show');
-                                                                }
+                                                                handleStatusUpdate(apt.id, 'no_show');
                                                             }
                                                         }}
                                                         className="w-full py-2.5 text-sm font-bold text-orange-700 bg-orange-50 border border-orange-100 rounded-xl hover:bg-orange-100 transition-colors flex items-center justify-center gap-2"

@@ -3,7 +3,8 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell
 } from 'recharts';
 import { 
-    Wallet, CreditCard, Clock, CheckCircle2, AlertCircle, TrendingUp, History, Search, Download, Filter
+    Wallet, CreditCard, Clock, CheckCircle2, AlertCircle, TrendingUp, History, Search, Download, Filter, 
+    RefreshCw, RotateCcw, XCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, parseISO, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from 'date-fns';
@@ -14,17 +15,24 @@ const UserPayments = ({ bookings }) => {
 
     // 1. Calculate Analytics
     const stats = useMemo(() => {
-        const paid = bookings.filter(b => b.payment_status === 'paid');
-        const pending = bookings.filter(b => b.payment_status === 'pending_payment' || (b.status === 'confirmed' && b.payment_status !== 'paid' && parseFloat(b.price) > 0));
+        const paid = bookings.filter(b => b.payment_status === 'paid' || b.payment_status === 'refunded');
+        const pending = bookings.filter(b => b.payment_status === 'pending_payment' || (b.status === 'confirmed' && b.payment_status !== 'paid' && b.payment_status !== 'refunded' && parseFloat(b.price) > 0));
         
-        const totalSpent = paid.reduce((sum, b) => sum + parseFloat(b.price || 0), 0);
+        const totalSpent = paid.reduce((sum, b) => {
+            const price = parseFloat(b.price || 0);
+            const refund = parseFloat(b.refund_amount || 0);
+            return sum + (price - refund);
+        }, 0);
+        
         const pendingAmount = pending.reduce((sum, b) => sum + parseFloat(b.price || 0), 0);
 
         return {
             totalSpent,
             pendingAmount,
-            paidCount: paid.length,
+            paidCount: bookings.filter(b => b.payment_status === 'paid').length,
+            refundCount: bookings.filter(b => b.payment_status === 'refunded').length,
             pendingCount: pending.length,
+            completedBookings: bookings.filter(b => b.status === 'completed').length,
             totalBookings: bookings.length
         };
     }, [bookings]);
@@ -40,12 +48,16 @@ const UserPayments = ({ bookings }) => {
         return months.map(month => {
             const monthStart = startOfMonth(month);
             const spentInMonth = bookings
-                .filter(b => b.payment_status === 'paid' && isSameMonth(parseISO(b.created_at || new Date().toISOString()), monthStart))
-                .reduce((sum, b) => sum + parseFloat(b.price || 0), 0);
+                .filter(b => (b.payment_status === 'paid' || b.payment_status === 'refunded') && isSameMonth(parseISO(b.created_at || new Date().toISOString()), monthStart))
+                .reduce((sum, b) => {
+                    const price = parseFloat(b.price || 0);
+                    const refund = parseFloat(b.refund_amount || 0);
+                    return sum + (price - refund);
+                }, 0);
             
             return {
                 name: format(month, 'MMM'),
-                amount: spentInMonth
+                amount: Math.max(0, spentInMonth)
             };
         });
     }, [bookings]);
@@ -59,7 +71,9 @@ const UserPayments = ({ bookings }) => {
             
             const matchesFilter = filterStatus === 'all' || 
                                (filterStatus === 'paid' && b.payment_status === 'paid') ||
-                               (filterStatus === 'pending' && b.payment_status !== 'paid' && parseFloat(b.price) > 0);
+                               (filterStatus === 'refunded' && b.payment_status === 'refunded') ||
+                               (filterStatus === 'cancelled' && b.status === 'cancelled') ||
+                               (filterStatus === 'pending' && b.payment_status !== 'paid' && b.payment_status !== 'refunded' && parseFloat(b.price) > 0);
             
             return matchesSearch && matchesFilter;
         }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -106,8 +120,8 @@ const UserPayments = ({ bookings }) => {
                             <CheckCircle2 className="h-6 w-6" />
                         </div>
                         <p className="text-sm text-gray-500 font-medium">Completed Bookings</p>
-                        <h3 className="text-3xl font-black text-gray-900 mt-1">{stats.totalBookings}</h3>
-                        <p className="text-xs text-gray-400 mt-2 font-medium">Total services accessed</p>
+                        <h3 className="text-3xl font-black text-gray-900 mt-1">{stats.completedBookings}</h3>
+                        <p className="text-xs text-gray-400 mt-2 font-medium">Out of {stats.totalBookings} total bookings</p>
                     </div>
                 </div>
             </div>
@@ -190,7 +204,9 @@ const UserPayments = ({ bookings }) => {
                                 className="bg-gray-50 border-none rounded-2xl px-4 py-2.5 text-sm font-bold text-gray-600 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             >
                                 <option value="all">All Status</option>
-                                <option value="paid">Paid</option>
+                                <option value="paid">Paid Only</option>
+                                <option value="refunded">Refunded</option>
+                                <option value="cancelled">Cancelled</option>
                                 <option value="pending">Pending</option>
                             </select>
                         </div>
@@ -227,20 +243,27 @@ const UserPayments = ({ bookings }) => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-center">
-                                        <span className="text-sm font-black text-gray-900">₹{parseFloat(row.price || 0).toLocaleString()}</span>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-sm font-black text-gray-900">₹{parseFloat(row.price || 0).toLocaleString()}</span>
+                                            {parseFloat(row.refund_amount || 0) > 0 && (
+                                                <span className="text-[10px] font-bold text-rose-500 mt-0.5">
+                                                    -₹{parseFloat(row.refund_amount).toLocaleString()} refund
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <span className={clsx(
                                             "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                                            row.payment_status === 'paid' 
-                                                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
-                                                : "bg-amber-50 text-amber-700 border-amber-100"
+                                            row.payment_status === 'paid' && "bg-emerald-50 text-emerald-700 border-emerald-100",
+                                            row.payment_status === 'refunded' && "bg-blue-50 text-blue-700 border-blue-100",
+                                            row.status === 'cancelled' && row.payment_status !== 'refunded' && "bg-rose-50 text-rose-700 border-rose-100",
+                                            (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && "bg-amber-50 text-amber-700 border-amber-100"
                                         )}>
-                                            {row.payment_status === 'paid' ? (
-                                                <><CheckCircle2 className="h-3 w-3" /> Paid</>
-                                            ) : (
-                                                <><Clock className="h-3 w-3" /> Pending</>
-                                            )}
+                                            {row.payment_status === 'paid' && <><CheckCircle2 className="h-3 w-3" /> Paid</>}
+                                            {row.payment_status === 'refunded' && <><RefreshCw className="h-3 w-3" /> Refunded</>}
+                                            {row.status === 'cancelled' && row.payment_status !== 'refunded' && <><AlertCircle className="h-3 w-3" /> Cancelled</>}
+                                            {(row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && <><Clock className="h-3 w-3" /> Pending</>}
                                         </span>
                                     </td>
                                 </tr>
