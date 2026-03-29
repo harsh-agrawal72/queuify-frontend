@@ -20,7 +20,7 @@ import {
 import toast from 'react-hot-toast';
 import { format, parseISO, isValid } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import RazorpayModal from '../common/RazorpayModal';
+// Removing mock RazorpayModal as we use real window.Razorpay
 
 const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }) => {
     const navigate = useNavigate();
@@ -87,8 +87,9 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
     // Derived State
     const showTimeStep = true;
-    const totalSteps = 4;
-    const confirmationStep = 4;
+    const totalSteps = 5;
+    const confirmationStep = 4; // Review is 4, Payment is 5.
+    const paymentStep = 5;
 
     // ──────────────────────────────────────────────
     // Step 1: Fetch Services (Only if not provided)
@@ -155,7 +156,15 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
         fetchSlots();
     }, [selectedResource, orgId]);
 
-    const handleNext = () => setStep(prev => prev + 1);
+    const handleNext = () => {
+        // If we are on Review (Step 4) and price is 0, skip Payment (Step 5)
+        const currentPrice = selectedResource?.price || selectedService?.price || 0;
+        if (step === 4 && parseFloat(currentPrice) === 0) {
+            handleBookingCreation();
+            return;
+        }
+        setStep(prev => prev + 1);
+    };
     const handleBack = () => {
         if (service && step === 2) {
             onClose();
@@ -169,6 +178,72 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     // ──────────────────────────────────────────────
     // Finalize Booking
     // ──────────────────────────────────────────────
+    const handlePaymentComplete = async (response) => {
+        try {
+            setLoading(true);
+            await apiService.verifyPayment({
+                appointmentId: pendingAppointment.id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+            });
+            
+            setBookingResult({
+                success: true,
+                queueNumber: pendingAppointment.queueNumber,
+                appointmentId: pendingAppointment.id
+            });
+            setStep(6); // Success screen
+            toast.success("Payment Verified & Ticket Generated!");
+        } catch (error) {
+            console.error('[Payment] Verification failed:', error);
+            toast.error(error.response?.data?.message || "Payment verification failed.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const initiateRazorpayPayment = async (appointment) => {
+        try {
+            setLoadingCreation(true);
+            const orderRes = await apiService.createPaymentOrder(appointment.id);
+            const { order } = orderRes.data;
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: order.amount,
+                currency: order.currency,
+                name: "Queuify",
+                description: `Booking Fee for ${selectedService?.name}`,
+                order_id: order.id,
+                handler: handlePaymentComplete,
+                prefill: {
+                    name: JSON.parse(localStorage.getItem('user'))?.name || "",
+                    email: JSON.parse(localStorage.getItem('user'))?.email || "",
+                },
+                theme: {
+                    color: "#4F46E5",
+                },
+                modal: {
+                    ondismiss: function() {
+                        setLoadingCreation(false);
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                toast.error("Payment failed: " + response.error.description);
+                setLoadingCreation(false);
+            });
+            rzp.open();
+        } catch (error) {
+            console.error('[Payment] Initiation failed:', error);
+            toast.error("Failed to start payment process.");
+            setLoadingCreation(false);
+        }
+    };
+
     const handleBookingCreation = async (bypassDuplicate = false) => {
         setLoadingCreation(true);
         try {
@@ -185,58 +260,33 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             const apptData = {
                 id: res.data.appointmentId,
                 queueNumber: res.data.queueNumber,
-                price: res.data.appointment?.price || res.data.price || 0, // Ensure price is included
+                price: res.data.appointment?.price || res.data.price || 0,
                 ...res.data
             };
 
             setPendingAppointment(apptData);
 
-            // Check if payment is required
             if (parseFloat(apptData.price) > 0) {
-                setIsPaymentModalOpen(true);
+                await initiateRazorpayPayment(apptData);
             } else {
                 setBookingResult({
                     success: true,
                     queueNumber: res.data.queueNumber,
                     appointmentId: res.data.appointmentId
                 });
-                setStep(confirmationStep + 1);
+                setStep(6);
+                toast.success("Joined Queue Successfully!");
             }
-
         } catch (error) {
-            console.error(error);
+            console.error('[Booking] Creation error:', error);
             if (error.response?.status === 409 && error.response?.data?.message === 'DUPLICATE_BOOKING_WARNING') {
-                const proceed = window.confirm("You have already booked this slot. Do you want to book it again?");
-                if (proceed) {
-                    handleBookingCreation(true);
-                }
+                const proceed = window.confirm("You already have an active booking for this. Continue anyway?");
+                if (proceed) handleBookingCreation(true);
             } else {
                 toast.error(error.response?.data?.message || "Booking failed");
             }
         } finally {
-            setLoadingCreation(false);
-        }
-    };
-
-    const handlePaymentComplete = async (paymentData) => {
-        try {
-            setLoading(true);
-            await apiService.api.post('/payments/verify-payment', {
-                appointmentId: pendingAppointment.id,
-                ...paymentData
-            });
-            
-            setBookingResult({
-                success: true,
-                queueNumber: pendingAppointment.queueNumber,
-                appointmentId: pendingAppointment.id
-            });
-            setStep(confirmationStep + 1);
-            toast.success("Payment Verified & Ticket Generated!");
-        } catch (error) {
-            toast.error("Payment verification failed. Please contact support.");
-        } finally {
-            setLoading(false);
+            if (step !== 5) setLoadingCreation(false); // Only stop loading if not waiting for modal
         }
     };
 
@@ -317,7 +367,10 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             <h3 className="font-bold text-gray-900">{res.name}</h3>
                             <p className="text-xs text-gray-500 mt-1 capitalize">{res.type}</p>
                         </div>
-                        {selectedResource?.id === res.id && <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-1" />}
+                        <div className="flex flex-col items-end gap-2">
+                             <span className="text-sm font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg border border-green-100">₹{res.price || selectedService?.price || 0}</span>
+                             {selectedResource?.id === res.id && <CheckCircle2 className="h-5 w-5 text-indigo-600" />}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -326,7 +379,10 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
     const renderSlotSelection = () => (
         <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Select a Time Slot</h2>
+            <div className="flex justify-between items-center mb-1">
+                <h2 className="text-xl font-bold text-gray-900">Select a Time Slot</h2>
+                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">Fee: ₹{selectedResource?.price || selectedService?.price || 0}</span>
+            </div>
             {loadingSlots ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-indigo-400 h-8 w-8" /></div>
             ) : availableSlots.length === 0 ? (
@@ -479,7 +535,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 <div className="flex justify-between pt-1">
                     <span className="text-gray-500 text-sm font-medium">Total Fee</span>
                     <span className="text-lg font-black text-green-600">
-                        ₹{selectedService?.price || 0}
+                        ₹{selectedResource?.price || selectedService?.price || 0}
                     </span>
                 </div>
             </div>
@@ -522,21 +578,75 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             </div>
 
             <button
-                onClick={() => handleBookingCreation(false)}
+                onClick={handleNext}
                 disabled={loadingCreation}
                 className="w-full flex items-center justify-center gap-3 p-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50"
             >
                 {loadingCreation ? <Loader2 className="animate-spin h-5 w-5" /> : (
                     <>
-                        <CheckCircle2 className="h-5 w-5" />
-                        <span>Join Queue Now</span>
+                        <span>{ (selectedResource?.price || selectedService?.price || 0) > 0 ? "Continue to Payment" : "Join Queue Now"}</span>
+                        <ArrowRight className="h-5 w-5" />
                     </>
                 )}
             </button>
         </div>
     );
 
-    if (bookingResult && step > confirmationStep) {
+    const renderPaymentStep = () => (
+        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CreditCard className="h-8 w-8" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Secure Payment</h2>
+                <p className="text-sm text-gray-500 mt-1">Confirm your booking fee to join the queue.</p>
+            </div>
+
+            <div className="bg-white border-2 border-indigo-50 rounded-3xl p-6 shadow-sm">
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-400 font-medium">Service</span>
+                        <span className="text-gray-900 font-bold">{selectedService?.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-400 font-medium">Resource</span>
+                        <span className="text-gray-900 font-bold">{selectedResource?.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm border-b border-gray-100 pb-4">
+                        <span className="text-gray-400 font-medium">Time</span>
+                        <span className="text-gray-900 font-bold">{format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                        <span className="text-gray-900 font-bold">Total Amount</span>
+                        <span className="text-2xl font-black text-indigo-600 font-mono">₹{selectedResource?.price || selectedService?.price || 0}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                    Payments are held in escrow and released only after your appointment is verified or successfully completed.
+                </p>
+            </div>
+
+            <button
+                onClick={() => handleBookingCreation()}
+                disabled={loadingCreation}
+                className="w-full flex items-center justify-center gap-3 p-5 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-[0.98]"
+            >
+                {loadingCreation ? <Loader2 className="animate-spin h-6 w-6" /> : (
+                    <>
+                        <CreditCard className="h-6 w-6" />
+                        <span>Pay ₹{selectedResource?.price || selectedService?.price || 0} & Join Queue</span>
+                    </>
+                )}
+            </button>
+            <p className="text-center text-[10px] text-gray-400 font-medium">Powered by Razorpay Escrow</p>
+        </div>
+    );
+
+    if (bookingResult && step > paymentStep) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
                 <motion.div
@@ -606,7 +716,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 <div className="bg-white px-8 py-5 border-b border-gray-100 flex items-center justify-between shrink-0">
                     <div>
                         <h1 className="text-xl font-bold text-gray-900">Get Your Ticket</h1>
-                        <p className="text-sm text-gray-500 mt-0.5">Step {step - (service ? 1 : 0)} of {totalSteps - (service ? 1 : 0)}</p>
+                        <p className="text-sm text-gray-500 mt-0.5">Step {step - (service ? 1 : 0)} of {((selectedResource?.price || selectedService?.price || 0) > 0 ? totalSteps : totalSteps - 1) - (service ? 1 : 0)}</p>
                     </div>
                     <button onClick={handleClose} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition">
                         <X className="h-5 w-5 text-gray-500" />
@@ -616,9 +726,13 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 {/* Progress Bar */}
                 <div className="px-8 pt-6 pb-2 shrink-0">
                     <div className="flex gap-2">
-                        {['Service', 'Resource', 'Time', 'Review'].map((label, i) => {
+                        {['Service', 'Resource', 'Time', 'Review', 'Payment'].map((label, i) => {
                             if (service && i === 0) return null;
                             if (!showTimeStep && i === 2) return null;
+                            
+                            // Hide payment step if price is 0
+                            const price = selectedResource?.price || selectedService?.price || 0;
+                            if (i === 4 && parseFloat(price) === 0) return null;
 
                             const stepNum = i + 1;
                             const isActive = stepNum <= step;
@@ -652,13 +766,14 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                 {step === 2 && renderResourceSelection()}
                                 {step === 3 && (showTimeStep ? renderSlotSelection() : renderConfirmation())}
                                 {step === 4 && renderConfirmation()}
+                                {step === 5 && renderPaymentStep()}
                             </motion.div>
                         </AnimatePresence>
                     )}
                 </div>
 
                 {/* Footer */}
-                {step < confirmationStep && (
+                {step < (selectedResource?.price || selectedService?.price || 0 > 0 ? paymentStep : confirmationStep) && (
                     <div className="px-8 py-5 border-t border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
                         <button
                             onClick={handleBack}

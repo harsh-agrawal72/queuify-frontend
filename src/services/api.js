@@ -104,6 +104,10 @@ const apiService = {
     // User Presence & Disputes
     markArrived: (id) => api.post(`/appointments/${id}/arrive`),
     flagDispute: (id, reason) => api.post(`/appointments/${id}/dispute`, { reason }),
+
+    // Payment Gateway
+    createPaymentOrder: (appointmentId) => api.post('/payments/create-order', { appointmentId }),
+    verifyPayment: (data) => api.post('/payments/verify-payment', data),
 };
 
 export { api, apiService };
