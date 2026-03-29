@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -54,6 +54,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     const [autoBook, setAutoBook] = useState(false);
     const [requestingNotification, setRequestingNotification] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const apptRef = useRef(null);
 
     // Helper to generate time intervals between slot boundaries
     const getTimeOptions = (slot) => {
@@ -181,8 +182,15 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     const handlePaymentComplete = async (response) => {
         try {
             setLoading(true);
+            const currentAppt = apptRef.current;
+            if (!currentAppt) {
+                console.error('[Payment] No pending appointment in ref');
+                toast.error("Process timed out. Please check your appointments.");
+                return;
+            }
+
             await apiService.verifyPayment({
-                appointmentId: pendingAppointment.id,
+                appointmentId: currentAppt.id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature
@@ -190,8 +198,8 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             
             setBookingResult({
                 success: true,
-                queueNumber: pendingAppointment.queueNumber,
-                appointmentId: pendingAppointment.id
+                queueNumber: currentAppt.queueNumber,
+                appointmentId: currentAppt.id
             });
             setStep(6); // Success screen
             toast.success("Payment Verified & Ticket Generated!");
@@ -265,6 +273,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             };
 
             setPendingAppointment(apptData);
+            apptRef.current = apptData;
 
             if (parseFloat(apptData.price) > 0) {
                 await initiateRazorpayPayment(apptData);
@@ -297,6 +306,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     const handleBookAnother = () => {
         setBookingResult(null);
         setPendingAppointment(null);
+        apptRef.current = null;
         if (service) {
             setStep(2);
             setSelectedResource(null);
