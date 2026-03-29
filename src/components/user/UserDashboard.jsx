@@ -143,7 +143,7 @@ export default function UserDashboard() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="flex items-center gap-4 text-left">
                     {user?.profile_picture_url ? (
                         <div className="relative group">
@@ -167,30 +167,6 @@ export default function UserDashboard() {
                     </div>
                 </div>
 
-                {/* Tabbed Navigation */}
-                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-2xl border border-gray-200">
-                    <button
-                        onClick={() => setActiveTab('overview')}
-                        className={clsx(
-                            "flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all",
-                            activeTab === 'overview' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                        )}
-                    >
-                        <LayoutDashboard className="h-4 w-4" />
-                        <span>Overview</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('payments')}
-                        className={clsx(
-                            "flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all",
-                            activeTab === 'payments' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                        )}
-                    >
-                        <History className="h-4 w-4" />
-                        <span>Payments</span>
-                    </button>
-                </div>
-
                 {isServing && activeTab === 'overview' && (
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
@@ -201,6 +177,34 @@ export default function UserDashboard() {
                         {t('dashboard.your_turn', 'Its your turn!')}
                     </motion.div>
                 )}
+            </div>
+
+            {/* Tabbed Navigation - Dedicated Row for Visibility */}
+            <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-2xl border border-gray-200 w-fit backdrop-blur-sm">
+                <button
+                    onClick={() => setActiveTab('overview')}
+                    className={clsx(
+                        "flex items-center gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
+                        activeTab === 'overview' 
+                            ? "bg-white text-indigo-600 shadow-sm ring-1 ring-black/5" 
+                            : "text-gray-400 hover:text-gray-600 hover:bg-white/50"
+                    )}
+                >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Overview</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('payments')}
+                    className={clsx(
+                        "flex items-center gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
+                        activeTab === 'payments' 
+                            ? "bg-white text-indigo-600 shadow-sm ring-1 ring-black/5" 
+                            : "text-gray-400 hover:text-gray-600 hover:bg-white/50"
+                    )}
+                >
+                    <History className="h-4 w-4" />
+                    <span>Payment History</span>
+                </button>
             </div>
 
             {/* Tab Content */}
