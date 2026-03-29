@@ -42,7 +42,7 @@ const WalletDashboard = () => {
                 api.get('/payments/transactions')
             ]);
             setWallet(walletRes.data);
-            setTransactions(transRes.data);
+            setTransactions(transRes.data.transactions || []);
         } catch (error) {
             toast.error('Failed to load wallet data');
             console.error(error);
@@ -57,7 +57,7 @@ const WalletDashboard = () => {
 
     const handlePayoutRequest = async (e) => {
         e.preventDefault();
-        if (parseFloat(payoutForm.amount) > wallet.balance) {
+        if (parseFloat(payoutForm.amount) > wallet?.available_balance) {
             toast.error('Insufficient available balance');
             return;
         }
@@ -127,21 +127,21 @@ const WalletDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard 
                     title="Total Revenue" 
-                    amount={parseFloat(wallet.balance) + parseFloat(wallet.locked_funds)} 
+                    amount={parseFloat(wallet?.available_balance || 0) + parseFloat(wallet?.locked_funds || 0)} 
                     icon={Wallet} 
                     color="bg-indigo-500"
                     subtitle="Includes locked and available funds"
                 />
                 <StatCard 
                     title="Available Balance" 
-                    amount={wallet.balance} 
+                    amount={wallet?.available_balance || 0} 
                     icon={CheckCircle2} 
                     color="bg-emerald-500"
                     subtitle="Ready for payout transfer"
                 />
                 <StatCard 
                     title="Locked in Escrow" 
-                    amount={wallet.locked_funds} 
+                    amount={wallet?.locked_funds || 0} 
                     icon={Lock} 
                     color="bg-amber-500"
                     subtitle="Pending check-in verification"
@@ -208,7 +208,7 @@ const WalletDashboard = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-xs text-gray-500 font-medium">
-                                                    {format(new Date(tx.created_at), 'MMM dd, HH:mm')}
+                                                    {tx.created_at ? format(new Date(tx.created_at), 'MMM dd, HH:mm') : 'N/A'}
                                                 </td>
                                             </motion.tr>
                                         ))}
@@ -241,7 +241,7 @@ const WalletDashboard = () => {
                             <div>
                                 <h1 className="text-4xl font-black tracking-tight">
                                     <span className="text-xl mr-1 opacity-60">₹</span>
-                                    {parseFloat(wallet.balance).toLocaleString('en-IN')}
+                                    {parseFloat(wallet?.available_balance || 0).toLocaleString('en-IN')}
                                 </h1>
                                 <p className="text-xs text-indigo-300 font-medium mt-2">Maximum withdrawal limit: ₹50,000/day</p>
                             </div>
@@ -309,7 +309,7 @@ const WalletDashboard = () => {
                                                 onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
                                             />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 mt-2 ml-1">Available: ₹{wallet.balance}</p>
+                                        <p className="text-[10px] text-gray-400 mt-2 ml-1">Available: ₹{wallet?.available_balance || 0}</p>
                                     </div>
 
                                     <div className="space-y-4 pt-2">
