@@ -77,6 +77,7 @@ export default function UserLayout() {
         { icon: LayoutDashboard, label: t('navigation.dashboard', 'Dashboard'), path: '/dashboard' },
         { icon: Search, label: t('navigation.find_organizations', 'Find Organizations'), path: '/organizations' },
         { icon: Calendar, label: t('navigation.my_appointments', 'My Appointments'), path: '/appointments' },
+        { icon: CreditCard, label: t('navigation.payment_history', 'Payment History'), path: '/payments' },
         { icon: User, label: t('navigation.profile', 'Profile'), path: '/profile' },
     ];
 

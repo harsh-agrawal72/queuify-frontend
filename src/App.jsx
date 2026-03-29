@@ -30,6 +30,7 @@ const OrganizationDetails = lazy(() => import('./components/user/OrganizationDet
 const MyAppointments = lazy(() => import('./components/user/MyAppointments'));
 const LiveQueue = lazy(() => import('./components/user/LiveQueue'));
 const Profile = lazy(() => import('./components/user/Profile'));
+const UserPaymentsPage = lazy(() => import('./pages/UserPaymentsPage'));
 
 import ScrollToTop from './components/ScrollToTop';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -96,6 +97,7 @@ function App() {
                   <Route path="/appointments" element={<MyAppointments />} />
                   <Route path="/queue/:appointmentId" element={<LiveQueue />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/payments" element={<UserPaymentsPage />} />
                 </Route>
 
                 <Route path="/admin/*" element={
