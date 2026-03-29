@@ -480,7 +480,7 @@ const AppointmentManager = () => {
                                                                             <History className="h-4 w-4 text-indigo-500" /> {t('appointment.view_history', 'View Visit History')}
                                                                         </button>
                                                                     )}
-                                                                    {apt.price > 0 && apt.status !== 'completed' && apt.status !== 'cancelled' && (
+                                                                    {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                                         <button 
                                                                             onClick={() => {
                                                                                 setOtpModal({ isOpen: true, appointmentId: apt.id });
@@ -647,7 +647,7 @@ const AppointmentManager = () => {
                                                         <History className="h-4 w-4" /> {t('appointment.view_history', 'Visit History')}
                                                     </button>
                                                 )}
-                                                {apt.price > 0 && apt.status !== 'completed' && apt.status !== 'cancelled' && (
+                                                {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                     <button 
                                                         onClick={() => {
                                                             setOtpModal({ isOpen: true, appointmentId: apt.id });
