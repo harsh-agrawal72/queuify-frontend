@@ -468,19 +468,20 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 {selectedSlot && (
                     <div className="flex justify-between border-b pb-3 border-gray-200">
                         <span className="text-gray-500 text-sm">Time</span>
-                        <div className="text-right">
-                        <span className="block font-bold text-gray-900 text-sm">
-                            {(() => {
-                                const start = selectedSlot.start_time ? parseISO(selectedSlot.start_time) : null;
-                                const end = selectedSlot.end_time ? parseISO(selectedSlot.end_time) : null;
-                                const startStr = (start && isValid(start)) ? format(start, 'MMM d, h:mm a') : '??';
-                                const endStr = (end && isValid(end)) ? format(end, 'h:mm a') : '??';
-                                return `${startStr} - ${endStr}`;
-                            })()}
-                        </span>
+                        <div className="text-right text-sm">
+                            <span className="block font-bold text-gray-900">
+                                {format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}
+                            </span>
                         </div>
                     </div>
                 )}
+                
+                <div className="flex justify-between pt-1">
+                    <span className="text-gray-500 text-sm font-medium">Total Fee</span>
+                    <span className="text-lg font-black text-green-600">
+                        ₹{selectedService?.price || 0}
+                    </span>
+                </div>
             </div>
 
             {/* Preferences Checkboxes */}

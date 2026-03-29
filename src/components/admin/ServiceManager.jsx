@@ -31,7 +31,8 @@ const ServiceManager = () => {
         name: '',
         description: '',
         queue_scope: 'CENTRAL',
-        estimated_service_time: 30
+        estimated_service_time: 30,
+        price: 0
     });
 
     const fetchServices = async () => {
@@ -67,7 +68,8 @@ const ServiceManager = () => {
             name: '',
             description: '',
             queue_scope: 'CENTRAL',
-            estimated_service_time: 30
+            estimated_service_time: 30,
+            price: 0
         });
         setIsModalOpen(true);
     };
@@ -79,7 +81,8 @@ const ServiceManager = () => {
             name: service.name,
             description: service.description || '',
             queue_scope: service.queue_scope,
-            estimated_service_time: service.estimated_service_time
+            estimated_service_time: service.estimated_service_time,
+            price: service.price || 0
         });
         setIsModalOpen(true);
     };
@@ -132,7 +135,8 @@ const ServiceManager = () => {
                     name: formData.name,
                     description: formData.description,
                     queue_scope: formData.queue_scope,
-                    estimated_service_time: formData.estimated_service_time
+                    estimated_service_time: formData.estimated_service_time,
+                    price: formData.price
                 };
                 await api.patch(`/services/${currentId}`, updatePayload);
                 toast.success("Service updated");
@@ -201,8 +205,8 @@ const ServiceManager = () => {
                                         <span className="text-xs font-medium px-2 py-1 bg-blue-50 text-blue-700 rounded-lg">
                                             {service.estimated_service_time} mins
                                         </span>
-                                        <span className="text-xs font-medium px-2 py-1 bg-gray-50 text-gray-700 rounded-lg">
-                                            {service.queue_scope.replace('_', ' ')}
+                                        <span className="text-xs font-medium px-2 py-1 bg-green-50 text-green-700 rounded-lg">
+                                            ₹{service.price || 0}
                                         </span>
                                     </div>
                                 </div>
@@ -258,6 +262,13 @@ const ServiceManager = () => {
                                             <InfoTooltip text="Approximate time per appointment. This is used to calculate the 'Estimated Wait Time' for your customers." />
                                         </label>
                                         <input type="number" required min="1" value={formData.estimated_service_time} onChange={e => setFormData({ ...formData, estimated_service_time: parseInt(e.target.value) })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                                            Base Price (₹)
+                                            <InfoTooltip text="The standard fee for this service. This applies if no specific resource-price is defined." />
+                                        </label>
+                                        <input type="number" required min="0" step="0.01" value={formData.price} onChange={e => setFormData({ ...formData, price: parseFloat(e.target.value) })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
                                     </div>
                                 </div>
                             </div>

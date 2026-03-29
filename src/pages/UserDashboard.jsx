@@ -5,9 +5,9 @@ import { useUserSocket } from '../hooks/useUserSocket';
 import { MessageCircle } from 'lucide-react';
 import OrganizationCard from '../components/OrganizationCard';
 import SlotList from '../components/SlotList';
-import SlotList from '../components/SlotList';
 import BookingWizard from '../components/user/BookingWizard';
 import MyBookings from '../components/MyBookings';
+import { api } from '../services/api';
 
 const UserDashboard = () => {
     const { user } = useAuth();
