@@ -53,7 +53,7 @@ const MyBookings = ({ bookings, onCancel }) => {
                                     booking.status === 'pending' && "bg-blue-50 text-blue-700 border-blue-100",
                                     booking.status === 'no_show' && "bg-orange-50 text-orange-700 border-orange-100"
                                 )}>
-                                    {booking.status === 'waitlisted_urgent' ? 'URGENT WAITLIST' : booking.status.replace('_', ' ')}
+                                    {booking.status === 'waitlisted_urgent' ? 'URGENT WAITLIST' : (booking.status === 'cancelled' && booking.cancelled_by === 'admin' ? 'CANCELLED BY ADMIN' : booking.status.replace('_', ' '))}
                                 </span>
                             </div>
                             
