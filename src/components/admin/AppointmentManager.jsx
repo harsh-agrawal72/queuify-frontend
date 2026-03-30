@@ -32,9 +32,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminRescheduleModal from './AdminRescheduleModal';
 import OtpVerificationModal from './OtpVerificationModal';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import { getSocket } from '../../services/socketService';
 
 const AppointmentManager = () => {
     const { t } = useTranslation();
+    const { user } = useAuth();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
