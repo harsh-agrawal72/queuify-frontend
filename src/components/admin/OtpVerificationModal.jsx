@@ -15,7 +15,7 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
     const [otp, setOtp] = useState(['', '', '', '']);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const inputRefs = [useRef(), useRef(), useRef(), useRef()];
+    const inputRefs = useRef([]);
 
     useEffect(() => {
         if (isOpen) {
