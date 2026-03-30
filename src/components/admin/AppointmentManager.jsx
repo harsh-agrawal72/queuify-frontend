@@ -22,7 +22,8 @@ import {
     CalendarClock,
     Award,
     History,
-    ShieldCheck
+    ShieldCheck,
+    RefreshCw
 } from 'lucide-react';
 import UserHistoryModal from './UserHistoryModal';
 import toast from 'react-hot-toast';
@@ -110,7 +111,24 @@ const AppointmentManager = () => {
     // Fetch resources only on mount
     useEffect(() => {
         fetchResources();
-    }, []);
+
+        if (user?.org_id) {
+            const socket = getSocket();
+            socket.emit('join_org', user.org_id);
+
+            const handleQueueUpdate = (data) => {
+                console.log('[AdminSocket] Queue update received:', data);
+                // We refresh the list to ensure data is globally consistent
+                fetchAppointments();
+            };
+
+            socket.on('queue_update', handleQueueUpdate);
+
+            return () => {
+                socket.off('queue_update', handleQueueUpdate);
+            };
+        }
+    }, [user?.org_id]);
 
     // Reset to page 1 ONLY if we are not already on page 1 when filters change
     useEffect(() => {
