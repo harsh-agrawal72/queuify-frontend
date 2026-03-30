@@ -69,7 +69,7 @@ const apiService = {
     // Appointment endpoints
     bookAppointment: (data) => api.post('/appointments', data),
     myAppointments: () => api.get('/appointments/my'),
-    cancelAppointment: (id) => api.patch(`/appointments/${id}/cancel`),
+    cancelAppointment: (id) => api.post(`/appointments/${id}/cancel`),
 
     // Analytics
     getAnalytics: () => api.get('/admin/analytics'),
