@@ -273,7 +273,7 @@
     "book_again": "Book Again",
     "message": "Message",
     "rebook": "Rebook",
-    "no_filter_appointments": "No {{filter}} appointments",
+    "no_filter_appointments": "No appointments found",
     "no_upcoming_hint": "You don't have any upcoming appointments. Browse organizations to book one!",
     "no_history_hint": "No completed appointments yet. Your history will appear here.",
     "no_cancelled_hint": "No cancelled appointments. That's a good thing!",
