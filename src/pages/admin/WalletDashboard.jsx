@@ -324,13 +324,14 @@ const WalletDashboard = () => {
 
                                 <form onSubmit={handlePayoutRequest} className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Amount to Withdraw</label>
+                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Amount to Withdraw (Min. ₹500)</label>
                                         <div className="relative">
                                             <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                             <input 
                                                 required
                                                 type="number"
-                                                placeholder="0.00"
+                                                min="500"
+                                                placeholder="500.00"
                                                 className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 font-bold transition-all"
                                                 value={payoutForm.amount}
                                                 onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
@@ -340,58 +341,42 @@ const WalletDashboard = () => {
                                     </div>
 
                                     <div className="space-y-4 pt-2">
-                                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Bank Account Details</p>
-                                        <input 
-                                            required
-                                            placeholder="Account Holder Name"
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
-                                            value={payoutForm.bankDetails.accountHolder}
-                                            onChange={(e) => setPayoutForm({
-                                                ...payoutForm, 
-                                                bankDetails: {...payoutForm.bankDetails, accountHolder: e.target.value}
-                                            })}
-                                        />
-                                        <input 
-                                            required
-                                            placeholder="Bank Account Number"
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
-                                            value={payoutForm.bankDetails.accountNumber}
-                                            onChange={(e) => setPayoutForm({
-                                                ...payoutForm, 
-                                                bankDetails: {...payoutForm.bankDetails, accountNumber: e.target.value}
-                                            })}
-                                        />
-                                        <input 
-                                            required
-                                            placeholder="IFSC Code"
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
-                                            value={payoutForm.bankDetails.ifsc}
-                                            onChange={(e) => setPayoutForm({
-                                                ...payoutForm, 
-                                                bankDetails: {...payoutForm.bankDetails, ifsc: e.target.value}
-                                            })}
-                                        />
-                                        <div className="relative flex items-center gap-2">
-                                            <div className="h-px flex-1 bg-gray-100" />
-                                            <span className="text-[10px] font-bold text-gray-400">OR</span>
-                                            <div className="h-px flex-1 bg-gray-100" />
-                                        </div>
-                                        <input 
-                                            placeholder="UPI ID (Alternative)"
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium transition-all"
-                                            value={payoutForm.bankDetails.upiId}
-                                            onChange={(e) => setPayoutForm({
-                                                ...payoutForm, 
-                                                bankDetails: {...payoutForm.bankDetails, upiId: e.target.value}
-                                            })}
-                                        />
+                                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Transfer Destination</p>
+                                        {payoutForm.bankDetails.accountNumber ? (
+                                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-white rounded-lg shadow-sm">
+                                                        <CreditCard className="h-4 w-4 text-indigo-600" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Saved Bank Account</p>
+                                                        <p className="text-sm font-bold text-indigo-900 truncate">
+                                                            {payoutForm.bankDetails.bankName} •••• {payoutForm.bankDetails.accountNumber.slice(-4)}
+                                                        </p>
+                                                        <p className="text-[10px] text-indigo-700 font-medium">{payoutForm.bankDetails.accountHolder}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="p-4 rounded-xl border-2 border-dashed border-gray-200 text-center space-y-2">
+                                                <p className="text-xs text-gray-500">No bank details saved.</p>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => navigate('/admin/settings')}
+                                                    className="text-[10px] font-black text-indigo-600 uppercase hover:underline"
+                                                >
+                                                    Go to Settings to add Bank Info
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <button 
                                         type="submit"
-                                        className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 mt-4"
+                                        disabled={!payoutForm.bankDetails.accountNumber || parseFloat(payoutForm.amount) < 500}
+                                        className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 mt-4 disabled:opacity-50 disabled:grayscale"
                                     >
-                                        Confirm Withdrawal
+                                        Verify & Transfer Funds
                                     </button>
                                 </form>
                             </div>

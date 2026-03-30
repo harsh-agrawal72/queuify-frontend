@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, User, Star, Clock, Award, ShieldAlert } from 'lucide-react';
+import { X, Calendar, User, Star, Clock, Award, ShieldAlert, MessageSquare } from 'lucide-react';
 import api from '../../services/api';
 import { format } from 'date-fns';
 import clsx from 'clsx';
@@ -150,6 +150,19 @@ const UserHistoryModal = ({ userId, isOpen, onClose, userName }) => {
                                                                 "{apt.review_comment}"
                                                             </span>
                                                         )}
+                                                    </div>
+                                                )}
+                                                {apt.admin_remarks && (
+                                                    <div className="mt-3 pt-3 border-t border-gray-100 flex items-start gap-2.5">
+                                                        <div className="p-1.5 bg-gray-100 rounded-lg text-gray-400 shrink-0">
+                                                            <MessageSquare className="h-3.5 w-3.5" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Internal Note</p>
+                                                            <p className="text-xs text-gray-600 font-medium leading-relaxed leading-relaxed">
+                                                                {apt.admin_remarks}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

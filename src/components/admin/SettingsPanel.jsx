@@ -333,6 +333,44 @@ const SettingsPanel = () => {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700 flex justify-between">
+                                    IFSC Code
+                                    {formData.payout_ifsc && (
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                if (!formData.payout_ifsc || formData.payout_ifsc.length < 11) {
+                                                    toast.error("Please enter a valid 11-digit IFSC code");
+                                                    return;
+                                                }
+                                                const loadingToast = toast.loading("Verifying IFSC...");
+                                                try {
+                                                    const res = await fetch(`https://ifsc.razorpay.com/${formData.payout_ifsc}`);
+                                                    if (!res.ok) throw new Error("Invalid IFSC code");
+                                                    const data = await res.json();
+                                                    setFormData(prev => ({ ...prev, payout_bank_name: data.BANK }));
+                                                    toast.success(`Verified: ${data.BANK}`, { id: loadingToast });
+                                                } catch (err) {
+                                                    toast.error("Invalid IFSC code or network error", { id: loadingToast });
+                                                }
+                                            }}
+                                            className="text-[10px] text-indigo-600 font-bold hover:underline"
+                                        >
+                                            Verify & Get Bank Name
+                                        </button>
+                                    )}
+                                </label>
+                                <input
+                                    type="text"
+                                    name="payout_ifsc"
+                                    value={formData.payout_ifsc}
+                                    onChange={handleChange}
+                                    placeholder="e.g. HDFC0001234"
+                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all uppercase"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">Bank Name</label>
                                 <input
                                     type="text"
@@ -362,18 +400,6 @@ const SettingsPanel = () => {
                                     name="payout_account_number"
                                     value={formData.payout_account_number}
                                     onChange={handleChange}
-                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">IFSC Code</label>
-                                <input
-                                    type="text"
-                                    name="payout_ifsc"
-                                    value={formData.payout_ifsc}
-                                    onChange={handleChange}
-                                    placeholder="e.g. HDFC0001234"
                                     className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
                                 />
                             </div>

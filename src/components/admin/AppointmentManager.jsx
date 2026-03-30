@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../../services/api';
+import { useQueueSocket } from '../../hooks/useQueueSocket';
 import {
     Search,
     Filter,
@@ -74,8 +75,8 @@ const AppointmentManager = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const fetchAppointments = async () => {
-        setLoading(true);
+    const fetchAppointments = useCallback(async (isBackground = false) => {
+        if (!isBackground) setLoading(true);
         try {
             const res = await api.get('/admin/appointments', {
                 params: {
@@ -91,11 +92,13 @@ const AppointmentManager = () => {
             setTotalPages(res.data.totalPages);
         } catch (error) {
             console.error("Failed to fetch appointments", error);
-            toast.error(t('appointment.load_failed', "Failed to load appointments"));
+            if (!isBackground) {
+                toast.error(t('appointment.load_failed', "Failed to load appointments"));
+            }
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
-    };
+    }, [page, debouncedSearch, statusFilter, selectedResourceId, selectedDate, t]);
 
     const fetchResources = async () => {
         try {
@@ -111,27 +114,20 @@ const AppointmentManager = () => {
         fetchAppointments();
     }, [page, debouncedSearch, statusFilter, selectedResourceId, selectedDate]);
 
+    // --- REAL-TIME UPDATES VIA SOCKET HOOK ---
+    const { queueData } = useQueueSocket(user?.org_id);
+    
+    useEffect(() => {
+        if (queueData) {
+            console.log('[AdminSocket] Appointment refresh triggered:', queueData);
+            fetchAppointments(true); // Background refresh
+        }
+    }, [queueData, fetchAppointments]);
+
     // Fetch resources only on mount
     useEffect(() => {
         fetchResources();
-
-        if (user?.org_id) {
-            const socket = getSocket();
-            socket.emit('join_org', user.org_id);
-
-            const handleQueueUpdate = (data) => {
-                console.log('[AdminSocket] Queue update received:', data);
-                // We refresh the list to ensure data is globally consistent
-                fetchAppointments();
-            };
-
-            socket.on('queue_update', handleQueueUpdate);
-
-            return () => {
-                socket.off('queue_update', handleQueueUpdate);
-            };
-        }
-    }, [user?.org_id]);
+    }, []);
 
     // Reset to page 1 ONLY if we are not already on page 1 when filters change
     useEffect(() => {

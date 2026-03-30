@@ -13,6 +13,7 @@ import { toast } from 'react-hot-toast';
 
 const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) => {
     const [otp, setOtp] = useState(['', '', '', '']);
+    const [remarks, setRemarks] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const inputRefs = useRef([]);
@@ -20,6 +21,7 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
     useEffect(() => {
         if (isOpen) {
             setOtp(['', '', '', '']);
+            setRemarks('');
             setError('');
             setTimeout(() => inputRefs.current[0]?.focus(), 100);
         }
@@ -83,7 +85,10 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
         setError('');
 
         try {
-            await api.post(`/appointments/${appointmentId}/verify-otp`, { otp: fullOtp });
+            await api.post(`/appointments/${appointmentId}/verify-otp`, { 
+                otp: fullOtp,
+                remarks: remarks.trim() || null 
+            });
             toast.success('Check-in verified successfully');
             onVerified(appointmentId);
             onClose();
@@ -150,6 +155,17 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
                                     onPaste={handlePaste}
                                 />
                             ))}
+                        </div>
+
+                        {/* Admin Remarks Field */}
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Internal Note (Optional)</label>
+                            <textarea
+                                value={remarks}
+                                onChange={(e) => setRemarks(e.target.value)}
+                                placeholder="Add optional remarks about this visit..."
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all resize-none h-20 placeholder:text-gray-300"
+                            />
                         </div>
 
                         {error && (

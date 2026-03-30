@@ -111,13 +111,6 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                     <>
                         <button
                             onClick={() => onVerifyCheckin(appt.id)}
-                            className="h-11 w-11 bg-white text-emerald-600 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-700/20 active:scale-95"
-                            title="Verify & Complete"
-                        >
-                            <ShieldCheck className="h-5 w-5" />
-                        </button>
-                        <button
-                            onClick={() => onVerifyCheckin(appt.id)}
                             className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
                             title={t('appointment.verify_complete', 'Verify & Complete')}
                         >
