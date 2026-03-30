@@ -196,9 +196,26 @@ const AppointmentManager = () => {
                 ));
                 toast.success(t('appointment.cancelled_success', "Appointment cancelled successfully"));
             }
+            fetchAppointments(); // Refresh to get correct payment_status
         } catch (error) {
             console.error(error);
             toast.error(t('appointment.delete_failed', "Failed to delete appointment"));
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleRetryRefund = async (id) => {
+        setActiveActionId(null);
+        setProcessingId(id);
+        const toastId = toast.loading(t('appointment.retrying_refund', 'Retrying refund...'));
+        try {
+            await api.post(`/admin/appointments/${id}/retry-refund`);
+            toast.success(t('appointment.refund_retried', 'Refund successfully retried'), { id: toastId });
+            fetchAppointments();
+        } catch (error) {
+            console.error("Refund retry failed:", error);
+            toast.error(error.response?.data?.message || "Refund retry failed", { id: toastId });
         } finally {
             setProcessingId(null);
         }
@@ -217,13 +234,22 @@ const AppointmentManager = () => {
     };
 
     const getStatusBadge = (apt) => {
-        const { status, cancelled_by, reschedule_status } = apt;
+        const { status, cancelled_by, reschedule_status, payment_status } = apt;
         
         if (reschedule_status === 'pending') {
             return (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-orange-200 bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-100 animate-pulse">
                     <Clock className="h-3 w-3" />
-                    {t('status.reschedule_pending', 'Reschedule Proposed')}
+                    {t('status.reschedule_proposed', 'Reschedule Proposed')}
+                </span>
+            );
+        }
+
+        if (payment_status === 'refund_failed') {
+            return (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-rose-300 bg-rose-100 text-rose-800 ring-1 ring-inset ring-rose-200">
+                    <AlertTriangle className="h-3 w-3" />
+                    {t('status.refund_failed', 'Refund Failed')}
                 </span>
             );
         }
@@ -534,6 +560,22 @@ const AppointmentManager = () => {
                                                                         <div className="w-2 h-2 rounded-full bg-rose-500"></div> {t('status.cancelled', 'Cancelled')}
                                                                     </button>
                                                                 </div>
+
+                                                                {apt.payment_status === 'refund_failed' && (
+                                                                    <>
+                                                                        <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
+                                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.payment_action', 'Payment Action')}</p>
+                                                                        </div>
+                                                                        <div className="p-1">
+                                                                            <button 
+                                                                                onClick={() => handleRetryRefund(apt.id)} 
+                                                                                className="w-full text-left px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
+                                                                            >
+                                                                                <DollarSign className="h-4 w-4" /> {t('appointment.retry_refund', 'Retry Refund')}
+                                                                            </button>
+                                                                        </div>
+                                                                    </>
+                                                                )}
 
                                                                 <div className="h-px bg-gray-100 my-1"></div>
 
