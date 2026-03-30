@@ -21,43 +21,75 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
         if (isOpen) {
             setOtp(['', '', '', '']);
             setError('');
-            setTimeout(() => inputRefs[0].current?.focus(), 100);
+            setTimeout(() => inputRefs.current[0]?.focus(), 100);
         }
     }, [isOpen]);
 
     const handleChange = (index, value) => {
+        // If multiple digits (e.g. paste or fast typing), distribute them
+        if (value.length > 1) {
+            const digits = value.split('').filter(d => /^\d$/.test(d));
+            const newOtp = [...otp];
+            for (let i = 0; i < digits.length && (index + i) < 4; i++) {
+                newOtp[index + i] = digits[i];
+            }
+            setOtp(newOtp);
+            const nextIndex = Math.min(index + digits.length, 3);
+            inputRefs.current[nextIndex].focus();
+            return;
+        }
+
         if (!/^\d*$/.test(value)) return;
+
         const newOtp = [...otp];
-        newOtp[index] = value.substring(value.length - 1);
+        newOtp[index] = value;
         setOtp(newOtp);
 
+        // Move to next input if value is entered
         if (value && index < 3) {
-            inputRefs[index + 1].current?.focus();
+            inputRefs.current[index + 1].focus();
         }
     };
 
     const handleKeyDown = (index, e) => {
         if (e.key === 'Backspace' && !otp[index] && index > 0) {
-            inputRefs[index - 1].current?.focus();
+            inputRefs.current[index - 1].focus();
+        }
+    };
+
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const data = e.clipboardData.getData('text').trim();
+        const digits = data.split('').filter(d => /^\d$/.test(d)).slice(0, 4);
+        
+        if (digits.length > 0) {
+            const newOtp = [...otp];
+            digits.forEach((d, i) => {
+                newOtp[i] = d;
+            });
+            setOtp(newOtp);
+            inputRefs.current[Math.min(digits.length - 1, 3)].focus();
         }
     };
 
     const handleVerify = async () => {
         const fullOtp = otp.join('');
-        if (fullOtp.length < 4) {
-            setError('Please enter the full 4-digit OTP');
+        if (fullOtp.length !== 4) {
+            setError('Please enter all 4 digits');
             return;
         }
 
         setLoading(true);
         setError('');
+
         try {
             await api.post(`/appointments/${appointmentId}/verify-otp`, { otp: fullOtp });
-            toast.success('Check-in Verified Successfully!');
-            onVerified();
+            toast.success('Check-in verified successfully');
+            onVerified(appointmentId);
             onClose();
         } catch (err) {
-            setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+            console.error('OTP Verification Error:', err);
+            setError(err.response?.data?.message || 'Verification failed. Please check the OTP and try again.');
         } finally {
             setLoading(false);
         }
@@ -101,10 +133,10 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
                         </div>
 
                         <div className="flex justify-center gap-4 py-2">
-                            {otp.map((digit, idx) => (
+                            {otp.map((digit, index) => (
                                 <input
-                                    key={idx}
-                                    ref={inputRefs[idx]}
+                                    key={index}
+                                    ref={(el) => (inputRefs.current[index] = el)}
                                     type="text"
                                     inputMode="numeric"
                                     maxLength={1}
@@ -113,8 +145,9 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
                                         'border-gray-100 bg-gray-50 text-indigo-600 focus:border-indigo-500 focus:bg-white'
                                     }`}
                                     value={digit}
-                                    onChange={(e) => handleChange(idx, e.target.value)}
-                                    onKeyDown={(e) => handleKeyDown(idx, e)}
+                                    onChange={(e) => handleChange(index, e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(index, e)}
+                                    onPaste={handlePaste}
                                 />
                             ))}
                         </div>

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket,
-    ArrowRight, Star, Building2, Filter, ChevronRight, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle
+    ArrowRight, Star, Building2, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -96,7 +96,6 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
 
                 {/* Content */}
                 <div className="flex-1 p-5 flex flex-col md:flex-row gap-4">
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-3 mb-3">
                             <div>
@@ -111,7 +110,6 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
-                            {/* Status Badge */}
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border ${statusConfig.color}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
                                 {appt.status === 'cancelled' && appt.cancelled_by
@@ -119,7 +117,6 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                     : t(`status.${appt.status}`, appt.status)}
                             </span>
 
-                            {/* Queue Number */}
                             {(appt.live_queue_number || appt.queue_number) && !isPendingReassignment && (
                                 <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-gray-100">
                                     <Ticket className="h-3 w-3" />
@@ -134,13 +131,11 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                 </span>
                             )}
 
-                            {/* Time (mobile) */}
                             <span className="md:hidden inline-flex items-center gap-1 text-gray-400 text-[11px] font-medium">
                                 <Clock className="h-3 w-3" />
                                 {isDateValid ? format(startDate, 'h:mm a') : t('common.tbd', 'TBD')}
                             </span>
 
-                            {/* Resource */}
                             {appt.resource_name && (
                                 <span className="inline-flex items-center gap-1 text-gray-400 text-[11px] font-medium">
                                     <MapPin className="h-3 w-3" />
@@ -149,8 +144,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                             )}
                         </div>
 
-                        {/* Cancellation Reason Description */}
-                        {appt.status === 'cancelled' && appt.cancellation_reason && (
+                        {appt.status === 'cancelled' && (
                             <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl relative overflow-hidden group/reason">
                                 <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/reason:opacity-20 transition-opacity">
                                     <AlertCircle className="h-12 w-12 text-rose-500 -rotate-12" />
@@ -159,18 +153,17 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                     <XCircle className="h-3 w-3" /> {t('appointment.cancellation_reason', 'Cancellation Reason')}
                                 </p>
                                 <p className="text-sm text-rose-700 font-medium leading-relaxed italic">
-                                    "{appt.cancellation_reason}"
+                                    "{appt.cancellation_reason || 'No reason provided'}"
                                 </p>
-                                {appt.cancelled_by && (
-                                    <div className="mt-2 text-[9px] font-bold text-rose-400 uppercase tracking-tighter">
-                                        {appt.cancelled_by === 'admin' ? t('appointment.cancelled_by_admin', 'Cancelled by Provider') : t('appointment.cancelled_by_you', 'Cancelled by You')}
-                                    </div>
+                                {appt.refund_amount > 0 && (
+                                    <p className="mt-2 text-xs font-bold text-emerald-600">
+                                        Amount Refunded: ₹{appt.refund_amount}
+                                    </p>
                                 )}
                             </div>
                         )}
                     </div>
 
-                    {/* Actions */}
                     <div className="grid grid-cols-2 md:flex md:flex-col gap-2 justify-end items-stretch flex-shrink-0 md:min-w-[150px]">
                         {filter === 'upcoming' && appt.status !== 'cancelled' && (
                             <>
@@ -195,7 +188,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id, orgName: appt.org_name, orgAvatar: null } }))}
+                                    onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id, orgName: appt.org_name } }))}
                                     className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"
                                 >
                                     <MessageCircle className="h-4 w-4" /> {t('appointment.chat')}
@@ -230,31 +223,12 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                         <Star className="h-4 w-4" /> {t('appointment.rate', 'Rate')}
                                     </button>
                                 )}
-                                {appt.status === 'completed' && appt.review_id && (
-                                    <div className="flex items-center justify-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-4 py-2.5 rounded-xl text-sm font-bold">
-                                        <Star className="h-4 w-4 fill-amber-400" /> {appt.review_rating}/5
-                                    </div>
-                                )}
                                 <Link
                                     to="/organizations"
                                     className="flex items-center justify-center gap-2 text-indigo-600 bg-indigo-50 border border-indigo-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all"
                                 >
                                     <ArrowRight className="h-4 w-4" /> {t('appointment.book_again', 'Book Again')}
                                 </Link>
-                                <button
-                                    onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id } }))}
-                                    className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"
-                                >
-                                    <MessageCircle className="h-4 w-4" /> {t('appointment.message', 'Message')}
-                                </button>
-                                {appt.org_address && (
-                                    <button
-                                        onClick={() => onSetMap(appt)}
-                                        className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
-                                    >
-                                        <Navigation className="h-4 w-4" /> {t('appointment.view_map')}
-                                    </button>
-                                )}
                             </>
                         )}
 
@@ -283,7 +257,7 @@ export default function MyAppointments() {
     const [reschedulingAppt, setReschedulingAppt] = useState(null);
     const [mapModalAppt, setMapModalAppt] = useState(null);
 
-    const fetchAppointments = async () => {
+    const fetchAppointments = useCallback(async () => {
         setLoading(true);
         try {
             const { data } = await api.get('/appointments');
@@ -294,18 +268,18 @@ export default function MyAppointments() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchAppointments();
-    }, []);
+    }, [fetchAppointments]);
 
     const handleCancel = useCallback(async (id) => {
         const confirmMsg = t('appointment.cancel_confirm', 'Are you sure you want to cancel this appointment?');
         if (!window.confirm(confirmMsg)) return;
-        
+
         const reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
-        if (reason === null) return; // User cancelled prompt
+        if (reason === null) return;
         if (!reason.trim()) {
             toast.error(t('appointment.reason_required', 'Cancellation reason is required'));
             return;
@@ -320,13 +294,13 @@ export default function MyAppointments() {
         try {
             await api.post(`/appointments/${id}/cancel`, { reason });
             toast.success('Appointment cancelled');
+            fetchAppointments();
         } catch (err) {
             console.error(err);
-            // Revert on error
             setAppointments(previousAppointments);
             toast.error(err.response?.data?.message || 'Failed to cancel');
         }
-    }, [t, appointments]);
+    }, [t, appointments, fetchAppointments]);
 
     const handleRespond = useCallback(async (id, action) => {
         try {
@@ -339,12 +313,10 @@ export default function MyAppointments() {
         }
     }, [fetchAppointments]);
 
-    // ─── Memoized Filtering ───
     const counts = useMemo(() => {
         return appointments.reduce((acc, appt) => {
             const isHistoryStatus = ['completed', 'no_show'].includes(appt.status);
             const isCancelledStatus = appt.status === 'cancelled';
-            
             const endDate = appt.end_time ? parseISO(appt.end_time) : null;
             const past = (endDate && isValid(endDate)) ? isPast(endDate) : false;
 
@@ -363,103 +335,60 @@ export default function MyAppointments() {
         return appointments.filter(appt => {
             const isHistoryStatus = ['completed', 'no_show'].includes(appt.status);
             const isCancelledStatus = appt.status === 'cancelled';
-            
             const endDate = appt.end_time ? parseISO(appt.end_time) : null;
             const past = (endDate && isValid(endDate)) ? isPast(endDate) : false;
 
-            if (filter === 'upcoming') {
-                return !isCancelledStatus && !isHistoryStatus && !past;
-            }
-            if (filter === 'history') {
-                return !isCancelledStatus && (isHistoryStatus || past);
-            }
-            if (filter === 'cancelled') {
-                return isCancelledStatus;
-            }
+            if (filter === 'upcoming') return !isCancelledStatus && !isHistoryStatus && !past;
+            if (filter === 'history') return !isCancelledStatus && (isHistoryStatus || past);
+            if (filter === 'cancelled') return isCancelledStatus;
             return true;
         });
     }, [appointments, filter]);
 
     const tabs = useMemo(() => [
-        { key: 'upcoming', label: t('appointment.upcoming'), count: counts.upcoming, icon: Calendar, activeColor: 'bg-indigo-600' },
-        { key: 'history', label: t('appointment.history'), count: counts.history, icon: Clock, activeColor: 'bg-emerald-600' },
-        { key: 'cancelled', label: t('appointment.cancelled'), count: counts.cancelled, icon: XCircle, activeColor: 'bg-red-500' },
+        { key: 'upcoming', label: t('appointment.upcoming'), count: counts.upcoming, icon: Calendar },
+        { key: 'history', label: t('appointment.history'), count: counts.history, icon: Clock },
+        { key: 'cancelled', label: t('appointment.cancelled'), count: counts.cancelled, icon: XCircle },
     ], [t, counts]);
-
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">{t('navigation.my_appointments')}</h1>
                     <p className="text-gray-500 mt-1 text-sm">{t('appointment.appointments')}</p>
                 </div>
                 <div className="flex gap-2">
-                    <button
-                        onClick={fetchAppointments}
-                        className="flex items-center gap-2 bg-white border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition text-sm"
-                    >
+                    <button onClick={fetchAppointments} className="flex items-center gap-2 bg-white border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition text-sm">
                         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                         {t('common.refresh')}
                     </button>
-                    <Link
-                        to="/organizations"
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 text-sm"
-                    >
+                    <Link to="/organizations" className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 text-sm">
                         <Search className="h-4 w-4" /> {t('appointment.book_new', 'Book New')}
                     </Link>
                 </div>
             </div>
 
-            {/* Stat Summary Cards */}
             <div className="grid grid-cols-3 gap-3">
                 {tabs.map(tab => (
                     <button
                         key={tab.key}
                         onClick={() => setFilter(tab.key)}
-                        className={`p-4 rounded-2xl border transition-all text-left ${filter === tab.key
-                            ? 'bg-white border-indigo-200 shadow-lg shadow-indigo-100 ring-2 ring-indigo-100'
-                            : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'
-                            }`}
+                        className={`p-4 rounded-2xl border transition-all text-left ${filter === tab.key ? 'bg-white border-indigo-200 shadow-lg shadow-indigo-100 ring-2 ring-indigo-100' : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'}`}
                     >
                         <div className="flex items-center justify-between mb-2">
                             <tab.icon className={`h-5 w-5 ${filter === tab.key ? 'text-indigo-600' : 'text-gray-400'}`} />
-                            <span className={`text-[10px] font-bold uppercase tracking-widest ${filter === tab.key ? 'text-indigo-600' : 'text-gray-400'
-                                }`}>
-                                {tab.label}
-                            </span>
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${filter === tab.key ? 'text-indigo-600' : 'text-gray-400'}`}>{tab.label}</span>
                         </div>
-                        <p className={`text-2xl font-black ${filter === tab.key ? 'text-gray-900' : 'text-gray-600'}`}>
-                            {tab.count}
-                        </p>
+                        <p className={`text-2xl font-black ${filter === tab.key ? 'text-gray-900' : 'text-gray-600'}`}>{tab.count}</p>
                     </button>
                 ))}
             </div>
 
-            {/* Results Header */}
-            {!loading && (
-                <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-                        {filteredAppointments.length} {t(`appointment.filter_${filter}`, filter)} {t('appointment.appointments_count', { count: filteredAppointments.length })}
-                    </p>
-                </div>
-            )}
-
-            {/* Appointment List */}
             {loading ? (
                 <div className="space-y-4">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5">
-                            <div className="flex gap-4">
-                                <div className="w-16 h-16 bg-gray-100 rounded-xl animate-pulse" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-5 w-1/3 bg-gray-100 rounded-lg animate-pulse" />
-                                    <div className="h-4 w-1/2 bg-gray-50 rounded-lg animate-pulse" />
-                                    <div className="h-3 w-1/4 bg-gray-50 rounded-lg animate-pulse" />
-                                </div>
-                            </div>
-                        </div>
+                        <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse h-24" />
                     ))}
                 </div>
             ) : filteredAppointments.length > 0 ? (
@@ -482,61 +411,16 @@ export default function MyAppointments() {
                     </AnimatePresence>
                 </div>
             ) : (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center py-20 bg-gradient-to-b from-gray-50 to-white rounded-3xl border border-dashed border-gray-200"
-                >
-                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
-                        <Calendar className="h-10 w-10 text-gray-300" />
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{t('appointment.no_filter_appointments', 'No {{filter}} appointments', { filter: t(`appointment.filter_${filter}`, filter) })}</h3>
-                    <p className="text-gray-500 text-sm max-w-sm mx-auto mb-6">
-                        {filter === 'upcoming'
-                            ? t('appointment.no_upcoming_hint', "You don't have any upcoming appointments. Browse organizations to book one!")
-                            : filter === 'history'
-                                ? t('appointment.no_history_hint', "No completed appointments yet. Your history will appear here.")
-                                : t('appointment.no_cancelled_hint', "No cancelled appointments. That's a good thing!")}
-                    </p>
-                    {filter === 'upcoming' && (
-                        <Link
-                            to="/organizations"
-                            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200"
-                        >
-                            <Search className="h-4 w-4" /> Find & Book Appointment
-                        </Link>
-                    )}
-                </motion.div>
+                <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                    <Calendar className="h-10 w-10 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-gray-900">{t('appointment.no_filter_appointments', 'No appointments found')}</h3>
+                    <p className="text-gray-500 text-sm mt-2">Try changing the filter or book a new appointment.</p>
+                </div>
             )}
 
-            {reviewModalAppt && (
-                <ReviewModal
-                    appointment={reviewModalAppt}
-                    onClose={() => setReviewModalAppt(null)}
-                    onSuccess={() => {
-                        setReviewModalAppt(null);
-                        fetchAppointments();
-                    }}
-                />
-            )}
-
-            {reschedulingAppt && (
-                <RescheduleModal
-                    appointment={reschedulingAppt}
-                    onClose={() => setReschedulingAppt(null)}
-                    onSuccess={() => {
-                        setReschedulingAppt(null);
-                        fetchAppointments();
-                    }}
-                />
-            )}
-
-            <MapModal
-                isOpen={!!mapModalAppt}
-                onClose={() => setMapModalAppt(null)}
-                address={mapModalAppt?.org_address}
-                orgName={mapModalAppt?.org_name}
-            />
+            {reviewModalAppt && <ReviewModal appointment={reviewModalAppt} onClose={() => setReviewModalAppt(null)} onSuccess={() => { setReviewModalAppt(null); fetchAppointments(); }} />}
+            {reschedulingAppt && <RescheduleModal appointment={reschedulingAppt} onClose={() => setReschedulingAppt(null)} onSuccess={() => { setReschedulingAppt(null); fetchAppointments(); }} />}
+            {mapModalAppt && <MapModal isOpen={!!mapModalAppt} onClose={() => setMapModalAppt(null)} address={mapModalAppt?.org_address} orgName={mapModalAppt?.org_name} />}
         </div>
     );
 }

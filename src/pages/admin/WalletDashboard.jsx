@@ -188,7 +188,8 @@ const WalletDashboard = () => {
                                 <thead className="bg-gray-50/50">
                                     <tr>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Type</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Description</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Customer</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Service & Transaction</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Amount</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Status</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Date</th>
@@ -210,21 +211,30 @@ const WalletDashboard = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm font-semibold text-gray-900">{tx.description}</p>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight mt-0.5">Ref: {tx.reference_id?.substring(0,8) || 'N/A'}</p>
+                                                    <p className="text-sm font-semibold text-gray-900">{tx.customer_name || 'System'}</p>
+                                                    <p className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">{tx.customer_email || 'Internal Transaction'}</p>
                                                 </td>
-                                                <td className="px-6 py-4 font-bold text-sm text-gray-900">
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm font-semibold text-gray-900">{tx.service_name || tx.description}</p>
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        <p className="text-[10px] text-indigo-500 uppercase font-black tracking-tight bg-indigo-50 px-1.5 py-0.5 rounded">
+                                                            {tx.razorpay_payment_id || `REF: ${tx.reference_id?.substring(0,8)}`}
+                                                        </p>
+                                                        {tx.razorpay_payment_id && <span className="text-[9px] text-gray-300 font-bold uppercase">Razorpay</span>}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 font-bold text-sm text-gray-900 whitespace-nowrap">
                                                     {tx.type === 'credit' ? '+' : '-'}₹{tx.amount}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                                        tx.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 
+                                                        tx.status === 'confirmed' || tx.status === 'completed' || tx.status === 'available' ? 'bg-emerald-50 text-emerald-600' : 
                                                         tx.status === 'locked' ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-600'
                                                     }`}>
                                                         {tx.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-xs text-gray-500 font-medium">
+                                                <td className="px-6 py-4 text-xs text-gray-500 font-medium whitespace-nowrap">
                                                     {tx.created_at ? format(new Date(tx.created_at), 'MMM dd, HH:mm') : 'N/A'}
                                                 </td>
                                             </motion.tr>
