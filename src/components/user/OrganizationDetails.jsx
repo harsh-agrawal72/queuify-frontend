@@ -135,6 +135,25 @@ export default function OrganizationDetails() {
                         <div className="flex-1 pb-2">
                             <div className="flex flex-wrap items-center gap-3">
                                 <h1 className="text-3xl font-black text-gray-900">{org.name}</h1>
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const res = await api.post(`/organizations/${org.id}/favorite`);
+                                            setOrg(prev => ({ ...prev, is_favorite: res.data.isFavorite }));
+                                        } catch (err) {
+                                            console.error("Failed to toggle favorite", err);
+                                        }
+                                    }}
+                                    className={`p-2.5 rounded-2xl border transition-all duration-300 ${
+                                        org.is_favorite 
+                                        ? 'bg-rose-50 text-rose-600 border-rose-100 shadow-sm shadow-rose-100' 
+                                        : 'bg-white text-gray-300 border-gray-100 hover:text-rose-400 hover:border-rose-100'
+                                    }`}
+                                    title={org.is_favorite ? "Remove from Favorites" : "Add to Favorites"}
+                                >
+                                    <Star className={`h-6 w-6 ${org.is_favorite ? 'fill-rose-600' : ''}`} />
+                                </button>
                                 {org.verified && (
                                     <div className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100 shadow-sm" title="Verified Organization">
                                         <ShieldCheck className="h-4 w-4 fill-blue-600 text-white" />

@@ -76,6 +76,7 @@ function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/scan/:slug" element={<ScanRedirect />} />
+                <Route path="/scan" element={<Navigate to="/" replace />} />
 
                 {/* Role-specific dashboards */}
                 <Route path="/superadmin/*" element={

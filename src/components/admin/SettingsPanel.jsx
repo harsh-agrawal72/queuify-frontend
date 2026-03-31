@@ -587,84 +587,121 @@ const SettingsPanel = () => {
                             <p className="text-sm text-gray-500">Generate and print your unique QR code for easy customer access.</p>
                         </div>
 
-                        <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start">
-                            <div className="relative group">
-                                <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-[2rem] blur-2xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
-                                <div className="relative bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-indigo-100/50 flex flex-col items-center w-full max-w-[320px]">
-                                    <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-dashed border-gray-200">
-                                        <QRCodeSVG 
-                                            id="org-qr-code"
-                                            value={scanUrl} 
-                                            size={200}
-                                            level="H"
-                                            includeMargin={false}
-                                        />
+                        {!orgSlug && (
+                            <div className="p-6 bg-amber-50 border border-amber-200 rounded-3xl flex flex-col items-center text-center space-y-4">
+                                <div className="p-3 bg-amber-100 rounded-2xl">
+                                    <AlertTriangle className="h-8 w-8 text-amber-600" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-amber-900">Missing Public Link!</h3>
+                                    <p className="text-sm text-amber-700 max-w-md mx-auto">Your organization doesn't have a unique public link yet. This is required to generate a QR code.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        const loadingToast = toast.loading("Generating your public link...");
+                                        try {
+                                            // Trigger an update to save settings which should generate a slug on the backend if missing
+                                            await handleSave(new Event('submit'));
+                                            // Refresh details to get the new slug
+                                            const res = await api.get('/admin/org');
+                                            if (res.data.slug) {
+                                                setOrgSlug(res.data.slug);
+                                                toast.success("Public link generated!", { id: loadingToast });
+                                            } else {
+                                                throw new Error("Slug still missing");
+                                            }
+                                        } catch (err) {
+                                            toast.error("Failed to generate link. Please contact support.", { id: loadingToast });
+                                        }
+                                    }}
+                                    className="bg-amber-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-amber-700 transition-colors shadow-lg shadow-amber-100"
+                                >
+                                    Generate Public Link
+                                </button>
+                            </div>
+                        )}
+
+                        {orgSlug && (
+                            <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start opacity-1 animate-in fade-in duration-500">
+                                <div className="relative group">
+                                    <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-[2rem] blur-2xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                                    <div className="relative bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-indigo-100/50 flex flex-col items-center w-full max-w-[320px]">
+                                        <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-dashed border-gray-200">
+                                            <QRCodeSVG 
+                                                id="org-qr-code"
+                                                value={scanUrl} 
+                                                size={200}
+                                                level="H"
+                                                includeMargin={false}
+                                            />
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 text-lg text-center leading-tight">{orgName}</h3>
+                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-widest mt-2">Queuify Smart Access</p>
+                                        
+                                        <div className="mt-8 flex gap-3 w-full">
+                                            <button 
+                                                type="button"
+                                                onClick={downloadQR}
+                                                className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                            >
+                                                <Download className="h-4 w-4" /> Download
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                onClick={printQR}
+                                                className="p-2.5 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-white hover:text-indigo-600 transition-all"
+                                                title="Print"
+                                            >
+                                                <Printer className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <h3 className="font-bold text-gray-900 text-lg text-center leading-tight">{orgName}</h3>
-                                    <p className="text-xs text-gray-400 font-medium uppercase tracking-widest mt-2">Queuify Smart Access</p>
-                                    
-                                    <div className="mt-8 flex gap-3 w-full">
-                                        <button 
-                                            type="button"
-                                            onClick={downloadQR}
-                                            className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-                                        >
-                                            <Download className="h-4 w-4" /> Download
-                                        </button>
-                                        <button 
-                                            type="button"
-                                            onClick={printQR}
-                                            className="p-2.5 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-white hover:text-indigo-600 transition-all"
-                                            title="Print"
-                                        >
-                                            <Printer className="h-4 w-4" />
-                                        </button>
+                                </div>
+
+                                <div className="flex-1 space-y-6">
+                                    <div className="space-y-4">
+                                        <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                                            <Info className="h-4 w-4 text-indigo-500" /> How to use?
+                                        </h4>
+                                        <ul className="space-y-3">
+                                            {[
+                                                { title: 'Print & Display', desc: 'Download and print this QR code to display at your reception or entrance.' },
+                                                { title: 'Instant Scan', desc: 'Customers scan the code using their phone camera.' },
+                                                { title: 'Automated Flow', desc: 'They will be instantly redirected to your booking page. New users will be prompted to join Queuify first.' }
+                                            ].map((item, i) => (
+                                                <li key={i} className="flex gap-3">
+                                                    <div className="h-5 w-5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 border border-indigo-100">
+                                                        {i + 1}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                                                        <p className="text-xs text-gray-500">{item.desc}</p>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
+                                        <p className="text-xs font-semibold text-indigo-900 uppercase tracking-widest">Public Link</p>
+                                        <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-indigo-100">
+                                            <code className="text-[10px] text-indigo-600 break-all flex-1">{scanUrl}</code>
+                                            <button 
+                                                type="button"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(scanUrl);
+                                                    toast.success('Link copied!');
+                                                }}
+                                                className="p-1 hover:bg-indigo-50 rounded transition-colors"
+                                            >
+                                                <ExternalLink className="h-3 w-3 text-indigo-500" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="flex-1 space-y-6">
-                                <div className="space-y-4">
-                                    <h4 className="font-bold text-gray-800 flex items-center gap-2">
-                                        <Info className="h-4 w-4 text-indigo-500" /> How to use?
-                                    </h4>
-                                    <ul className="space-y-3">
-                                        {[
-                                            { title: 'Print & Display', desc: 'Download and print this QR code to display at your reception or entrance.' },
-                                            { title: 'Instant Scan', desc: 'Customers scan the code using their phone camera.' },
-                                            { title: 'Automated Flow', desc: 'They will be instantly redirected to your booking page. New users will be prompted to join Queuify first.' }
-                                        ].map((item, i) => (
-                                            <li key={i} className="flex gap-3">
-                                                <div className="h-5 w-5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 border border-indigo-100">
-                                                    {i + 1}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                                                    <p className="text-xs text-gray-500">{item.desc}</p>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
-                                    <p className="text-xs font-semibold text-indigo-900 uppercase tracking-widest">Public Link</p>
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-indigo-100">
-                                        <code className="text-[10px] text-indigo-600 break-all flex-1">{scanUrl}</code>
-                                        <button 
-                                            type="button"
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(scanUrl);
-                                                toast.success('Link copied!');
-                                            }}
-                                            className="p-1 hover:bg-indigo-50 rounded transition-colors"
-                                        >
-                                            <ExternalLink className="h-3 w-3 text-indigo-500" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 );
             case 'danger':

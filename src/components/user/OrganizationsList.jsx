@@ -61,7 +61,9 @@ export default function OrganizationsList() {
             try {
                 const params = new URLSearchParams();
                 if (search) params.append('search', search);
-                if (filter && filter !== 'All') params.append('type', filter);
+                if (filter === 'favorites') params.append('onlyFavorites', 'true');
+                else if (filter && filter !== 'All') params.append('type', filter);
+                
                 if (user?.city) params.append('city', user.city);
                 if (user?.state) params.append('state', user.state);
                 if (user?.pincode) params.append('pincode', user.pincode);
@@ -81,6 +83,7 @@ export default function OrganizationsList() {
 
     const categories = [
         { label: 'All', value: '', icon: <Building2 className="h-4 w-4" /> },
+        { label: 'Favorites', value: 'favorites', icon: <Star className="h-4 w-4 text-rose-500 fill-rose-500" /> },
         { label: 'Clinic', value: 'Clinic', icon: <Stethoscope className="h-4 w-4" /> },
         { label: 'Hospital', value: 'Hospital', icon: <Building2 className="h-4 w-4" /> },
         { label: 'Salon', value: 'Salon', icon: <Scissors className="h-4 w-4" /> },
@@ -288,11 +291,38 @@ export default function OrganizationsList() {
                                                         )}
                                                     </div>
                                                 </div>
-                                                {org.is_verified && (
-                                                    <div className="bg-blue-50 text-blue-600 p-2 rounded-xl border border-blue-100 shadow-sm">
-                                                        <BadgeCheck className="h-5 w-5" />
-                                                    </div>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            const toggleFav = async () => {
+                                                                try {
+                                                                    const res = await api.post(`/organizations/${org.id}/favorite`);
+                                                                    setOrgs(prev => prev.map(o => 
+                                                                        o.id === org.id ? { ...o, is_favorite: res.data.isFavorite } : o
+                                                                    ));
+                                                                } catch (err) {
+                                                                    console.error("Failed to toggle favorite", err);
+                                                                }
+                                                            };
+                                                            toggleFav();
+                                                        }}
+                                                        className={`p-2.5 rounded-xl border transition-all duration-300 ${
+                                                            org.is_favorite 
+                                                            ? 'bg-rose-50 text-rose-600 border-rose-100 shadow-sm shadow-rose-100' 
+                                                            : 'bg-white text-gray-300 border-gray-100 hover:text-rose-400 hover:border-rose-100'
+                                                        }`}
+                                                    >
+                                                        <Star className={`h-5 w-5 ${org.is_favorite ? 'fill-rose-600' : ''}`} />
+                                                    </button>
+                                                    {org.is_verified && (
+                                                        <div className="bg-blue-50 text-blue-600 p-2 rounded-xl border border-blue-100 shadow-sm">
+                                                            <BadgeCheck className="h-5 w-5" />
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {/* Info */}

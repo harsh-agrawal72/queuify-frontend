@@ -519,7 +519,7 @@ const AppointmentManager = () => {
                                                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.actions', 'Actions')}</p>
                                                                 </div>
                                                                  <div className="p-1">
-                                                                    {apt.status !== 'completed' && (
+                                                                    {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                                         <button 
                                                                             onClick={() => {
                                                                                 setReschedulingAppt(apt);
@@ -554,7 +554,7 @@ const AppointmentManager = () => {
                                                                         </button>
                                                                     )}
                                                                 </div>
-                                                                 {apt.status !== 'completed' && (
+                                                                 {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                                     <>
                                                                         <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
                                                                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.update_status', 'Update Status')}</p>
@@ -604,12 +604,16 @@ const AppointmentManager = () => {
                                                                 <div className="h-px bg-gray-100 my-1"></div>
 
                                                                 <div className="p-1">
-                                                                    <button
-                                                                        onClick={() => handleDelete(apt)}
-                                                                        className="w-full text-left px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition-colors"
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" /> {t('common.delete', 'Delete')}
-                                                                    </button>
+                                                                 {apt.status !== 'confirmed' && apt.status !== 'pending' && (
+                                                                    <div className="p-1">
+                                                                        <button
+                                                                            onClick={() => handleDelete(apt)}
+                                                                            className="w-full text-left px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition-colors"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" /> {t('common.delete', 'Delete')}
+                                                                        </button>
+                                                                    </div>
+                                                                 )}
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -716,7 +720,7 @@ const AppointmentManager = () => {
                                                 </button>
                                             </div>
                                             <div className="flex flex-col gap-2 mb-3">
-                                                {apt.status !== 'completed' && (
+                                                {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                     <button 
                                                         onClick={() => {
                                                             setReschedulingAppt(apt);
@@ -763,7 +767,7 @@ const AppointmentManager = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                                 {apt.status !== 'completed' && (
+                                                 {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                     <div className="grid grid-cols-2 gap-2 flex-grow mt-2">
                                                         <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
                                                         <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
