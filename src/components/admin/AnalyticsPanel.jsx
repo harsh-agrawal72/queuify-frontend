@@ -617,12 +617,12 @@ const AnalyticsPanel = () => {
             },
             ...(wallet ? [
                 {
-                    title: t('dashboard.available_balance', 'Available Balance'), value: `₹${wallet.balance}`,
+                    title: t('dashboard.available_balance', 'Available Balance'), value: `₹${wallet.available_balance || 0}`,
                     icon: IndianRupee, color: 'from-emerald-500 to-teal-600', 
                     lightBg: 'bg-emerald-50', lightText: 'text-emerald-600'
                 },
                 {
-                    title: t('dashboard.locked_funds', 'Locked (Escrow)'), value: `₹${wallet.locked_funds}`,
+                    title: t('dashboard.locked_funds', 'Locked (Escrow)'), value: `₹${wallet.locked_funds || 0}`,
                     icon: Lock, color: 'from-amber-500 to-orange-600', 
                     lightBg: 'bg-amber-50', lightText: 'text-amber-600'
                 }
@@ -833,12 +833,12 @@ const AnalyticsPanel = () => {
                                     {card.suffix && <span className="text-xs font-bold text-gray-400 uppercase">{card.suffix}</span>}
                                 </div>
                                 
-                                {card.title === t('dashboard.available_balance', 'Available Balance') && parseFloat(wallet?.balance) > 0 && (
+                                {card.title === t('dashboard.available_balance', 'Available Balance') && parseFloat(wallet?.available_balance) > 0 && (
                                     <button
                                         onClick={async () => {
-                                            if (window.confirm(`Withdraw ₹${wallet.balance} to your linked bank account?`)) {
+                                            if (window.confirm(`Withdraw ₹${wallet.available_balance} to your linked bank account?`)) {
                                                 try {
-                                                    await api.post('/payments/withdraw', { amount: wallet.balance });
+                                                    await api.post('/payments/withdraw', { amount: wallet.available_balance });
                                                     alert('Withdrawal request processed successfully!');
                                                     window.location.reload();
                                                 } catch (err) {

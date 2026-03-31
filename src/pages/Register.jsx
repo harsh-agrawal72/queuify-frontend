@@ -127,9 +127,18 @@ const Register = () => {
     const handleLoginSuccess = async (user) => {
         toast.success(`Welcome, ${user.name}!`);
         const role = user.role || 'user';
-        if (role === 'superadmin') navigate('/superadmin');
-        else if (role === 'admin') navigate('/admin');
-        else navigate('/dashboard');
+        const referredOrg = localStorage.getItem('referred_org');
+        
+        if (role === 'superadmin') {
+            navigate('/superadmin');
+        } else if (role === 'admin') {
+            navigate('/admin');
+        } else if (referredOrg) {
+            localStorage.removeItem('referred_org');
+            navigate(`/organizations/${referredOrg}`);
+        } else {
+            navigate('/dashboard');
+        }
     };
 
     const handleGoogleSuccess = async (credentialResponse) => {

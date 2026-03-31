@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import InfoTooltip from '../common/InfoTooltip';
 import {
@@ -18,8 +18,13 @@ import {
     Trash2,
     AlertTriangle,
     Info,
-    CreditCard
+    CreditCard,
+    QrCode,
+    Download,
+    Printer,
+    ExternalLink
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useOutletContext, useNavigate } from 'react-router-dom';
@@ -38,6 +43,9 @@ const SettingsPanel = () => {
     const [deleteConfirmText, setDeleteConfirmText] = useState('');
     const [deletingOrg, setDeletingOrg] = useState(false);
     const [orgName, setOrgName] = useState('');
+    const [orgSlug, setOrgSlug] = useState('');
+    const [qrBase64, setQrBase64] = useState('');
+    const qrRef = useRef(null);
 
     const [admins, setAdmins] = useState([]);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -84,6 +92,7 @@ const SettingsPanel = () => {
                         payout_upi_id: res.data.payout_upi_id || ''
                     });
                     setOrgName(res.data.name || '');
+                    setOrgSlug(res.data.slug || '');
                     setNotifications({
                         emailAlerts: res.data.email_notification ?? true,
                         newBookingNotify: res.data.new_booking_notification ?? true
@@ -496,6 +505,168 @@ const SettingsPanel = () => {
                         </div>
                     </div>
                 );
+            case 'qrcode':
+                const scanUrl = `${window.location.protocol}//${window.location.host}/scan/${orgSlug}`;
+                
+                const generateQrImage = () => {
+                    const svg = document.getElementById('org-qr-code');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const base64 = 'data:image/svg+xml;base64,' + btoa(svgData);
+                    setQrBase64(base64);
+                };
+
+                const downloadQR = () => {
+                    const svg = document.getElementById('org-qr-code');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = () => {
+                        canvas.width = img.width + 40;
+                        canvas.height = img.height + 100;
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 20, 20);
+                        ctx.fillStyle = '#111827';
+                        ctx.font = 'bold 16px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(orgName, canvas.width / 2, img.height + 60);
+                        ctx.font = '12px sans-serif';
+                        ctx.fillStyle = '#6B7280';
+                        ctx.fillText('Scan to Book Appointment', canvas.width / 2, img.height + 80);
+                        
+                        const pngFile = canvas.toDataURL('image/png');
+                        const downloadLink = document.createElement('a');
+                        downloadLink.download = `${orgName.replace(/\s+/g, '_')}_QR.png`;
+                        downloadLink.href = pngFile;
+                        downloadLink.click();
+                        toast.success('QR Code downloaded!');
+                    };
+                    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+                };
+
+                const printQR = () => {
+                    const svg = document.getElementById('org-qr-code');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const base64 = 'data:image/svg+xml;base64,' + btoa(svgData);
+                    
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Print QR - ${orgName}</title>
+                                <style>
+                                    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                                    .card { border: 2px solid #eee; padding: 40px; border-radius: 20px; }
+                                    h1 { margin-top: 20px; color: #111827; }
+                                    p { color: #6B7280; }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="card">
+                                    <img src="${base64}" width="300" height="300" />
+                                    <h1>${orgName}</h1>
+                                    <p>Scan this QR to book an appointment</p>
+                                </div>
+                                <script>setTimeout(() => { window.print(); window.close(); }, 500);</script>
+                            </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                };
+
+                return (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 pb-4">
+                        <div className="border-b border-gray-100 pb-4 mb-4">
+                            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <QrCode className="h-5 w-5 text-indigo-600" /> Organization QR Code
+                            </h2>
+                            <p className="text-sm text-gray-500">Generate and print your unique QR code for easy customer access.</p>
+                        </div>
+
+                        <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start">
+                            <div className="relative group">
+                                <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-[2rem] blur-2xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                                <div className="relative bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-indigo-100/50 flex flex-col items-center w-full max-w-[320px]">
+                                    <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-dashed border-gray-200">
+                                        <QRCodeSVG 
+                                            id="org-qr-code"
+                                            value={scanUrl} 
+                                            size={200}
+                                            level="H"
+                                            includeMargin={false}
+                                        />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900 text-lg text-center leading-tight">{orgName}</h3>
+                                    <p className="text-xs text-gray-400 font-medium uppercase tracking-widest mt-2">Queuify Smart Access</p>
+                                    
+                                    <div className="mt-8 flex gap-3 w-full">
+                                        <button 
+                                            type="button"
+                                            onClick={downloadQR}
+                                            className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                        >
+                                            <Download className="h-4 w-4" /> Download
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            onClick={printQR}
+                                            className="p-2.5 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-white hover:text-indigo-600 transition-all"
+                                            title="Print"
+                                        >
+                                            <Printer className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 space-y-6">
+                                <div className="space-y-4">
+                                    <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                                        <Info className="h-4 w-4 text-indigo-500" /> How to use?
+                                    </h4>
+                                    <ul className="space-y-3">
+                                        {[
+                                            { title: 'Print & Display', desc: 'Download and print this QR code to display at your reception or entrance.' },
+                                            { title: 'Instant Scan', desc: 'Customers scan the code using their phone camera.' },
+                                            { title: 'Automated Flow', desc: 'They will be instantly redirected to your booking page. New users will be prompted to join Queuify first.' }
+                                        ].map((item, i) => (
+                                            <li key={i} className="flex gap-3">
+                                                <div className="h-5 w-5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 border border-indigo-100">
+                                                    {i + 1}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                                                    <p className="text-xs text-gray-500">{item.desc}</p>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
+                                    <p className="text-xs font-semibold text-indigo-900 uppercase tracking-widest">Public Link</p>
+                                    <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-indigo-100">
+                                        <code className="text-[10px] text-indigo-600 break-all flex-1">{scanUrl}</code>
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(scanUrl);
+                                                toast.success('Link copied!');
+                                            }}
+                                            className="p-1 hover:bg-indigo-50 rounded transition-colors"
+                                        >
+                                            <ExternalLink className="h-3 w-3 text-indigo-500" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
             case 'danger':
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -561,6 +732,7 @@ const SettingsPanel = () => {
                     {[
                         { id: 'general', icon: Building2, label: t('settings.tabs.general', 'General') },
                         { id: 'hours', icon: Clock, label: t('settings.tabs.hours', 'Hours') },
+                        { id: 'qrcode', icon: QrCode, label: 'QR Code' },
                         { id: 'notifications', icon: Bell, label: t('settings.tabs.alerts', 'Alerts') },
                         { id: 'payout', icon: CreditCard, label: 'Payout' },
                         { id: 'security', icon: Shield, label: t('settings.tabs.security', 'Security') },

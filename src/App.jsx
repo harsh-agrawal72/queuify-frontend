@@ -21,8 +21,7 @@ const CookiePolicy = lazy(() => import('./pages/CookiePolicy'));
 const Security = lazy(() => import('./pages/Security'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
-
-// User Components
+import ScanRedirect from './pages/ScanRedirect';
 const UserLayout = lazy(() => import('./components/layout/UserLayout'));
 const UserDashboard = lazy(() => import('./components/user/UserDashboard'));
 const OrganizationsList = lazy(() => import('./components/user/OrganizationsList'));
@@ -76,6 +75,7 @@ function App() {
                 <Route path="/security" element={<Security />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/scan/:slug" element={<ScanRedirect />} />
 
                 {/* Role-specific dashboards */}
                 <Route path="/superadmin/*" element={

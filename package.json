@@ -20,6 +20,7 @@
     "html2canvas": "^1.4.1",
     "i18next": "^25.10.5",
     "lucide-react": "^0.563.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",

@@ -28,6 +28,18 @@ const TermsOfService = () => {
 
                             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.terms.sec4_title', '4. Limitations')}</h2>
                             <p>{t('policies.terms.sec4_desc', 'In no event shall Queuify or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on Queuify.')}</p>
+
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.terms.sec5_title', '5. Payment & Escrow Service')}</h2>
+                            <p>{t('policies.terms.sec5_desc', "Queuify uses a secure escrow system for paid bookings. Funds are held by Queuify and only released to the Organization's wallet after the service is marked as 'Completed' via OTP verification or check-in.")}</p>
+
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.terms.sec6_title', '6. Refund & Cancellation Policy')}</h2>
+                            <p>{t('policies.terms.sec6_desc', "Full refunds are issued if an organization cancels your appointment. For user cancellations, refunds are processed based on the organization's timing policy. No refunds are provided for 'No Show' statuses.")}</p>
+
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.terms.sec7_title', '7. Settlements & Payouts (for Businesses)')}</h2>
+                            <p>{t('policies.terms.sec7_desc', "Organizations can withdraw their Available Balance to verified bank accounts or UPI IDs. Payout requests are typically processed within 1-3 business days.")}</p>
+
+                            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">{t('policies.terms.sec8_title', '8. User Responsibilities')}</h2>
+                            <p>{t('policies.terms.sec8_desc', "Users are responsible for providing the correct OTP to the organization at the time of service to trigger the release of escrowed funds.")}</p>
                         </div>
                     </div>
                 </div>

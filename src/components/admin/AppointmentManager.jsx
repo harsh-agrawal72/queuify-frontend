@@ -518,16 +518,18 @@ const AppointmentManager = () => {
                                                                 <div className="px-3 py-2 border-b border-gray-50 bg-gray-50/50">
                                                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.actions', 'Actions')}</p>
                                                                 </div>
-                                                                <div className="p-1">
-                                                                    <button 
-                                                                        onClick={() => {
-                                                                            setReschedulingAppt(apt);
-                                                                            setActiveActionId(null);
-                                                                        }} 
-                                                                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
-                                                                    >
-                                                                        <CalendarClock className="h-4 w-4 text-indigo-500" /> {t('appointment.transfer_slot', 'Transfer Slot')}
-                                                                    </button>
+                                                                 <div className="p-1">
+                                                                    {apt.status !== 'completed' && (
+                                                                        <button 
+                                                                            onClick={() => {
+                                                                                setReschedulingAppt(apt);
+                                                                                setActiveActionId(null);
+                                                                            }} 
+                                                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
+                                                                        >
+                                                                            <CalendarClock className="h-4 w-4 text-indigo-500" /> {t('appointment.transfer_slot', 'Transfer Slot')}
+                                                                        </button>
+                                                                    )}
                                                                     {apt.user_id && (
                                                                         <button 
                                                                             onClick={() => {
@@ -552,32 +554,36 @@ const AppointmentManager = () => {
                                                                         </button>
                                                                     )}
                                                                 </div>
-                                                                <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
-                                                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.update_status', 'Update Status')}</p>
-                                                                </div>
-                                                                <div className="p-1">
-                                                                     <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-amber-500"></div> {t('status.pending', 'Pending')}
-                                                                    </button>
-                                                                    <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-blue-500"></div> {t('status.confirmed', 'Confirmed')}
-                                                                    </button>
-                                                                    {!(apt.payment_status === 'paid' && parseFloat(apt.price) > 0) && (
-                                                                        <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
-                                                                        </button>
-                                                                    )}
-                                                                    <button onClick={() => {
-                                                                            if (window.confirm('Mark this user as No-Show?')) {
-                                                                                handleStatusUpdate(apt.id, 'no_show');
-                                                                            }
-                                                                        }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-orange-500"></div> {t('status.no_show', 'No-Show')}
-                                                                    </button>
-                                                                    <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                        <div className="w-2 h-2 rounded-full bg-rose-500"></div> {t('status.cancelled', 'Cancelled')}
-                                                                    </button>
-                                                                </div>
+                                                                 {apt.status !== 'completed' && (
+                                                                    <>
+                                                                        <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
+                                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.update_status', 'Update Status')}</p>
+                                                                        </div>
+                                                                        <div className="p-1">
+                                                                            <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                                <div className="w-2 h-2 rounded-full bg-amber-500"></div> {t('status.pending', 'Pending')}
+                                                                            </button>
+                                                                            <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                                <div className="w-2 h-2 rounded-full bg-blue-500"></div> {t('status.confirmed', 'Confirmed')}
+                                                                            </button>
+                                                                            {!(apt.payment_status === 'paid' && parseFloat(apt.price) > 0) && (
+                                                                                <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
+                                                                                </button>
+                                                                            )}
+                                                                            <button onClick={() => {
+                                                                                    if (window.confirm('Mark this user as No-Show?')) {
+                                                                                        handleStatusUpdate(apt.id, 'no_show');
+                                                                                    }
+                                                                                }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                                <div className="w-2 h-2 rounded-full bg-orange-500"></div> {t('status.no_show', 'No-Show')}
+                                                                            </button>
+                                                                            <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                                <div className="w-2 h-2 rounded-full bg-rose-500"></div> {t('status.cancelled', 'Cancelled')}
+                                                                            </button>
+                                                                        </div>
+                                                                    </>
+                                                                )}
 
                                                                 {apt.payment_status === 'refund_failed' && (
                                                                     <>
@@ -704,21 +710,23 @@ const AppointmentManager = () => {
                                             className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 rounded-2xl flex flex-col p-4 shadow-xl border border-indigo-100"
                                         >
                                             <div className="flex justify-between items-center mb-4">
-                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('appointment.update_status', 'Update Status')}</h4>
+                                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">{apt.status === 'completed' ? 'Appointment Completed' : t('appointment.update_status', 'Update Status')}</h4>
                                                 <button onClick={() => setActiveActionId(null)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                                                     <XCircle className="h-4 w-4 text-gray-400" />
                                                 </button>
                                             </div>
                                             <div className="flex flex-col gap-2 mb-3">
-                                                <button 
-                                                    onClick={() => {
-                                                        setReschedulingAppt(apt);
-                                                        setActiveActionId(null);
-                                                    }}
-                                                    className="w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <CalendarClock className="h-4 w-4" /> {t('appointment.transfer_slot', 'Transfer Slot')}
-                                                </button>
+                                                {apt.status !== 'completed' && (
+                                                    <button 
+                                                        onClick={() => {
+                                                            setReschedulingAppt(apt);
+                                                            setActiveActionId(null);
+                                                        }}
+                                                        className="w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <CalendarClock className="h-4 w-4" /> {t('appointment.transfer_slot', 'Transfer Slot')}
+                                                    </button>
+                                                )}
                                                 {apt.user_id && (
                                                     <button 
                                                         onClick={() => {
@@ -755,14 +763,16 @@ const AppointmentManager = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2 flex-grow">
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
-                                                {!(apt.payment_status === 'paid' && parseFloat(apt.price) > 0) && (
-                                                    <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">{t('status.completed', 'Completed')}</button>
+                                                 {apt.status !== 'completed' && (
+                                                    <div className="grid grid-cols-2 gap-2 flex-grow mt-2">
+                                                        <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
+                                                        <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
+                                                        {!(apt.payment_status === 'paid' && parseFloat(apt.price) > 0) && (
+                                                            <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">{t('status.completed', 'Completed')}</button>
+                                                        )}
+                                                        <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">{t('status.cancelled', 'Cancelled')}</button>
+                                                    </div>
                                                 )}
-                                                <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">{t('status.cancelled', 'Cancelled')}</button>
-                                            </div>
                                             <button
                                                 onClick={() => handleDelete(apt)}
                                                 className="mt-3 w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors flex items-center justify-center gap-2"
