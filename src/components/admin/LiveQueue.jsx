@@ -581,7 +581,13 @@ const AdminLiveQueue = () => {
                                                         onCallPatient={callPatient}
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
-                                                        onVerifyCheckin={(id) => setOtpModal({ isOpen: true, appointmentId: id })}
+                                                        onVerifyCheckin={(id) => {
+                                                            if (appt.payment_status === 'paid' && parseFloat(appt.price) > 0) {
+                                                                setOtpModal({ isOpen: true, appointmentId: id });
+                                                            } else {
+                                                                updateStatus(id, 'completed');
+                                                            }
+                                                        }}
                                                     />
                                                 </div>
                                             );
@@ -637,7 +643,7 @@ const AdminLiveQueue = () => {
                                 <div className="grid grid-cols-1 gap-4 pt-10">
                                     <button
                                         onClick={() => {
-                                            if (parseFloat(transitioningQueue.currentAppt.price) > 0) {
+                                            if (transitioningQueue.currentAppt.payment_status === 'paid' && parseFloat(transitioningQueue.currentAppt.price) > 0) {
                                                 setOtpModal({ isOpen: true, appointmentId: transitioningQueue.currentAppt.id });
                                                 setTransitioningQueue(null);
                                             } else {
