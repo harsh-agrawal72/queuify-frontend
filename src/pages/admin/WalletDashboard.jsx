@@ -274,9 +274,14 @@ const WalletDashboard = () => {
                             </div>
                             <div className="pt-4 flex items-center gap-2">
                                 <div className="h-2 flex-1 bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-400 w-3/4 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
+                                    <div 
+                                        className="h-full bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] transition-all duration-1000" 
+                                        style={{ width: `${Math.min(100, ((parseFloat(wallet?.available_balance || 0) / 50000) * 100)).toFixed(1)}%` }}
+                                    />
                                 </div>
-                                <span className="text-[10px] font-bold">75%</span>
+                                <span className="text-[10px] font-bold">
+                                    {Math.min(100, ((parseFloat(wallet?.available_balance || 0) / 50000) * 100)).toFixed(1)}%
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -284,13 +289,16 @@ const WalletDashboard = () => {
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
                         <h3 className="font-bold text-gray-900 flex items-center gap-2">
                             <Clock className="h-4 w-4 text-amber-500" />
-                            Next Settlement
+                            Payout Process
                         </h3>
                         <p className="text-sm text-gray-500 leading-relaxed">
-                            Your locked funds will be automatically settled <span className="font-bold text-indigo-600">every midnight</span> for all verified appointments.
+                            Verified funds are instantly added to your <span className="font-bold text-indigo-600">Available Balance</span>. You can then request a manual payout to your bank account.
                         </p>
-                        <button className="w-full text-xs font-bold text-indigo-600 bg-indigo-50 py-3 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 group">
-                            Learn more about settlements
+                        <button 
+                            onClick={() => setIsPayoutModalOpen(true)}
+                            className="w-full text-xs font-bold text-indigo-600 bg-indigo-50 py-3 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 group"
+                        >
+                            Request a Payout Now
                             <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>

@@ -23,6 +23,8 @@ import toast from 'react-hot-toast';
 import { format, parseISO, addDays, addWeeks, startOfDay } from 'date-fns';
 import InfoTooltip from '../common/InfoTooltip';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import clsx from 'clsx';
 
 const SlotManagement = () => {
     const { t } = useTranslation();
