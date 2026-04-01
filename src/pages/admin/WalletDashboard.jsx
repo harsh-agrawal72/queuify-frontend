@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
     Wallet, 
     TrendingUp, 
@@ -22,6 +23,7 @@ import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 
 const WalletDashboard = () => {
+    const { t } = useTranslation();
     const [wallet, setWallet] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -125,7 +127,8 @@ const WalletDashboard = () => {
             await api.post('/payments/payout', payoutForm);
             toast.success(t('wallet.payout_request_success', 'Payout request submitted successfully'));
             setIsPayoutModalOpen(false);
-            fetchWalletData();
+            fetchWalletStatus();
+            fetchTransactions();
         } catch (error) {
             toast.error(error.response?.data?.message || t('wallet.payout_request_failed', 'Payout request failed'));
         }

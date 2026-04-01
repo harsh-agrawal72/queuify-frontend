@@ -5,13 +5,16 @@ import {
     CheckCircle2, 
     AlertCircle,
     Loader2,
-    Lock
+    Lock,
+    Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
-const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) => {
+const OtpVerificationModal = ({ isOpen, onClose, appointment, onVerified, org }) => {
+    const appointmentId = appointment?.id;
+    const [isSuccess, setIsSuccess] = useState(false);
     const [otp, setOtp] = useState(['', '', '', '']);
     const [remarks, setRemarks] = useState('');
     const [loading, setLoading] = useState(false);
@@ -23,6 +26,7 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
             setOtp(['', '', '', '']);
             setRemarks('');
             setError('');
+            setIsSuccess(false);
             setTimeout(() => inputRefs.current[0]?.focus(), 100);
         }
     }, [isOpen]);
@@ -91,7 +95,7 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
             });
             toast.success('Check-in verified successfully');
             onVerified(appointmentId);
-            onClose();
+            setIsSuccess(true);
         } catch (err) {
             console.error('OTP Verification Error:', err);
             setError(err.response?.data?.message || 'Verification failed. Please check the OTP and try again.');
@@ -119,7 +123,43 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
                     className="bg-white w-full max-w-sm rounded-[32px] shadow-2xl relative z-10 overflow-hidden"
                 >
-                    <div className="p-8 space-y-6">
+                    {isSuccess ? (
+                        <div className="p-10 text-center space-y-6">
+                            <motion.div 
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: [0.5, 1.2, 1], opacity: 1 }}
+                                className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto"
+                            >
+                                <CheckCircle2 className="h-10 w-10 font-bold" />
+                            </motion.div>
+                            
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Check-in Verified!</h2>
+                                <p className="text-sm text-gray-500">The service has been completed and funds released from escrow.</p>
+                            </div>
+
+                            <div className="space-y-3 pt-4">
+                                <button 
+                                    onClick={async () => {
+                                        const { generateInvoice } = await import('../../utils/pdfGenerator');
+                                        generateInvoice(appointment, org);
+                                    }}
+                                    className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                    <Download className="h-5 w-5" />
+                                    <span>Download Receipt</span>
+                                </button>
+                                
+                                <button 
+                                    onClick={onClose}
+                                    className="w-full bg-gray-50 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-100 transition-all"
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-8 space-y-6">
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
@@ -199,6 +239,7 @@ const OtpVerificationModal = ({ isOpen, onClose, appointmentId, onVerified }) =>
                             </p>
                         </div>
                     </div>
+                    )}
                 </motion.div>
             </div>
         </AnimatePresence>

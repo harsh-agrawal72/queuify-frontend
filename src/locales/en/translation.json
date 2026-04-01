@@ -16,7 +16,8 @@
     "patient_reviews": "Patient Reviews",
     "about_organization": "About Organization",
     "settings": "Settings",
-    "find_organizations": "Find Organizations"
+    "find_organizations": "Find Organizations",
+    "wallet": "Wallet"
   },
   "dashboard": {
     "welcome": "Welcome back",
@@ -102,7 +103,17 @@
     "back_to_home": "Back to home",
     "user": "I'm a User",
     "business": "I'm a Business",
-    "tomorrow": "Tomorrow"
+    "tomorrow": "Tomorrow",
+    "all_types": "All Types",
+    "credits": "Credits",
+    "payouts": "Payouts",
+    "refunds": "Refunds",
+    "clear": "Clear",
+    "customer": "Customer",
+    "service": "Service",
+    "transaction": "Transaction",
+    "amount": "Amount",
+    "system": "System"
   },
   "templates": {
     "clinic": {
@@ -569,6 +580,31 @@
       "stars": "{{count}} Stars",
       "star": "{{count}} Star",
       "no_comment": "No comment provided."
+    },
+    "wallet": {
+      "title": "Financial Hub",
+      "subtitle": "Manage your earnings, escrow funds, and payouts.",
+      "request_payout": "Request Payout",
+      "total_revenue": "Total Revenue",
+      "revenue_hint": "Includes locked and available funds",
+      "available_balance": "Available Balance",
+      "ready_for_payout": "Ready for payout transfer",
+      "locked_escrow": "Locked in Escrow",
+      "locked_hint": "Pending check-in verification",
+      "verified_revenue": "Verified Revenue",
+      "withdrawal_limit": "Max withdrawal limit: ₹50,000/day",
+      "payout_process": "Payout Process",
+      "payout_desc": "Verified funds are instantly added to your available balance. You can then request a manual payout to your bank account.",
+      "request_now": "Request Payout Now",
+      "ledger": "Transaction Ledger",
+      "no_transactions": "No transactions found for this period.",
+      "internal_tx": "Internal Transaction",
+      "modal_title": "Request Fund Transfer",
+      "withdraw_amount": "Withdrawal Amount (Min ₹500)",
+      "destination": "Transfer Destination",
+      "saved_account": "Saved Bank Account",
+      "verify_transfer": "Verify & Transfer Funds",
+      "go_to_settings": "Go to settings to add bank details"
     }
   },
   "user": {

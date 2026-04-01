@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket,
-    ArrowRight, Star, Building2, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle
+    ArrowRight, Star, Building2, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -221,6 +221,27 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                         className="flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-100 transition-all"
                                     >
                                         <Star className="h-4 w-4" /> {t('appointment.rate', 'Rate')}
+                                    </button>
+                                )}
+                                {appt.status === 'completed' && (
+                                    <button
+                                        onClick={async () => {
+                                            const { generateInvoice } = await import('../../utils/pdfGenerator');
+                                            // Construct a temporary org object from appointment data
+                                            const org = {
+                                                name: appt.org_name,
+                                                address: appt.org_address,
+                                                city: '', // Users might not have this in basic appt object
+                                                state: '',
+                                                pincode: '',
+                                                contact_phone: '',
+                                                contact_email: ''
+                                            };
+                                            generateInvoice(appt, org);
+                                        }}
+                                        className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
+                                    >
+                                        <Download className="h-4 w-4" /> {t('appointment.download_receipt', 'Download Receipt')}
                                     </button>
                                 )}
                                 <Link

@@ -24,7 +24,8 @@ import {
     Award,
     History,
     ShieldCheck,
-    RefreshCw
+    RefreshCw,
+    Download
 } from 'lucide-react';
 import UserHistoryModal from './UserHistoryModal';
 import toast from 'react-hot-toast';
@@ -52,7 +53,22 @@ const AppointmentManager = () => {
     const [selectedResourceId, setSelectedResourceId] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
-    const [otpModal, setOtpModal] = useState({ isOpen: false, appointmentId: null });
+    const [otpModal, setOtpModal] = useState({ isOpen: false, appointment: null });
+    const [orgProfile, setOrgProfile] = useState(null);
+
+    // Fetch organization profile for PDF branding
+    const fetchOrgProfile = async () => {
+        try {
+            const res = await api.get('/organizations/profile');
+            setOrgProfile(res.data);
+        } catch (error) {
+            console.error('Failed to fetch org profile', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrgProfile();
+    }, []);
 
     // Debounce search
     const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -522,7 +538,7 @@ const AppointmentManager = () => {
                                                                         <button 
                                                                             onClick={() => {
                                                                                 const isWalkin = !(apt.payment_status === 'paid' && parseFloat(apt.price) > 0);
-                                                                                setOtpModal({ isOpen: true, appointmentId: apt.id, isWalkin });
+                                                                                setOtpModal({ isOpen: true, appointment: apt, isWalkin });
                                                                                 setActiveActionId(null);
                                                                             }} 
                                                                             className="w-full text-left px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
@@ -578,6 +594,24 @@ const AppointmentManager = () => {
                                                                     </>
                                                                 )}
 
+                                                                {apt.status === 'completed' && (
+                                                                    <>
+                                                                        <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
+                                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.receipt_action', 'Receipt')}</p>
+                                                                        </div>
+                                                                        <div className="p-1">
+                                                                            <button 
+                                                                                onClick={async () => {
+                                                                                    const { generateInvoice } = await import('../../utils/pdfGenerator');
+                                                                                    generateInvoice(apt, orgProfile);
+                                                                                }} 
+                                                                                className="w-full text-left px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
+                                                                            >
+                                                                                <Download className="h-4 w-4" /> {t('appointment.download_receipt', 'Download Receipt')}
+                                                                            </button>
+                                                                        </div>
+                                                                    </>
+                                                                )}
                                                                 <div className="h-px bg-gray-100 my-1"></div>
 
                                                                 <div className="p-1">
@@ -813,11 +847,12 @@ const AppointmentManager = () => {
             />
             <OtpVerificationModal 
                 isOpen={otpModal.isOpen}
-                appointmentId={otpModal.appointmentId}
-                onVerified={() => {
-                    fetchAppointments();
+                onClose={() => setOtpModal({ isOpen: false, appointment: null })}
+                appointment={otpModal.appointment}
+                org={orgProfile}
+                onVerified={(id) => {
+                    fetchAppointments(true);
                 }}
-                onClose={() => setOtpModal({ ...otpModal, isOpen: false })}
             />
         </div>
     );

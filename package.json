@@ -19,6 +19,8 @@
     "framer-motion": "^12.34.0",
     "html2canvas": "^1.4.1",
     "i18next": "^25.10.5",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.563.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",

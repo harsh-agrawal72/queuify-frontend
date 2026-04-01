@@ -110,7 +110,7 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                 {isServing ? (
                     <>
                         <button
-                            onClick={() => onVerifyCheckin(appt.id)}
+                            onClick={() => onVerifyCheckin(appt)}
                             className="h-11 w-11 bg-white text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all shadow-lg shadow-indigo-700/20 active:scale-95"
                             title={t('appointment.verify_complete', 'Verify & Complete')}
                         >
@@ -160,7 +160,18 @@ const AdminLiveQueue = () => {
     const [manualEntryData, setManualEntryData] = useState({ customer_name: '', customer_phone: '', resourceId: '', slotId: '' });
     const [availableSlotsForManual, setAvailableSlotsForManual] = useState([]);
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
-    const [otpModal, setOtpModal] = useState({ isOpen: false, appointmentId: null });
+    const [otpModal, setOtpModal] = useState({ isOpen: false, appointment: null });
+    const [orgProfile, setOrgProfile] = useState(null);
+
+    // Fetch organization profile for PDF branding
+    const fetchOrgProfile = async () => {
+        try {
+            const res = await api.get('/organizations/profile');
+            setOrgProfile(res.data);
+        } catch (error) {
+            console.error('Failed to fetch org profile', error);
+        }
+    };
 
     const fetchQueue = useCallback(async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -207,6 +218,7 @@ const AdminLiveQueue = () => {
     useEffect(() => {
         fetchQueue();
         fetchPredictiveInsights();
+        fetchOrgProfile();
     }, [selectedDate]);
 
     // WebSocket Integration
@@ -581,11 +593,11 @@ const AdminLiveQueue = () => {
                                                         onCallPatient={callPatient}
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
-                                                        onVerifyCheckin={(id) => {
+                                                        onVerifyCheckin={(appt) => {
                                                             if (appt.payment_status === 'paid' && parseFloat(appt.price) > 0) {
-                                                                setOtpModal({ isOpen: true, appointmentId: id });
+                                                                setOtpModal({ isOpen: true, appointment: appt });
                                                             } else {
-                                                                updateStatus(id, 'completed');
+                                                                updateStatus(appt.id, 'completed');
                                                             }
                                                         }}
                                                     />
@@ -644,7 +656,7 @@ const AdminLiveQueue = () => {
                                     <button
                                         onClick={() => {
                                             if (transitioningQueue.currentAppt.payment_status === 'paid' && parseFloat(transitioningQueue.currentAppt.price) > 0) {
-                                                setOtpModal({ isOpen: true, appointmentId: transitioningQueue.currentAppt.id });
+                                                setOtpModal({ isOpen: true, appointment: transitioningQueue.currentAppt });
                                                 setTransitioningQueue(null);
                                             } else {
                                                 completeTransition('completed');
@@ -791,12 +803,12 @@ const AdminLiveQueue = () => {
 
             <OtpVerificationModal 
                 isOpen={otpModal.isOpen}
-                appointmentId={otpModal.appointmentId}
+                onClose={() => setOtpModal({ isOpen: false, appointment: null })}
+                appointment={otpModal.appointment}
+                org={orgProfile}
                 onVerified={() => {
                     fetchQueue(true);
-                    setOtpModal({ isOpen: false, appointmentId: null });
                 }}
-                onClose={() => setOtpModal({ isOpen: false, appointmentId: null })}
             />
         </div>
     );
