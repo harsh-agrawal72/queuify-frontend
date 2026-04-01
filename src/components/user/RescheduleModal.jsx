@@ -17,7 +17,6 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [rescheduling, setRescheduling] = useState(false);
     const [notificationTime, setNotificationTime] = useState('');
-    const [autoBook, setAutoBook] = useState(false);
     const [requestingNotification, setRequestingNotification] = useState(false);
 
     // Helper to generate time intervals between slot boundaries
@@ -313,11 +312,9 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                                                                 desiredTime: desiredDate.toISOString(),
                                                                 serviceId: appointment.service_id,
                                                                 resourceId: slot.resource_id,
-                                                                autoBook,
                                                                 customerPhone: null
                                                             });
-                                                            const modeMsg = autoBook ? "We'll auto-book your reschedule" : "We'll notify you";
-                                                            toast.success(`${modeMsg} when it reaches your time!`);
+                                                            toast.success("We'll notify you when it reaches your time!");
                                                             setNotificationTime('');
                                                             onClose();
                                                         } catch (e) {
@@ -329,23 +326,11 @@ const RescheduleModal = ({ appointment, onClose, onSuccess }) => {
                                                     disabled={requestingNotification}
                                                     className="mt-4 text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
                                                 >
-                                                    {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : (autoBook ? 'Auto-Book' : 'Notify Me')}
+                                                    {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : 'Notify Me'}
                                                 </button>
                                             </div>
 
-                                            {/* Auto-Book Toggle */}
-                                            <label className="flex items-center gap-2 cursor-pointer group">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={autoBook}
-                                                    onChange={(e) => setAutoBook(e.target.checked)}
-                                                    className="rounded text-indigo-600 h-4 w-4"
-                                                />
-                                                <div>
-                                                    <p className="text-[11px] font-black text-indigo-700 uppercase tracking-tight">Auto-Book for me</p>
-                                                    <p className="text-[9px] text-indigo-400">Wins you the spot automatically.</p>
-                                                </div>
-                                            </label>
+
                                         </div>
                                     </div>
                                 </div>

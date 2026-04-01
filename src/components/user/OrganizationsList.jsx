@@ -83,7 +83,6 @@ export default function OrganizationsList() {
 
     const categories = [
         { label: 'All', value: '', icon: <Building2 className="h-4 w-4" /> },
-        { label: 'Favorites', value: 'favorites', icon: <Star className="h-4 w-4 text-rose-500 fill-rose-500" /> },
         { label: 'Clinic', value: 'Clinic', icon: <Stethoscope className="h-4 w-4" /> },
         { label: 'Hospital', value: 'Hospital', icon: <Building2 className="h-4 w-4" /> },
         { label: 'Salon', value: 'Salon', icon: <Scissors className="h-4 w-4" /> },
@@ -164,7 +163,19 @@ export default function OrganizationsList() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-6 bg-indigo-600 rounded-full" />
-                    <h2 className="text-lg font-black text-gray-900 tracking-tight">Browse Categories</h2>
+                    <h2 className="text-lg font-black text-gray-900 tracking-tight">{t('org.browse_categories', 'Browse Categories')}</h2>
+                    <button
+                        onClick={() => setFilter(filter === 'favorites' ? '' : 'favorites')}
+                        className={`ml-2 p-2 rounded-xl border transition-all duration-300 flex items-center gap-2 text-xs font-bold ${
+                            filter === 'favorites'
+                            ? 'bg-rose-50 text-rose-600 border-rose-100 shadow-sm shadow-rose-100'
+                            : 'bg-white text-gray-400 border-gray-100 hover:text-rose-500 hover:border-rose-100'
+                        }`}
+                        title={filter === 'favorites' ? "Show All Organizations" : "Show Favorites Only"}
+                    >
+                        <Star className={`h-4 w-4 ${filter === 'favorites' ? 'fill-rose-600' : ''}`} />
+                        <span>{t('org.favorites', 'Favorites')}</span>
+                    </button>
                 </div>
                 
                 <div className="relative min-w-[260px] z-30">

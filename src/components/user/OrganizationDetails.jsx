@@ -135,25 +135,6 @@ export default function OrganizationDetails() {
                         <div className="flex-1 pb-2">
                             <div className="flex flex-wrap items-center gap-3">
                                 <h1 className="text-3xl font-black text-gray-900">{org.name}</h1>
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        try {
-                                            const res = await api.post(`/organizations/${org.id}/favorite`);
-                                            setOrg(prev => ({ ...prev, is_favorite: res.data.isFavorite }));
-                                        } catch (err) {
-                                            console.error("Failed to toggle favorite", err);
-                                        }
-                                    }}
-                                    className={`p-2.5 rounded-2xl border transition-all duration-300 ${
-                                        org.is_favorite 
-                                        ? 'bg-rose-50 text-rose-600 border-rose-100 shadow-sm shadow-rose-100' 
-                                        : 'bg-white text-gray-300 border-gray-100 hover:text-rose-400 hover:border-rose-100'
-                                    }`}
-                                    title={org.is_favorite ? "Remove from Favorites" : "Add to Favorites"}
-                                >
-                                    <Star className={`h-6 w-6 ${org.is_favorite ? 'fill-rose-600' : ''}`} />
-                                </button>
                                 {org.verified && (
                                     <div className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100 shadow-sm" title="Verified Organization">
                                         <ShieldCheck className="h-4 w-4 fill-blue-600 text-white" />
@@ -176,6 +157,30 @@ export default function OrganizationDetails() {
                                 {org?.contact_phone && <span className="flex items-center gap-1.5"><Phone className="h-4 w-4 text-indigo-400" /> {org.contact_phone}</span>}
                                 <span className="flex items-center gap-1.5"><Mail className="h-4 w-4 text-indigo-400" /> {org.contact_email}</span>
                             </div>
+                        </div>
+                        <div className="md:pb-2">
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        const res = await api.post(`/organizations/${org.id}/favorite`);
+                                        setOrg(prev => ({ ...prev, is_favorite: res.data.isFavorite }));
+                                    } catch (err) {
+                                        console.error("Failed to toggle favorite", err);
+                                    }
+                                }}
+                                className={`group relative p-4 rounded-[2rem] border transition-all duration-500 hover:scale-110 active:scale-95 shadow-xl ${
+                                    org.is_favorite 
+                                    ? 'bg-rose-50 text-rose-600 border-rose-100 shadow-rose-200/50' 
+                                    : 'bg-white text-gray-400 border-gray-100 hover:text-rose-500 hover:bg-rose-50/50 hover:border-rose-100'
+                                }`}
+                                title={org.is_favorite ? "Remove from Favorites" : "Add to Favorites"}
+                            >
+                                <Star className={`h-7 w-7 transition-transform duration-500 ${org.is_favorite ? 'fill-rose-600 rotate-[360deg]' : 'group-hover:rotate-12'}`} />
+                                <div className={`absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center border-2 ${org.is_favorite ? 'border-rose-500' : 'border-gray-200 opacity-0'}`}>
+                                    {org.is_favorite && <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />}
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>

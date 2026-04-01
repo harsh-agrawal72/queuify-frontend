@@ -14,6 +14,11 @@ import SystemHealth from '../components/superadmin/SystemHealth';
 import GlobalMonitor from '../components/superadmin/GlobalMonitor';
 import GlobalAuditLog from '../components/superadmin/GlobalAuditLog';
 import PremiumAnalytics from '../components/superadmin/PremiumAnalytics';
+import BroadcastManager from '../components/superadmin/BroadcastManager';
+import PayoutControl from '../components/superadmin/PayoutControl';
+import { Megaphone, Wallet } from 'lucide-react';
+
+
 
 const SuperadminDashboard = () => {
     const location = useLocation();
@@ -35,6 +40,8 @@ const SuperadminDashboard = () => {
         { id: 'plans', label: 'Plans & Billing', icon: CreditCard },
         { id: 'appointments', label: 'Global Bookings', icon: Calendar },
         { id: 'admins', label: 'System Admins', icon: ShieldCheck },
+        { id: 'broadcast', label: 'Broadcast', icon: Megaphone },
+        { id: 'payouts', label: 'Payout Requests', icon: Wallet },
         { id: 'system', label: 'System Health', icon: PieChart },
     ];
 
@@ -95,6 +102,8 @@ const SuperadminDashboard = () => {
                         <Route path="plans" element={<PlanManager />} />
                         <Route path="appointments" element={<GlobalAppointments />} />
                         <Route path="admins" element={<AdminManager />} />
+                        <Route path="broadcast" element={<BroadcastManager />} />
+                        <Route path="payouts" element={<PayoutControl />} />
                         <Route path="system" element={<SystemHealth />} />
                     </Routes>
                 </div>

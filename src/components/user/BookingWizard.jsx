@@ -51,7 +51,6 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     const [prefResource, setPrefResource] = useState('ANY');
     const [prefTime, setPrefTime] = useState('FLEXIBLE');
     const [notificationTime, setNotificationTime] = useState('');
-    const [autoBook, setAutoBook] = useState(false);
     const [requestingNotification, setRequestingNotification] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const apptRef = useRef(null);
@@ -473,12 +472,10 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                                         desiredTime: desiredDate.toISOString(),
                                                         serviceId: selectedService?.id || selectedSlot.service_id,
                                                         resourceId: selectedResource?.id || selectedSlot.resource_id,
-                                                        autoBook,
                                                         customerPhone: null
                                                     });
                                                     
-                                                    const modeMsg = autoBook ? "We'll auto-book your appointment" : "We'll notify you";
-                                                    toast.success(`${modeMsg} when it reaches your time!`);
+                                                    toast.success("We'll notify you when it reaches your time!");
                                                     setNotificationTime('');
                                                     onClose();
                                                 } catch (e) {
@@ -490,23 +487,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                             disabled={requestingNotification}
                                             className="mt-4 text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
                                         >
-                                            {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : (autoBook ? 'Auto-Book for me' : 'Notify Me')}
+                                            {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : 'Notify Me'}
                                         </button>
                                     </div>
 
-                                    {/* Win-Win Auto-Book Toggle */}
-                                    <label className="flex items-center gap-2 cursor-pointer group bg-white/50 p-2 rounded-xl border border-indigo-50 hover:border-indigo-200 transition-all">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={autoBook}
-                                            onChange={(e) => setAutoBook(e.target.checked)}
-                                            className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4"
-                                        />
-                                        <div>
-                                            <p className="text-[11px] font-black text-indigo-700 uppercase tracking-tight leading-none">Auto-Book for me (Win-Win)</p>
-                                            <p className="text-[9px] text-indigo-400 mt-0.5">Systems will book it automatically when time reached.</p>
-                                        </div>
-                                    </label>
+
                                 </div>
                                 <p className="text-[10px] text-indigo-400 mt-2 italic">We'll send you an alert when the estimated time reaches your preference.</p>
                             </div>
