@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, Building2, ArrowRight, Star, Clock, Shield, Filter, ChevronRight, Sparkles, Users, BadgeCheck, MessageCircle, Stethoscope, Scissors, Landmark, Library, Briefcase, GraduationCap, Wrench, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const getIndustryTerminology = (type) => {
     switch (type) {
@@ -48,6 +49,7 @@ const getTypeGradient = (type) => {
 };
 
 export default function OrganizationsList() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const [orgs, setOrgs] = useState([]);
     const [loading, setLoading] = useState(true);

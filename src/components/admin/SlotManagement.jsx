@@ -16,10 +16,11 @@ import {
     Info,
     Copy,
     ChevronRight,
-    Check
+    Check,
+    TrendingUp
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays, addWeeks, startOfDay } from 'date-fns';
 import InfoTooltip from '../common/InfoTooltip';
 import { useTranslation } from 'react-i18next';
 
@@ -29,6 +30,7 @@ const SlotManagement = () => {
     const [services, setServices] = useState([]);
     const [resources, setResources] = useState([]);
     const [slots, setSlots] = useState([]);
+    const [allResources, setAllResources] = useState([]);
 
     // ─── Filters ───
     const [filterService, setFilterService] = useState('');
@@ -62,23 +64,28 @@ const SlotManagement = () => {
     const [copyResourceId, setCopyResourceId] = useState('');
     const [copyOverwrite, setCopyOverwrite] = useState(false);
     const [copying, setCopying] = useState(false);
+    const [copyMode, setCopyMode] = useState('manual'); // 'manual', 'next_month', 'next_4_weeks'
 
     // ═══════════════════════════════════════════
     // FETCH SERVICES ON MOUNT
     // ═══════════════════════════════════════════
     useEffect(() => {
-        const fetchServices = async () => {
+        const fetchData = async () => {
             try {
-                const res = await api.get('/services');
-                setServices(res.data);
-                setModalServices(res.data);
+                const [servicesRes, allResourcesRes] = await Promise.all([
+                    api.get('/services'),
+                    api.get('/resources')
+                ]);
+                setServices(servicesRes.data);
+                setModalServices(servicesRes.data);
+                setAllResources(allResourcesRes.data);
             } catch {
                 toast.error(t('service.load_failed', 'Failed to load services'));
             } finally {
                 setLoadingServices(false);
             }
         };
-        fetchServices();
+        fetchData();
     }, []);
 
     // ═══════════════════════════════════════════
@@ -202,6 +209,28 @@ const SlotManagement = () => {
     // ═══════════════════════════════════════════
     // CREATE / UPDATE SLOT
     // ═══════════════════════════════════════════
+    const handleCopyModeChange = (mode, sourceDate) => {
+        if (!sourceDate) return;
+        const source = parseISO(sourceDate);
+        let targets = [];
+
+        if (mode === 'next_month') {
+            // Next 30 days starting from tomorrow
+            for (let i = 1; i <= 30; i++) {
+                targets.push(format(addDays(source, i), 'yyyy-MM-dd'));
+            }
+        } else if (mode === 'next_4_weeks') {
+            // Next 4 weeks, same day
+            for (let i = 1; i <= 4; i++) {
+                targets.push(format(addWeeks(source, i), 'yyyy-MM-dd'));
+            }
+        }
+        
+        if (targets.length > 0) {
+            setCopyTargetDates(targets.sort());
+        }
+    };
+
     const handleSaveSlot = async () => {
         if (!selectedModalResource || !slotDate || !slotTime) {
             toast.error(t('common.complete_fields', 'Please complete all fields'));
@@ -841,115 +870,186 @@ const SlotManagement = () => {
 
             {/* ═══ BULK COPY MODAL ═══ */}
             {isCopyModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setIsCopyModalOpen(false)}>
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-                            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                                <Copy className="h-4 w-4 text-indigo-600" />
-                                {t('slot.copy_schedule_title', 'Bulk Copy Schedule')}
-                            </h2>
-                            <button onClick={() => setIsCopyModalOpen(false)} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
-                                <X className="h-4 w-4 text-gray-400" />
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300" onClick={() => setIsCopyModalOpen(false)}>
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden border border-white/20" onClick={e => e.stopPropagation()}>
+                        <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+                            <div>
+                                <h2 className="text-xl font-black text-gray-900 flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-600 rounded-xl">
+                                        <Copy className="h-5 w-5 text-white" />
+                                    </div>
+                                    {t('slot.copy_schedule_title', 'Bulk Copy Schedule')}
+                                </h2>
+                                <p className="text-sm text-gray-500 font-medium mt-1">Duplicate your perfect schedule across dates</p>
+                            </div>
+                            <button onClick={() => setIsCopyModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-2xl transition-all group">
+                                <X className="h-5 w-5 text-gray-400 group-hover:rotate-90 transition-transform" />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-6">
-                            {/* Source Date */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('slot.source_date', 'Copy From (Source Date)')}</label>
-                                <input
-                                    type="date"
-                                    value={copySourceDate}
-                                    onChange={e => setCopySourceDate(e.target.value)}
-                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
-                                />
-                                <p className="text-[11px] text-gray-500 mt-1">All slots on this date will be used as templates.</p>
-                            </div>
-
-                            {/* Resource Filter */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('slot.copy_resource_filter', 'Filter by Resource (Optional)')}</label>
-                                <select
-                                    value={copyResourceId}
-                                    onChange={e => setCopyResourceId(e.target.value)}
-                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm bg-white"
-                                >
-                                    <option value="">{t('slot.all_resources', 'All Resources')}</option>
-                                    {/* We can use the 'resources' state from the main component if it's currently loaded for some service */}
-                                    {resources.length > 0 ? (
-                                        resources.map(r => <option key={r.id} value={r.id}>{r.name} ({r.type})</option>)
-                                    ) : (
-                                        /* Backend should probably send all org resources, but for now we filter what's in state or assume All */
-                                        <option disabled>Select a service in main filters to see resources here</option>
-                                    )}
-                                </select>
-                            </div>
-
-                            {/* Target Dates */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('slot.target_dates', 'Copy To (Target Dates)')}</label>
-                                <div className="space-y-3">
-                                    <div className="flex gap-2">
+                        <div className="p-8 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Source Date */}
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">{t('slot.source_date', 'Copy From (Source Date)')}</label>
+                                    <div className="relative group">
+                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
                                         <input
                                             type="date"
-                                            id="target-date-input"
-                                            className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    const val = e.target.value;
-                                                    if (val && !copyTargetDates.includes(val)) {
-                                                        setCopyTargetDates([...copyTargetDates, val]);
-                                                        e.target.value = '';
-                                                    }
-                                                }
-                                            }}
+                                            value={copySourceDate}
+                                            onChange={e => setCopySourceDate(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none text-sm font-bold text-gray-900 shadow-sm"
                                         />
+                                    </div>
+                                    <p className="text-[10px] text-indigo-500 font-bold flex items-center gap-1">
+                                        <Info className="h-3 w-3" /> Templates fetched from this day
+                                    </p>
+                                </div>
+
+                                {/* Resource Filter */}
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">{t('slot.copy_resource_filter', 'Resource Filter')}</label>
+                                    <div className="relative group">
+                                        <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                                        <select
+                                            value={copyResourceId}
+                                            onChange={e => setCopyResourceId(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none text-sm font-bold text-gray-900 shadow-sm appearance-none cursor-pointer"
+                                        >
+                                            <option value="">{t('slot.all_resources', 'All Resources')}</option>
+                                            {allResources.map(r => (
+                                                <option key={r.id} value={r.id}>{r.name} ({r.type})</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <ChevronRight className="h-4 w-4 text-gray-400 rotate-90" />
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 font-medium">Leave as "All" to copy everything</p>
+                                </div>
+                            </div>
+
+                            {/* Copy Mode / Strategy Selection */}
+                            <div className="space-y-4">
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">Copy Strategy</label>
+                                <div className="grid grid-cols-3 gap-2 bg-gray-100 p-1.5 rounded-[1.25rem]">
+                                    {[
+                                        { id: 'manual', label: 'Custom Dates', icon: Calendar },
+                                        { id: 'next_month', label: 'Next Month', icon: Clock },
+                                        { id: 'next_4_weeks', label: '4 Same-Days', icon: TrendingUp }
+                                    ].map((mode) => (
+                                        <button
+                                            key={mode.id}
+                                            onClick={() => {
+                                                setCopyMode(mode.id);
+                                                handleCopyModeChange(mode.id, copySourceDate);
+                                            }}
+                                            className={clsx(
+                                                "flex flex-col items-center gap-1.5 py-3 rounded-[1rem] transition-all duration-300",
+                                                copyMode === mode.id 
+                                                    ? "bg-white text-indigo-600 shadow-sm ring-1 ring-black/5" 
+                                                    : "text-gray-500 hover:text-gray-800 hover:bg-white/50"
+                                            )}
+                                        >
+                                            <mode.icon className="h-4 w-4" />
+                                            <span className="text-[10px] font-black uppercase tracking-tighter">{mode.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Target Dates Visualizer */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">{t('slot.target_dates', 'Copy To (Target Dates)')}</label>
+                                    <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black uppercase">{copyTargetDates.length} Selected</span>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1 group">
+                                            <Plus className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
+                                            <input
+                                                type="date"
+                                                id="target-date-input"
+                                                className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none text-sm font-bold text-gray-900 shadow-sm"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        const val = e.target.value;
+                                                        if (val && !copyTargetDates.includes(val)) {
+                                                            setCopyTargetDates([...copyTargetDates, val].sort());
+                                                            e.target.value = '';
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                        </div>
                                         <button 
                                             type="button"
                                             onClick={() => {
                                                 const el = document.getElementById('target-date-input');
                                                 const val = el.value;
                                                 if (val && !copyTargetDates.includes(val)) {
-                                                    setCopyTargetDates([...copyTargetDates, val]);
+                                                    setCopyTargetDates([...copyTargetDates, val].sort());
                                                     el.value = '';
                                                 }
                                             }}
-                                            className="px-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                                            className="px-6 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 font-bold text-sm"
                                         >
-                                            <Plus className="h-4 w-4" />
+                                            Add
                                         </button>
                                     </div>
-                                    <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                    <div className="flex flex-wrap gap-2 min-h-[100px] p-4 bg-gray-50 rounded-[1.5rem] border-2 border-dashed border-gray-200 content-start">
                                         {copyTargetDates.map(date => (
-                                            <span key={date} className="flex items-center gap-1 px-2 py-1 bg-white border border-indigo-100 text-indigo-700 text-xs font-medium rounded-lg">
-                                                {format(parseISO(date), 'MMM d')}
-                                                <button onClick={() => setCopyTargetDates(copyTargetDates.filter(d => d !== date))}>
-                                                    <X className="h-3 w-3 hover:text-red-500" />
+                                            <motion.span 
+                                                initial={{ scale: 0.8, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                key={date} 
+                                                className="flex items-center gap-2 pl-3 pr-2 py-2 bg-white border border-indigo-100 text-indigo-700 text-xs font-black rounded-xl shadow-sm group"
+                                            >
+                                                {format(parseISO(date), 'MMM d, EEE')}
+                                                <button onClick={() => setCopyTargetDates(copyTargetDates.filter(d => d !== date))} className="p-1 hover:bg-red-50 rounded-lg group-hover:text-red-500 transition-colors">
+                                                    <X className="h-3 w-3" />
                                                 </button>
-                                            </span>
+                                            </motion.span>
                                         ))}
-                                        {copyTargetDates.length === 0 && <p className="text-[10px] text-gray-400 italic m-auto italic">Add one or more dates to copy to...</p>}
+                                        {copyTargetDates.length === 0 && (
+                                            <div className="w-full flex flex-col items-center justify-center gap-2 py-4">
+                                                <Calendar className="h-8 w-8 text-gray-200" />
+                                                <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">No target dates selected</p>
+                                            </div>
+                                        )}
                                     </div>
+                                    <button 
+                                        onClick={() => setCopyTargetDates([])}
+                                        className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-red-500 transition-colors ml-auto block"
+                                    >
+                                        Clear All
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Overwrite Toggle */}
-                            <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl">
-                                <div>
-                                    <p className="text-xs font-bold text-amber-900 uppercase">Overwrite Existing?</p>
-                                    <p className="text-[10px] text-amber-700">Clears slots on target date before copying.</p>
+                            {/* Overwrite Toggle (Premium Styling) */}
+                            <div className="flex items-center justify-between p-6 bg-amber-50/50 border border-amber-100 rounded-[2rem] group hover:bg-amber-50 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-amber-100 rounded-2xl">
+                                        <AlertTriangle className="h-5 w-5 text-amber-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black text-amber-900 tracking-tight">Overwrite Existing?</p>
+                                        <p className="text-[11px] text-amber-700 font-medium">Replaces all slots on target dates</p>
+                                    </div>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked={copyOverwrite} onChange={e => setCopyOverwrite(e.target.checked)} className="sr-only peer" />
-                                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                                    <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
                                 </label>
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-3 pt-2">
+                            <div className="flex gap-4 pt-4">
                                 <button
                                     onClick={() => setIsCopyModalOpen(false)}
-                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+                                    className="flex-1 px-8 py-4 bg-gray-50 text-gray-700 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-gray-100 transition-all"
                                 >
                                     {t('common.cancel', 'Cancel')}
                                 </button>
@@ -975,10 +1075,10 @@ const SlotManagement = () => {
                                         }
                                     }}
                                     disabled={copying || copyTargetDates.length === 0}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                                    className="flex-[2] flex items-center justify-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 disabled:opacity-50 disabled:grayscale"
                                 >
-                                    {copying ? <Loader2 className="animate-spin h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                                    {copying ? t('common.copying', 'Copying...') : t('slot.confirm_copy', 'Confirm Copy')}
+                                    {copying ? <Loader2 className="animate-spin h-5 w-5" /> : <Check className="h-5 w-5" />}
+                                    {copying ? t('common.copying', 'Processing...') : t('slot.confirm_copy', 'Finalize & Copy')}
                                 </button>
                             </div>
                         </div>

@@ -175,13 +175,11 @@ const AppointmentManager = () => {
     const handleDelete = async (apt) => {
         setActiveActionId(null);
         
-        const isCancelled = apt.status === 'cancelled';
         const isPaid = apt.payment_status === 'paid' && apt.price > 0;
+        const isCancelled = apt.status === 'cancelled';
 
-        let confirmMessage = isCancelled 
-            ? t('appointment.confirm_hide', "This appointment is already cancelled. Are you sure you want to permanently hide it from the dashboard?")
-            : t('appointment.confirm_cancel', "Are you sure you want to cancel and delete this appointment?");
-
+        let confirmMessage = t('appointment.confirm_delete_direct', "Are you sure you want to PERMANENTLY DELETE this appointment and remove it from the dashboard?");
+        
         if (!isCancelled && isPaid) {
             confirmMessage += "\n\n" + t('appointment.refund_notice', "IMPORTANT: A 100% REFUND will be issued to the user automatically.");
         }
@@ -190,10 +188,10 @@ const AppointmentManager = () => {
 
         let reason = null;
         if (!isCancelled) {
-            reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
-            if (reason === null) return; // User cancelled prompt
+            reason = window.prompt(t('appointment.enter_delete_reason', 'Please enter a reason for deletion/cancellation (for user records):'));
+            if (reason === null) return;
             if (!reason.trim()) {
-                toast.error(t('appointment.reason_required', 'Cancellation reason is required'));
+                toast.error(t('appointment.reason_required', 'A reason is required to notify the user.'));
                 return;
             }
         }
@@ -202,18 +200,12 @@ const AppointmentManager = () => {
         try {
             await api.delete(`/admin/appointments/${apt.id}`, { data: { reason } });
             
-            if (isCancelled) {
-                // Permanently hidden, remove from list
-                setAppointments(prev => prev.filter(a => a.id !== apt.id));
-                toast.success("Appointment hidden permanently");
-            } else {
-                // Just cancelled, update status in list
-                setAppointments(prev => prev.map(a => 
-                    a.id === apt.id ? { ...a, status: 'cancelled', cancelled_by: 'admin', cancellation_reason: reason } : a
-                ));
-                toast.success(t('appointment.cancelled_success', "Appointment cancelled successfully"));
-            }
-            fetchAppointments(); // Refresh to get correct payment_status
+            // Immediately remove from the local state for instant UI feedback
+            setAppointments(prev => prev.filter(a => a.id !== apt.id));
+            toast.success(t('appointment.delete_success', "Appointment deleted successfully"));
+            
+            // Optional: Background refresh to sync any other changes
+            fetchAppointments(true);
         } catch (error) {
             console.error(error);
             toast.error(t('appointment.delete_failed', "Failed to delete appointment"));
