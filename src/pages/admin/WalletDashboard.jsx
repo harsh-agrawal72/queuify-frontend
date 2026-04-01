@@ -61,7 +61,7 @@ const WalletDashboard = () => {
                 }));
             }
         } catch (error) {
-            toast.error('Failed to load wallet data');
+            toast.error(t('wallet.load_failed', 'Failed to load wallet data'));
             console.error(error);
         } finally {
             setLoading(false);
@@ -75,17 +75,17 @@ const WalletDashboard = () => {
     const handlePayoutRequest = async (e) => {
         e.preventDefault();
         if (parseFloat(payoutForm.amount) > wallet?.available_balance) {
-            toast.error('Insufficient available balance');
+            toast.error(t('wallet.insufficient_balance', 'Insufficient available balance'));
             return;
         }
 
         try {
             await api.post('/payments/payout', payoutForm);
-            toast.success('Payout request submitted successfully');
+            toast.success(t('wallet.payout_request_success', 'Payout request submitted successfully'));
             setIsPayoutModalOpen(false);
             fetchWalletData();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Payout request failed');
+            toast.error(error.response?.data?.message || t('wallet.payout_request_failed', 'Payout request failed'));
         }
     };
 
@@ -128,40 +128,40 @@ const WalletDashboard = () => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Financial Hub</h1>
-                    <p className="text-gray-500 mt-1">Manage your earnings, escrow funds, and payouts.</p>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('wallet.title', 'Financial Hub')}</h1>
+                    <p className="text-gray-500 mt-1">{t('wallet.subtitle', 'Manage your earnings, escrow funds, and payouts.')}</p>
                 </div>
                 <button 
                     onClick={() => setIsPayoutModalOpen(true)}
                     className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
                 >
                     <ArrowUpRight className="h-5 w-5" />
-                    Request Payout
+                    {t('wallet.request_payout', 'Request Payout')}
                 </button>
             </div>
 
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard 
-                    title="Total Revenue" 
+                    title={t('wallet.total_revenue', 'Total Revenue')} 
                     amount={parseFloat(wallet?.available_balance || 0) + parseFloat(wallet?.locked_funds || 0)} 
                     icon={Wallet} 
                     color="bg-indigo-500"
-                    subtitle="Includes locked and available funds"
+                    subtitle={t('wallet.revenue_hint', 'Includes locked and available funds')}
                 />
                 <StatCard 
-                    title="Available Balance" 
+                    title={t('wallet.available_balance', 'Available Balance')} 
                     amount={wallet?.available_balance || 0} 
                     icon={CheckCircle2} 
                     color="bg-emerald-500"
-                    subtitle="Ready for payout transfer"
+                    subtitle={t('wallet.ready_for_payout', 'Ready for payout transfer')}
                 />
                 <StatCard 
-                    title="Locked in Escrow" 
+                    title={t('wallet.locked_escrow', 'Locked in Escrow')} 
                     amount={wallet?.locked_funds || 0} 
                     icon={Lock} 
                     color="bg-amber-500"
-                    subtitle="Pending check-in verification"
+                    subtitle={t('wallet.locked_hint', 'Pending check-in verification')}
                 />
             </div>
 
@@ -175,7 +175,7 @@ const WalletDashboard = () => {
                                 <div className="p-2 bg-gray-50 rounded-lg text-gray-600">
                                     <History className="h-5 w-5" />
                                 </div>
-                                <h2 className="text-lg font-bold text-gray-900">Transaction Ledger</h2>
+                                <h2 className="text-lg font-bold text-gray-900">{t('wallet.ledger', 'Transaction Ledger')}</h2>
                             </div>
                             <div className="flex gap-2">
                                 <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg"><Search className="h-5 w-5" /></button>
@@ -187,12 +187,12 @@ const WalletDashboard = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-gray-50/50">
                                     <tr>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Type</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Customer</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Service & Transaction</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Amount</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">Date</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.type', 'Type')}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.customer', 'Customer')}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.service', 'Service')} & {t('common.transaction', 'Transaction')}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.amount', 'Amount')}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.status', 'Status')}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.date', 'Date')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
@@ -211,8 +211,8 @@ const WalletDashboard = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm font-semibold text-gray-900">{tx.customer_name || 'System'}</p>
-                                                    <p className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">{tx.customer_email || 'Internal Transaction'}</p>
+                                                    <p className="text-sm font-semibold text-gray-900">{tx.customer_name || t('common.system', 'System')}</p>
+                                                    <p className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">{tx.customer_email || t('wallet.internal_tx', 'Internal Transaction')}</p>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <p className="text-sm font-semibold text-gray-900">{tx.service_name || tx.description}</p>
@@ -247,7 +247,7 @@ const WalletDashboard = () => {
                                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
                                         <History className="h-8 w-8 text-gray-300" />
                                     </div>
-                                    <p className="text-gray-400 text-sm font-medium">No transactions found in this period.</p>
+                                    <p className="text-gray-400 text-sm font-medium">{t('wallet.no_transactions', 'No transactions found in this period.')}</p>
                                 </div>
                             )}
                         </div>
@@ -262,7 +262,7 @@ const WalletDashboard = () => {
                         </div>
                         <div className="relative z-10 space-y-6">
                             <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold uppercase tracking-widest opacity-60">Verified Revenue</span>
+                                <span className="text-xs font-bold uppercase tracking-widest opacity-60">{t('wallet.verified_revenue', 'Verified Revenue')}</span>
                                 <CreditCard className="h-5 w-5 opacity-60" />
                             </div>
                             <div>
@@ -270,7 +270,7 @@ const WalletDashboard = () => {
                                     <span className="text-xl mr-1 opacity-60">₹</span>
                                     {parseFloat(wallet?.available_balance || 0).toLocaleString('en-IN')}
                                 </h1>
-                                <p className="text-xs text-indigo-300 font-medium mt-2">Maximum withdrawal limit: ₹50,000/day</p>
+                                <p className="text-xs text-indigo-300 font-medium mt-2">{t('wallet.withdrawal_limit', 'Maximum withdrawal limit: ₹50,000/day')}</p>
                             </div>
                             <div className="pt-4 flex items-center gap-2">
                                 <div className="h-2 flex-1 bg-white/10 rounded-full overflow-hidden">
@@ -289,16 +289,16 @@ const WalletDashboard = () => {
                     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
                         <h3 className="font-bold text-gray-900 flex items-center gap-2">
                             <Clock className="h-4 w-4 text-amber-500" />
-                            Payout Process
+                            {t('wallet.payout_process', 'Payout Process')}
                         </h3>
                         <p className="text-sm text-gray-500 leading-relaxed">
-                            Verified funds are instantly added to your <span className="font-bold text-indigo-600">Available Balance</span>. You can then request a manual payout to your bank account.
+                            {t('wallet.payout_desc', 'Verified funds are instantly added to your Available Balance. You can then request a manual payout to your bank account.')}
                         </p>
                         <button 
                             onClick={() => setIsPayoutModalOpen(true)}
                             className="w-full text-xs font-bold text-indigo-600 bg-indigo-50 py-3 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 group"
                         >
-                            Request a Payout Now
+                            {t('wallet.request_now', 'Request a Payout Now')}
                             <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>
@@ -324,7 +324,7 @@ const WalletDashboard = () => {
                         >
                             <div className="p-8 space-y-6">
                                 <div className="flex justify-between items-center">
-                                    <h2 className="text-xl font-black text-gray-900">Request Fund Transfer</h2>
+                                    <h2 className="text-xl font-black text-gray-900">{t('wallet.modal_title', 'Request Fund Transfer')}</h2>
                                     <button onClick={() => setIsPayoutModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                         <XCircle className="h-6 w-6 text-gray-400" />
                                     </button>
@@ -332,7 +332,7 @@ const WalletDashboard = () => {
 
                                 <form onSubmit={handlePayoutRequest} className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Amount to Withdraw (Min. ₹500)</label>
+                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('wallet.withdraw_amount', 'Amount to Withdraw (Min. ₹500)')}</label>
                                         <div className="relative">
                                             <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                             <input 
@@ -345,11 +345,11 @@ const WalletDashboard = () => {
                                                 onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
                                             />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 mt-2 ml-1">Available: ₹{wallet?.available_balance || 0}</p>
+                                        <p className="text-[10px] text-gray-400 mt-2 ml-1">{t('wallet.available_balance', 'Available Balance')}: ₹{wallet?.available_balance || 0}</p>
                                     </div>
 
                                     <div className="space-y-4 pt-2">
-                                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Transfer Destination</p>
+                                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t('wallet.destination', 'Transfer Destination')}</p>
                                         {payoutForm.bankDetails.accountNumber ? (
                                             <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                                                 <div className="flex items-center gap-3">
@@ -357,7 +357,7 @@ const WalletDashboard = () => {
                                                         <CreditCard className="h-4 w-4 text-indigo-600" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Saved Bank Account</p>
+                                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{t('wallet.saved_account', 'Saved Bank Account')}</p>
                                                         <p className="text-sm font-bold text-indigo-900 truncate">
                                                             {payoutForm.bankDetails.bankName} •••• {payoutForm.bankDetails.accountNumber.slice(-4)}
                                                         </p>
@@ -367,13 +367,13 @@ const WalletDashboard = () => {
                                             </div>
                                         ) : (
                                             <div className="p-4 rounded-xl border-2 border-dashed border-gray-200 text-center space-y-2">
-                                                <p className="text-xs text-gray-500">No bank details saved.</p>
+                                                <p className="text-xs text-gray-500">{t('wallet.no_details', 'No bank details saved.')}</p>
                                                 <button 
                                                     type="button"
                                                     onClick={() => navigate('/admin/settings')}
                                                     className="text-[10px] font-black text-indigo-600 uppercase hover:underline"
                                                 >
-                                                    Go to Settings to add Bank Info
+                                                    {t('wallet.go_to_settings', 'Go to Settings to add Bank Info')}
                                                 </button>
                                             </div>
                                         )}
@@ -384,7 +384,7 @@ const WalletDashboard = () => {
                                         disabled={!payoutForm.bankDetails.accountNumber || parseFloat(payoutForm.amount) < 500}
                                         className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 mt-4 disabled:opacity-50 disabled:grayscale"
                                     >
-                                        Verify & Transfer Funds
+                                        {t('wallet.verify_transfer', 'Verify & Transfer Funds')}
                                     </button>
                                 </form>
                             </div>

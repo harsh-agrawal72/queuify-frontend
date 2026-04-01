@@ -10,8 +10,10 @@ import clsx from 'clsx';
 import { format, parseISO, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const UserPayments = ({ bookings }) => {
+    const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
@@ -88,7 +90,7 @@ const UserPayments = ({ bookings }) => {
 
     const copyToClipboard = (text, type) => {
         navigator.clipboard.writeText(text);
-        toast.success(`${type} ID copied!`);
+        toast.success(t('payments_user.copy_id', '{{type}} ID copied!', { type }));
     };
 
     return (
@@ -104,14 +106,14 @@ const UserPayments = ({ bookings }) => {
                         <div className="p-3 bg-indigo-600 w-fit rounded-2xl text-white mb-4 shadow-lg shadow-indigo-100">
                             <Wallet className="h-6 w-6" />
                         </div>
-                        <p className="text-gray-500 text-sm font-medium">Total Net Spent</p>
+                        <p className="text-gray-500 text-sm font-medium">{t('payments_user.total_net_spent', 'Total Net Spent')}</p>
                         <h3 className="text-3xl font-black text-gray-900 mt-1 flex items-center">
                             <IndianRupee className="h-6 w-6 mr-0.5" />
                             {stats.totalNetSpent.toLocaleString('en-IN')}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-2 text-emerald-600 text-xs font-bold">
                             <TrendingUp className="h-3.5 w-3.5" />
-                            <span>{stats.paidCount} successful payments</span>
+                            <span>{t('payments_user.successful_payments', '{{count}} successful payments', { count: stats.paidCount })}</span>
                         </div>
                     </div>
                 </motion.div>
@@ -125,12 +127,12 @@ const UserPayments = ({ bookings }) => {
                         <div className="p-3 bg-blue-500 w-fit rounded-2xl text-white mb-4 shadow-lg shadow-blue-100">
                             <RefreshCw className="h-6 w-6" />
                         </div>
-                        <p className="text-gray-500 text-sm font-medium">Total Refunds</p>
+                        <p className="text-gray-500 text-sm font-medium">{t('payments_user.total_refunds', 'Total Refunds')}</p>
                         <h3 className="text-3xl font-black text-gray-900 mt-1 flex items-center">
                             <IndianRupee className="h-6 w-6 mr-0.5" />
                             {stats.totalRefunds.toLocaleString('en-IN')}
                         </h3>
-                        <p className="text-xs text-gray-400 mt-2 font-medium">Across {stats.refundCount} refunded appointments</p>
+                        <p className="text-xs text-gray-400 mt-2 font-medium">{t('payments_user.refunded_appointments', 'Across {{count}} refunded appointments', { count: stats.refundCount })}</p>
                     </div>
                 </motion.div>
 
@@ -143,14 +145,14 @@ const UserPayments = ({ bookings }) => {
                         <div className="p-3 bg-amber-500 w-fit rounded-2xl text-white mb-4 shadow-lg shadow-amber-100">
                             <Clock className="h-6 w-6" />
                         </div>
-                        <p className="text-gray-500 text-sm font-medium">Awaiting Payment</p>
+                        <p className="text-gray-500 text-sm font-medium">{t('payments_user.awaiting_payment', 'Awaiting Payment')}</p>
                         <h3 className="text-3xl font-black text-gray-900 mt-1 flex items-center">
                             <IndianRupee className="h-6 w-6 mr-0.5" />
                             {stats.pendingAmount.toLocaleString('en-IN')}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-2 text-amber-600 text-xs font-bold">
                             <AlertCircle className="h-3.5 w-3.5" />
-                            <span>{stats.pendingCount} pending appointments</span>
+                            <span>{t('payments_user.pending_appointments', '{{count}} pending appointments', { count: stats.pendingCount })}</span>
                         </div>
                     </div>
                 </motion.div>
@@ -163,12 +165,12 @@ const UserPayments = ({ bookings }) => {
             >
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <h3 className="text-xl font-black text-gray-900">Spending Trends</h3>
-                        <p className="text-sm text-gray-500 font-medium">Your monthly breakdown of service costs</p>
+                        <h3 className="text-xl font-black text-gray-900">{t('payments_user.spending_trends', 'Spending Trends')}</h3>
+                        <p className="text-sm text-gray-500 font-medium">{t('payments_user.monthly_breakdown', 'Your monthly breakdown of service costs')}</p>
                     </div>
                     <div className="hidden sm:flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
                         <History className="h-3 w-3" />
-                        Last 6 Months
+                        {t('payments_user.last_6_months', 'Last 6 Months')}
                     </div>
                 </div>
                 
@@ -218,15 +220,15 @@ const UserPayments = ({ bookings }) => {
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
                 <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <h3 className="text-xl font-black text-gray-900">Transaction History</h3>
-                        <p className="text-sm text-gray-500 font-medium">A detailed log of all payments and refunds</p>
+                        <h3 className="text-xl font-black text-gray-900">{t('payments_user.history_title', 'Transaction History')}</h3>
+                        <p className="text-sm text-gray-500 font-medium">{t('payments_user.history_subtitle', 'A detailed log of all payments and refunds')}</p>
                     </div>
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         <div className="relative flex-grow md:w-80">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input 
                                 type="text" 
-                                placeholder="Search payments..."
+                                placeholder={t('payments_user.search_placeholder', 'Search payments...')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm w-full focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-medium"
@@ -237,11 +239,11 @@ const UserPayments = ({ bookings }) => {
                             onChange={(e) => setFilterStatus(e.target.value)}
                             className="bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm font-black text-gray-600 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                         >
-                            <option value="all">Status: All</option>
-                            <option value="paid">Paid</option>
-                            <option value="refunded">Refunded</option>
-                            <option value="pending">Pending</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="all">{t('payments_user.status.all', 'Status: All')}</option>
+                            <option value="paid">{t('payments_user.status.paid', 'Paid')}</option>
+                            <option value="refunded">{t('payments_user.status.refunded', 'Refunded')}</option>
+                            <option value="pending">{t('payments_user.status.pending', 'Pending')}</option>
+                            <option value="cancelled">{t('payments_user.status.cancelled', 'Cancelled')}</option>
                         </select>
                     </div>
                 </div>
@@ -250,10 +252,10 @@ const UserPayments = ({ bookings }) => {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50/50">
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Service & Organization</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaction Details</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Amount</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Status</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('payments_user.table.service_org', 'Service & Organization')}</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('payments_user.table.trans_details', 'Transaction Details')}</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">{t('payments_user.table.amount', 'Amount')}</th>
+                                <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">{t('payments_user.table.status', 'Status')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -288,7 +290,7 @@ const UserPayments = ({ bookings }) => {
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-[10px] text-gray-300 italic font-medium">No Payment ID</span>
+                                                    <span className="text-[10px] text-gray-300 italic font-medium">{t('payments_user.no_payment_id', 'No Payment ID')}</span>
                                                 )}
 
                                                 {row.razorpay_refund_id && (
@@ -328,10 +330,10 @@ const UserPayments = ({ bookings }) => {
                                                 row.status === 'cancelled' && row.payment_status !== 'refunded' && "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
                                                 (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100"
                                             )}>
-                                                {row.payment_status === 'paid' && <><CheckCircle2 className="h-3.5 w-3.5" /> Paid</>}
-                                                {row.payment_status === 'refunded' && <><RefreshCw className="h-3.5 w-3.5" /> Refunded</>}
-                                                {row.status === 'cancelled' && row.payment_status !== 'refunded' && <><XCircle className="h-3.5 w-3.5" /> Cancelled</>}
-                                                {(row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && <><Clock className="h-3.5 w-3.5" /> Pending</>}
+                                                {row.payment_status === 'paid' && <><CheckCircle2 className="h-3.5 w-3.5" /> {t('payments_user.status.paid', 'Paid')}</>}
+                                                {row.payment_status === 'refunded' && <><RefreshCw className="h-3.5 w-3.5" /> {t('payments_user.status.refunded', 'Refunded')}</>}
+                                                {row.status === 'cancelled' && row.payment_status !== 'refunded' && <><XCircle className="h-3.5 w-3.5" /> {t('payments_user.status.cancelled', 'Cancelled')}</>}
+                                                {(row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && <><Clock className="h-3.5 w-3.5" /> {t('payments_user.status.pending', 'Pending')}</>}
                                             </span>
                                         </td>
                                     </motion.tr>
@@ -344,7 +346,7 @@ const UserPayments = ({ bookings }) => {
                                             <div className="p-4 bg-gray-50 rounded-full text-gray-200">
                                                 <History className="h-12 w-12" />
                                             </div>
-                                            <p className="text-gray-400 font-bold italic">No financial history matching your criteria.</p>
+                                            <p className="text-gray-400 font-bold italic">{t('payments_user.table.no_history', 'No financial history matching your criteria.')}</p>
                                         </div>
                                     </td>
                                 </tr>

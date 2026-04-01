@@ -178,23 +178,8 @@ const AppointmentManager = () => {
         const isPaid = apt.payment_status === 'paid' && apt.price > 0;
         const isCancelled = apt.status === 'cancelled';
 
-        let confirmMessage = t('appointment.confirm_delete_direct', "Are you sure you want to PERMANENTLY DELETE this appointment and remove it from the dashboard?");
-        
-        if (!isCancelled && isPaid) {
-            confirmMessage += "\n\n" + t('appointment.refund_notice', "IMPORTANT: A 100% REFUND will be issued to the user automatically.");
-        }
-
-        if (!window.confirm(confirmMessage)) return;
-
-        let reason = null;
-        if (!isCancelled) {
-            reason = window.prompt(t('appointment.enter_delete_reason', 'Please enter a reason for deletion/cancellation (for user records):'));
-            if (reason === null) return;
-            if (!reason.trim()) {
-                toast.error(t('appointment.reason_required', 'A reason is required to notify the user.'));
-                return;
-            }
-        }
+        // Removed confirmation as requested for direct removal
+        const reason = "Deleted by Admin";
 
         setProcessingId(apt.id);
         try {

@@ -750,5 +750,25 @@
     "bookings": "Bookings",
     "name": "Name",
     "date": "Date"
+  },
+  "slot": {
+    "bulk_copy": {
+      "title": "Bulk Copy Logic",
+      "source_date": "Copy From (Source Date)",
+      "source_hint": "Templates fetched from this day",
+      "resource_hint": "Leave as \"All\" to copy everything",
+      "strategy": "Copy Strategy",
+      "custom_dates": "Custom Dates",
+      "next_7_days": "Next 7 Days",
+      "next_month": "Next Month",
+      "4_weeks": "4 Same-Days",
+      "target_dates": "Copy To (Target Dates)",
+      "no_dates": "No target dates selected",
+      "clear_all": "Clear All",
+      "overwrite": "Overwrite Existing?",
+      "overwrite_desc": "Replaces all slots on target dates",
+      "finalize": "Finalize & Copy",
+      "min_date_error": "Add at least one target date"
+    }
   }
 }

@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { apiService } from '../services/api';
 import clsx from 'clsx';
 import { MapPin, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const MyBookings = ({ bookings, onCancel }) => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(null);
 
     const handleArrived = async (id) => {
         setLoading(`arrive-${id}`);
         try {
             await apiService.markArrived(id);
-            alert('Arrival signaled! Admin notified.');
+            alert(t('appointments.messages.arrival_success', 'Arrival signaled! Admin notified.'));
             window.location.reload();
-        } catch (e) { alert('Failed to signal arrival'); }
+        } catch (e) { alert(t('appointments.messages.arrival_failed', 'Failed to signal arrival')); }
         setLoading(null);
     };
 
@@ -22,16 +24,16 @@ const MyBookings = ({ bookings, onCancel }) => {
         setLoading(`dispute-${id}`);
         try {
             await apiService.flagDispute(id, reason);
-            alert('Dispute flagged. Funds held in escrow for review.');
+            alert(t('appointments.messages.dispute_success', 'Dispute flagged. Funds held in escrow for review.'));
             window.location.reload();
-        } catch (e) { alert('Failed to flag dispute'); }
+        } catch (e) { alert(t('appointments.messages.dispute_failed', 'Failed to flag dispute')); }
         setLoading(null);
     };
 
     if (!bookings || bookings.length === 0) {
         return (
             <div className="text-center py-8 bg-white rounded-lg shadow-sm border border-gray-100">
-                <p className="text-gray-500">You haven't made any bookings yet.</p>
+                <p className="text-gray-500">{t('appointments.no_bookings', "You haven't made any bookings yet.")}</p>
             </div>
         );
     }
@@ -53,7 +55,11 @@ const MyBookings = ({ bookings, onCancel }) => {
                                     booking.status === 'pending' && "bg-blue-50 text-blue-700 border-blue-100",
                                     booking.status === 'no_show' && "bg-orange-50 text-orange-700 border-orange-100"
                                 )}>
-                                    {booking.status === 'waitlisted_urgent' ? 'URGENT WAITLIST' : (booking.status === 'cancelled' && booking.cancelled_by === 'admin' ? 'CANCELLED BY ADMIN' : booking.status.replace('_', ' '))}
+                                    {booking.status === 'waitlisted_urgent' 
+                                        ? t('appointments.status.waitlisted_urgent', 'URGENT WAITLIST') 
+                                        : (booking.status === 'cancelled' && booking.cancelled_by === 'admin' 
+                                            ? t('appointments.status.cancelled_admin', 'CANCELLED BY ADMIN') 
+                                            : t(`appointments.status.${booking.status}`, booking.status.replace('_', ' ')))}
                                 </span>
                             </div>
                             
@@ -74,8 +80,8 @@ const MyBookings = ({ bookings, onCancel }) => {
                                 ) : (
                                     <div className="bg-red-50 text-red-700 p-2 rounded-lg font-bold border border-red-100 mt-2">
                                         {booking.status === 'waitlisted_urgent' 
-                                            ? "Time update pending: High-priority waitlist for today." 
-                                            : "Schedule interrupted: Manual action required."}
+                                            ? t('appointments.messages.time_pending', "Time update pending: High-priority waitlist for today.") 
+                                            : t('appointments.messages.schedule_interrupted', "Schedule interrupted: Manual action required.")}
                                     </div>
                                 )}
                             </div>
@@ -87,12 +93,12 @@ const MyBookings = ({ bookings, onCancel }) => {
                                         onClick={() => handleArrived(booking.id)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                     >
-                                        <MapPin className="h-3.5 w-3.5" /> {loading === `arrive-${booking.id}` ? 'Signaling...' : 'I am here'}
+                                        <MapPin className="h-3.5 w-3.5" /> {loading === `arrive-${booking.id}` ? t('appointments.actions.signaling', 'Signaling...') : t('appointments.actions.i_am_here', 'I am here')}
                                     </button>
                                 )}
                                 {booking.check_in_method === 'user_signal' && booking.status !== 'completed' && (
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-100">
-                                        <CheckCircle2 className="h-3.5 w-3.5" /> Arrived
+                                        <CheckCircle2 className="h-3.5 w-3.5" /> {t('appointments.actions.arrived', 'Arrived')}
                                     </div>
                                 )}
                                 {booking.payment_status === 'paid' && booking.dispute_status === 'none' && (
@@ -101,12 +107,12 @@ const MyBookings = ({ bookings, onCancel }) => {
                                         onClick={() => handleDispute(booking.id)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
                                     >
-                                        <ShieldAlert className="h-3.5 w-3.5" /> Report Issue
+                                        <ShieldAlert className="h-3.5 w-3.5" /> {t('appointments.actions.report_issue', 'Report Issue')}
                                     </button>
                                 )}
                                 {booking.dispute_status === 'flagged' && (
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-bold">
-                                        <AlertCircle className="h-3.5 w-3.5" /> Disputed (Held)
+                                        <AlertCircle className="h-3.5 w-3.5" /> {t('appointments.actions.disputed', 'Disputed (Held)')}
                                     </div>
                                 )}
                             </div>
@@ -122,7 +128,7 @@ const MyBookings = ({ bookings, onCancel }) => {
                                     onClick={() => onCancel(booking.id)}
                                     className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors uppercase tracking-tighter"
                                 >
-                                    Cancel
+                                    {t('common.cancel', 'Cancel')}
                                 </button>
                             )}
                         </div>

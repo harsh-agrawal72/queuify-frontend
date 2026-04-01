@@ -4,8 +4,9 @@ import { LogOut, Menu, X, ChevronRight, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
-
+import { useTranslation } from 'react-i18next';
 const Navbar = () => {
+    const { t } = useTranslation();
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -27,7 +28,7 @@ const Navbar = () => {
     };
 
     const navLinks = [
-        ...(user ? [{ name: 'Dashboard', path: '/dashboard' }] : [])
+        ...(user ? [{ name: t('navigation.dashboard', 'Dashboard'), path: '/dashboard' }] : [])
     ];
 
     return (
@@ -56,13 +57,13 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-4">
                                 <Link to="/dashboard" className="text-gray-600 hover:text-indigo-600 text-sm font-medium transition-colors">
-                                    Dashboard
+                                    {t('navigation.dashboard', 'Dashboard')}
                                 </Link>
                                 <button
                                     onClick={handleLogout}
                                     className="text-gray-600 hover:text-red-600 text-sm font-medium transition-colors"
                                 >
-                                    Logout
+                                    {t('navigation.logout', 'Logout')}
                                 </button>
                             </div>
                         ) : (
@@ -71,13 +72,13 @@ const Navbar = () => {
                                     to="/login"
                                     className="text-gray-600 hover:text-indigo-600 text-sm font-medium transition-colors"
                                 >
-                                    Login
+                                    {t('auth.login', 'Login')}
                                 </Link>
                                 <Link
                                     to="/register"
                                     className="bg-primary-600 text-white hover:bg-primary-700 px-5 py-2.5 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all"
                                 >
-                                    Get Started
+                                    {t('auth.get_started', 'Get Started')}
                                 </Link>
                             </div>
                         )}
@@ -139,7 +140,7 @@ const Navbar = () => {
                                         className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 font-medium transition-colors"
                                     >
                                         <LogOut className="h-4 w-4" />
-                                        Log Out
+                                        {t('navigation.logout', 'Log Out')}
                                     </button>
                                 </div>
                             ) : (
@@ -148,13 +149,13 @@ const Navbar = () => {
                                         to="/login"
                                         className="flex justify-center items-center px-4 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
                                     >
-                                        Log in
+                                        {t('auth.login', 'Log in')}
                                     </Link>
                                     <Link
                                         to="/register"
                                         className="flex justify-center items-center px-4 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700"
                                     >
-                                        Register
+                                        {t('auth.register', 'Register')}
                                     </Link>
                                 </div>
                             )}

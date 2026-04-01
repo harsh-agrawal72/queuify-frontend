@@ -159,28 +159,28 @@ const AdminLayout = () => {
     }, [notification]);
 
     const menuItems = [
-        { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics', 'Analytics') },
-        { path: '/admin/services', icon: Briefcase, label: t('navigation.service_management', 'Service Management') },
-        { path: '/admin/slots', icon: Clock, label: t('navigation.manage_slots', 'Manage Slots') },
-        { path: '/admin/appointments', icon: Users, label: t('navigation.appointments', 'Appointments') },
-        { path: '/admin/queue', icon: ListVideo, label: t('navigation.live_queue', 'Live Queue') },
-        { path: '/admin/inbox', icon: MessageCircle, label: t('navigation.support_inbox', 'Support Inbox') },
-        { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews', 'Patient Reviews') },
-        { path: '/admin/about', icon: Building2, label: t('navigation.about_organization', 'About Organization') },
-        { path: '/admin/settings', icon: Settings, label: t('navigation.settings', 'Settings') },
-        { path: '/admin/wallet', icon: Wallet, label: t('navigation.wallet', 'Wallet') },
+        { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics') },
+        { path: '/admin/services', icon: Briefcase, label: t('navigation.service_management') },
+        { path: '/admin/slots', icon: Clock, label: t('navigation.manage_slots') },
+        { path: '/admin/appointments', icon: Users, label: t('navigation.appointments') },
+        { path: '/admin/queue', icon: ListVideo, label: t('navigation.live_queue') },
+        { path: '/admin/inbox', icon: MessageCircle, label: t('navigation.support_inbox') },
+        { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews') },
+        { path: '/admin/about', icon: Building2, label: t('navigation.about_organization') },
+        { path: '/admin/settings', icon: Settings, label: t('navigation.settings') },
+        { path: '/admin/wallet', icon: Wallet, label: t('navigation.wallet') },
     ];
 
     const getIndustryTerminology = (type) => {
         switch (type) {
-            case 'Salon': return { action: 'Book Service', item: 'Service', dashboard: 'Salon Management' };
-            case 'Bank': return { action: 'Reserve Slot', item: 'Meeting', dashboard: 'Branch Dashboard' };
+            case 'Salon': return { action: t('industry.salon.action', 'Book Service'), item: t('industry.salon.item', 'Service'), dashboard: t('industry.salon.dashboard', 'Salon Management') };
+            case 'Bank': return { action: t('industry.bank.action', 'Reserve Slot'), item: t('industry.bank.item', 'Meeting'), dashboard: t('industry.bank.dashboard', 'Branch Dashboard') };
             case 'Hospital':
-            case 'Clinic': return { action: 'Book Appointment', item: 'Appointment', dashboard: 'Medical Dashboard' };
-            case 'Government Office': return { action: 'Schedule Visit', item: 'Visit', dashboard: 'Office Control' };
-            case 'Consultancy': return { action: 'Schedule Consultation', item: 'Consultation', dashboard: 'Client Portal' };
-            case 'Coaching Institute': return { action: 'Join Class', item: 'Class', dashboard: 'Institute Panel' };
-            default: return { action: 'Book Appointment', item: 'Appointment', dashboard: 'Admin Dashboard' };
+            case 'Clinic': return { action: t('industry.medical.action', 'Book Appointment'), item: t('industry.medical.item', 'Appointment'), dashboard: t('industry.medical.dashboard', 'Medical Dashboard') };
+            case 'Government Office': return { action: t('industry.gov.action', 'Schedule Visit'), item: t('industry.gov.item', 'Visit'), dashboard: t('industry.gov.dashboard', 'Office Control') };
+            case 'Consultancy': return { action: t('industry.consultancy.action', 'Schedule Consultation'), item: t('industry.consultancy.item', 'Consultation'), dashboard: t('industry.consultancy.dashboard', 'Client Portal') };
+            case 'Coaching Institute': return { action: t('industry.institute.action', 'Join Class'), item: t('industry.institute.item', 'Class'), dashboard: t('industry.institute.dashboard', 'Institute Panel') };
+            default: return { action: t('common.book_appointment', 'Book Appointment'), item: t('common.appointment', 'Appointment'), dashboard: t('common.admin_dashboard', 'Admin Dashboard') };
         }
     };
 
@@ -229,7 +229,7 @@ const AdminLayout = () => {
 
                 <div className="flex-1 py-6 overflow-y-auto px-3">
                     <p className={`text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3 ${!isSidebarOpen && 'text-center'}`}>
-                        {isSidebarOpen ? 'Menu' : '...'}
+                        {isSidebarOpen ? t('common.menu', 'Menu') : '...'}
                     </p>
                     <nav className="space-y-1">
                         {menuItems.map((item) => {
@@ -261,7 +261,7 @@ const AdminLayout = () => {
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         className="flex items-center justify-center w-full py-2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                        {isSidebarOpen ? '« Collapse Sidebar' : '»'}
+                        {isSidebarOpen ? `« ${t('common.collapse', 'Collapse Sidebar')}` : '»'}
                     </button>
                 </div>
             </motion.aside>
@@ -306,18 +306,18 @@ const AdminLayout = () => {
                                         className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 py-2 overflow-hidden z-50"
                                     >
                                         <div className="px-4 py-2 border-b border-gray-50 flex justify-between items-center">
-                                            <h3 className="font-semibold text-gray-800">Notifications</h3>
+                                            <h3 className="font-semibold text-gray-800">{t('common.notifications', 'Notifications')}</h3>
                                             <button
                                                 onClick={handleMarkAllRead}
                                                 className="text-xs text-indigo-600 hover:text-indigo-800"
                                             >
-                                                Mark all read
+                                                {t('common.mark_all_read', 'Mark all read')}
                                             </button>
                                         </div>
                                         <div className="max-h-64 overflow-y-auto">
                                             {notifications.length === 0 ? (
                                                 <div className="px-4 py-6 text-center text-gray-400 text-sm">
-                                                    No new notifications
+                                                    {t('common.no_notifications', 'No new notifications')}
                                                 </div>
                                             ) : (
                                                 notifications.map((notif) => (

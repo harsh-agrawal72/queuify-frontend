@@ -105,6 +105,10 @@ const apiService = {
     markArrived: (id) => api.post(`/appointments/${id}/arrive`),
     flagDispute: (id, reason) => api.post(`/appointments/${id}/dispute`, { reason }),
 
+    // Slot Notifications Tracker
+    getMyNotifications: () => api.get('/slots/notifications/my'),
+    cancelNotification: (id) => api.delete(`/slots/notifications/${id}`),
+
     // Payment Gateway
     createPaymentOrder: (appointmentId) => api.post('/payments/create-order', { appointmentId }),
     verifyPayment: (data) => api.post('/payments/verify-payment', data),

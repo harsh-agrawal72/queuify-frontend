@@ -6,17 +6,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 
-const getIndustryTerminology = (type) => {
+const getIndustryTerminology = (type, t) => {
     switch (type) {
-        case 'Salon': return { action: 'View Services', item: 'Service', emoji: '💇' };
-        case 'Bank': return { action: 'Reserve Slot', item: 'Visit', emoji: '🏦' };
-        case 'Hospital': return { action: 'Book Appointment', item: 'Appointment', emoji: '🏥' };
-        case 'Clinic': return { action: 'Book Appointment', item: 'Appointment', emoji: '🩺' };
-        case 'Government Office': return { action: 'Schedule Visit', item: 'Visit', emoji: '🏛️' };
-        case 'Consultancy': return { action: 'Schedule Consultation', item: 'Consultation', emoji: '💼' };
-        case 'Coaching Institute': return { action: 'Join Class/Slot', item: 'Class', emoji: '📚' };
-        case 'Service Center': return { action: 'Schedule Service', item: 'Repair', emoji: '🔧' };
-        default: return { action: 'Book Appointment', item: 'Appointment', emoji: '📋' };
+        case 'Salon': return { action: t('org.industry.salon.action', 'View Services'), item: t('org.industry.salon.item', 'Service'), emoji: '💇' };
+        case 'Bank': return { action: t('org.industry.bank.action', 'Reserve Slot'), item: t('org.industry.bank.item', 'Visit'), emoji: '🏦' };
+        case 'Hospital': return { action: t('org.industry.hospital.action', 'Book Appointment'), item: t('org.industry.hospital.item', 'Appointment'), emoji: '🏥' };
+        case 'Clinic': return { action: t('org.industry.clinic.action', 'Book Appointment'), item: t('org.industry.clinic.item', 'Appointment'), emoji: '🩺' };
+        case 'Government Office': return { action: t('org.industry.gov.action', 'Schedule Visit'), item: t('org.industry.gov.item', 'Visit'), emoji: '🏛️' };
+        case 'Consultancy': return { action: t('org.industry.consultancy.action', 'Schedule Consultation'), item: t('org.industry.consultancy.item', 'Consultation'), emoji: '💼' };
+        case 'Coaching Institute': return { action: t('org.industry.coaching.action', 'Join Class/Slot'), item: t('org.industry.coaching.item', 'Class'), emoji: '📚' };
+        case 'Service Center': return { action: t('org.industry.service.action', 'Schedule Service'), item: t('org.industry.service.item', 'Repair'), emoji: '🔧' };
+        default: return { action: t('org.industry.default.action', 'Book Appointment'), item: t('org.industry.default.item', 'Appointment'), emoji: '📋' };
     }
 };
 
@@ -84,16 +84,16 @@ export default function OrganizationsList() {
     }, [search, filter]);
 
     const categories = [
-        { label: 'All', value: '', icon: <Building2 className="h-4 w-4" /> },
-        { label: 'Clinic', value: 'Clinic', icon: <Stethoscope className="h-4 w-4" /> },
-        { label: 'Hospital', value: 'Hospital', icon: <Building2 className="h-4 w-4" /> },
-        { label: 'Salon', value: 'Salon', icon: <Scissors className="h-4 w-4" /> },
-        { label: 'Bank', value: 'Bank', icon: <Landmark className="h-4 w-4" /> },
-        { label: 'Government', value: 'Government Office', icon: <Library className="h-4 w-4" /> },
-        { label: 'Consultancy', value: 'Consultancy', icon: <Briefcase className="h-4 w-4" /> },
-        { label: 'Coaching', value: 'Coaching Institute', icon: <GraduationCap className="h-4 w-4" /> },
-        { label: 'Service Center', value: 'Service Center', icon: <Wrench className="h-4 w-4" /> },
-        { label: 'Other', value: 'Other', icon: <ClipboardList className="h-4 w-4" /> },
+        { label: t('org.categories.all', 'All'), value: '', icon: <Building2 className="h-4 w-4" /> },
+        { label: t('org.categories.clinic', 'Clinic'), value: 'Clinic', icon: <Stethoscope className="h-4 w-4" /> },
+        { label: t('org.categories.hospital', 'Hospital'), value: 'Hospital', icon: <Building2 className="h-4 w-4" /> },
+        { label: t('org.categories.salon', 'Salon'), value: 'Salon', icon: <Scissors className="h-4 w-4" /> },
+        { label: t('org.categories.bank', 'Bank'), value: 'Bank', icon: <Landmark className="h-4 w-4" /> },
+        { label: t('org.categories.gov', 'Government'), value: 'Government Office', icon: <Library className="h-4 w-4" /> },
+        { label: t('org.categories.consultancy', 'Consultancy'), value: 'Consultancy', icon: <Briefcase className="h-4 w-4" /> },
+        { label: t('org.categories.coaching', 'Coaching'), value: 'Coaching Institute', icon: <GraduationCap className="h-4 w-4" /> },
+        { label: t('org.categories.service', 'Service Center'), value: 'Service Center', icon: <Wrench className="h-4 w-4" /> },
+        { label: t('org.categories.other', 'Other'), value: 'Other', icon: <ClipboardList className="h-4 w-4" /> },
     ];
 
     const renderStars = (rating) => {
@@ -124,7 +124,7 @@ export default function OrganizationsList() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight"
                     >
-                        Professional Services, <span className="text-indigo-400">Simplified.</span>
+                        {t('org.hero_title', 'Professional Services, ')}<span className="text-indigo-400">{t('org.hero_title_accent', 'Simplified.')}</span>
                     </motion.h1>
                     
                     <motion.p
@@ -133,7 +133,7 @@ export default function OrganizationsList() {
                         transition={{ delay: 0.1 }}
                         className="text-slate-400 text-xs md:text-sm font-medium mb-6 leading-relaxed max-w-lg"
                     >
-                        Connect with top-rated organizations and manage your appointments with our intelligent queue system.
+                        {t('org.hero_subtitle', 'Connect with top-rated organizations and manage your appointments with our intelligent queue system.')}
                     </motion.p>
                     
                     {/* Integrated Search Bar */}
@@ -148,13 +148,13 @@ export default function OrganizationsList() {
                             <Search className="h-5 w-5 text-gray-400 ml-3" />
                             <input
                                 type="text"
-                                placeholder="Search by name, category, or service..."
+                                placeholder={t('org.search_placeholder', 'Search by name, category, or service...')}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 font-medium py-3 px-3 text-xs md:text-sm placeholder-gray-400"
                             />
                             <button className="hidden md:flex items-center gap-2 bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-indigo-700 transition active:scale-95 text-sm">
-                                Search
+                                {t('common.search', 'Search')}
                             </button>
                         </div>
                     </motion.div>
@@ -190,7 +190,7 @@ export default function OrganizationsList() {
                         </div>
                         <div className="flex items-center gap-2">
                             <span>{categories.find(c => c.value === filter)?.icon}</span>
-                            <span>{categories.find(c => c.value === filter)?.label || 'All'}</span>
+                            <span>{categories.find(c => c.value === filter)?.label || t('org.categories.all', 'All')}</span>
                         </div>
                         <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? '-rotate-90' : 'rotate-90'}`} />
                     </button>
@@ -244,14 +244,14 @@ export default function OrganizationsList() {
                 {!loading && (
                     <div className="flex items-center justify-between px-2">
                         <p className="text-sm font-medium text-gray-500">
-                            Found <span className="text-gray-900 font-black">{orgs.length}</span> results
+                            {t('org.results_found', 'Found {{count}} results', { count: orgs.length })}
                         </p>
                         {search && (
                             <button 
                                 onClick={() => setSearch('')}
                                 className="text-xs font-bold text-indigo-600 hover:underline"
                             >
-                                Clear search
+                                {t('org.clear_search', 'Clear search')}
                             </button>
                         )}
                     </div>
@@ -276,7 +276,7 @@ export default function OrganizationsList() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
                         <AnimatePresence mode="popLayout">
                             {orgs.map((org, index) => {
-                                const term = getIndustryTerminology(org.type);
+                                const term = getIndustryTerminology(org.type, t);
                                 const gradient = getTypeGradient(org.type);
                                 const hasRating = org.avg_rating > 0;
 
@@ -347,7 +347,7 @@ export default function OrganizationsList() {
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-lg">
-                                                        {org.type || 'Professional'}
+                                                        {t(`org.categories.${org.type?.toLowerCase().replace(' ', '_')}`, org.type || 'Professional')}
                                                     </span>
                                                     <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded-lg">
                                                         ID: {org.org_code}
@@ -367,7 +367,7 @@ export default function OrganizationsList() {
                                                     </div>
                                                 ) : (
                                                     <div className="text-xs text-gray-400 font-bold bg-gray-50/50 px-3 py-1.5 rounded-xl border border-gray-100 w-fit">
-                                                        No ratings yet
+                                                        {t('org.no_ratings', 'No ratings yet')}
                                                     </div>
                                                 )}
 
@@ -385,7 +385,7 @@ export default function OrganizationsList() {
                                                                 {org.open_time && org.close_time ? (
                                                                     `${formatTime12h(org.open_time)} - ${formatTime12h(org.close_time)}`
                                                                 ) : (
-                                                                    'Schedule not set'
+                                                                    t('org.schedule_not_set', 'Schedule not set')
                                                                 )}
                                                             </span>
                                                         </div>
@@ -403,7 +403,7 @@ export default function OrganizationsList() {
                                                                 <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border shadow-sm ${
                                                                     isOpen ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
                                                                 }`}>
-                                                                    {isOpen ? 'Open Now' : 'Closed'}
+                                                                    {isOpen ? t('org.open_now', 'Open Now') : t('org.closed', 'Closed')}
                                                                 </span>
                                                             );
                                                         })()}
@@ -446,15 +446,15 @@ export default function OrganizationsList() {
                         <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-gray-200/50">
                             <Building2 className="h-10 w-10 text-gray-200" />
                         </div>
-                        <h3 className="text-2xl font-black text-gray-900 mb-2">No organizations found</h3>
+                        <h3 className="text-2xl font-black text-gray-900 mb-2">{t('org.no_results_title', 'No organizations found')}</h3>
                         <p className="text-gray-500 font-medium max-w-sm mx-auto mb-8">
-                            We couldn't find any results matching your current filters. Try searching with different terms.
+                            {t('org.no_results_subtitle', "We couldn't find any results matching your current filters. Try searching with different terms.")}
                         </p>
                         <button
                             onClick={() => { setSearch(''); setFilter(''); }}
                             className="bg-white text-indigo-600 px-8 py-3 rounded-xl font-bold border border-indigo-100 hover:bg-indigo-50 transition shadow-sm"
                         >
-                            Reset all filters
+                            {t('org.reset_filters', 'Reset all filters')}
                         </button>
                     </motion.div>
                 )}

@@ -336,8 +336,8 @@ const SettingsPanel = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-gray-100 pb-4 mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">Payout & Bank Settings</h2>
-                            <p className="text-sm text-gray-500">Securely store your account details for faster withdrawals.</p>
+                            <h2 className="text-lg font-semibold text-gray-800">{t('admin.payout_settings.title', 'Payout & Bank Settings')}</h2>
+                            <p className="text-sm text-gray-500">{t('admin.payout_settings.subtitle', 'Securely store your account details for faster withdrawals.')}</p>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -349,23 +349,23 @@ const SettingsPanel = () => {
                                             type="button"
                                             onClick={async () => {
                                                 if (!formData.payout_ifsc || formData.payout_ifsc.length < 11) {
-                                                    toast.error("Please enter a valid 11-digit IFSC code");
+                                                    toast.error(t('admin.payout_settings.ifsc_invalid_msg', "Please enter a valid 11-digit IFSC code"));
                                                     return;
                                                 }
-                                                const loadingToast = toast.loading("Verifying IFSC...");
+                                                const loadingToast = toast.loading(t('admin.payout_settings.verifying', "Verifying IFSC..."));
                                                 try {
                                                     const res = await fetch(`https://ifsc.razorpay.com/${formData.payout_ifsc}`);
-                                                    if (!res.ok) throw new Error("Invalid IFSC code");
+                                                    if (!res.ok) throw new Error(t('admin.payout_settings.invalid_ifsc', "Invalid IFSC code"));
                                                     const data = await res.json();
                                                     setFormData(prev => ({ ...prev, payout_bank_name: data.BANK }));
-                                                    toast.success(`Verified: ${data.BANK}`, { id: loadingToast });
+                                                    toast.success(t('admin.payout_settings.verified_bank', `Verified: ${data.BANK}`, { bank: data.BANK }), { id: loadingToast });
                                                 } catch (err) {
-                                                    toast.error("Invalid IFSC code or network error", { id: loadingToast });
+                                                    toast.error(t('admin.payout_settings.verify_error', "Invalid IFSC code or network error"), { id: loadingToast });
                                                 }
                                             }}
                                             className="text-[10px] text-indigo-600 font-bold hover:underline"
                                         >
-                                            Verify & Get Bank Name
+                                            {t('admin.payout_settings.ifsc_verify', 'Verify & Get Bank Name')}
                                         </button>
                                     )}
                                 </label>
@@ -374,25 +374,25 @@ const SettingsPanel = () => {
                                     name="payout_ifsc"
                                     value={formData.payout_ifsc}
                                     onChange={handleChange}
-                                    placeholder="e.g. HDFC0001234"
+                                    placeholder={t('admin.payout_settings.ifsc_placeholder', "e.g. HDFC0001234")}
                                     className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all uppercase"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Bank Name</label>
+                                <label className="text-sm font-medium text-gray-700">{t('admin.payout_settings.bank_name', 'Bank Name')}</label>
                                 <input
                                     type="text"
                                     name="payout_bank_name"
                                     value={formData.payout_bank_name}
                                     onChange={handleChange}
-                                    placeholder="e.g. HDFC Bank"
+                                    placeholder={t('admin.payout_settings.bank_placeholder', "e.g. HDFC Bank")}
                                     className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Account Holder Name</label>
+                                <label className="text-sm font-medium text-gray-700">{t('admin.payout_settings.holder_name', 'Account Holder Name')}</label>
                                 <input
                                     type="text"
                                     name="payout_account_holder"
@@ -403,7 +403,7 @@ const SettingsPanel = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">Account Number</label>
+                                <label className="text-sm font-medium text-gray-700">{t('admin.payout_settings.acc_number', 'Account Number')}</label>
                                 <input
                                     type="text"
                                     name="payout_account_number"
@@ -416,13 +416,13 @@ const SettingsPanel = () => {
 
                         <div className="pt-4 mt-4 border-t border-gray-50">
                             <div className="space-y-2 max-w-md">
-                                <label className="text-sm font-medium text-gray-700">UPI ID (Alternative)</label>
+                                <label className="text-sm font-medium text-gray-700">{t('admin.payout_settings.upi_id', 'UPI ID (Alternative)')}</label>
                                 <input
                                     type="text"
                                     name="payout_upi_id"
                                     value={formData.payout_upi_id}
                                     onChange={handleChange}
-                                    placeholder="e.g. name@upi"
+                                    placeholder={t('admin.payout_settings.upi_placeholder', "e.g. name@upi")}
                                     className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
                                 />
                             </div>
@@ -582,9 +582,9 @@ const SettingsPanel = () => {
                     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 pb-4">
                         <div className="border-b border-gray-100 pb-4 mb-4">
                             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                                <QrCode className="h-5 w-5 text-indigo-600" /> Organization QR Code
+                                <QrCode className="h-5 w-5 text-indigo-600" /> {t('admin.qr.title', 'Organization QR Code')}
                             </h2>
-                            <p className="text-sm text-gray-500">Generate and print your unique QR code for easy customer access.</p>
+                            <p className="text-sm text-gray-500">{t('admin.qr.subtitle', 'Generate and print your unique QR code for easy customer access.')}</p>
                         </div>
 
                         {!orgSlug && (
@@ -593,13 +593,13 @@ const SettingsPanel = () => {
                                     <AlertTriangle className="h-8 w-8 text-amber-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-amber-900">Missing Public Link!</h3>
-                                    <p className="text-sm text-amber-700 max-w-md mx-auto">Your organization doesn't have a unique public link yet. This is required to generate a QR code.</p>
+                                    <h3 className="font-bold text-amber-900">{t('admin.qr.missing_link', 'Missing Public Link!')}</h3>
+                                    <p className="text-sm text-amber-700 max-w-md mx-auto">{t('admin.qr.missing_link_desc', "Your organization doesn't have a unique public link yet. This is required to generate a QR code.")}</p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={async () => {
-                                        const loadingToast = toast.loading("Generating your public link...");
+                                        const loadingToast = toast.loading(t('admin.qr.generating', "Generating your public link..."));
                                         try {
                                             // Trigger an update to save settings which should generate a slug on the backend if missing
                                             await handleSave(new Event('submit'));
@@ -607,17 +607,17 @@ const SettingsPanel = () => {
                                             const res = await api.get('/admin/org');
                                             if (res.data.slug) {
                                                 setOrgSlug(res.data.slug);
-                                                toast.success("Public link generated!", { id: loadingToast });
+                                                toast.success(t('admin.qr.gen_success', "Public link generated!"), { id: loadingToast });
                                             } else {
                                                 throw new Error("Slug still missing");
                                             }
                                         } catch (err) {
-                                            toast.error("Failed to generate link. Please contact support.", { id: loadingToast });
+                                            toast.error(t('admin.qr.gen_failed', "Failed to generate link. Please contact support."), { id: loadingToast });
                                         }
                                     }}
                                     className="bg-amber-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-amber-700 transition-colors shadow-lg shadow-amber-100"
                                 >
-                                    Generate Public Link
+                                    {t('admin.qr.generate_btn', 'Generate Public Link')}
                                 </button>
                             </div>
                         )}
@@ -637,7 +637,7 @@ const SettingsPanel = () => {
                                             />
                                         </div>
                                         <h3 className="font-bold text-gray-900 text-lg text-center leading-tight">{orgName}</h3>
-                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-widest mt-2">Queuify Smart Access</p>
+                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-widest mt-2">{t('admin.qr.scan_to_book', 'Scan to Book Appointment')}</p>
                                         
                                         <div className="mt-8 flex gap-3 w-full">
                                             <button 
@@ -645,13 +645,13 @@ const SettingsPanel = () => {
                                                 onClick={downloadQR}
                                                 className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                                             >
-                                                <Download className="h-4 w-4" /> Download
+                                                <Download className="h-4 w-4" /> {t('admin.qr.download', 'Download')}
                                             </button>
                                             <button 
                                                 type="button"
                                                 onClick={printQR}
                                                 className="p-2.5 bg-gray-50 text-gray-600 border border-gray-200 rounded-xl hover:bg-white hover:text-indigo-600 transition-all"
-                                                title="Print"
+                                                title={t('admin.qr.print', "Print")}
                                             >
                                                 <Printer className="h-4 w-4" />
                                             </button>
@@ -662,13 +662,13 @@ const SettingsPanel = () => {
                                 <div className="flex-1 space-y-6">
                                     <div className="space-y-4">
                                         <h4 className="font-bold text-gray-800 flex items-center gap-2">
-                                            <Info className="h-4 w-4 text-indigo-500" /> How to use?
+                                            <Info className="h-4 w-4 text-indigo-500" /> {t('admin.qr.how_to_use', 'How to use?')}
                                         </h4>
                                         <ul className="space-y-3">
                                             {[
-                                                { title: 'Print & Display', desc: 'Download and print this QR code to display at your reception or entrance.' },
-                                                { title: 'Instant Scan', desc: 'Customers scan the code using their phone camera.' },
-                                                { title: 'Automated Flow', desc: 'They will be instantly redirected to your booking page. New users will be prompted to join Queuify first.' }
+                                                { title: t('admin.qr.step1_title', 'Print & Display'), desc: t('admin.qr.step1_desc', 'Download and print this QR code to display at your reception or entrance.') },
+                                                { title: t('admin.qr.step2_title', 'Instant Scan'), desc: t('admin.qr.step2_desc', 'Customers scan the code using their phone camera.') },
+                                                { title: t('admin.qr.step3_title', 'Automated Flow'), desc: t('admin.qr.step3_desc', 'They will be instantly redirected to your booking page. New users will be prompted to join Queuify first.') }
                                             ].map((item, i) => (
                                                 <li key={i} className="flex gap-3">
                                                     <div className="h-5 w-5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5 border border-indigo-100">
@@ -684,14 +684,14 @@ const SettingsPanel = () => {
                                     </div>
 
                                     <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
-                                        <p className="text-xs font-semibold text-indigo-900 uppercase tracking-widest">Public Link</p>
+                                        <p className="text-xs font-semibold text-indigo-900 uppercase tracking-widest">{t('admin.qr.public_link', 'Public Link')}</p>
                                         <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-indigo-100">
                                             <code className="text-[10px] text-indigo-600 break-all flex-1">{scanUrl}</code>
                                             <button 
                                                 type="button"
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(scanUrl);
-                                                    toast.success('Link copied!');
+                                                    toast.success(t('admin.qr.link_copied', 'Link copied!'));
                                                 }}
                                                 className="p-1 hover:bg-indigo-50 rounded transition-colors"
                                             >
@@ -769,9 +769,9 @@ const SettingsPanel = () => {
                     {[
                         { id: 'general', icon: Building2, label: t('settings.tabs.general', 'General') },
                         { id: 'hours', icon: Clock, label: t('settings.tabs.hours', 'Hours') },
-                        { id: 'qrcode', icon: QrCode, label: 'QR Code' },
+                        { id: 'qrcode', icon: QrCode, label: t('navigation.qr_code', 'QR Code') },
                         { id: 'notifications', icon: Bell, label: t('settings.tabs.alerts', 'Alerts') },
-                        { id: 'payout', icon: CreditCard, label: 'Payout' },
+                        { id: 'payout', icon: CreditCard, label: t('navigation.payout', 'Payout') },
                         { id: 'security', icon: Shield, label: t('settings.tabs.security', 'Security') },
                         { id: 'admins', icon: Users, label: t('settings.tabs.admins', 'Admins') },
                         { id: 'danger', icon: AlertTriangle, label: t('settings.tabs.danger', 'Danger') }

@@ -11,6 +11,9 @@ import { api } from '../services/api';
 import { LayoutDashboard, Calendar, History, Search, TrendingUp } from 'lucide-react';
 import UserPayments from '../components/user/UserPayments';
 import MyBookings from '../components/MyBookings';
+import WaitlistTrackerCard from '../components/user/WaitlistTrackerCard';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 
 const UserDashboard = () => {
     const { user } = useAuth();
@@ -25,6 +28,9 @@ const UserDashboard = () => {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [confirmedBooking, setConfirmedBooking] = useState(null);
     const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'bookings', 'payments'
+    const [notifications, setNotifications] = useState([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
+    const { t } = useTranslation();
 
     const { update } = useUserSocket(user?.id);
 
@@ -32,6 +38,7 @@ const UserDashboard = () => {
     useEffect(() => {
         fetchOrganizations();
         fetchMyBookings();
+        fetchNotifications();
     }, []);
 
     // Refresh on socket update
@@ -39,6 +46,7 @@ const UserDashboard = () => {
         if (update) {
             console.log('[Dashboard] Refreshing due to real-time update');
             fetchMyBookings();
+            fetchNotifications();
             if (selectedOrg) {
                 handleViewSlots(selectedOrg);
             }
@@ -62,6 +70,18 @@ const UserDashboard = () => {
             setMyBookings(response.data);
         } catch (error) {
             console.error('Error fetching bookings:', error);
+        }
+    };
+
+    const fetchNotifications = async () => {
+        setLoadingNotifications(true);
+        try {
+            const response = await apiService.getMyNotifications();
+            setNotifications(response.data);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        } finally {
+            setLoadingNotifications(false);
         }
     };
 
@@ -146,6 +166,17 @@ const UserDashboard = () => {
         }
     };
 
+    const handleCancelNotification = async (notificationId) => {
+        if (!window.confirm(t('common.confirm_cancel', 'Stop tracking this slot?'))) return;
+        try {
+            await apiService.cancelNotification(notificationId);
+            toast.success(t('common.success', 'Tracker removed'));
+            fetchNotifications();
+        } catch (error) {
+            toast.error(t('common.error', 'Failed to remove tracker'));
+        }
+    };
+
     const closeBookingModal = () => {
         setShowBookingModal(false);
         setBookingSlot(null);
@@ -155,14 +186,14 @@ const UserDashboard = () => {
     return (
         <div className="w-full px-4 py-8 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <h1 className="text-3xl font-black mb-0 text-gray-900 tracking-tight">User Dashboard</h1>
+                <h1 className="text-3xl font-black mb-0 text-gray-900 tracking-tight">{t('user_dashboard.title', 'User Dashboard')}</h1>
                 
                 {/* Modern Navigation Tabs */}
                 <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-2xl border border-gray-200 backdrop-blur-sm self-stretch md:self-auto">
                     {[
-                        { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
-                        { id: 'bookings', icon: Calendar, label: 'My Bookings' },
-                        { id: 'payments', icon: History, label: 'Payment History' }
+                        { id: 'overview', icon: LayoutDashboard, label: t('user_dashboard.tabs.overview', 'Overview') },
+                        { id: 'bookings', icon: Calendar, label: t('user_dashboard.tabs.bookings', 'My Bookings') },
+                        { id: 'payments', icon: History, label: t('user_dashboard.tabs.payments', 'Payment History') }
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -187,7 +218,7 @@ const UserDashboard = () => {
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                         <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 rounded-3xl text-white shadow-xl shadow-indigo-200">
-                            <p className="text-xs text-indigo-100 font-black uppercase tracking-widest opacity-80 mb-1">Active Bookings</p>
+                            <p className="text-xs text-indigo-100 font-black uppercase tracking-widest opacity-80 mb-1">{t('user_dashboard.stats.active_bookings', 'Active Bookings')}</p>
                             <div className="flex justify-between items-end">
                                 <h3 className="text-4xl font-black">{myBookings.filter(b => ['pending', 'confirmed', 'serving'].includes(b.status)).length}</h3>
                                 <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
@@ -197,7 +228,7 @@ const UserDashboard = () => {
                         </div>
 
                         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                            <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-1">Lifetime Spent</p>
+                            <p className="text-xs text-gray-400 font-black uppercase tracking-widest mb-1">{t('user_dashboard.stats.lifetime_spent', 'Lifetime Spent')}</p>
                             <div className="flex justify-between items-end">
                                 <h3 className="text-4xl font-black text-gray-900">₹{myBookings.filter(b => b.payment_status === 'paid').reduce((sum, b) => sum + parseFloat(b.price || 0), 0).toLocaleString()}</h3>
                                 <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
@@ -211,35 +242,60 @@ const UserDashboard = () => {
                                 onClick={() => setActiveTab('bookings')}
                                 className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
                             >
-                                <History className="h-5 w-5" /> Manage Calendar
+                                <History className="h-5 w-5" /> {t('dashboard.manage_calendar', 'Manage Calendar')}
                             </button>
                         </div>
                     </div>
 
+                    {/* Waitlist Trackers Section */}
+                    {notifications.length > 0 && (
+                        <div className="mb-12 animate-in fade-in slide-in-from-left-4 duration-700">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2 bg-indigo-600 rounded-lg text-white">
+                                    <Bell className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t('user_dashboard.tracker.title', 'Waitlist Trackers')}</h2>
+                                    <p className="text-sm text-gray-500 font-medium">{t('user_dashboard.tracker.subtitle', 'Live status of your requested slots.')}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {notifications.map(sn => (
+                                    <WaitlistTrackerCard 
+                                        key={sn.id} 
+                                        notification={sn} 
+                                        onCancel={handleCancelNotification}
+                                        onRefresh={fetchNotifications}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Find Organizations</h2>
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t('user_dashboard.find_orgs', 'Find Organizations')}</h2>
                         <div className="hidden sm:flex items-center gap-3">
                             <select
                                 value={selectedType}
                                 onChange={handleTypeChange}
                                 className="bg-white border-none rounded-xl px-4 py-2 text-sm font-bold text-gray-600 focus:ring-2 focus:ring-indigo-500 transition-all outline-none shadow-sm"
                             >
-                                <option value="All">All Types</option>
-                                <option value="Clinic">Clinic</option>
-                                <option value="Hospital">Hospital</option>
-                                <option value="Salon">Salon</option>
-                                <option value="Bank">Bank</option>
-                                <option value="Government Office">Government Office</option>
-                                <option value="Consultancy">Consultancy</option>
-                                <option value="Coaching Institute">Coaching Institute</option>
-                                <option value="Service Center">Service Center</option>
-                                <option value="Other">Other</option>
+                                <option value="All">{t('user_dashboard.filters.all_types', 'All Types')}</option>
+                                <option value="Clinic">{t('templates.clinic.title', 'Clinic')}</option>
+                                <option value="Hospital">{t('templates.hospital.title', 'Hospital')}</option>
+                                <option value="Salon">{t('templates.salon.title', 'Salon')}</option>
+                                <option value="Bank">{t('templates.bank.title', 'Bank')}</option>
+                                <option value="Government Office">{t('templates.govt.title', 'Government Office')}</option>
+                                <option value="Consultancy">{t('templates.consultancy.title', 'Consultancy')}</option>
+                                <option value="Coaching Institute">{t('templates.coaching.title', 'Coaching Institute')}</option>
+                                <option value="Service Center">{t('templates.service_center.title', 'Service Center')}</option>
+                                <option value="Other">{t('templates.other.title', 'Other')}</option>
                             </select>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Search..."
+                                    placeholder={t('user_dashboard.filters.search_placeholder', 'Search...')}
                                     value={searchQuery}
                                     onChange={handleSearch}
                                     className="pl-10 pr-4 py-2 bg-white border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none shadow-sm"
@@ -264,7 +320,7 @@ const UserDashboard = () => {
             {activeTab === 'bookings' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">My Recent Appointments</h2>
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t('appointments.title', 'My Recent Appointments')}</h2>
                     </div>
                     <MyBookings bookings={myBookings} onCancel={handleCancelBooking} />
                 </div>

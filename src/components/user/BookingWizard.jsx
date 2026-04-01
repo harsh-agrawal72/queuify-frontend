@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
     Calendar,
     Clock,
@@ -24,6 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     // If slot/resource provided, start at step 4 (Review) or 3 (Time/Slot)
     const getInitialStep = () => {
         if (initialSlot || initialResource) return 4;
@@ -103,7 +105,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 setServices(res.data);
             } catch (error) {
                 console.error('[BookingWizard] Failed to load services', error);
-                toast.error("Failed to load services");
+                toast.error(t('common.operation_failed', "Failed to load services"));
             } finally {
                 setLoading(false);
             }
@@ -127,7 +129,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 }
             } catch (error) {
                 console.error('[BookingWizard] Failed to load resources', error);
-                toast.error("Failed to load resources for this service");
+                toast.error(t('common.operation_failed', "Failed to load resources for this service"));
             } finally {
                 setLoading(false);
             }
@@ -148,7 +150,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 setAvailableSlots(res.data);
             } catch (error) {
                 console.error('[BookingWizard] Failed to load slots', error);
-                toast.error("Failed to load available slots");
+                toast.error(t('common.operation_failed', "Failed to load available slots"));
             } finally {
                 setLoadingSlots(false);
             }
@@ -201,10 +203,10 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 appointmentId: currentAppt.id
             });
             setStep(6); // Success screen
-            toast.success("Payment Verified & Ticket Generated!");
+            toast.success(t('booking.wizard.notify_me.success', "Payment Verified & Ticket Generated!"));
         } catch (error) {
             console.error('[Payment] Verification failed:', error);
-            toast.error(error.response?.data?.message || "Payment verification failed.");
+            toast.error(error.response?.data?.message || t('common.error', "Payment verification failed."));
         } finally {
             setLoading(false);
         }
@@ -283,15 +285,15 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                     appointmentId: res.data.appointmentId
                 });
                 setStep(6);
-                toast.success("Joined Queue Successfully!");
+                toast.success(t('booking.wizard.success.title', "Joined Queue Successfully!"));
             }
         } catch (error) {
             console.error('[Booking] Creation error:', error);
             if (error.response?.status === 409 && error.response?.data?.message === 'DUPLICATE_BOOKING_WARNING') {
-                const proceed = window.confirm("You already have an active booking for this. Continue anyway?");
+                const proceed = window.confirm(t('booking.wizard.duplicate_warning', "You already have an active booking for this. Continue anyway?"));
                 if (proceed) handleBookingCreation(true);
             } else {
-                toast.error(error.response?.data?.message || "Booking failed");
+                toast.error(error.response?.data?.message || t('common.error', "Booking failed"));
             }
         } finally {
             if (step !== 5) setLoadingCreation(false); // Only stop loading if not waiting for modal
@@ -326,7 +328,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
     const renderServiceSelection = () => (
         <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Select a Service</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t('booking.wizard.select_service', 'Select a Service')}</h2>
             <div className="grid grid-cols-1 gap-3">
                 {services.map(s => (
                     <div
@@ -355,9 +357,9 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
     const renderResourceSelection = () => (
         <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Select a Resource</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{t('booking.wizard.select_resource', 'Select a Resource')}</h2>
             <p className="text-sm text-gray-500 mb-4">
-                Available resources for <span className="font-semibold text-indigo-600">{selectedService?.name}</span>
+                {t('booking.wizard.available_for', 'Available resources for {{name}}', { name: selectedService?.name })}
             </p>
             <div className="grid grid-cols-1 gap-3">
                 {resources.map(res => (
@@ -389,15 +391,15 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     const renderSlotSelection = () => (
         <div className="space-y-4">
             <div className="flex justify-between items-center mb-1">
-                <h2 className="text-xl font-bold text-gray-900">Select a Time Slot</h2>
-                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">Fee: ₹{selectedResource?.price || selectedService?.price || 0}</span>
+                <h2 className="text-xl font-bold text-gray-900">{t('booking.wizard.select_time', 'Select a Time Slot')}</h2>
+                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">{t('booking.wizard.fee', 'Fee: ₹{{amount}}', { amount: selectedResource?.price || selectedService?.price || 0 })}</span>
             </div>
             {loadingSlots ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-indigo-400 h-8 w-8" /></div>
             ) : availableSlots.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                     <Calendar className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 font-medium">No available slots</p>
+                    <p className="text-gray-500 font-medium">{t('booking.wizard.no_slots', 'No available slots')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -442,17 +444,17 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             </p>
                             
                             <div className="pt-2 border-t border-indigo-100">
-                                <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">Not free at this time?</p>
+                                <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">{t('booking.wizard.notify_me.title', 'Not free at this time?')}</p>
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-2">
                                         <div className="flex flex-col flex-1">
-                                            <span className="text-[10px] text-indigo-400 font-bold uppercase ml-1 mb-0.5">Desired Time</span>
+                                            <span className="text-[10px] text-indigo-400 font-bold uppercase ml-1 mb-0.5">{t('booking.wizard.notify_me.desired', 'Desired Time')}</span>
                                             <select
                                                 value={notificationTime}
                                                 onChange={(e) => setNotificationTime(e.target.value)}
                                                 className="text-sm border-gray-200 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                                             >
-                                                <option value="">Select Time...</option>
+                                                <option value="">{t('booking.wizard.notify_me.select', 'Select Time...')}</option>
                                                 {getTimeOptions(selectedSlot).map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                                 ))}
@@ -460,14 +462,14 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                         </div>
                                         <button
                                             onClick={async () => {
-                                                if (!notificationTime) return toast.error("Please pick a time");
+                                                if (!notificationTime) return toast.error(t('booking.wizard.notify_me.select', "Please pick a time"));
                                                 setRequestingNotification(true);
                                                 try {
                                                     const desiredOption = getTimeOptions(selectedSlot).find(o => o.value === notificationTime);
                                                     const desiredDate = desiredOption ? desiredOption.date : null;
                                                     
-                                                    if (!desiredDate) return toast.error("Invalid time selected");
-
+                                                    if (!desiredDate) return toast.error(t('common.error', "Invalid time selected"));
+ 
                                                     await apiService.requestSlotNotification(selectedSlot.id, {
                                                         desiredTime: desiredDate.toISOString(),
                                                         serviceId: selectedService?.id || selectedSlot.service_id,
@@ -475,11 +477,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                                         customerPhone: null
                                                     });
                                                     
-                                                    toast.success("We'll notify you when it reaches your time!");
+                                                    toast.success(t('booking.wizard.notify_me.success', "We'll notify you when it reaches your time!"));
                                                     setNotificationTime('');
                                                     onClose();
                                                 } catch (e) {
-                                                    toast.error(e.response?.data?.message || "Failed to set notification");
+                                                    toast.error(e.response?.data?.message || t('common.error', "Failed to set notification"));
                                                 } finally {
                                                     setRequestingNotification(false);
                                                 }
@@ -487,13 +489,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                             disabled={requestingNotification}
                                             className="mt-4 text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
                                         >
-                                            {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : 'Notify Me'}
+                                            {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : t('booking.wizard.notify_me.button', 'Notify Me')}
                                         </button>
                                     </div>
-
-
                                 </div>
-                                <p className="text-[10px] text-indigo-400 mt-2 italic">We'll send you an alert when the estimated time reaches your preference.</p>
+                                <p className="text-[10px] text-indigo-400 mt-2 italic">{t('booking.wizard.notify_me.footer', "We'll send you an alert when the estimated time reaches your preference.")}</p>
                             </div>
                         </div>
                     </div>
@@ -504,21 +504,21 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
     const renderConfirmation = () => (
         <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-900 text-center">Review Your Booking</h2>
+            <h2 className="text-xl font-bold text-gray-900 text-center">{t('booking.wizard.review_title', 'Review Your Booking')}</h2>
             <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
                 <div className="flex justify-between border-b pb-3 border-gray-200">
-                    <span className="text-gray-500 text-sm">Service</span>
+                    <span className="text-gray-500 text-sm">{t('booking.wizard.steps.service', 'Service')}</span>
                     <span className="font-bold text-gray-900 text-sm">{selectedService?.name}</span>
                 </div>
                 {selectedResource && (
                     <div className="flex justify-between border-b pb-3 border-gray-200">
-                        <span className="text-gray-500 text-sm">Resource</span>
+                        <span className="text-gray-500 text-sm">{t('booking.wizard.steps.resource', 'Resource')}</span>
                         <span className="font-bold text-gray-900 text-sm">{selectedResource.name}</span>
                     </div>
                 )}
                 {selectedSlot && (
                     <div className="flex justify-between border-b pb-3 border-gray-200">
-                        <span className="text-gray-500 text-sm">Time</span>
+                        <span className="text-gray-500 text-sm">{t('booking.wizard.steps.time', 'Time')}</span>
                         <div className="text-right text-sm">
                             <span className="block font-bold text-gray-900">
                                 {format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}
@@ -528,7 +528,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 )}
                 
                 <div className="flex justify-between pt-1">
-                    <span className="text-gray-500 text-sm font-medium">Total Fee</span>
+                    <span className="text-gray-500 text-sm font-medium">{t('booking.wizard.total_fee', 'Total Fee')}</span>
                     <span className="text-lg font-black text-green-600">
                         ₹{selectedResource?.price || selectedService?.price || 0}
                     </span>
@@ -547,9 +547,9 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         />
                     </div>
                     <div>
-                        <span className="block text-xs font-bold text-gray-700">Flexible Staff</span>
+                        <span className="block text-xs font-bold text-gray-700">{t('booking.wizard.prefs.flexible_staff', 'Flexible Staff')}</span>
                         <span className="block text-[10px] text-gray-400 mt-0.5 leading-tight">
-                            Allow us to move you to another staff member if {selectedResource?.name} becomes unavailable.
+                            {t('booking.wizard.prefs.flexible_staff_desc', 'Allow us to move you to another staff member if {{name}} becomes unavailable.', { name: selectedResource?.name })}
                         </span>
                     </div>
                 </label>
@@ -564,9 +564,9 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         />
                     </div>
                     <div>
-                        <span className="block text-xs font-bold text-gray-700">Urgent Requirement (Today)</span>
+                        <span className="block text-xs font-bold text-gray-700">{t('booking.wizard.prefs.urgent', 'Urgent Requirement (Today)')}</span>
                         <span className="block text-[10px] text-gray-400 mt-0.5 leading-tight">
-                            If this slot is cancelled, keep me on high-priority waitlist for same-day openings.
+                            {t('booking.wizard.prefs.urgent_desc', 'If this slot is cancelled, keep me on high-priority waitlist for same-day openings.')}
                         </span>
                     </div>
                 </label>
@@ -582,26 +582,26 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CreditCard className="h-8 w-8" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Secure Payment</h2>
-                <p className="text-sm text-gray-500 mt-1">Confirm your booking fee to join the queue.</p>
+                <h2 className="text-2xl font-bold text-gray-900">{t('booking.wizard.payment.title', 'Secure Payment')}</h2>
+                <p className="text-sm text-gray-500 mt-1">{t('booking.wizard.payment.subtitle', 'Confirm your booking fee to join the queue.')}</p>
             </div>
 
             <div className="bg-white border-2 border-indigo-50 rounded-3xl p-6 shadow-sm">
                 <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400 font-medium">Service</span>
+                        <span className="text-gray-400 font-medium">{t('booking.wizard.steps.service', 'Service')}</span>
                         <span className="text-gray-900 font-bold">{selectedService?.name}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400 font-medium">Resource</span>
+                        <span className="text-gray-400 font-medium">{t('booking.wizard.steps.resource', 'Resource')}</span>
                         <span className="text-gray-900 font-bold">{selectedResource?.name}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm border-b border-gray-100 pb-4">
-                        <span className="text-gray-400 font-medium">Time</span>
+                        <span className="text-gray-400 font-medium">{t('booking.wizard.steps.time', 'Time')}</span>
                         <span className="text-gray-900 font-bold">{format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}</span>
                     </div>
                     <div className="flex justify-between items-center pt-2">
-                        <span className="text-gray-900 font-bold">Total Amount</span>
+                        <span className="text-gray-900 font-bold">{t('booking.wizard.payment.total', 'Total Amount')}</span>
                         <span className="text-2xl font-black text-indigo-600 font-mono">₹{selectedResource?.price || selectedService?.price || 0}</span>
                     </div>
                 </div>
@@ -610,7 +610,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                    Payments are held in escrow and released only after your appointment is verified or successfully completed.
+                    {t('booking.wizard.payment.escrow_note', 'Payments are held in escrow and released only after your appointment is verified or successfully completed.')}
                 </p>
             </div>
 
@@ -622,11 +622,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 {loadingCreation ? <Loader2 className="animate-spin h-6 w-6" /> : (
                     <>
                         <CreditCard className="h-6 w-6" />
-                        <span>Pay ₹{selectedResource?.price || selectedService?.price || 0} & Join Queue</span>
+                        <span>{t('booking.wizard.payment.pay_button', 'Pay ₹{{amount}} & Join Queue', { amount: selectedResource?.price || selectedService?.price || 0 })}</span>
                     </>
                 )}
             </button>
-            <p className="text-center text-[10px] text-gray-400 font-medium">Powered by Razorpay Escrow</p>
+            <p className="text-center text-[10px] text-gray-400 font-medium">{t('booking.wizard.payment.powered_by', 'Powered by Razorpay Escrow')}</p>
         </div>
     );
 
@@ -646,11 +646,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle2 className="h-10 w-10" />
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">You're in Queue!</h2>
-                        <p className="text-gray-500 mb-6">Your ticket has been generated successfully.</p>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('booking.wizard.success.title', "You're in Queue!")}</h2>
+                        <p className="text-gray-500 mb-6">{t('booking.wizard.success.subtitle', "Your ticket has been generated successfully.")}</p>
 
                         <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 relative overflow-hidden mb-6">
-                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 font-bold">Queue Number</p>
+                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 font-bold">{t('booking.wizard.success.queue_number', "Queue Number")}</p>
                             <p className="text-6xl font-black text-indigo-600 tracking-tighter">#{bookingResult.queueNumber || '1'}</p>
                             <div className="h-px bg-gray-200 my-4" />
                             <p className="text-sm font-bold text-gray-900">{selectedService?.name}</p>
@@ -673,14 +673,14 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                 onClick={handleGoToAppointments}
                                 className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg"
                             >
-                                <LayoutDashboard className="h-4 w-4" /> View My Appointments
+                                <LayoutDashboard className="h-4 w-4" /> {t('booking.wizard.success.view_appointments', "View My Appointments")}
                             </button>
 
                             <button
                                 onClick={handleBookAnother}
                                 className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition"
                             >
-                                <CalendarCheck className="h-4 w-4" /> Book Another
+                                <CalendarCheck className="h-4 w-4" /> {t('booking.wizard.success.book_another', "Book Another")}
                             </button>
                         </div>
                     </div>
@@ -699,8 +699,8 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 {/* Header */}
                 <div className="bg-white px-8 py-5 border-b border-gray-100 flex items-center justify-between shrink-0">
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">Get Your Ticket</h1>
-                        <p className="text-sm text-gray-500 mt-0.5">Step {step - (service ? 1 : 0)} of {((selectedResource?.price || selectedService?.price || 0) > 0 ? totalSteps : totalSteps - 1) - (service ? 1 : 0)}</p>
+                        <h1 className="text-xl font-bold text-gray-900">{t('booking.wizard.title', 'Get Your Ticket')}</h1>
+                        <p className="text-sm text-gray-500 mt-0.5">{t('booking.wizard.step_of', 'Step {{current}} of {{total}}', { current: step - (service ? 1 : 0), total: ((selectedResource?.price || selectedService?.price || 0) > 0 ? totalSteps : totalSteps - 1) - (service ? 1 : 0) })}</p>
                     </div>
                     <button onClick={handleClose} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition">
                         <X className="h-5 w-5 text-gray-500" />
@@ -710,7 +710,13 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 {/* Progress Bar */}
                 <div className="px-8 pt-6 pb-2 shrink-0">
                     <div className="flex gap-2">
-                        {['Service', 'Resource', 'Time', 'Review', 'Payment'].map((label, i) => {
+                        {[
+                            { key: 'service', label: t('booking.wizard.steps.service', 'Service') },
+                            { key: 'resource', label: t('booking.wizard.steps.resource', 'Resource') },
+                            { key: 'time', label: t('booking.wizard.steps.time', 'Time') },
+                            { key: 'review', label: t('booking.wizard.steps.review', 'Review') },
+                            { key: 'payment', label: t('booking.wizard.steps.payment', 'Payment') }
+                        ].map((s, i) => {
                             if (service && i === 0) return null;
                             if (!showTimeStep && i === 2) return null;
                             
@@ -722,9 +728,9 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             const isActive = stepNum <= step;
 
                             return (
-                                <div key={label} className="flex-1 text-center">
+                                <div key={s.key} className="flex-1 text-center">
                                     <div className={`h-1.5 rounded-full transition-all duration-300 ${isActive ? 'bg-indigo-600' : 'bg-gray-100'}`} />
-                                    <p className={`text-[10px] mt-2 font-bold uppercase tracking-wider ${isActive ? 'text-indigo-600' : 'text-gray-300'}`}>{label}</p>
+                                    <p className={`text-[10px] mt-2 font-bold uppercase tracking-wider ${isActive ? 'text-indigo-600' : 'text-gray-300'}`}>{s.label}</p>
                                 </div>
                             );
                         })}
@@ -735,7 +741,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                     {loading && step < confirmationStep ? (
                         <div className="h-full flex flex-col items-center justify-center text-gray-400">
                             <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
-                            <p>Loading...</p>
+                            <p>{t('common.loading', 'Loading...')}</p>
                         </div>
                     ) : (
                         <AnimatePresence mode="wait">
@@ -763,7 +769,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             onClick={handleBack}
                             className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-white transition-colors"
                         >
-                            <ChevronLeft className="h-4 w-4" /> Back
+                            <ChevronLeft className="h-4 w-4" /> {t('common.back', 'Back')}
                         </button>
 
                         <button
@@ -777,12 +783,12 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         >
                             {step === 4 ? (
                                 <>
-                                    <span>{(selectedResource?.price || selectedService?.price || 0) > 0 ? "Continue to Payment" : "Join Queue Now"}</span>
+                                    <span>{(selectedResource?.price || selectedService?.price || 0) > 0 ? t('booking.wizard.payment.title', "Continue to Payment") : t('booking.wizard.payment.join_now', "Join Queue Now")}</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </>
                             ) : (
                                 <>
-                                    <span>Next Step</span>
+                                    <span>{t('common.next', 'Next Step')}</span>
                                     <ChevronRight className="h-4 w-4" />
                                 </>
                             )}

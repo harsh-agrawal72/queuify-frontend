@@ -37,7 +37,7 @@ const SlotManagement = () => {
     // ─── Filters ───
     const [filterService, setFilterService] = useState('');
     const [filterResource, setFilterResource] = useState('');
-    const [filterDate, setFilterDate] = useState('');
+    const [filterDate, setFilterDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
     // ─── Loading States ───
     const [loadingServices, setLoadingServices] = useState(true);
@@ -219,6 +219,11 @@ const SlotManagement = () => {
         if (mode === 'next_month') {
             // Next 30 days starting from tomorrow
             for (let i = 1; i <= 30; i++) {
+                targets.push(format(addDays(source, i), 'yyyy-MM-dd'));
+            }
+        } else if (mode === 'next_7_days') {
+            // Next 7 days starting from tomorrow
+            for (let i = 1; i <= 7; i++) {
                 targets.push(format(addDays(source, i), 'yyyy-MM-dd'));
             }
         } else if (mode === 'next_4_weeks') {
@@ -904,7 +909,7 @@ const SlotManagement = () => {
                                         />
                                     </div>
                                     <p className="text-[10px] text-indigo-500 font-bold flex items-center gap-1">
-                                        <Info className="h-3 w-3" /> Templates fetched from this day
+                                        <Info className="h-3 w-3" /> {t('slot.bulk_copy.source_hint', 'Templates fetched from this day')}
                                     </p>
                                 </div>
 
@@ -927,18 +932,19 @@ const SlotManagement = () => {
                                             <ChevronRight className="h-4 w-4 text-gray-400 rotate-90" />
                                         </div>
                                     </div>
-                                    <p className="text-[10px] text-gray-400 font-medium">Leave as "All" to copy everything</p>
+                                    <p className="text-[10px] text-gray-400 font-medium">{t('slot.bulk_copy.resource_hint', 'Leave as "All" to copy everything')}</p>
                                 </div>
                             </div>
 
                             {/* Copy Mode / Strategy Selection */}
                             <div className="space-y-4">
-                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">Copy Strategy</label>
-                                <div className="grid grid-cols-3 gap-2 bg-gray-100 p-1.5 rounded-[1.25rem]">
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">{t('slot.bulk_copy.strategy', 'Copy Strategy')}</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-gray-100 p-1.5 rounded-[1.25rem]">
                                     {[
-                                        { id: 'manual', label: 'Custom Dates', icon: Calendar },
-                                        { id: 'next_month', label: 'Next Month', icon: Clock },
-                                        { id: 'next_4_weeks', label: '4 Same-Days', icon: TrendingUp }
+                                        { id: 'manual', label: t('slot.bulk_copy.custom_dates', 'Custom Dates'), icon: Calendar },
+                                        { id: 'next_7_days', label: t('slot.bulk_copy.next_7_days', 'Next 7 Days'), icon: Clock },
+                                        { id: 'next_month', label: t('slot.bulk_copy.next_month', 'Next Month'), icon: TrendingUp },
+                                        { id: 'next_4_weeks', label: t('slot.bulk_copy.4_weeks', '4 Same-Days'), icon: Calendar }
                                     ].map((mode) => (
                                         <button
                                             key={mode.id}
@@ -963,8 +969,8 @@ const SlotManagement = () => {
                             {/* Target Dates Visualizer */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">{t('slot.target_dates', 'Copy To (Target Dates)')}</label>
-                                    <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black uppercase">{copyTargetDates.length} Selected</span>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest">{t('slot.bulk_copy.target_dates', 'Copy To (Target Dates)')}</label>
+                                    <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black uppercase">{copyTargetDates.length} {t('common.selected', 'Selected')}</span>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex gap-2">
@@ -997,7 +1003,7 @@ const SlotManagement = () => {
                                             }}
                                             className="px-6 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 font-bold text-sm"
                                         >
-                                            Add
+                                            {t('common.add', 'Add')}
                                         </button>
                                     </div>
                                     <div className="flex flex-wrap gap-2 min-h-[100px] p-4 bg-gray-50 rounded-[1.5rem] border-2 border-dashed border-gray-200 content-start">
@@ -1017,7 +1023,7 @@ const SlotManagement = () => {
                                         {copyTargetDates.length === 0 && (
                                             <div className="w-full flex flex-col items-center justify-center gap-2 py-4">
                                                 <Calendar className="h-8 w-8 text-gray-200" />
-                                                <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">No target dates selected</p>
+                                                <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">{t('slot.bulk_copy.no_dates', 'No target dates selected')}</p>
                                             </div>
                                         )}
                                     </div>
@@ -1025,7 +1031,7 @@ const SlotManagement = () => {
                                         onClick={() => setCopyTargetDates([])}
                                         className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-red-500 transition-colors ml-auto block"
                                     >
-                                        Clear All
+                                        {t('slot.bulk_copy.clear_all', 'Clear All')}
                                     </button>
                                 </div>
                             </div>
@@ -1037,8 +1043,8 @@ const SlotManagement = () => {
                                         <AlertTriangle className="h-5 w-5 text-amber-600" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-black text-amber-900 tracking-tight">Overwrite Existing?</p>
-                                        <p className="text-[11px] text-amber-700 font-medium">Replaces all slots on target dates</p>
+                                        <p className="text-sm font-black text-amber-900 tracking-tight">{t('slot.bulk_copy.overwrite', 'Overwrite Existing?')}</p>
+                                        <p className="text-[11px] text-amber-700 font-medium">{t('slot.bulk_copy.overwrite_desc', 'Replaces all slots on target dates')}</p>
                                     </div>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1057,7 +1063,7 @@ const SlotManagement = () => {
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        if (copyTargetDates.length === 0) return toast.error("Add at least one target date");
+                                        if (copyTargetDates.length === 0) return toast.error(t('slot.bulk_copy.min_date_error', "Add at least one target date"));
                                         setCopying(true);
                                         try {
                                             const res = await api.post('/slots/bulk-copy', {
