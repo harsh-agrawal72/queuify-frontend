@@ -25,7 +25,18 @@ const WalletDashboard = () => {
     const [wallet, setWallet] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [transLoading, setTransLoading] = useState(false);
     const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+    
+    // Search, Filter & Pagination State
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalTransactions, setTotalTransactions] = useState(0);
+    const itemsPerPage = 10;
+
     const [payoutForm, setPayoutForm] = useState({
         amount: '',
         bankDetails: {
@@ -37,17 +48,20 @@ const WalletDashboard = () => {
         }
     });
 
-    const fetchWalletData = async () => {
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const fetchWalletStatus = async () => {
         try {
-            const [walletRes, transRes, orgRes] = await Promise.all([
+            const [walletRes, orgRes] = await Promise.all([
                 api.get('/payments/status'),
-                api.get('/payments/transactions'),
                 api.get('/admin/org')
             ]);
             setWallet(walletRes.data);
-            setTransactions(transRes.data.transactions || []);
             
-            // Pre-fill payout form if bank details are saved
             if (orgRes.data && (orgRes.data.payout_account_number || orgRes.data.payout_upi_id)) {
                 setPayoutForm(prev => ({
                     ...prev,
@@ -61,16 +75,44 @@ const WalletDashboard = () => {
                 }));
             }
         } catch (error) {
-            toast.error(t('wallet.load_failed', 'Failed to load wallet data'));
-            console.error(error);
+            console.error("Wallet status fetch failed", error);
+        }
+    };
+
+    const fetchTransactions = async (isBackground = false) => {
+        if (!isBackground) setTransLoading(true);
+        try {
+            const res = await api.get('/payments/transactions', {
+                params: {
+                    limit: itemsPerPage,
+                    offset: (currentPage - 1) * itemsPerPage,
+                    search: debouncedSearch,
+                    type: typeFilter,
+                    status: statusFilter
+                }
+            });
+            setTransactions(res.data.transactions || []);
+            setTotalTransactions(res.data.total || 0);
+        } catch (error) {
+            toast.error('Failed to load transactions');
         } finally {
+            setTransLoading(false);
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchWalletData();
+        fetchWalletStatus();
     }, []);
+
+    useEffect(() => {
+        fetchTransactions();
+    }, [currentPage, debouncedSearch, typeFilter, statusFilter]);
+
+    // Reset to page 1 on filter change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch, typeFilter, statusFilter]);
 
     const handlePayoutRequest = async (e) => {
         e.preventDefault();
@@ -177,9 +219,35 @@ const WalletDashboard = () => {
                                 </div>
                                 <h2 className="text-lg font-bold text-gray-900">{t('wallet.ledger', 'Transaction Ledger')}</h2>
                             </div>
-                            <div className="flex gap-2">
-                                <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg"><Search className="h-5 w-5" /></button>
-                                <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg"><Filter className="h-5 w-5" /></button>
+                            <div className="flex flex-wrap gap-2">
+                                <div className="relative group">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input 
+                                        type="text"
+                                        placeholder={t('common.search', 'Search transactions...')}
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="pl-9 pr-4 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-48 transition-all"
+                                    />
+                                </div>
+                                <select 
+                                    value={typeFilter}
+                                    onChange={(e) => setTypeFilter(e.target.value)}
+                                    className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer"
+                                >
+                                    <option value="">{t('common.all_types', 'All Types')}</option>
+                                    <option value="credit">{t('common.credits', 'Credits')}</option>
+                                    <option value="payout">{t('common.payouts', 'Payouts')}</option>
+                                    <option value="refund">{t('common.refunds', 'Refunds')}</option>
+                                </select>
+                                {(search || typeFilter) && (
+                                    <button 
+                                        onClick={() => { setSearch(''); setTypeFilter(''); }}
+                                        className="text-xs font-bold text-indigo-600 hover:text-indigo-700 px-2"
+                                    >
+                                        {t('common.clear', 'Clear')}
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -242,15 +310,48 @@ const WalletDashboard = () => {
                                     </AnimatePresence>
                                 </tbody>
                             </table>
-                            {transactions.length === 0 && (
+                            {transLoading ? (
+                                <div className="flex items-center justify-center py-20">
+                                    <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+                                </div>
+                            ) : transactions.length === 0 ? (
                                 <div className="py-20 text-center space-y-3">
                                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
                                         <History className="h-8 w-8 text-gray-300" />
                                     </div>
-                                    <p className="text-gray-400 text-sm font-medium">{t('wallet.no_transactions', 'No transactions found in this period.')}</p>
+                                    <p className="text-gray-400 text-sm font-medium">{t('wallet.no_transactions', 'No transactions found')}</p>
                                 </div>
-                            )}
+                            ) : null}
                         </div>
+
+                        {/* Pagination Footer */}
+                        {totalTransactions > itemsPerPage && (
+                            <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
+                                <p className="text-xs text-gray-500 font-medium">
+                                    {t('common.showing_range', 'Showing {{start}} to {{end}} of {{total}} transactions', {
+                                        start: (currentPage - 1) * itemsPerPage + 1,
+                                        end: Math.min(currentPage * itemsPerPage, totalTransactions),
+                                        total: totalTransactions
+                                    })}
+                                </p>
+                                <div className="flex gap-2">
+                                    <button 
+                                        disabled={currentPage === 1}
+                                        onClick={() => setCurrentPage(p => p - 1)}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all"
+                                    >
+                                        {t('common.previous', 'Previous')}
+                                    </button>
+                                    <button 
+                                        disabled={currentPage * itemsPerPage >= totalTransactions}
+                                        onClick={() => setCurrentPage(p => p + 1)}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all"
+                                    >
+                                        {t('common.next', 'Next')}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
