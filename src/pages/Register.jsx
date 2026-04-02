@@ -448,11 +448,11 @@ const Register = () => {
                     </AnimatePresence>
                 </motion.div>
 
-                {/* Terms Modal for Orgs */}
                 <TermsModal 
                     isOpen={showTerms}
                     onClose={() => setShowTerms(false)}
                     onAgree={signupType === 'org' ? finalizeOrgSignup : finalizeUserSignup}
+                    role={signupType === 'org' ? 'org' : 'user'}
                 />
 
                 <p className="mt-8 text-center text-gray-500 text-sm font-medium">

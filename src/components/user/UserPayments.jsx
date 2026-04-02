@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import { 
     Wallet, CreditCard, Clock, CheckCircle2, AlertCircle, TrendingUp, History, Search, Filter, 
-    RefreshCw, IndianRupee, ArrowDownLeft, ArrowUpRight, Copy, ExternalLink, XCircle
+    RefreshCw, IndianRupee, ArrowDownLeft, ArrowUpRight, Copy, ExternalLink, XCircle, Info
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, parseISO, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from 'date-fns';
@@ -328,8 +328,13 @@ const UserPayments = ({ bookings }) => {
                                                     "text-sm font-black",
                                                     row.payment_status === 'refunded' ? "text-gray-400 line-through decoration-rose-400" : "text-gray-900"
                                                 )}>
-                                                    ₹{parseFloat(row.price || 0).toLocaleString('en-IN')}
+                                                    ₹{parseFloat(row.total_payable || row.price || 0).toLocaleString('en-IN')}
                                                 </span>
+                                                {(parseFloat(row.platform_fee) > 0 || parseFloat(row.transaction_fee) > 0) && (
+                                                    <span className="text-[9px] text-gray-400 font-bold mt-1">
+                                                        Incl. ₹{(parseFloat(row.platform_fee || 0) + parseFloat(row.transaction_fee || 0) + parseFloat(row.payment_gst || 0)).toFixed(2)} fees
+                                                    </span>
+                                                )}
                                                 {parseFloat(row.refund_amount || 0) > 0 && (
                                                     <span className="text-[11px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full mt-1.5 flex items-center gap-1">
                                                         <ArrowUpRight className="h-3 w-3" />
@@ -344,12 +349,14 @@ const UserPayments = ({ bookings }) => {
                                                 row.payment_status === 'paid' && "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
                                                 row.payment_status === 'refunded' && "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
                                                 row.status === 'cancelled' && row.payment_status !== 'refunded' && "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
-                                                (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100"
+                                                parseFloat(row.price || 0) === 0 && row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled' && "bg-gray-50 text-gray-700 border-gray-100 hover:bg-gray-100",
+                                                (parseFloat(row.price || 0) > 0 && (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled'))) && "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100"
                                             )}>
                                                 {row.payment_status === 'paid' && <><CheckCircle2 className="h-3.5 w-3.5" /> {t('payments_user.status.paid', 'Paid')}</>}
                                                 {row.payment_status === 'refunded' && <><RefreshCw className="h-3.5 w-3.5" /> {t('payments_user.status.refunded', 'Refunded')}</>}
                                                 {row.status === 'cancelled' && row.payment_status !== 'refunded' && <><XCircle className="h-3.5 w-3.5" /> {t('payments_user.status.cancelled', 'Cancelled')}</>}
-                                                {(row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && <><Clock className="h-3.5 w-3.5" /> {t('payments_user.status.pending', 'Pending')}</>}
+                                                {parseFloat(row.price || 0) === 0 && row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled' && <><Info className="h-3.5 w-3.5" /> {t('payments_user.status.free', 'FREE')}</>}
+                                                {parseFloat(row.price || 0) > 0 && (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && <><Clock className="h-3.5 w-3.5" /> {t('payments_user.status.pending', 'Pending')}</>}
                                             </span>
                                         </td>
                                     </motion.tr>

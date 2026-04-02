@@ -14,7 +14,8 @@ import InfoTooltip from '../common/InfoTooltip';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import UserPayments from './UserPayments';
-import { LayoutDashboard, History } from 'lucide-react';
+import NotifyMeTracker from './NotifyMeTracker';
+import { LayoutDashboard, History, Bell } from 'lucide-react';
 
 // ─── Memoized Sub-components ───
 const Shimmer = memo(({ className }) => (
@@ -205,6 +206,18 @@ export default function UserDashboard() {
                     <History className="h-4 w-4" />
                     <span>{t('dashboard.payments_tab', 'Payment History')}</span>
                 </button>
+                <button
+                    onClick={() => setActiveTab('notifications')}
+                    className={clsx(
+                        "flex items-center gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
+                        activeTab === 'notifications' 
+                            ? "bg-white text-indigo-600 shadow-sm ring-1 ring-black/5" 
+                            : "text-gray-400 hover:text-gray-600 hover:bg-white/50"
+                    )}
+                >
+                    <Bell className="h-4 w-4" />
+                    <span>Notify Me</span>
+                </button>
             </div>
 
             {/* Tab Content */}
@@ -369,9 +382,13 @@ export default function UserDashboard() {
                         </motion.div>
                     </div>
                 </div>
-            ) : (
+            ) : activeTab === 'payments' ? (
                 <div className="animate-in fade-in duration-500">
                     <UserPayments bookings={allAppointments} />
+                </div>
+            ) : (
+                <div className="animate-in fade-in duration-500">
+                    <NotifyMeTracker />
                 </div>
             )}
         </div>

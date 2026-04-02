@@ -126,7 +126,7 @@ const SlotManagement = () => {
             const res = await api.get('/slots', { params });
             setSlots(res.data);
         } catch {
-            toast.error(t('slot.load_failed', 'Failed to load slots'));
+            toast.error(t('admin.slots.load_failed', 'Failed to load slots'));
         } finally {
             setLoadingSlots(false);
         }
@@ -269,17 +269,17 @@ const SlotManagement = () => {
 
             if (editingSlotId) {
                 await api.patch(`/admin/slots/${editingSlotId}`, payload);
-                toast.success(t('slot.updated', 'Slot updated successfully'));
+                toast.success(t('admin.slots.updated', 'Slot updated successfully'));
             } else {
                 // Use /admin/slots for consistency and validation
                 await api.post('/admin/slots', payload);
-                toast.success(t('slot.created', 'Slot created successfully'));
+                toast.success(t('admin.slots.created', 'Slot created successfully'));
             }
 
             closeModal();
             fetchSlots();
         } catch (error) {
-            toast.error(error.response?.data?.message || t('slot.save_failed', 'Failed to save slot'));
+            toast.error(error.response?.data?.message || t('admin.slots.save_failed', 'Failed to save slot'));
         } finally {
             setSubmitting(false);
         }
@@ -338,17 +338,17 @@ const SlotManagement = () => {
     // DELETE SLOT
     // ═══════════════════════════════════════════
     const handleDeleteSlot = async (slotId) => {
-        if (!confirm(t('slot.delete_confirm', 'Delete this slot?'))) return;
+        if (!confirm(t('admin.slots.delete_confirm', 'Delete this slot?'))) return;
         try {
             await api.delete(`/slots/${slotId}`);
             setSlots(prev => prev.filter(s => s.id !== slotId));
-            toast.success(t('slot.deleted', 'Slot deleted'));
+            toast.success(t('admin.slots.deleted', 'Slot deleted'));
         } catch (error) {
             if (error.response?.status === 404) {
                 setSlots(prev => prev.filter(s => s.id !== slotId));
-                toast.error(t('slot.already_deleted', 'Slot already deleted'));
+                toast.error(t('admin.slots.already_deleted', 'Slot already deleted'));
             } else {
-                toast.error(error.response?.data?.message || t('slot.delete_failed', 'Failed to delete slot'));
+                toast.error(error.response?.data?.message || t('admin.slots.delete_failed', 'Failed to delete slot'));
             }
         }
     };
@@ -405,22 +405,22 @@ const SlotManagement = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {t('navigation.manage_slots', 'Manage Slots')}
-                        <InfoTooltip text={t('slot.mgmt_tooltip', 'Slots are the specific time periods when a Resource is available for a Service. Select a Service and then a Resource to create a slot.')} />
+                        <InfoTooltip text={t('admin.slots.mgmt_tooltip', 'Slots are the specific time periods when a Resource is available for a Service. Select a Service and then a Resource to create a slot.')} />
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">{t('slot.mgmt_subtitle', 'Create and manage time slots for your resources.')}</p>
+                    <p className="text-sm text-gray-500 mt-1">{t('admin.slots.mgmt_subtitle', 'Create and manage time slots for your resources.')}</p>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
                     <button
                         onClick={() => setIsCopyModalOpen(true)}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all shadow-sm font-medium"
                     >
-                        <Copy className="h-4 w-4" /> {t('slot.copy_day', 'Copy Schedule')}
+                        <Copy className="h-4 w-4" /> {t('admin.slots.copy_day', 'Copy Schedule')}
                     </button>
                     <button
                         onClick={openModal}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
                     >
-                        <Plus className="h-4 w-4" /> {t('slot.create_slot', 'Create Slot')}
+                        <Plus className="h-4 w-4" /> {t('admin.slots.create_slot_btn', 'Create Slot')}
                     </button>
                 </div>
             </div>
@@ -486,8 +486,8 @@ const SlotManagement = () => {
                 ) : slots.length === 0 ? (
                     <div className="text-center py-16">
                         <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 font-medium">{t('slot.no_slots', 'No slots found')}</p>
-                        <p className="text-xs text-gray-400 mt-1">{t('slot.adjust_filters', 'Create a slot or adjust your filters.')}</p>
+                        <p className="text-gray-500 font-medium">{t('admin.slots.no_slots', 'No slots found')}</p>
+                        <p className="text-xs text-gray-400 mt-1">{t('admin.slots.mgmt_subtitle', 'Create and manage time slots for your resources.')}</p>
                     </div>
                 ) : (
                     <>
@@ -498,10 +498,10 @@ const SlotManagement = () => {
                                     <th className="px-5 py-3 text-left font-semibold">{t('common.date', 'Date')}</th>
                                     <th className="px-5 py-3 text-left font-semibold">{t('common.service', 'Service')}</th>
                                     <th className="px-5 py-3 text-left font-semibold">{t('common.resource', 'Resource')}</th>
-                                    <th className="px-5 py-3 text-left font-semibold">{t('slot.time_range', 'Time Range')}</th>
-                                    <th className="px-5 py-3 text-center font-semibold">{t('slot.capacity', 'Capacity')}</th>
-                                    <th className="px-5 py-3 text-center font-semibold">{t('common.booked', 'Booked')}</th>
-                                    <th className="px-5 py-3 text-center font-semibold">{t('slot.remaining', 'Remaining')}</th>
+                                    <th className="px-5 py-3 text-left font-semibold">{t('admin.slots.time_range', 'Time Range')}</th>
+                                    <th className="px-5 py-3 text-center font-semibold">{t('admin.slots.max_capacity', 'Capacity')}</th>
+                                    <th className="px-5 py-3 text-center font-semibold">{t('admin.slots.booked', 'Booked')}</th>
+                                    <th className="px-5 py-3 text-center font-semibold">{t('admin.slots.available', 'Remaining')}</th>
                                     <th className="px-5 py-3 text-center font-semibold">{t('common.status', 'Status')}</th>
                                     <th className="px-5 py-3 text-right font-semibold">{t('common.actions', 'Actions')}</th>
                                 </tr>
@@ -567,14 +567,14 @@ const SlotManagement = () => {
                                                 <button
                                                     onClick={() => handleDeleteSlot(slot.id)}
                                                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title={t('slot.delete', 'Delete slot')}
+                                                    title={t('admin.slots.delete', 'Delete slot')}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleEditSlot(slot)}
                                                     className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors ml-1"
-                                                    title={t('slot.edit', 'Edit slot')}
+                                                    title={t('admin.slots.edit', 'Edit slot')}
                                                 >
                                                     <Pencil className="h-4 w-4" />
                                                 </button>
@@ -617,7 +617,7 @@ const SlotManagement = () => {
                                         <div className="flex-1 min-w-[80px] text-right">
                                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.availability', 'Availability')}</p>
                                             <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${isFull ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                                                {t('slot.left_count', '{{count}} Left', { count: remaining })} / {slot.max_capacity}
+                                                {t('admin.slots.left_count', '{{count}} Left', { count: remaining })} / {slot.max_capacity}
                                             </span>
                                         </div>
                                     </div>
@@ -642,13 +642,13 @@ const SlotManagement = () => {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeModal}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-                            <h2 className="font-semibold text-gray-900">{editingSlotId ? t('slot.update_slot', 'Update Time Slot') : t('slot.create_slot_title', 'Create Time Slot')}</h2>
+                            <h2 className="font-semibold text-gray-900">{editingSlotId ? t('admin.slots.update_slot', 'Update Time Slot') : t('admin.slots.create_slot_title', 'Create Time Slot')}</h2>
                             <button onClick={closeModal} className="p-1 hover:bg-gray-200 rounded-lg transition-colors"><X className="h-4 w-4 text-gray-400" /></button>
                         </div>
 
                         {/* Step indicator */}
                         <div className="px-6 pt-4 flex gap-1">
-                            {[t('common.service', 'Service'), t('common.resource', 'Resource'), t('slot.date_time', 'Date & Time')].map((label, i) => (
+                            {[t('common.service', 'Service'), t('common.resource', 'Resource'), t('admin.slots.date_time', 'Date & Time')].map((label, i) => (
                                 <div key={`${label}-${i}`} className="flex-1">
                                     <div className={`h-1 rounded-full transition-all ${i + 1 <= modalStep ? 'bg-indigo-600' : 'bg-gray-200'}`} />
                                     <p className={`text-[10px] mt-1 text-center ${i + 1 <= modalStep ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>{label}</p>

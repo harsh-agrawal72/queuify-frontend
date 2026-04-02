@@ -158,12 +158,18 @@ const AdminLayout = () => {
         }
     }, [notification]);
 
-    const setupIncomplete = user?.role === 'admin' && !user?.org_is_setup_completed;
+    const setupIncomplete = (user?.role === 'admin' || user?.role === 'staff') && !user?.org_is_setup_completed;
 
     useEffect(() => {
         if (user && setupIncomplete && location.pathname !== '/admin/about' && location.pathname !== '/admin/settings') {
-            navigate('/admin/about');
-            toast.error(t('setup.incomplete_toast', 'Please complete your organization setup first to access all features.'));
+            const isAdmin = user?.role === 'admin';
+            if (isAdmin) {
+                navigate('/admin/about');
+            }
+            toast(t('setup.incomplete_toast', 'Please complete your organization setup first to access all features.'), {
+                icon: '🚀',
+                duration: 6000
+            });
         }
     }, [setupIncomplete, location.pathname, navigate, t, user]);
 
@@ -423,17 +429,29 @@ const AdminLayout = () => {
                 {/* Main Content */}
                 <main className="flex-1 p-3 md:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
                     {setupIncomplete && (
-                        <div className="mb-6 bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center justify-between shadow-sm">
-                            <div className="flex items-center gap-3 text-rose-800">
-                                <Building2 className="h-5 w-5" />
+                        <div className="mb-6 bg-amber-50 border border-amber-100 p-5 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden group">
+                           {/* BG Decoration */}
+                           <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-amber-100/50 rounded-full blur-2xl group-hover:bg-amber-200/50 transition-colors duration-500"></div>
+
+                            <div className="flex items-center gap-4 text-amber-900 relative z-10">
+                                <div className="p-3 bg-amber-100 rounded-2xl">
+                                    <Building2 className="h-6 w-6 text-amber-600" />
+                                </div>
                                 <div>
-                                    <p className="text-sm font-bold">{t('setup.mandatory_title', 'Organization Setup Required')}</p>
-                                    <p className="text-xs opacity-80">{t('setup.mandatory_subtitle', 'Complete your profile and upload documents to unlock all features.')}</p>
+                                    <p className="text-base font-black tracking-tight">{t('setup.mandatory_title', 'Organization Setup Required')}</p>
+                                    <p className="text-sm font-medium opacity-80">
+                                        {user?.role === 'admin' 
+                                            ? t('setup.mandatory_subtitle', 'Complete your profile and upload documents to unlock all features.')
+                                            : t('setup.staff_mandatory_subtitle', 'Organization setup is in progress. Please contact your administrator to complete the setup.')
+                                        }
+                                    </p>
                                 </div>
                             </div>
-                            <Link to="/admin/about" className="text-xs font-bold bg-rose-600 text-white px-4 py-2 rounded-xl hover:bg-rose-700 transition-colors uppercase tracking-tight">
-                                {t('setup.complete_now', 'Complete Now')}
-                            </Link>
+                            {user?.role === 'admin' && (
+                                <Link to="/admin/about" className="relative z-10 text-sm font-black bg-amber-600 text-white px-6 py-3 rounded-2xl hover:bg-amber-700 transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-200 uppercase tracking-widest whitespace-nowrap">
+                                    {t('setup.complete_now', 'Complete Now')}
+                                </Link>
+                            )}
                         </div>
                     )}
                     <motion.div

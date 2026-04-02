@@ -358,14 +358,14 @@ const ServiceManagement = () => {
             {/* ═══ RESOURCE MODAL ═══ */}
             <FormModal
                 open={resourceModal.open}
-                title={resourceModal.edit ? t('service.edit_resource', 'Edit Resource') : t('service.new_resource', 'New Resource')}
+                title={resourceModal.edit ? t('admin.services.edit_resource', 'Edit Resource') : t('admin.services.new_resource', 'New Resource')}
                 onClose={() => setResourceModal({ open: false, edit: false, data: null, serviceId: null })}
                 onSubmit={handleResourceSubmit}
                 fields={[
-                    { name: 'name', label: t('service.resource_name', 'Resource Name'), type: 'text', required: true },
+                    { name: 'name', label: t('admin.services.resource_name', 'Resource Name'), type: 'text', required: true },
                     { name: 'type', label: t('common.type', 'Type'), type: 'select', options: ['staff', 'room', 'equipment', 'counter', 'machine'], required: true, translateOptions: true },
-                    { name: 'concurrent_capacity', label: t('service.concurrent_capacity', 'Concurrent Capacity'), type: 'number', min: 1, required: true },
-                    { name: 'price', label: t('service.price', 'Fee / Price (₹)'), type: 'number', min: 0, required: false, help: t('service.price_help', 'Set a fee for this service. Users will be asked to pay this amount during booking.') },
+                    { name: 'concurrent_capacity', label: t('admin.services.concurrent_capacity', 'Concurrent Capacity'), type: 'number', min: 1, required: true },
+                    { name: 'price', label: t('admin.services.price', 'Fee / Price (₹)'), type: 'number', min: 0, required: false, help: t('admin.services.price_help', 'Set a fee for this service. Users will be asked to pay this amount during booking.') },
                     { name: 'description', label: t('common.description', 'Description'), type: 'textarea' },
                 ]}
                 defaults={resourceModal.edit ? resourceModal.data : { name: '', type: 'staff', description: '', concurrent_capacity: 1, price: 0 }}

@@ -49,6 +49,7 @@ const TermsGuard = ({ children }) => {
                 isOpen={true}
                 onClose={handleReject}
                 onAgree={handleAgree}
+                role={(user?.role === 'admin' || user?.role === 'superadmin') ? 'org' : 'user'}
             />
             
             {/* Semi-transparent backdrop to block interaction while modal is open */}

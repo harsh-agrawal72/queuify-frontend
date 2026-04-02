@@ -8,10 +8,12 @@ import {
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { formatWaitTime } from '../../utils/format';
 import { isValid, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import InfoTooltip from '../common/InfoTooltip';
 import QueueVisualization from './QueueVisualization';
 
 export default function LiveQueue() {
+    const { t } = useTranslation();
     const { appointmentId } = useParams();
     const [status, setStatus] = useState(null);
     const [error, setError] = useState(null);
@@ -68,7 +70,7 @@ export default function LiveQueue() {
         <div className="w-full space-y-6">
             <div className="flex items-center justify-between">
                 <Link to="/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-2 text-sm font-medium">
-                    <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+                    <ArrowLeft className="h-4 w-4" /> {t('queue.back_dashboard', 'Back to Dashboard')}
                 </Link>
                 <div className="flex items-center gap-4">
                     <button 
@@ -77,10 +79,10 @@ export default function LiveQueue() {
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold hover:bg-indigo-100 transition-all border border-indigo-100 shadow-sm shadow-indigo-100/50 disabled:opacity-50"
                     >
                         <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
+                        {t('queue.refresh', 'Refresh')}
                     </button>
                     <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
-                        Updated {lastUpdated.toLocaleTimeString()}
+                        {t('queue.updated', 'Updated')} {lastUpdated.toLocaleTimeString()}
                     </div>
                 </div>
             </div>
@@ -91,12 +93,12 @@ export default function LiveQueue() {
                 className="bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border border-gray-100 max-w-2xl mx-auto"
             >
                 <div className={`${isCompleted ? 'bg-green-600' : isServing ? 'bg-indigo-600' : 'bg-slate-800'} p-6 sm:p-10 text-center text-white relative transition-colors duration-500`}>
-                    <p className="text-white/60 uppercase tracking-widest text-[10px] sm:text-xs font-bold mb-2">My Ticket Number</p>
+                    <p className="text-white/60 uppercase tracking-widest text-[10px] sm:text-xs font-bold mb-2">{t('queue.my_ticket_number', 'My Ticket Number')}</p>
                     <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-4">#{status.myRank}</h1>
 
                     <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20">
                         <span className={`w-2.5 h-2.5 rounded-full ${isServing ? 'bg-green-400 animate-pulse' : !hasStarted ? 'bg-orange-400' : 'bg-blue-400'}`} />
-                        {isServing ? 'NOW SERVING' : !hasStarted ? 'QUEUE NOT STARTED' : 'SOON TO BE CALLED'}
+                        {isServing ? t('queue.now_serving', 'NOW SERVING') : !hasStarted ? t('queue.not_started', 'QUEUE NOT STARTED') : t('queue.soon_called', 'SOON TO BE CALLED')}
                     </div>
                 </div>
 
@@ -104,12 +106,12 @@ export default function LiveQueue() {
                     {isCompleted ? (
                         <div className="text-center py-6">
                             <CheckCircle2 className="h-20 w-20 text-green-500 mx-auto mb-4" />
-                            <h3 className="text-3xl font-bold text-gray-900">Appointment Completed</h3>
-                            <p className="text-gray-500 mt-2">Thank you for using our service!</p>
+                            <h3 className="text-3xl font-bold text-gray-900">{t('queue.appointment_completed', 'Appointment Completed')}</h3>
+                            <p className="text-gray-500 mt-2">{t('queue.thanks', 'Thank you for using our service!')}</p>
                         </div>
                     ) : isCancelled ? (
                         <div className="text-center py-6">
-                            <h3 className="text-2xl font-bold text-red-600">This Ticket is Cancelled</h3>
+                            <h3 className="text-2xl font-bold text-red-600">{t('queue.ticket_cancelled_label', 'This Ticket is Cancelled')}</h3>
                         </div>
                     ) : (
                         <>
@@ -125,9 +127,9 @@ export default function LiveQueue() {
                                         <Sparkles className="h-7 w-7 text-white" />
                                     </div>
                                     <div className="relative z-10">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 leading-none mb-2">Smart Arrival Recommendation</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 leading-none mb-2">{t('queue.smart_recommendation', 'Smart Arrival Recommendation')}</p>
                                         <p className="text-base font-bold leading-tight">
-                                            Queue is slightly delayed. You may arrive <span className="underline decoration-white/50 underline-offset-4">{Math.floor(status.time_drift_minutes/5)*5} mins</span> later than planned.
+                                            {t('queue.delay_suggestion', 'Queue is slightly delayed. You may arrive {{mins}} mins later than planned.', { mins: Math.floor(status.time_drift_minutes/5)*5 })}
                                         </p>
                                     </div>
                                 </motion.div>
@@ -144,9 +146,9 @@ export default function LiveQueue() {
                                         <Sparkles className="h-7 w-7 text-white" />
                                     </div>
                                     <div className="relative z-10">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 leading-none mb-2">Smart Arrival Recommendation</p>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 leading-none mb-2">{t('queue.smart_recommendation', 'Smart Arrival Recommendation')}</p>
                                         <p className="text-base font-bold leading-tight">
-                                            Queue is moving faster today! Please arrive <span className="underline decoration-white/50 underline-offset-4">{Math.abs(Math.floor(status.time_drift_minutes/5)*5)} mins</span> earlier than planned.
+                                            {t('queue.faster_suggestion', 'Queue is moving faster today! Please arrive {{mins}} mins earlier than planned.', { mins: Math.abs(Math.floor(status.time_drift_minutes/5)*5) })}
                                         </p>
                                     </div>
                                 </motion.div>
@@ -160,7 +162,7 @@ export default function LiveQueue() {
                                     <Users className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 mx-auto mb-1" />
                                     <p className="text-2xl sm:text-3xl font-black text-indigo-900">{status.people_ahead}</p>
                                     <p className="text-[9px] sm:text-[10px] text-indigo-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
-                                        People Ahead
+                                        {t('queue.people_ahead_card', 'People Ahead')}
                                         <InfoTooltip align="start" text="Number of confirmed bookings currently ahead of you in this specific slot." />
                                     </p>
                                 </motion.div>
@@ -174,12 +176,12 @@ export default function LiveQueue() {
                                         {formatWaitTime(status.estimated_wait_time)}
                                     </p>
                                     <p className="text-[9px] sm:text-[10px] text-blue-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
-                                        Est. Wait
+                                        {t('queue.est_wait_card', 'Est. Wait')}
                                         <InfoTooltip text="Estimated time until your turn, calculated by our Smart AI model based on real-time performance." />
                                     </p>
                                     <div className="flex items-center justify-center gap-1 mt-1">
                                         <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-400" />
-                                        <span className="text-[8px] font-black text-blue-400 uppercase tracking-tighter">AI Powered</span>
+                                        <span className="text-[8px] font-black text-blue-400 uppercase tracking-tighter">{t('queue.ai_powered', 'AI Powered')}</span>
                                     </div>
                                 </motion.div>
 
@@ -195,7 +197,7 @@ export default function LiveQueue() {
                                         })()}
                                     </p>
                                     <p className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
-                                        Slot Time
+                                        {t('queue.slot_time_card', 'Slot Time')}
                                         <InfoTooltip text="The scheduled start time for this resource's availability slot." />
                                     </p>
                                 </motion.div>
@@ -212,7 +214,7 @@ export default function LiveQueue() {
                                         })()}
                                     </p>
                                     <p className="text-[9px] sm:text-[10px] text-green-500 uppercase font-bold tracking-wider flex items-center justify-center gap-1">
-                                        Expected Turn
+                                        {t('queue.expected_turn_card', 'Expected Turn')}
                                         <InfoTooltip align="end" text="Dynamic estimate of when you will be called, updated in real-time." />
                                     </p>
                                 </motion.div>
@@ -227,16 +229,16 @@ export default function LiveQueue() {
                                         <PlayCircle className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
                                     </div>
                                     <div>
-                                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-0">Currently Serving</p>
+                                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-0">{t('queue.currently_serving_card', 'Currently Serving')}</p>
                                         <p className="text-xl sm:text-2xl font-black text-slate-800 leading-none">
-                                            {status.current_serving_number > 0 ? `#${status.current_serving_number}` : 'No one yet'}
+                                            {status.current_serving_number > 0 ? `#${status.current_serving_number}` : t('queue.no_one_yet', 'No one yet')}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="sm:text-right">
-                                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-0">Status</p>
+                                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-0.5 sm:mb-0">{t('queue.status_label', 'Status')}</p>
                                     <p className={`text-sm font-bold ${hasStarted ? 'text-green-600' : 'text-orange-600'} leading-none`}>
-                                        {hasStarted ? 'Live' : 'Waiting to start'}
+                                        {hasStarted ? t('queue.live_badge', 'Live') : t('queue.waiting_start', 'Waiting to start')}
                                     </p>
                                 </div>
                             </div>
@@ -244,7 +246,7 @@ export default function LiveQueue() {
                             {!hasStarted && status.people_ahead === 0 && (
                                 <div className="bg-orange-50 rounded-2xl p-4 text-center border border-orange-100">
                                     <p className="text-sm font-medium text-orange-800">
-                                        You are first in line! Please wait for the administrator to start the queue.
+                                        {t('queue.first_in_line', 'You are first in line! Please wait for the administrator to start the queue.')}
                                     </p>
                                 </div>
                             )}

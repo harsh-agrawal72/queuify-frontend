@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Users, Play, CheckCircle2, Clock, Sparkles, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const QueueVisualization = ({ appointment }) => {
+    const { t } = useTranslation();
     const { 
         live_queue_number, 
         myRank,
@@ -34,22 +36,22 @@ const QueueVisualization = ({ appointment }) => {
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <h4 className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
-                                Live Queue Status
+                                {t('queue.live_queue', 'Live Queue Status')}
                             </h4>
                             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-50 rounded-full border border-green-100">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                                 </span>
-                                <span className="text-[9px] sm:text-[10px] font-black text-green-600 uppercase">Live</span>
+                                <span className="text-[9px] sm:text-[10px] font-black text-green-600 uppercase">{t('queue.live_badge', 'Live')}</span>
                             </div>
                         </div>
                         <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                            {isServing ? "It's your turn now!" : (ahead === 0 ? "You're next in line" : `${ahead} people ahead`)}
+                            {isServing ? t('queue.your_turn', "It's your turn now!") : (ahead === 0 ? t('queue.next_in_line', "You're next in line") : t('queue.people_ahead_count', "{{count}} people ahead", { count: ahead }))}
                         </p>
                     </div>
                     <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 text-center min-w-[120px] w-full sm:w-auto shadow-sm">
-                        <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Your Token</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">{t('queue.your_token_label', 'Your Token')}</span>
                         <span className="text-3xl font-black text-indigo-600">#{myToken}</span>
                     </div>
                 </div>
@@ -90,7 +92,7 @@ const QueueVisualization = ({ appointment }) => {
                                 )}
                             </motion.div>
                             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-400 uppercase whitespace-nowrap tracking-wider">
-                                {isServing ? 'Current' : `Serving #${serving || '...'}`}
+                                {isServing ? t('queue.current_checkpoint', 'Current') : t('queue.serving_number', 'Serving #{{number}}', { number: serving || '...' })}
                             </div>
                         </div>
 
@@ -116,14 +118,14 @@ const QueueVisualization = ({ appointment }) => {
                                     className="relative z-30"
                                 >
                                     <div className="absolute -top-12 left-1/2 -translate-x-1/2">
-                                        <motion.div 
-                                            animate={{ y: [0, -4, 0] }}
-                                            transition={{ repeat: Infinity, duration: 2 }}
-                                            className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-lg shadow-lg shadow-indigo-200 uppercase"
-                                        >
-                                            You
-                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-indigo-600 rotate-45" />
-                                        </motion.div>
+                                            <motion.div 
+                                                animate={{ y: [0, -4, 0] }}
+                                                transition={{ repeat: Infinity, duration: 2 }}
+                                                className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-lg shadow-lg shadow-indigo-200 uppercase"
+                                            >
+                                                {t('queue.you_badge', 'You')}
+                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-indigo-600 rotate-45" />
+                                            </motion.div>
                                     </div>
                                     <div className="w-14 h-14 sm:w-18 sm:h-18 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-300 ring-4 sm:ring-8 ring-white">
                                         <div className="relative">
@@ -136,7 +138,7 @@ const QueueVisualization = ({ appointment }) => {
                                         </div>
                                     </div>
                                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-indigo-600 uppercase whitespace-nowrap tracking-wider">
-                                        Ticket #{myToken}
+                                        {t('queue.ticket_number', 'Ticket #{{number}}', { number: myToken })}
                                     </div>
                                 </motion.div>
                             )}
@@ -152,7 +154,7 @@ const QueueVisualization = ({ appointment }) => {
                                 <CheckCircle2 className="h-6 w-6" />
                             </div>
                             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-300 uppercase whitespace-nowrap tracking-wider">
-                                Finish
+                                {t('queue.finish_checkpoint', 'Finish')}
                             </div>
                         </div>
                     </div>
@@ -165,9 +167,9 @@ const QueueVisualization = ({ appointment }) => {
                             <Clock className="h-6 w-6 sm:h-7 sm:w-7" />
                         </div>
                         <div>
-                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Estimated Arrival</p>
+                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{t('queue.est_arrival', 'Estimated Arrival')}</p>
                             <p className="text-lg sm:text-xl font-black text-slate-900">
-                                {isServing ? 'Ready for Service' : (waitMins > 60 ? `${Math.floor(waitMins/60)}h ${waitMins%60}m` : `${waitMins} mins`)}
+                                {isServing ? t('queue.ready_for_service', 'Ready for Service') : (waitMins > 60 ? `${Math.floor(waitMins/60)}h ${waitMins%60}m` : `${waitMins} mins`)}
                             </p>
                         </div>
                     </div>
@@ -175,7 +177,7 @@ const QueueVisualization = ({ appointment }) => {
                         <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start ${driftMins > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
                             {driftMins > 0 ? <Sparkles className="h-4 w-4" /> : <Play className="h-4 w-4 rotate-90" />}
                             <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap">
-                                {driftMins > 0 ? 'AI: Moving Slower' : 'AI: Moving Faster'}
+                                {driftMins > 0 ? t('queue.ai_slower', 'AI: Moving Slower') : t('queue.ai_faster', 'AI: Moving Faster')}
                             </span>
                         </div>
                     )}

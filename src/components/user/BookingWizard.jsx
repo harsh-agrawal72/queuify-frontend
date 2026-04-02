@@ -214,9 +214,18 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
     const initiateRazorpayPayment = async (appointment) => {
         try {
-            setLoadingCreation(true);
             const orderRes = await apiService.createPaymentOrder(appointment.id);
-            const { order } = orderRes.data;
+            const { order, breakdown } = orderRes.data;
+
+            // Update local state with exact amount and breakdown from backend
+            if (breakdown) {
+                setPendingAppointment(prev => ({
+                    ...prev,
+                    price: breakdown.basePrice,
+                    total_payable: breakdown.totalPayable,
+                    breakdown
+                }));
+            }
 
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -600,9 +609,26 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         <span className="text-gray-400 font-medium">{t('booking.wizard.steps.time', 'Time')}</span>
                         <span className="text-gray-900 font-bold">{format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-2">
+
+                    {/* Breakdown of Fees */}
+                    <div className="space-y-2 py-2">
+                        <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>{t('booking.wizard.payment.appointment_fee', 'Appointment Fee')}</span>
+                            <span>₹{pendingAppointment?.price || selectedResource?.price || selectedService?.price || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>{t('booking.wizard.payment.convenience_fee', 'Convenience Fee')}</span>
+                            <span>₹{pendingAppointment?.breakdown ? (parseFloat(pendingAppointment.breakdown.platformFee) + parseFloat(pendingAppointment.breakdown.transactionFee)).toFixed(2) : '--'}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>{t('booking.wizard.payment.gst', 'GST (18%)')}</span>
+                            <span>₹{pendingAppointment?.breakdown?.paymentGst || '--'}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-2 border-t border-indigo-100">
                         <span className="text-gray-900 font-bold">{t('booking.wizard.payment.total', 'Total Amount')}</span>
-                        <span className="text-2xl font-black text-indigo-600 font-mono">₹{selectedResource?.price || selectedService?.price || 0}</span>
+                        <span className="text-2xl font-black text-indigo-600 font-mono">₹{pendingAppointment?.total_payable || pendingAppointment?.price || selectedResource?.price || selectedService?.price || 0}</span>
                     </div>
                 </div>
             </div>

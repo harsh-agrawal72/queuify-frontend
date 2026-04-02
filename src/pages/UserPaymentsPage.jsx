@@ -35,7 +35,7 @@ const UserPaymentsPage = () => {
                         <CreditCard className="h-8 w-8 text-indigo-600" />
                         {t('navigation.payment_history', 'Payment History')}
                     </h1>
-                    <p className="text-gray-500 font-medium">Analyze your spending and track transaction history.</p>
+                    <p className="text-gray-500 font-medium">{t('payments.spending_analysis_subtitle', 'Analyze your spending and track transaction history.')}</p>
                 </div>
                 <button
                     onClick={fetchData}
