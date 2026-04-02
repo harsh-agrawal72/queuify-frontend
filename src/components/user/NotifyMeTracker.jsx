@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, parseISO, isValid, formatDistanceToNow, isPast } from 'date-fns';
+import { format, parseISO, isValid, formatDistanceToNow } from 'date-fns';
 import {
     Bell, BellOff, Clock, MapPin, Calendar, X, Loader2,
-    CheckCircle2, AlertCircle, Timer, RefreshCw, Building2, ChevronRight, Zap
+    CheckCircle2, AlertCircle, Timer, RefreshCw, Building2, Zap
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 
 // ─── Helper: safe date parsing ───
@@ -18,31 +19,28 @@ const safeDate = (str) => {
     } catch { return null; }
 };
 
-const safeFormat = (str, fmt, fallback = '--') => {
-    const d = safeDate(str);
-    return d ? format(d, fmt) : fallback;
-};
-
 // ─── Status Badge ───
 const StatusBadge = ({ status, notified }) => {
+    const { t } = useTranslation();
     if (notified || status === 'notified') {
         return (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-black uppercase tracking-wider">
                 <CheckCircle2 className="h-3 w-3" />
-                Notified
+                {t('notify.card.notified', 'Notified')}
             </span>
         );
     }
     return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-black uppercase tracking-wider">
             <Timer className="h-3 w-3 animate-pulse" />
-            Waiting for Your Turn
+            {t('notify.card.waiting', 'Waiting for Your Turn')}
         </span>
     );
 };
 
 // ─── Individual Notification Card ───
 const NotifyCard = ({ notification, onCancel, cancellingId }) => {
+    const { t } = useTranslation();
     const {
         id,
         service_name,
@@ -70,9 +68,9 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
 
     const getTimeDiffLabel = () => {
         if (timeDiffMinutes === null) return null;
-        if (Math.abs(timeDiffMinutes) <= 5) return { text: "On time!", color: "text-emerald-600" };
-        if (timeDiffMinutes > 5) return { text: `~${timeDiffMinutes}m behind your time`, color: "text-amber-600" };
-        return { text: `~${Math.abs(timeDiffMinutes)}m ahead of your time`, color: "text-blue-600" };
+        if (Math.abs(timeDiffMinutes) <= 5) return { text: t('notify.card.on_time', 'On time!'), color: "text-emerald-600" };
+        if (timeDiffMinutes > 5) return { text: t('notify.card.behind', '~{{mins}} behind your time', { mins: timeDiffMinutes }), color: "text-amber-600" };
+        return { text: t('notify.card.ahead', '~{{mins}} ahead of your time', { mins: Math.abs(timeDiffMinutes) }), color: "text-blue-600" };
     };
 
     const timeDiffInfo = getTimeDiffLabel();
@@ -108,10 +106,10 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
                             <Bell className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="font-black text-gray-900 text-sm leading-tight">{service_name || 'Service'}</h3>
+                            <h3 className="font-black text-gray-900 text-sm leading-tight">{service_name || t('common.service', 'Service')}</h3>
                             <p className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-0.5">
                                 <Building2 className="h-3 w-3" />
-                                {org_name || 'Organization'}
+                                {org_name || t('appointment.organization', 'Organization')}
                             </p>
                         </div>
                     </div>
@@ -122,7 +120,7 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100">
                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" /> Slot Time
+                            <Calendar className="h-3 w-3" /> {t('notify.card.slot_time', 'Slot Time')}
                         </p>
                         <p className="text-xs font-black text-gray-900">
                             {slotStartDate ? format(slotStartDate, 'MMM d, h:mm a') : '--'}
@@ -130,7 +128,7 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
                     </div>
                     <div className="bg-indigo-50 rounded-2xl p-3 border border-indigo-100">
                         <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                            <Zap className="h-3 w-3" /> Your Desired Time
+                            <Zap className="h-3 w-3" /> {t('notify.card.desired_time', 'Your Desired Time')}
                         </p>
                         <p className="text-xs font-black text-indigo-700">
                             {desiredDate ? format(desiredDate, 'h:mm a') : '--'}
@@ -148,13 +146,13 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> Currently Estimated At
+                                <Clock className="h-3 w-3" /> {t('notify.card.estimated_at', 'Currently Estimated At')}
                             </p>
                             <p className={clsx(
                                 "text-base font-black",
                                 isNotified ? "text-emerald-700" : "text-gray-900"
                             )}>
-                                {estimatedDate ? format(estimatedDate, 'h:mm a') : 'Calculating...'}
+                                {estimatedDate ? format(estimatedDate, 'h:mm a') : t('notify.card.calculating', 'Calculating...')}
                             </p>
                         </div>
                         {timeDiffInfo && (
@@ -168,8 +166,8 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
                     {max_capacity > 0 && (
                         <div className="mt-3">
                             <div className="flex justify-between text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">
-                                <span>Queue Filled</span>
-                                <span>{booked_count}/{max_capacity} booked</span>
+                                <span>{t('notify.card.queue_filled', 'Queue Filled')}</span>
+                                <span>{t('notify.card.booked_info', '{{count}}/{{total}} booked', { count: booked_count, total: max_capacity })}</span>
                             </div>
                             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
@@ -187,7 +185,7 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
                 {/* Footer: Set time ago + Cancel */}
                 <div className="flex items-center justify-between">
                     <p className="text-[10px] text-gray-400 font-medium">
-                        Alert set {created_at ? formatDistanceToNow(safeDate(created_at), { addSuffix: true }) : ''}
+                        {t('notify.card.alert_set', 'Alert set {{time}}', { time: created_at ? formatDistanceToNow(safeDate(created_at), { addSuffix: true }) : '' })}
                     </p>
                     {!isNotified && (
                         <button
@@ -199,7 +197,7 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
                                 ? <Loader2 className="h-3 w-3 animate-spin" />
                                 : <X className="h-3 w-3" />
                             }
-                            {isCancelling ? 'Cancelling...' : 'Cancel Alert'}
+                            {isCancelling ? t('notify.card.cancelling', 'Cancelling...') : t('notify.card.cancel_btn', 'Cancel Alert')}
                         </button>
                     )}
                 </div>
@@ -210,6 +208,7 @@ const NotifyCard = ({ notification, onCancel, cancellingId }) => {
 
 // ─── Main Component ───
 const NotifyMeTracker = () => {
+    const { t } = useTranslation();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [cancellingId, setCancellingId] = useState(null);
@@ -221,11 +220,11 @@ const NotifyMeTracker = () => {
             setNotifications(Array.isArray(res.data) ? res.data : []);
         } catch (e) {
             console.error('[NotifyMeTracker] Fetch failed:', e);
-            toast.error('Could not load your alerts.');
+            toast.error(t('notify.error.load', 'Could not load your alerts.'));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         fetchNotifications();
@@ -239,9 +238,9 @@ const NotifyMeTracker = () => {
         try {
             await apiService.cancelNotification(id);
             setNotifications(prev => prev.filter(n => n.id !== id));
-            toast.success('Alert cancelled successfully.');
+            toast.success(t('notify.success.cancel', 'Alert cancelled successfully.'));
         } catch (e) {
-            toast.error('Could not cancel alert. Try again.');
+            toast.error(t('notify.error.cancel', 'Could not cancel alert. Try again.'));
         } finally {
             setCancellingId(null);
         }
@@ -262,7 +261,7 @@ const NotifyMeTracker = () => {
                 {[1, 2].map(i => (
                     <div key={i} className="bg-white rounded-3xl border border-gray-100 p-6 animate-pulse">
                         <div className="flex gap-3 mb-4">
-                            <div className="h-10 w-10 bg-gray-200 rounded-2xl" />
+                            <div className="h-10 h-10 bg-gray-200 rounded-2xl" />
                             <div className="flex-1 space-y-2">
                                 <div className="h-4 bg-gray-200 rounded-lg w-2/3" />
                                 <div className="h-3 bg-gray-100 rounded-lg w-1/3" />
@@ -286,10 +285,10 @@ const NotifyMeTracker = () => {
                 <div>
                     <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                         <Bell className="h-6 w-6 text-indigo-500" />
-                        My Wait Alerts
+                        {t('notify.header', 'My Wait Alerts')}
                     </h2>
                     <p className="text-sm text-gray-500 font-medium mt-1">
-                        Track all your "Notify Me" requests and their current queue status.
+                        {t('notify.subtitle', 'Track all your "Notify Me" requests and their current queue status.')}
                     </p>
                 </div>
                 <button
@@ -297,7 +296,7 @@ const NotifyMeTracker = () => {
                     className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-black hover:bg-gray-200 transition-all"
                 >
                     <RefreshCw className="h-3.5 w-3.5" />
-                    Refresh
+                    {t('notify.refresh', 'Refresh')}
                 </button>
             </div>
 
@@ -306,15 +305,15 @@ const NotifyMeTracker = () => {
                 <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
                         <p className="text-2xl font-black text-gray-900">{notifications.length}</p>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mt-1">Total</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mt-1">{t('notify.stats.total', 'Total')}</p>
                     </div>
                     <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 text-center">
                         <p className="text-2xl font-black text-amber-700">{pendingCount}</p>
-                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider mt-1">Waiting</p>
+                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider mt-1">{t('notify.stats.waiting', 'Waiting')}</p>
                     </div>
                     <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-4 text-center">
                         <p className="text-2xl font-black text-emerald-700">{notifiedCount}</p>
-                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider mt-1">Notified</p>
+                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider mt-1">{t('notify.stats.notified', 'Notified')}</p>
                     </div>
                 </div>
             )}
@@ -323,9 +322,9 @@ const NotifyMeTracker = () => {
             {notifications.length > 0 && (
                 <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-2xl border border-gray-200 w-fit">
                     {[
-                        { key: 'all', label: 'All Alerts' },
-                        { key: 'pending', label: '⏳ Waiting' },
-                        { key: 'notified', label: '✅ Notified' },
+                        { key: 'all', label: t('notify.tabs.all', 'All Alerts') },
+                        { key: 'pending', label: t('notify.tabs.waiting', '⏳ Waiting') },
+                        { key: 'notified', label: t('notify.tabs.notified', '✅ Notified') },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -366,12 +365,15 @@ const NotifyMeTracker = () => {
                             <BellOff className="h-9 w-9 text-gray-200" />
                         </div>
                         <h3 className="text-xl font-black text-gray-900 mb-2">
-                            {filter === 'all' ? 'No Wait Alerts Set' : `No ${filter === 'pending' ? 'Waiting' : 'Notified'} Alerts`}
+                            {filter === 'all'
+                                ? t('notify.empty.title', 'No Wait Alerts Set')
+                                : t('notify.empty.no_category', 'You don\'t have any alerts in this category.')
+                            }
                         </h3>
                         <p className="text-gray-400 font-medium max-w-xs text-sm leading-relaxed">
                             {filter === 'all'
-                                ? 'When you click "Notify Me" on a slot, your alerts will appear here so you can track them.'
-                                : `You don't have any alerts in this category.`
+                                ? t('notify.empty.subtitle', 'When you click "Notify Me" on a slot, your alerts will appear here so you can track them.')
+                                : ""
                             }
                         </p>
                     </motion.div>
@@ -381,11 +383,14 @@ const NotifyMeTracker = () => {
             {/* Info Footer */}
             <div className="flex items-start gap-3 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
                 <AlertCircle className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-indigo-700 font-medium leading-relaxed">
-                    <strong>How it works:</strong> Estimated times update automatically as the queue moves. 
-                    You'll get notified when the queue reaches your desired time. 
-                    Alerts auto-refresh every 60 seconds.
-                </p>
+                <div className="text-xs text-indigo-700 font-medium leading-relaxed">
+                    <p className="font-black mb-1">{t('common.how_it_works', 'How it works')}:</p>
+                    <ul className="space-y-1 list-disc list-inside opacity-90">
+                        <li>{t('notify.footer.how_it_works', 'Estimated times update automatically as the queue moves.')}</li>
+                        <li>{t('notify.footer.notified_hint', 'You\'ll get notified when the queue reaches your desired time.')}</li>
+                        <li>{t('notify.footer.refresh_hint', 'Alerts auto-refresh every 60 seconds.')}</li>
+                    </ul>
+                </div>
             </div>
         </div>
     );

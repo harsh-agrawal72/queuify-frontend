@@ -324,27 +324,27 @@ const ServiceManagement = () => {
             {/* ═══ SERVICE MODAL ═══ */}
             <FormModal
                 open={serviceModal.open}
-                title={serviceModal.edit ? t('service.edit_service', 'Edit Service') : t('service.new_service', 'New Service')}
+                title={serviceModal.edit ? t('admin.services.edit', 'Edit Service') : t('admin.services.create', 'New Service')}
                 onClose={() => setServiceModal({ open: false, edit: false, data: null })}
                 onSubmit={handleServiceSubmit}
                 fields={[
-                    { name: 'name', label: t('service.service_name', 'Service Name'), type: 'text', required: true },
+                    { name: 'name', label: t('admin.services.service_name', 'Service Name'), type: 'text', required: true },
                     { name: 'description', label: t('common.description', 'Description'), type: 'textarea' },
                     {
                         name: 'queue_scope',
-                        label: t('service.queue_scope', 'Queue Scope'),
+                        label: t('admin.services.queue_scope', 'Queue Scope'),
                         type: 'select',
                         options: ['PER_RESOURCE', 'CENTRAL'],
                         required: true,
-                        help: t('service.queue_scope_help', 'CENTRAL: One shared queue for all resources. PER_RESOURCE: Separate queue for each staff/doctor (best for specific bookings).')
+                        help: t('admin.services.queue_scope_help', 'CENTRAL: One shared queue for all resources. PER_RESOURCE: Separate queue for each staff/doctor (best for specific bookings).')
                     },
                     { 
                         name: 'estimated_service_time', 
-                        label: t('service.estimated_duration', 'Estimated Duration (min)'), 
+                        label: t('admin.services.estimated_duration', 'Estimated Duration (min)'), 
                         type: 'number', 
                         min: 1, 
                         required: true,
-                        help: t('service.estimated_duration_help', 'Average time per appointment. This is used for wait-time estimates and as a default timing for new slots.')
+                        help: t('admin.services.estimated_duration_help', 'Average time per appointment. This is used for wait-time estimates and as a default timing for new slots.')
                     },
                 ]}
                 defaults={serviceModal.edit ? serviceModal.data : {

@@ -59,15 +59,17 @@ const Login = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-white p-4 relative">
             {/* Back Button */}
-            <Link
-                to="/"
-                className="absolute top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-gray-900 font-semibold transition-all group"
-            >
-                <div className="p-2 rounded-full group-hover:bg-gray-100 transition-colors">
-                    <ChevronLeft className="h-5 w-5" />
-                </div>
-                {t('common.back_to_home', 'Back to home')}
-            </Link>
+            <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-20">
+                <Link
+                    to="/"
+                    className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-semibold transition-all group"
+                >
+                    <div className="p-2 rounded-full bg-white/80 backdrop-blur-sm sm:bg-transparent group-hover:bg-gray-100 transition-colors shadow-sm sm:shadow-none">
+                        <ChevronLeft className="h-5 w-5" />
+                    </div>
+                    <span className="hidden sm:inline">{t('common.back_to_home', 'Back to home')}</span>
+                </Link>
+            </div>
             {/* Background Gradients */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-50 rounded-full blur-[120px] opacity-60"></div>
@@ -77,9 +79,9 @@ const Login = () => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md"
+                className="w-full max-w-md mt-12 sm:mt-0"
             >
-                <div className="bg-white border border-gray-100 shadow-2xl shadow-gray-200/50 rounded-3xl p-8 md:p-10">
+                <div className="bg-white border border-gray-100 shadow-2xl shadow-gray-200/50 rounded-3xl p-6 sm:p-8 md:p-10">
                     <div className="text-center mb-10">
                         <Link to="/" className="inline-flex items-center mb-6 hover:scale-105 transition-transform origin-center">
                             <Logo iconSize="w-12 h-12" textClass="text-3xl text-gray-900 ml-2" />
@@ -162,13 +164,13 @@ const Login = () => {
                     </div>
 
                     <div className="flex flex-col gap-4">
-                        <div className="flex justify-center w-full">
+                        <div className="flex justify-center w-full overflow-hidden">
                             <GoogleLogin
                                 onSuccess={handleGoogleSuccess}
                                 onError={() => toast.error(t('auth.google_failed', 'Google Sign In failed'))}
                                 shape="pill"
                                 theme="outline"
-                                width={400}
+                                width="100%"
                                 size="large"
                                 text="signin_with"
                             />

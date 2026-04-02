@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { apiService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO, isValid } from 'date-fns';
+import { calculatePaymentBreakdown } from '../../utils/paymentHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 // Removing mock RazorpayModal as we use real window.Razorpay
 
@@ -56,6 +57,10 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     const [requestingNotification, setRequestingNotification] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const apptRef = useRef(null);
+
+    // Derived Financial State (Preview)
+    const basePrice = selectedResource?.price || selectedService?.price || 0;
+    const previewBreakdown = useMemo(() => calculatePaymentBreakdown(basePrice), [basePrice]);
 
     // Helper to generate time intervals between slot boundaries
     const getTimeOptions = (slot) => {
@@ -614,21 +619,25 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                     <div className="space-y-2 py-2">
                         <div className="flex justify-between items-center text-xs text-gray-500">
                             <span>{t('booking.wizard.payment.appointment_fee', 'Appointment Fee')}</span>
-                            <span>₹{pendingAppointment?.price || selectedResource?.price || selectedService?.price || 0}</span>
+                            <span>₹{pendingAppointment?.price || basePrice || 0}</span>
                         </div>
                         <div className="flex justify-between items-center text-xs text-gray-500">
                             <span>{t('booking.wizard.payment.convenience_fee', 'Convenience Fee')}</span>
-                            <span>₹{pendingAppointment?.breakdown ? (parseFloat(pendingAppointment.breakdown.platformFee) + parseFloat(pendingAppointment.breakdown.transactionFee)).toFixed(2) : '--'}</span>
+                            <span>
+                                ₹{pendingAppointment?.breakdown 
+                                    ? (parseFloat(pendingAppointment.breakdown.platformFee) + parseFloat(pendingAppointment.breakdown.transactionFee)).toFixed(2) 
+                                    : (previewBreakdown.platformFee + previewBreakdown.transactionFee).toFixed(2)}
+                            </span>
                         </div>
                         <div className="flex justify-between items-center text-xs text-gray-500">
                             <span>{t('booking.wizard.payment.gst', 'GST (18%)')}</span>
-                            <span>₹{pendingAppointment?.breakdown?.paymentGst || '--'}</span>
+                            <span>₹{pendingAppointment?.breakdown?.paymentGst || previewBreakdown.paymentGst || 0}</span>
                         </div>
                     </div>
 
                     <div className="flex justify-between items-center pt-2 border-t border-indigo-100">
                         <span className="text-gray-900 font-bold">{t('booking.wizard.payment.total', 'Total Amount')}</span>
-                        <span className="text-2xl font-black text-indigo-600 font-mono">₹{pendingAppointment?.total_payable || pendingAppointment?.price || selectedResource?.price || selectedService?.price || 0}</span>
+                        <span className="text-2xl font-black text-indigo-600 font-mono">₹{pendingAppointment?.total_payable || previewBreakdown.totalPayable || basePrice || 0}</span>
                     </div>
                 </div>
             </div>
@@ -648,7 +657,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 {loadingCreation ? <Loader2 className="animate-spin h-6 w-6" /> : (
                     <>
                         <CreditCard className="h-6 w-6" />
-                        <span>{t('booking.wizard.payment.pay_button', 'Pay ₹{{amount}} & Join Queue', { amount: selectedResource?.price || selectedService?.price || 0 })}</span>
+                        <span>{t('booking.wizard.payment.pay_button', 'Pay ₹{{amount}} & Join Queue', { amount: pendingAppointment?.total_payable || previewBreakdown.totalPayable || basePrice || 0 })}</span>
                     </>
                 )}
             </button>

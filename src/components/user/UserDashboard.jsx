@@ -216,7 +216,7 @@ export default function UserDashboard() {
                     )}
                 >
                     <Bell className="h-4 w-4" />
-                    <span>Notify Me</span>
+                    <span>{t('dashboard.notify_tab', 'Notify Me')}</span>
                 </button>
             </div>
 

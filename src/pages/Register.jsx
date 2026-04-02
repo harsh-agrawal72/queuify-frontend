@@ -219,15 +219,17 @@ const Register = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-white p-4 py-12 relative">
             {/* Back Button */}
-            <Link
-                to="/"
-                className="absolute top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-gray-900 font-semibold transition-all group"
-            >
-                <div className="p-2 rounded-full group-hover:bg-gray-100 transition-colors">
-                    <ChevronLeft className="h-5 w-5" />
-                </div>
-                {t('common.back_to_home', 'Back to home')}
-            </Link>
+            <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-20">
+                <Link
+                    to="/"
+                    className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-semibold transition-all group"
+                >
+                    <div className="p-2 rounded-full bg-white/80 backdrop-blur-sm sm:bg-transparent group-hover:bg-gray-100 transition-colors shadow-sm sm:shadow-none">
+                        <ChevronLeft className="h-5 w-5" />
+                    </div>
+                    <span className="hidden sm:inline">{t('common.back_to_home', 'Back to home')}</span>
+                </Link>
+            </div>
             {/* Background Gradients */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
                 <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-50 rounded-full blur-[120px] opacity-60"></div>
@@ -261,7 +263,7 @@ const Register = () => {
 
                 <motion.div
                     layout
-                    className="bg-white border border-gray-100 shadow-2xl shadow-gray-200/50 rounded-3xl p-8"
+                    className="bg-white border border-gray-100 shadow-2xl shadow-gray-200/50 rounded-3xl p-6 md:p-8"
                 >
                     <AnimatePresence mode="wait">
                         {signupType === 'user' ? (
@@ -287,7 +289,7 @@ const Register = () => {
                                         <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="john@example.com" />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">{t('auth.password', 'Password')}</label>
                                         <input type="password" name="password" required value={formData.password} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder="••••••••" />
@@ -349,7 +351,7 @@ const Register = () => {
                                         <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                                             <Building2 className="h-5 w-5 text-blue-600" /> {t('auth.org_details', 'Organization Details')}
                                         </h3>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t('auth.business_name', 'Business Name')}</label>
                                                 <input type="text" name="orgName" required value={formData.orgName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" placeholder={t('auth.business_name_placeholder', 'Blue Coast Dental')} />
