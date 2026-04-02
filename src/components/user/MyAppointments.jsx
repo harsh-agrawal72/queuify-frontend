@@ -55,7 +55,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                     </span>
                     <div className="hidden md:block mt-2 bg-white/80 px-2.5 py-1 rounded-lg">
                         <span className="text-[11px] font-bold text-gray-700">
-                            {appt.start_time ? format(parseISO(appt.start_time), 'h:mm a') : (isPendingReassignment ? 'Slot Pending' : t('common.no_time', 'No Time'))}
+                            {appt.start_time ? format(parseISO(appt.start_time), 'h:mm a') : (isPendingReassignment ? t('appointment.slot_pending', 'Slot Pending') : t('common.no_time', 'No Time'))}
                         </span>
                     </div>
                 </div>
@@ -70,7 +70,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                             <div>
                                 <p className="text-xs font-bold text-amber-900">{t('appointment.reschedule_proposed', 'Reschedule Proposed by Business')}</p>
                                 <p className="text-[10px] text-amber-700 font-medium">
-                                    New Time: <span className="font-bold">{appt.proposed_start_time ? format(parseISO(appt.proposed_start_time), 'PPp') : 'TBD'}</span>
+                                {t('appointment.new_time', 'New Time')}: <span className="font-bold">{appt.proposed_start_time ? format(parseISO(appt.proposed_start_time), 'PPp') : 'TBD'}</span>
                                 </p>
                                 {appt.reschedule_reason && (
                                     <p className="text-[10px] text-amber-600 italic mt-0.5">"{appt.reschedule_reason}"</p>
@@ -80,15 +80,15 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                         <div className="flex gap-2">
                             <button
                                 onClick={(e) => { e.stopPropagation(); onRespond(appt.id, 'accept'); }}
-                                className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-700 transition-all flex items-center gap-1.5 shadow-sm"
+                                className="bg-amber-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-700 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                             >
-                                <Star className="h-3 w-3 fill-white" /> Accept & Get Priority #1
+                                <Star className="h-3 w-3 fill-white" /> {t('appointment.accept_priority', 'Accept & Get Priority #1')}
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); onRespond(appt.id, 'decline'); }}
-                                className="bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-50 transition-all"
+                                className="bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-50 transition-all active:scale-95"
                             >
-                                Keep Original
+                                {t('appointment.keep_original', 'Keep Original')}
                             </button>
                         </div>
                     </div>
