@@ -20,6 +20,13 @@
     "wallet": "वॉलेट",
     "payment_history": "भुगतान इतिहास"
   },
+  "appointment": {
+    "title": "अपॉइंटमेंट",
+    "organization": "संस्था",
+    "try_changing_filter": "फ़िल्टर बदलने या नया अपॉइंटमेंट बुक करने का प्रयास करें।",
+    "reschedule_proposed": "व्यवसाय द्वारा पुन: निर्धारण का प्रस्ताव",
+    "slot_pending": "स्लॉट लंबित"
+  },
   "dashboard": {
     "welcome": "वापसी पर स्वागत है",
     "overview": "अवलोकन",
@@ -1035,6 +1042,11 @@
       "active_bookings": "सक्रिय बुकिंग",
       "lifetime_spent": "कुल खर्च",
       "manage_calendar": "कैलेंडर प्रबंधित करें"
+    },
+    "tabs": {
+        "overview": "अवलोकन",
+        "bookings": "मेरी बुकिंग",
+        "payments": "भुगतान इतिहास"
     },
     "find_orgs": "संस्थाएं खोजें",
     "filters": {
