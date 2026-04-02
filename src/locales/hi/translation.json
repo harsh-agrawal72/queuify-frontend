@@ -110,6 +110,24 @@
     "token_tooltip": "इस स्लॉट के लिए आपका विशिष्ट अनुक्रम नंबर। अपनी स्थिति को ट्रैक करने के लिए इसका उपयोग करें।",
     "clear_schedule": "लगता है आपका शेड्यूल खाली है।"
   },
+  "status": {
+    "confirmed": "पुष्टि हुई",
+    "pending": "लंबित",
+    "cancelled": "रद्द",
+    "completed": "पूर्ण",
+    "serving": "सेवा दी जा रही है",
+    "no_show": "अनुपस्थित",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "past": "पिछला",
+    "full": "पूर्ण",
+    "almost_full": "लगभग पूर्ण",
+    "available": "उपलब्ध",
+    "reschedule_proposed": "पुनर्निर्धारण प्रस्तावित",
+    "refund_failed": "रिफंड विफल",
+    "cancelled_by_admin": "व्यवस्थापक द्वारा रद्द",
+    "cancelled_by_user": "उपयोगकर्ता द्वारा रद्द"
+  },
   "dashboard": {
     "welcome": "वापसी पर स्वागत है",
     "overview": "अवलोकन",
@@ -352,24 +370,6 @@
     "finalize_registration": "पंजीकरण पूरा करें",
     "next_step_admin": "अगला कदम: व्यवस्थापक विवरण",
     "confirm": "पुष्टि करें"
-  },
-  "status": {
-    "confirmed": "पुष्टि हुई",
-    "pending": "लंबित",
-    "cancelled": "रद्द",
-    "completed": "पूर्ण",
-    "serving": "सेवा दी जा रही है",
-    "no_show": "अनुपस्थित",
-    "active": "सक्रिय",
-    "inactive": "निष्क्रिय",
-    "past": "पिछला",
-    "full": "पूर्ण",
-    "almost_full": "लगभग पूर्ण",
-    "available": "उपलब्ध",
-    "reschedule_proposed": "पुनर्निर्धारण प्रस्तावित",
-    "refund_failed": "रिफंड विफल",
-    "cancelled_by_admin": "व्यवस्थापक द्वारा रद्द",
-    "cancelled_by_user": "उपयोगकर्ता द्वारा रद्द"
   },
   "loyalty": {
     "bronze": "ब्रॉन्ज़",
