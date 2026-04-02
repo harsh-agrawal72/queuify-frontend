@@ -282,7 +282,9 @@ const AppointmentManager = () => {
 
         let displayLabel = t(`status.${status}`, status);
         if (status === 'cancelled' && cancelled_by) {
-            displayLabel = cancelled_by === 'admin' ? t('status.cancelled_by_admin', 'Cancelled by Admin') : t('status.cancelled_by_user', 'Cancelled by User');
+            displayLabel = cancelled_by === 'admin' 
+                ? t('status.cancelled_by_admin', 'Cancelled by Admin') 
+                : t('status.cancelled_by_user', 'Cancelled by User');
         }
 
         return (
@@ -297,13 +299,13 @@ const AppointmentManager = () => {
         if (!count || count < 1) return null;
         
         let tier = { 
-            name: 'Bronze', 
+            name: t('loyalty.bronze', 'Bronze'), 
             color: 'bg-orange-50 text-orange-700 border-orange-200', 
             icon: <Award className="h-2.5 w-2.5" /> 
         };
-        if (count >= 10) tier = { name: 'Diamond', color: 'bg-cyan-50 text-cyan-700 border-cyan-200', icon: <Award className="h-2.5 w-2.5" /> };
-        else if (count >= 5) tier = { name: 'Gold', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: <Award className="h-2.5 w-2.5" /> };
-        else if (count >= 3) tier = { name: 'Silver', color: 'bg-slate-50 text-slate-700 border-slate-200', icon: <Award className="h-2.5 w-2.5" /> };
+        if (count >= 10) tier = { name: t('loyalty.diamond', 'Diamond'), color: 'bg-cyan-50 text-cyan-700 border-cyan-200', icon: <Award className="h-2.5 w-2.5" /> };
+        else if (count >= 5) tier = { name: t('loyalty.gold', 'Gold'), color: 'bg-amber-50 text-amber-700 border-amber-200', icon: <Award className="h-2.5 w-2.5" /> };
+        else if (count >= 3) tier = { name: t('loyalty.silver', 'Silver'), color: 'bg-slate-50 text-slate-700 border-slate-200', icon: <Award className="h-2.5 w-2.5" /> };
 
         return (
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border shadow-sm ${tier.color}`}>
@@ -564,7 +566,7 @@ const AppointmentManager = () => {
                                                                                 </button>
                                                                             )}
                                                                             <button onClick={() => {
-                                                                                    if (window.confirm('Mark this user as No-Show?')) {
+                                                                                    if (window.confirm(t('appointment.confirm_no_show', 'Mark this user as No-Show?'))) {
                                                                                         handleStatusUpdate(apt.id, 'no_show');
                                                                                     }
                                                                                 }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">

@@ -42,11 +42,11 @@ const COLORS = {
 const SERVICE_COLORS = ['#4f46e5', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
 
 const STATUS_CONFIG = {
-    pending: { color: '#f59e0b', label: 'Pending' },
-    confirmed: { color: '#4f46e5', label: 'Confirmed' },
-    serving: { color: '#8b5cf6', label: 'Serving' },
-    completed: { color: '#10b981', label: 'Completed' },
-    cancelled: { color: '#ef4444', label: 'Cancelled' }
+    pending: { color: '#f59e0b', label: 'status.pending' },
+    confirmed: { color: '#4f46e5', label: 'status.confirmed' },
+    serving: { color: '#8b5cf6', label: 'status.serving' },
+    completed: { color: '#10b981', label: 'status.completed' },
+    cancelled: { color: '#ef4444', label: 'status.cancelled' }
 };
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -289,7 +289,7 @@ const PredictiveInsightsSection = ({ insights }) => {
                     <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
                         <div>
                              <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">{t('analytics.overall_forecast', 'Overall Forecast')}</p>
-                             <p className="text-sm font-black">Stable Demand</p>
+                             <p className="text-sm font-black">{t('analytics.stable_demand', 'Stable Demand')}</p>
                         </div>
                         <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse" />
                     </div>
@@ -454,7 +454,7 @@ const AnalyticsPanel = () => {
         };
 
         // 1. OVERVIEW SHEET
-        const wsOverview = workbook.addWorksheet('Overview');
+        const wsOverview = workbook.addWorksheet(t('dashboard.overview', 'Overview'));
         wsOverview.columns = [{ width: 30 }, { width: 25 }, { width: 25 }];
 
         // Branding Header
@@ -512,16 +512,15 @@ const AnalyticsPanel = () => {
         // 4. RESOURCE PERFORMANCE
         const wsResource = workbook.addWorksheet(t('analytics.resource_performance', 'Resource Performance'));
         wsResource.columns = [{ width: 35 }, { width: 15 }, { width: 20 }];
-        const resHeader = wsResource.addRow([t('analytics.name', 'Staff / Counter'), t('analytics.bookings', 'Bookings'), t('analytics.status', 'Status')]);
         resHeader.eachCell(c => styleHeader(c));
         (stats.bookingsByResource || []).forEach(r => {
-            wsResource.addRow([r.name, r.value, 'Active']);
+            wsResource.addRow([r.name, r.value, t('common.active', 'Active')]);
         });
 
         // 5. PEAK HOURS HEATMAP
-        const wsPeak = workbook.addWorksheet('Peak Hours');
+        const wsPeak = workbook.addWorksheet(t('analytics.peak_hours', 'Peak Hours'));
         const hCols = HOURS.map(h => ({ header: `${h}:00`, width: 8 }));
-        wsPeak.columns = [{ header: 'Day', width: 15 }, ...hCols];
+        wsPeak.columns = [{ header: t('analytics.day', 'Day'), width: 15 }, ...hCols];
 
         const getHeatArgb = (count) => {
             if (count === 0) return 'F8FAFC';
@@ -553,9 +552,9 @@ const AnalyticsPanel = () => {
         });
 
         // 6. INSIGHTS
-        const wsInsights = workbook.addWorksheet('Smart Insights');
+        const wsInsights = workbook.addWorksheet(t('analytics.smart_insights', 'Smart Insights'));
         wsInsights.columns = [{ width: 25 }, { width: 15 }, { width: 65 }];
-        const insHead = wsInsights.addRow(['Metric', 'Impact', 'Insight / Action Area']);
+        const insHead = wsInsights.addRow([t('analytics.metric', 'Metric'), t('analytics.impact', 'Impact'), t('analytics.action_area', 'Insight / Action Area')]);
         insHead.eachCell(c => styleHeader(c, 'F59E0B'));
         (stats.insights || []).forEach(i => {
             wsInsights.addRow([i.title, i.type.toUpperCase(), i.message]);
@@ -836,19 +835,19 @@ const AnalyticsPanel = () => {
                                 {card.title === t('dashboard.available_balance', 'Available Balance') && parseFloat(wallet?.available_balance) > 0 && (
                                     <button
                                         onClick={async () => {
-                                            if (window.confirm(`Withdraw ₹${wallet.available_balance} to your linked bank account?`)) {
+                                            if (window.confirm(t('wallet.withdraw_confirm', 'Withdraw ₹{{amount}} to your linked bank account?', { amount: wallet.available_balance }))) {
                                                 try {
                                                     await api.post('/payments/withdraw', { amount: wallet.available_balance });
-                                                    alert('Withdrawal request processed successfully!');
+                                                    toast.success(t('wallet.withdraw_success', 'Withdrawal request processed successfully!'));
                                                     window.location.reload();
                                                 } catch (err) {
-                                                    alert(err.response?.data?.message || 'Withdrawal failed');
+                                                    toast.error(err.response?.data?.message || t('wallet.withdraw_failed', 'Withdrawal failed'));
                                                 }
                                             }
                                         }}
                                         className="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full hover:bg-green-700 transition-colors shadow-sm"
                                     >
-                                        Withdraw
+                                        {t('common.withdraw', 'Withdraw')}
                                     </button>
                                 )}
                             </div>
@@ -924,7 +923,7 @@ const AnalyticsPanel = () => {
                                         if (!active || !payload?.length) return null;
                                         return (
                                             <div style={customTooltipStyle}>
-                                                <p className="font-semibold">{payload[0].name}: {payload[0].value}</p>
+                                                <p className="font-semibold">{t(payload[0].name)}: {payload[0].value}</p>
                                             </div>
                                         );
                                     }} />
@@ -934,7 +933,7 @@ const AnalyticsPanel = () => {
                                 {stats.statusDistribution.map((s, i) => (
                                     <div key={i} className="flex items-center gap-1.5 text-xs">
                                         <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                                        <span className="text-gray-600">{s.name} ({s.value})</span>
+                                        <span className="text-gray-600">{t(s.name)} ({s.value})</span>
                                     </div>
                                 ))}
                             </div>

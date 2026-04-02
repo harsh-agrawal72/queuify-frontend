@@ -288,7 +288,7 @@ const ServiceManagement = () => {
                                                             <div>
                                                                 <p className="font-medium text-gray-900 text-sm">{resource.name}</p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                                    <span className="text-xs text-gray-400 capitalize">{resource.type}</span>
+                                                                    <span className="text-xs text-gray-400 capitalize">{t(`resource_type.${resource.type}`, resource.type)}</span>
                                                                     <span className="text-xs text-blue-600 font-medium flex items-center gap-0.5">
                                                                         <Users className="h-3 w-3" /> {t('service.capacity', 'Cap')}: {resource.concurrent_capacity}
                                                                     </span>
@@ -363,7 +363,7 @@ const ServiceManagement = () => {
                 onSubmit={handleResourceSubmit}
                 fields={[
                     { name: 'name', label: t('service.resource_name', 'Resource Name'), type: 'text', required: true },
-                    { name: 'type', label: t('common.type', 'Type'), type: 'select', options: ['staff', 'room', 'equipment', 'counter', 'machine'], required: true },
+                    { name: 'type', label: t('common.type', 'Type'), type: 'select', options: ['staff', 'room', 'equipment', 'counter', 'machine'], required: true, translateOptions: true },
                     { name: 'concurrent_capacity', label: t('service.concurrent_capacity', 'Concurrent Capacity'), type: 'number', min: 1, required: true },
                     { name: 'price', label: t('service.price', 'Fee / Price (₹)'), type: 'number', min: 0, required: false, help: t('service.price_help', 'Set a fee for this service. Users will be asked to pay this amount during booking.') },
                     { name: 'description', label: t('common.description', 'Description'), type: 'textarea' },
@@ -434,7 +434,11 @@ const FormModal = ({ open, title, onClose, onSubmit, fields, defaults }) => {
                                             onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
                                             className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm bg-white"
                                         >
-                                            {field.options.map(opt => <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>)}
+                                            {field.options.map(opt => (
+                                                <option key={opt} value={opt}>
+                                                    {field.translateOptions ? t(`option.${opt}`, opt.charAt(0).toUpperCase() + opt.slice(1)) : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                                </option>
+                                            ))}
                                         </select>
                                     ) : (
                                         <input

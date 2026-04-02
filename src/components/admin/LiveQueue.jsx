@@ -119,7 +119,7 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                         <button
                             onClick={() => onUpdateStatus(appt.id, 'no_show')}
                             className="h-11 w-11 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-all active:scale-95"
-                            title="No Show / Skip"
+                            title={t('status.no_show', 'No Show / Skip')}
                         >
                             <SkipForward className="h-5 w-5" />
                         </button>
@@ -131,13 +131,13 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                             onCallPatient(appt.token_number);
                         }}
                         className="h-11 w-11 bg-white border border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm active:scale-95 md:opacity-0 group-hover:opacity-100 focus:opacity-100"
-                        title="Start Serving"
+                        title={t('common.start_serving', 'Start Serving')}
                     >
                         <Play className="h-4 w-4 fill-current" />
                     </button>
                 ) : isCompleted && (
                     <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${appt.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-                        {appt.status.replace('_', ' ')}
+                        {t(`status.${appt.status}`, appt.status.replace('_', ' '))}
                     </div>
                 )}
             </div>
@@ -506,7 +506,7 @@ const AdminLiveQueue = () => {
                                                      <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-indigo-100/50 shadow-sm whitespace-nowrap">{queue.name}</span>
                                                      <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 whitespace-nowrap">
                                                          <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                                         {t('queue.active_today', 'Active')}
+                                                         {t('common.status_active', 'Active')}
                                                      </span>
                                                  </div>
                                              </div>

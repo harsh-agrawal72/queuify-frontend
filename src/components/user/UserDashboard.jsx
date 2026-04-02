@@ -191,7 +191,7 @@ export default function UserDashboard() {
                     )}
                 >
                     <LayoutDashboard className="h-4 w-4" />
-                    <span>Overview</span>
+                    <span>{t('dashboard.overview_tab', 'Overview')}</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('payments')}
@@ -203,7 +203,7 @@ export default function UserDashboard() {
                     )}
                 >
                     <History className="h-4 w-4" />
-                    <span>Payment History</span>
+                    <span>{t('dashboard.payments_tab', 'Payment History')}</span>
                 </button>
             </div>
 

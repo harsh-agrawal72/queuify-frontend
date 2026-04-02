@@ -163,7 +163,7 @@ const WalletDashboard = () => {
                 <p className="text-gray-500 text-sm font-medium">{title}</p>
                 <h3 className="text-2xl font-bold text-gray-900 mt-1 flex items-center">
                     <IndianRupee className="h-5 w-5 mr-0.5" />
-                    {parseFloat(amount).toLocaleString('en-IN')}
+                    {parseFloat(amount).toLocaleString(t('common.locale', 'en-IN'))}
                 </h3>
                 {subtitle && <p className="text-xs text-gray-400 mt-2">{subtitle}</p>}
             </div>
@@ -304,14 +304,14 @@ const WalletDashboard = () => {
                                                         tx.status === 'confirmed' || tx.status === 'completed' || tx.status === 'available' ? 'bg-emerald-50 text-emerald-600' : 
                                                         tx.status === 'locked' ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-600'
                                                     }`}>
-                                                        {tx.status}
+                                                        {t(`status.${tx.status}`, tx.status)}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-xs text-gray-500 font-medium whitespace-nowrap">
                                                     {tx.created_at ? (() => {
                                                         try {
                                                             const date = new Date(tx.created_at);
-                                                            return isNaN(date.getTime()) ? 'N/A' : format(date, 'MMM dd, HH:mm');
+                                                            return isNaN(date.getTime()) ? 'N/A' : format(date, t('common.date_format_short', 'MMM dd, HH:mm'));
                                                         } catch (e) {
                                                             return 'N/A';
                                                         }
@@ -381,7 +381,7 @@ const WalletDashboard = () => {
                             <div>
                                 <h1 className="text-4xl font-black tracking-tight">
                                     <span className="text-xl mr-1 opacity-60">₹</span>
-                                    {parseFloat(wallet?.available_balance || 0).toLocaleString('en-IN')}
+                                    {parseFloat(wallet?.available_balance || 0).toLocaleString(t('common.locale', 'en-IN'))}
                                 </h1>
                                 <p className="text-xs text-indigo-300 font-medium mt-2">{t('wallet.withdrawal_limit', 'Maximum withdrawal limit: ₹50,000/day')}</p>
                             </div>

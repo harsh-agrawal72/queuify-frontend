@@ -432,7 +432,7 @@ const SlotManagement = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Service</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common.service', 'Service')}</label>
                         <select
                             value={filterService}
                             onChange={e => { setFilterService(e.target.value); setFilterResource(''); }}
@@ -444,7 +444,7 @@ const SlotManagement = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Resource</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common.resource', 'Resource')}</label>
                         <select
                             value={filterResource}
                             onChange={e => setFilterResource(e.target.value)}
@@ -457,7 +457,7 @@ const SlotManagement = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common.date', 'Date')}</label>
                         <input
                             type="date"
                             value={filterDate}
@@ -534,8 +534,8 @@ const SlotManagement = () => {
                                             <td className="px-5 py-3.5">
                                                 <div>
                                                     <span className="text-gray-800 font-medium">{slot.resource_name || '—'}</span>
-                                                    {slot.resource_type && (
-                                                        <span className="ml-1.5 text-xs text-gray-400 capitalize">({slot.resource_type})</span>
+                                                     {slot.resource_type && (
+                                                        <span className="ml-1.5 text-xs text-gray-400 capitalize">({t(`resource_type.${slot.resource_type}`, slot.resource_type)})</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -610,12 +610,12 @@ const SlotManagement = () => {
 
                                     <div className="flex flex-wrap gap-2">
                                         <div className="flex-1 min-w-[120px]">
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Resource</p>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.resource', 'Resource')}</p>
                                             <p className="text-xs font-semibold text-gray-800">{slot.resource_name}</p>
-                                            <p className="text-[10px] text-gray-400 capitalize">{slot.resource_type}</p>
+                                            <p className="text-[10px] text-gray-400 capitalize">{t(`resource_type.${slot.resource_type}`, slot.resource_type)}</p>
                                         </div>
                                         <div className="flex-1 min-w-[80px] text-right">
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Availability</p>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">{t('common.availability', 'Availability')}</p>
                                             <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${isFull ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                                                 {t('slot.left_count', '{{count}} Left', { count: remaining })} / {slot.max_capacity}
                                             </span>
@@ -711,15 +711,15 @@ const SlotManagement = () => {
                                                         : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
                                                         }`}
                                                 >
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <p className="font-medium text-gray-900 text-sm">{r.name}</p>
-                                                            <p className="text-xs text-gray-400 capitalize">{r.type}</p>
+                                                        <div className="flex justify-between items-start">
+                                                            <div>
+                                                                <p className="font-medium text-gray-900 text-sm">{r.name}</p>
+                                                                <p className="text-xs text-gray-400 capitalize">{t(`resource_type.${r.type}`, r.type)}</p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <p className="text-xs text-blue-600">{t('common.selected', 'Selected')}</p>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-right">
-                                                            <p className="text-xs text-blue-600">Selected</p>
-                                                        </div>
-                                                    </div>
                                                 </button>
                                             ))}
                                             {modalResources.length === 0 && (

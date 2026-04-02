@@ -158,17 +158,26 @@ const AdminLayout = () => {
         }
     }, [notification]);
 
+    const setupIncomplete = user?.role === 'admin' && !user?.org_is_setup_completed;
+
+    useEffect(() => {
+        if (user && setupIncomplete && location.pathname !== '/admin/about' && location.pathname !== '/admin/settings') {
+            navigate('/admin/about');
+            toast.error(t('setup.incomplete_toast', 'Please complete your organization setup first to access all features.'));
+        }
+    }, [setupIncomplete, location.pathname, navigate, t, user]);
+
     const menuItems = [
-        { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics') },
-        { path: '/admin/services', icon: Briefcase, label: t('navigation.service_management') },
-        { path: '/admin/slots', icon: Clock, label: t('navigation.manage_slots') },
-        { path: '/admin/appointments', icon: Users, label: t('navigation.appointments') },
-        { path: '/admin/queue', icon: ListVideo, label: t('navigation.live_queue') },
-        { path: '/admin/inbox', icon: MessageCircle, label: t('navigation.support_inbox') },
-        { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews') },
+        { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics'), disabled: setupIncomplete },
+        { path: '/admin/services', icon: Briefcase, label: t('navigation.service_management'), disabled: setupIncomplete },
+        { path: '/admin/slots', icon: Clock, label: t('navigation.manage_slots'), disabled: setupIncomplete },
+        { path: '/admin/appointments', icon: Users, label: t('navigation.appointments'), disabled: setupIncomplete },
+        { path: '/admin/queue', icon: ListVideo, label: t('navigation.live_queue'), disabled: setupIncomplete },
+        { path: '/admin/inbox', icon: MessageCircle, label: t('navigation.support_inbox'), disabled: setupIncomplete },
+        { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews'), disabled: setupIncomplete },
         { path: '/admin/about', icon: Building2, label: t('navigation.about_organization') },
         { path: '/admin/settings', icon: Settings, label: t('navigation.settings') },
-        { path: '/admin/wallet', icon: Wallet, label: t('navigation.wallet') },
+        { path: '/admin/wallet', icon: Wallet, label: t('navigation.wallet'), disabled: setupIncomplete },
     ];
 
     const getIndustryTerminology = (type) => {
@@ -237,11 +246,20 @@ const AdminLayout = () => {
                             return (
                                 <Link
                                     key={item.path}
-                                    to={item.path}
-                                    onClick={() => window.innerWidth <= 768 && setIsSidebarOpen(false)}
+                                    to={item.disabled ? '#' : item.path}
+                                    onClick={(e) => {
+                                        if (item.disabled) {
+                                            e.preventDefault();
+                                            toast.error(t('setup.locked_feature', 'This feature is locked until setup is complete.'));
+                                            return;
+                                        }
+                                        window.innerWidth <= 768 && setIsSidebarOpen(false);
+                                    }}
                                     title={!isSidebarOpen ? item.label : ''}
                                     className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${isActive
                                         ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm'
+                                        : item.disabled 
+                                        ? 'opacity-40 cursor-not-allowed text-gray-400' 
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                         }`}
                                 >
@@ -404,6 +422,20 @@ const AdminLayout = () => {
 
                 {/* Main Content */}
                 <main className="flex-1 p-3 md:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
+                    {setupIncomplete && (
+                        <div className="mb-6 bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3 text-rose-800">
+                                <Building2 className="h-5 w-5" />
+                                <div>
+                                    <p className="text-sm font-bold">{t('setup.mandatory_title', 'Organization Setup Required')}</p>
+                                    <p className="text-xs opacity-80">{t('setup.mandatory_subtitle', 'Complete your profile and upload documents to unlock all features.')}</p>
+                                </div>
+                            </div>
+                            <Link to="/admin/about" className="text-xs font-bold bg-rose-600 text-white px-4 py-2 rounded-xl hover:bg-rose-700 transition-colors uppercase tracking-tight">
+                                {t('setup.complete_now', 'Complete Now')}
+                            </Link>
+                        </div>
+                    )}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}

@@ -68,7 +68,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                 <Clock className="h-4 w-4 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-amber-900">Reschedule Proposed by Business</p>
+                                <p className="text-xs font-bold text-amber-900">{t('appointment.reschedule_proposed', 'Reschedule Proposed by Business')}</p>
                                 <p className="text-[10px] text-amber-700 font-medium">
                                     New Time: <span className="font-bold">{appt.proposed_start_time ? format(parseISO(appt.proposed_start_time), 'PPp') : 'TBD'}</span>
                                 </p>
@@ -127,7 +127,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                             {isPendingReassignment && (
                                 <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-amber-100 animate-pulse">
                                     <RefreshCw className="h-3 w-3" />
-                                    Waiting for New Slot
+                                    {t('appointment.waiting_for_slot', 'Waiting for New Slot')}
                                 </span>
                             )}
 
@@ -153,11 +153,11 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                     <XCircle className="h-3 w-3" /> {t('appointment.cancellation_reason', 'Cancellation Reason')}
                                 </p>
                                 <p className="text-sm text-rose-700 font-medium leading-relaxed italic">
-                                    "{appt.cancellation_reason || 'No reason provided'}"
+                                    "{appt.cancellation_reason || t('appointment.no_reason_provided', 'No reason provided')}"
                                 </p>
                                 {appt.refund_amount > 0 && (
                                     <p className="mt-2 text-xs font-bold text-emerald-600">
-                                        Amount Refunded: ₹{appt.refund_amount}
+                                    {t('appointment.amount_refunded', 'Amount Refunded')}: ₹{appt.refund_amount}
                                     </p>
                                 )}
                             </div>
@@ -204,9 +204,9 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                 {parseFloat(appt.price) > 0 && ['confirmed', 'pending', 'serving'].includes(appt.status) && (
                                     <div className="col-span-2 mt-2 p-4 bg-gray-900 text-white rounded-2xl border-2 border-dashed border-gray-700">
                                         <div className="flex flex-col items-center">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Check-in OTP</p>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('appointment.checkin_otp', 'Check-in OTP')}</p>
                                             <p className="text-4xl font-black tracking-[0.2em] text-indigo-400 font-mono">{appt.otp_code || '****'}</p>
-                                            <p className="text-[9px] text-gray-500 mt-2 text-center">Show this to staff to verify your check-in.</p>
+                                            <p className="text-[9px] text-gray-500 mt-2 text-center">{t('appointment.otp_hint', 'Show this to staff to verify your check-in.')}</p>
                                         </div>
                                     </div>
                                 )}
@@ -314,7 +314,7 @@ export default function MyAppointments() {
 
         try {
             await api.post(`/appointments/${id}/cancel`, { reason });
-            toast.success('Appointment cancelled');
+            toast.success(t('appointment.cancel_success', 'Appointment cancelled'));
             fetchAppointments();
         } catch (err) {
             console.error(err);
@@ -435,7 +435,7 @@ export default function MyAppointments() {
                 <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
                     <Calendar className="h-10 w-10 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-gray-900">{t('appointment.no_filter_appointments', 'No appointments found')}</h3>
-                    <p className="text-gray-500 text-sm mt-2">Try changing the filter or book a new appointment.</p>
+                    <p className="text-gray-500 text-sm mt-2">{t('appointment.try_changing_filter', 'Try changing the filter or book a new appointment.')}</p>
                 </div>
             )}
 

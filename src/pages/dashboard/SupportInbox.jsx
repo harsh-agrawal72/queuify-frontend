@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { MessageCircle, Search, Send, Check, CheckCircle2 } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 export default function SupportInbox() {
+    const { t } = useTranslation();
     const { user } = useAuth(); // admin user
     const [conversations, setConversations] = useState([]);
     const [activeChat, setActiveChat] = useState(null);
@@ -141,12 +143,12 @@ export default function SupportInbox() {
                 <div className="p-4 border-b border-gray-100 bg-white">
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
                         <MessageCircle className="h-6 w-6 text-indigo-600" />
-                        Support Inbox
+                        {t('navigation.support_inbox', 'Support Inbox')}
                     </h2>
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search users..."
+                            placeholder={t('common.search_users', 'Search users...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-gray-50 transition"
@@ -158,7 +160,7 @@ export default function SupportInbox() {
                 <div className="flex-1 overflow-y-auto p-3 space-y-1">
                     {filteredConversations.length === 0 ? (
                         <div className="text-center text-gray-500 text-sm mt-10">
-                            No conversations found.
+                            {t('common.no_conversations', 'No conversations found.')}
                         </div>
                     ) : (
                         filteredConversations.map(conv => {
@@ -194,7 +196,7 @@ export default function SupportInbox() {
                                             </span>
                                         </div>
                                         <p className={`text-xs truncate ${unread ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>
-                                            {conv.last_message || 'No messages yet'}
+                                            {conv.last_message || t('common.no_messages', 'No messages yet')}
                                         </p>
                                     </div>
                                 </button>
@@ -251,7 +253,7 @@ export default function SupportInbox() {
                                 <textarea
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Type your reply..."
+                                    placeholder={t('common.type_reply_placeholder', 'Type your reply...')}
                                     className="flex-1 bg-transparent border-none px-3 py-2 text-sm focus:outline-none resize-none max-h-32 min-h-[44px]"
                                     rows="1"
                                     onKeyDown={(e) => {
@@ -269,7 +271,7 @@ export default function SupportInbox() {
                                     <Send className="h-5 w-5 ml-0.5" />
                                 </button>
                             </form>
-                            <p className="text-center text-[11px] text-gray-400 mt-2">Press Enter to send, Shift + Enter for new line</p>
+                            <p className="text-center text-[11px] text-gray-400 mt-2">{t('common.chat_hint', 'Press Enter to send, Shift + Enter for new line')}</p>
                         </div>
                     </>
                 ) : (
@@ -277,8 +279,8 @@ export default function SupportInbox() {
                         <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
                             <MessageCircle className="h-10 w-10 text-gray-300" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Select a Conversation</h3>
-                        <p className="text-gray-500 max-w-sm">Choose a user from the left panel to start messaging or reply to their queries in real-time.</p>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{t('common.select_conversation_title', 'Select a Conversation')}</h3>
+                        <p className="text-gray-500 max-w-sm">{t('common.select_conversation_desc', 'Choose a user from the left panel to start messaging or reply to their queries in real-time.')}</p>
                     </div>
                 )}
             </div>

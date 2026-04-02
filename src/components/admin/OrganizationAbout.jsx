@@ -15,10 +15,7 @@ import {
     Trash2,
     Loader2,
     Building2,
-    Clock,
     Globe,
-    Mail,
-    Phone,
     Facebook,
     Instagram,
     Linkedin,
@@ -30,12 +27,15 @@ import {
     X
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
 
 const OrganizationAbout = () => {
     const { t } = useTranslation();
+    const { user, updateUser } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [verifyingEmail, setVerifyingEmail] = useState(false);
     const [profile, setProfile] = useState({
         description: '',
         address: '',
@@ -58,11 +58,16 @@ const OrganizationAbout = () => {
         email_verified: false,
         keywords: ''
     });
-    const [verifyingEmail, setVerifyingEmail] = useState(false);
+
+    const isSetupIncomplete = user?.role === 'admin' && !user?.org_is_setup_completed;
 
     const fetchData = async () => {
         try {
             const res = await api.get('/organizations/profile');
+            // If setup is now complete but wasn't before, update the global auth state
+            if (res.data.org_is_setup_completed && !user?.org_is_setup_completed) {
+                updateUser({ org_is_setup_completed: true });
+            }
             setProfile(prev => ({
                 ...prev,
                 ...res.data,
@@ -76,6 +81,9 @@ const OrganizationAbout = () => {
         }
     };
 
+    const isFieldMissing = (field) => isSetupIncomplete && !profile[field];
+    const isImageMissing = (type) => isSetupIncomplete && !profile.images?.some(img => img.image_type === type);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -88,7 +96,6 @@ const OrganizationAbout = () => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            // Only send actual DB columns — exclude computed/derived fields
             const {
                 description,
                 address,
@@ -129,7 +136,7 @@ const OrganizationAbout = () => {
                 keywords
             });
             toast.success(t('admin.about.save_success', 'Profile updated successfully'));
-            fetchData(); // Refresh to get updated trust score
+            fetchData();
         } catch (error) {
             console.error('Save failed:', error);
             toast.error(error.response?.data?.message || t('admin.about.save_failed', 'Failed to save profile'));
@@ -179,6 +186,7 @@ const OrganizationAbout = () => {
     };
 
     const handleDeleteImage = async (imageId) => {
+        if (!imageId) return;
         if (!window.confirm(t('admin.about.delete_image_confirm', 'Are you sure you want to delete this image?'))) return;
 
         try {
@@ -200,6 +208,39 @@ const OrganizationAbout = () => {
 
     return (
         <div className="space-y-8 pb-20">
+            {/* Setup Progress Checklist (Only if incomplete) */}
+            {isSetupIncomplete && (
+                <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-indigo-50 border border-indigo-100 p-6 rounded-3xl shadow-sm"
+                >
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-indigo-600 text-white rounded-lg">
+                            <ShieldAlert className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-indigo-900">{t('setup.checklist_title', 'Mandatory Setup Checklist')}</h2>
+                            <p className="text-sm text-indigo-700">{t('setup.checklist_subtitle', 'Please complete the following blocks to unlock all features.')}</p>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                            { label: t('setup.check_basic', 'Description & Keywords'), done: profile.description && profile.keywords },
+                            { label: t('setup.check_contact', 'Phone & Address'), done: profile.contact_phone && profile.address && profile.city },
+                            { label: t('setup.check_documents', 'Identity (PAN & Aadhar)'), done: profile.images?.some(img => img.image_type === 'pan_card') && profile.images?.some(img => img.image_type === 'aadhar_card') },
+                            { label: t('setup.check_logo', 'Organization Logo'), done: profile.images?.some(img => img.image_type === 'logo') }
+                        ].map((item, idx) => (
+                            <div key={idx} className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${item.done ? 'bg-white border-emerald-100 text-emerald-700' : 'bg-indigo-100/50 border-indigo-200 text-indigo-400'}`}>
+                                {item.done ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertCircle className="h-4 w-4" />}
+                                <span className="text-xs font-bold tracking-tight">{item.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
+
             {/* Header & Verification Status */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-800 text-white">
                 <div>
@@ -227,11 +268,12 @@ const OrganizationAbout = () => {
                 {/* Left Side: Forms */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Basic Information */}
-                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
+                    <div className={`bg-white p-8 rounded-3xl border shadow-sm space-y-8 transition-colors ${isFieldMissing('description') ? 'border-rose-200 ring-4 ring-rose-50' : 'border-gray-100'}`}>
                         <div>
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                     <Info className="h-5 w-5 text-indigo-600" /> {t('admin.about.basic_info', 'Basic Information')}
+                                    {isSetupIncomplete && <span className="text-[10px] text-rose-500 font-bold uppercase ml-2 tracking-widest">{t('common.required', 'Required')}</span>}
                                 </h2>
                                 {profile.verified && (
                                     <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full border border-blue-100 shadow-sm" title={t('admin.about.verified_title', 'Your organization is verified by Queuify')}>
@@ -244,20 +286,24 @@ const OrganizationAbout = () => {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.description', 'Description')}</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {t('common.description', 'Description')}
+                                    {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                </label>
                                 <textarea
                                     name="description"
                                     value={profile.description || ''}
                                     onChange={handleChange}
                                     rows={4}
                                     placeholder={t('admin.about.description_placeholder', 'Tell your customers about your organization, history, and mission...')}
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none"
+                                    className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none ${isFieldMissing('description') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     {t('admin.about.keywords', 'Search Keywords & Hashtags')}
+                                    {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
                                     <InfoTooltip text={t('admin.about.keywords_tooltip', 'Enter comma-separated tags and hashtags like #doctor, #heartspecialist, etc. This helps users find you more easily in search results.')} />
                                 </label>
                                 <textarea
@@ -266,7 +312,7 @@ const OrganizationAbout = () => {
                                     onChange={handleChange}
                                     rows={2}
                                     placeholder={t('admin.about.keywords_placeholder', 'e.g. #heart, #specialist, clinic, best care...')}
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none"
+                                    className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none ${isFieldMissing('keywords') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                 />
                                 <p className="text-[10px] text-gray-500 mt-1 italic tracking-tight">
                                     Separate each keyword or hashtag with a comma. These act as SEO tags for your profile.
@@ -333,64 +379,78 @@ const OrganizationAbout = () => {
                                         name="contact_email"
                                         value={profile.contact_email || ''}
                                         readOnly
-                                        title="Contact email can only be changed by contacting support"
                                         className="w-full px-4 py-2 rounded-xl border border-gray-100 bg-gray-50 text-gray-500 cursor-not-allowed outline-none"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.phone', 'Contact Phone')}</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        {t('admin.about.phone', 'Contact Phone')}
+                                        {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="tel"
                                         name="contact_phone"
                                         value={profile.contact_phone || ''}
                                         onChange={handleChange}
                                         placeholder={t('admin.about.phone_placeholder', '+91 98765 43210')}
-                                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${isFieldMissing('contact_phone') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.address', 'Full Address')}</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {t('admin.about.address', 'Full Address')}
+                                    {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     name="address"
                                     value={profile.address || ''}
                                     onChange={handleChange}
                                     placeholder={t('admin.about.address_placeholder', 'Street, Landmark...')}
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                    className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${isFieldMissing('address') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                 />
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.city', 'City')}</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        {t('common.city', 'City')}
+                                        {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         name="city"
                                         value={profile.city || ''}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${isFieldMissing('city') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                     />
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.state', 'State')}</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        {t('common.state', 'State')}
+                                        {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         name="state"
                                         value={profile.state || ''}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${isFieldMissing('state') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                     />
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.pincode', 'Pincode')}</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        {t('common.pincode', 'Pincode')}
+                                        {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                    </label>
                                     <input
                                         type="text"
                                         name="pincode"
                                         value={profile.pincode || ''}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                        className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${isFieldMissing('pincode') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                     />
                                 </div>
                             </div>
@@ -509,20 +569,24 @@ const OrganizationAbout = () => {
 
                         <div className="space-y-6">
                             {/* Verification Documents */}
-                            <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 mb-6">
-                                <h3 className="text-sm font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                            <div className={`p-4 rounded-xl border mb-6 transition-colors ${isImageMissing('pan_card') || isImageMissing('aadhar_card') ? 'bg-rose-50 border-rose-200' : 'bg-amber-50/50 border-amber-100'}`}>
+                                <h3 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${isImageMissing('pan_card') || isImageMissing('aadhar_card') ? 'text-rose-900' : 'text-amber-900'}`}>
                                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
                                     {t('admin.about.verification_docs', 'Verification Documents (PDF)')}
+                                    {isSetupIncomplete && <span className="text-[10px] text-rose-500 font-bold uppercase ml-1 tracking-widest">{t('common.required', 'Required')}</span>}
                                 </h3>
                                 <div className="space-y-4">
                                     {/* PAN Card */}
-                                    <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                    <div className={`flex items-center justify-between bg-white p-3 rounded-lg border ${isImageMissing('pan_card') ? 'border-rose-300 shadow-sm' : 'border-gray-200'}`}>
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                                                 <FileText className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-gray-900">{t('admin.about.pan_card', 'PAN Card')}</p>
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {t('admin.about.pan_card', 'PAN Card')}
+                                                    {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                                </p>
                                                 {profile.images?.find(img => img.image_type === 'pan_card') ? (
                                                     <a 
                                                         href={profile.images.find(img => img.image_type === 'pan_card').image_url} 
@@ -533,7 +597,7 @@ const OrganizationAbout = () => {
                                                         <Download className="h-3 w-3" /> {t('admin.about.view_document', 'View Document')}
                                                     </a>
                                                 ) : (
-                                                    <p className="text-xs text-gray-500">{t('common.not_uploaded', 'Not uploaded')}</p>
+                                                    <p className="text-xs text-rose-500 font-medium italic">{t('common.not_uploaded', 'Missing Document')}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -549,13 +613,16 @@ const OrganizationAbout = () => {
                                     </div>
 
                                     {/* Aadhar Card */}
-                                    <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200">
+                                    <div className={`flex items-center justify-between bg-white p-3 rounded-lg border ${isImageMissing('aadhar_card') ? 'border-rose-300 shadow-sm' : 'border-gray-200'}`}>
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                                                 <FileText className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-gray-900">{t('admin.about.aadhar_card', 'Aadhar Card')}</p>
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {t('admin.about.aadhar_card', 'Aadhar Card')}
+                                                    {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                                </p>
                                                 {profile.images?.find(img => img.image_type === 'aadhar_card') ? (
                                                     <a 
                                                         href={profile.images.find(img => img.image_type === 'aadhar_card').image_url} 
@@ -566,7 +633,7 @@ const OrganizationAbout = () => {
                                                         <Download className="h-3 w-3" /> {t('admin.about.view_document', 'View Document')}
                                                     </a>
                                                 ) : (
-                                                    <p className="text-xs text-gray-500">{t('common.not_uploaded', 'Not uploaded')}</p>
+                                                    <p className="text-xs text-rose-500 font-medium italic">{t('common.not_uploaded', 'Missing Document')}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -582,11 +649,15 @@ const OrganizationAbout = () => {
                                     </div>
                                 </div>
                             </div>
+
                             {/* Logo Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.about.logo_label', 'Organization Logo')}</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    {t('admin.about.logo_label', 'Organization Logo')}
+                                    {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                </label>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                    <div className={`w-16 h-16 rounded-xl bg-gray-50 border-2 border-dashed flex items-center justify-center overflow-hidden flex-shrink-0 transition-colors ${isImageMissing('logo') ? 'border-rose-300' : 'border-gray-200'}`}>
                                         {profile.images?.find(img => img.image_type === 'logo') ? (
                                             <img
                                                 src={profile.images.find(img => img.image_type === 'logo').image_url}
@@ -594,7 +665,7 @@ const OrganizationAbout = () => {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <Building2 className="h-6 w-6 text-gray-300" />
+                                            <Building2 className={`h-6 w-6 ${isImageMissing('logo') ? 'text-rose-300' : 'text-gray-300'}`} />
                                         )}
                                     </div>
                                     <label className="cursor-pointer bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -644,7 +715,7 @@ const OrganizationAbout = () => {
                             </div>
 
                             {/* Gallery Management */}
-                            <div>
+                            <div className="space-y-3">
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-sm font-medium text-gray-700">{t('admin.about.gallery_label', 'Photo Gallery')}</label>
                                     <span className="text-xs text-gray-500">{profile.images?.filter(i => i.image_type === 'gallery').length || 0}/10</span>
@@ -716,13 +787,13 @@ const OrganizationAbout = () => {
                                 disabled={saving}
                                 className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                    {saving ? (
-                                        <Loader2 className="h-5 w-5 animate-spin" />
-                                    ) : (
-                                        <Save className="h-5 w-5" />
-                                    )}
-                                    {t('admin.about.save_btn', 'Save All Changes')}
-                                </button>
+                                {saving ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                    <Save className="h-5 w-5" />
+                                )}
+                                {t('admin.about.save_btn', 'Save All Changes')}
+                            </button>
                         </div>
                     </section>
                 </div>

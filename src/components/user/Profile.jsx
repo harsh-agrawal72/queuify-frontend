@@ -5,9 +5,10 @@ import { motion } from 'framer-motion';
 import { User, Lock, Mail, Save, Shield, Bell, Calendar, CheckCircle, Award, Clock, Sparkles, Eye, EyeOff, Trash2, AlertTriangle, Phone, MapPin, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function Profile() {
+    const { t } = useTranslation();
     const { user, updateUser, logout } = useAuth();
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
@@ -59,11 +60,11 @@ export default function Profile() {
 
         // Validations
         if (!file.type.startsWith('image/')) {
-            toast.error('Please select an image file');
+            toast.error(t('user.profile.error.select_image'));
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            toast.error('Image size should be less than 5MB');
+            toast.error(t('user.profile.error.image_size'));
             return;
         }
 
@@ -86,10 +87,10 @@ export default function Profile() {
             // Also update the user in context immediately for the navbar/sidebar
             updateUser({ ...user, profile_picture_url: finalUrl });
             
-            toast.success('Photo uploaded successfully');
+            toast.success(t('user.profile.success.upload'));
         } catch (err) {
             console.error(err);
-            toast.error('Failed to upload photo');
+            toast.error(t('user.profile.error.upload_failed'));
         } finally {
             setUploadingImage(false);
         }
@@ -122,10 +123,10 @@ export default function Profile() {
                 email_notification_enabled: emailNotifications,
                 notification_enabled: notificationAlerts
             });
-            toast.success('Profile updated successfully');
+            toast.success(t('user.profile.success.update'));
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data?.message || 'Failed to update profile');
+            toast.error(err.response?.data?.message || t('user.profile.error.update_failed'));
         } finally {
             setLoading(false);
         }
@@ -134,28 +135,28 @@ export default function Profile() {
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         if (!newPassword) {
-            toast.error('Please enter a new password');
+            toast.error(t('user.profile.error.password_required'));
             return;
         }
         if (newPassword.length < 6) {
-            toast.error('Password must be at least 6 characters');
+            toast.error(t('user.profile.error.password_length'));
             return;
         }
         if (newPassword !== confirmPassword) {
-            toast.error('Passwords do not match');
+            toast.error(t('user.profile.passwords_not_match'));
             return;
         }
         setPasswordLoading(true);
         try {
             await api.patch('/user/profile', { password: newPassword });
-            toast.success('Password updated successfully');
+            toast.success(t('user.profile.success.password_update'));
             setNewPassword('');
             setConfirmPassword('');
             setShowNewPassword(false);
             setShowConfirmPassword(false);
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data?.message || 'Failed to update password');
+            toast.error(err.response?.data?.message || t('user.profile.error.password_update_failed'));
         } finally {
             setPasswordLoading(false);
         }
@@ -163,17 +164,17 @@ export default function Profile() {
 
     const handleDeleteAccount = async () => {
         if (!deletePassword) {
-            toast.error('Please enter your password to confirm');
+            toast.error(t('user.profile.confirm_with_password'));
             return;
         }
         setDeleting(true);
         try {
             await api.delete('/user/account', { data: { password: deletePassword } });
-            toast.success('Account deleted successfully');
+            toast.success(t('user.profile.success.delete'));
             logout();
             navigate('/');
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to delete account');
+            toast.error(err.response?.data?.message || t('user.profile.error.delete_failed'));
         } finally {
             setDeleting(false);
         }
@@ -230,11 +231,11 @@ export default function Profile() {
                         <div className="flex items-center gap-4 mt-3 justify-center md:justify-start">
                             <span className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full font-semibold border border-white/10">
                                 <Shield className="h-3.5 w-3.5 text-emerald-300" />
-                                {user?.role === 'user' ? 'Verified Member' : user?.role}
+                                {user?.role === 'user' ? t('user.profile.verified_member') : user?.role}
                             </span>
                             <span className="inline-flex items-center gap-1.5 text-indigo-200 text-xs font-medium">
                                 <Clock className="h-3.5 w-3.5" />
-                                Member since {memberSince}
+                                {t('user.profile.member_since', { date: memberSince })}
                             </span>
                         </div>
                     </div>
@@ -243,11 +244,11 @@ export default function Profile() {
                     <div className="flex gap-4">
                         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/10 min-w-[80px]">
                             <p className="text-2xl font-black text-white">{totalAppointments}</p>
-                            <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">Visits</p>
+                            <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">{t('user.profile.visits')}</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/10 min-w-[80px]">
                             <p className="text-2xl font-black text-emerald-300">{completedAppointments}</p>
-                            <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">Done</p>
+                            <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">{t('user.profile.done')}</p>
                         </div>
                     </div>
                 </div>
@@ -269,15 +270,15 @@ export default function Profile() {
                                 <User className="h-5 w-5 text-indigo-600" />
                             </div>
                             <div>
-                                <h2 className="font-bold text-gray-900">Personal Information</h2>
-                                <p className="text-xs text-gray-400">Update your account details below</p>
+                                <h2 className="font-bold text-gray-900">{t('user.profile.personal_info')}</h2>
+                                <p className="text-xs text-gray-400">{t('user.profile.personal_info_subtitle')}</p>
                             </div>
                         </div>
 
                         <div className="p-6 space-y-5">
                             {/* Name Field */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Display Name</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.display_name')}</label>
                                 <div className="relative">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                     <input
@@ -285,7 +286,7 @@ export default function Profile() {
                                         value={name}
                                         onChange={e => setName(e.target.value)}
                                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                        placeholder="Your full name"
+                                        placeholder={t('user.profile.display_name_placeholder')}
                                     />
                                 </div>
                             </div>
@@ -293,7 +294,7 @@ export default function Profile() {
                              {/* Phone Field */}
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                  <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.phone_number')}</label>
                                      <div className="relative">
                                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                          <input
@@ -301,26 +302,26 @@ export default function Profile() {
                                              value={phone}
                                              onChange={e => setPhone(e.target.value)}
                                              className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder="Your phone number"
+                                             placeholder={t('user.profile.phone_placeholder')}
                                          />
                                      </div>
                                  </div>
                                  <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Photo</label>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.profile_photo')}</label>
                                      <button
                                          type="button"
                                          onClick={handleImageClick}
                                          className="w-full flex items-center gap-3 px-4 py-3 border border-dashed border-gray-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-gray-500 text-sm font-medium"
                                      >
                                          <Camera className="h-4 w-4 text-indigo-500" />
-                                         {profilePictureUrl ? 'Change Profile Photo' : 'Upload Profile Photo'}
+                                         {profilePictureUrl ? t('user.profile.change_photo') : t('user.profile.upload_photo')}
                                      </button>
                                  </div>
                              </div>
 
                              {/* Address Field */}
                              <div>
-                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Residential Address</label>
+                                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.address')}</label>
                                  <div className="relative">
                                      <MapPin className="absolute left-4 top-3 h-4 w-4 text-gray-400" />
                                      <textarea
@@ -328,7 +329,7 @@ export default function Profile() {
                                          onChange={e => setAddress(e.target.value)}
                                          rows="2"
                                          className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white resize-none"
-                                         placeholder="Enter your full address"
+                                         placeholder={t('user.profile.address_placeholder')}
                                      ></textarea>
                                  </div>
                              </div>
@@ -336,7 +337,7 @@ export default function Profile() {
                              {/* City, State, Pincode Grid */}
                              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                  <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.city')}</label>
                                      <div className="relative">
                                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                          <input
@@ -344,12 +345,12 @@ export default function Profile() {
                                              value={city}
                                              onChange={e => setCity(e.target.value)}
                                              className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder="New Delhi"
+                                             placeholder={t('user.profile.city_placeholder')}
                                          />
                                      </div>
                                  </div>
                                  <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">State</label>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.state')}</label>
                                      <div className="relative">
                                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                          <input
@@ -357,12 +358,12 @@ export default function Profile() {
                                              value={state}
                                              onChange={e => setState(e.target.value)}
                                              className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder="Delhi"
+                                             placeholder={t('user.profile.state_placeholder')}
                                          />
                                      </div>
                                  </div>
                                  <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Pincode</label>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.pincode')}</label>
                                      <div className="relative">
                                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                          <input
@@ -370,14 +371,14 @@ export default function Profile() {
                                              value={pincode}
                                              onChange={e => setPincode(e.target.value)}
                                              className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder="110001"
+                                             placeholder={t('user.profile.pincode_placeholder')}
                                          />
                                      </div>
                                  </div>
                              </div>
                              
                              <p className="text-[11px] text-gray-400 -mt-2 flex items-center gap-1">
-                                 Used for finding organizations in your local area first
+                                 {t('user.profile.location_hint')}
                              </p>
 
                          </div>
@@ -390,7 +391,7 @@ export default function Profile() {
                                 className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 active:scale-[0.98]"
                             >
                                 <Save className="h-4 w-4" />
-                                {loading ? 'Saving...' : 'Save Changes'}
+                                {loading ? t('user.profile.saving') : t('user.profile.save_changes')}
                             </button>
                         </div>
                     </form>
@@ -402,20 +403,20 @@ export default function Profile() {
                                 <Lock className="h-5 w-5 text-amber-600" />
                             </div>
                             <div>
-                                <h2 className="font-bold text-gray-900">Change Password</h2>
-                                <p className="text-xs text-gray-400">Ensure your account stays secure</p>
+                                <h2 className="font-bold text-gray-900">{t('user.profile.change_password_title')}</h2>
+                                <p className="text-xs text-gray-400">{t('user.profile.change_password_subtitle')}</p>
                             </div>
                         </div>
 
                         <div className="p-6 space-y-5">
                             {/* New Password */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.new_password')}</label>
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                     <input
                                         type={showNewPassword ? 'text' : 'password'}
-                                        placeholder="Enter new password"
+                                        placeholder={t('user.profile.new_password_placeholder')}
                                         value={newPassword}
                                         onChange={e => setNewPassword(e.target.value)}
                                         className="w-full pl-11 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
@@ -449,10 +450,10 @@ export default function Profile() {
                                                 : newPassword.length >= 6 ? 'text-red-500'
                                                     : 'text-red-400'
                                             }`}>
-                                            {newPassword.length >= 12 ? 'Strong password ✓'
-                                                : newPassword.length >= 8 ? 'Good password'
-                                                    : newPassword.length >= 6 ? 'Weak — add more characters'
-                                                        : 'Too short — minimum 6 characters'}
+                                            {newPassword.length >= 12 ? t('user.profile.password_strength.strong')
+                                                : newPassword.length >= 8 ? t('user.profile.password_strength.good')
+                                                    : newPassword.length >= 6 ? t('user.profile.password_strength.weak')
+                                                        : t('user.profile.password_strength.too_short')}
                                         </p>
                                     </div>
                                 )}
@@ -460,12 +461,12 @@ export default function Profile() {
 
                             {/* Confirm Password */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.confirm_password')}</label>
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                     <input
                                         type={showConfirmPassword ? 'text' : 'password'}
-                                        placeholder="Re-enter new password"
+                                        placeholder={t('user.profile.confirm_password_placeholder')}
                                         value={confirmPassword}
                                         onChange={e => setConfirmPassword(e.target.value)}
                                         className={`w-full pl-11 pr-12 py-3 border rounded-xl focus:ring-2 outline-none text-sm transition-all bg-gray-50 focus:bg-white ${confirmPassword && confirmPassword !== newPassword
@@ -484,11 +485,11 @@ export default function Profile() {
                                     </button>
                                 </div>
                                 {confirmPassword && confirmPassword !== newPassword && (
-                                    <p className="text-[11px] text-red-500 mt-1.5 font-medium">Passwords do not match</p>
+                                    <p className="text-[11px] text-red-500 mt-1.5 font-medium">{t('user.profile.passwords_not_match')}</p>
                                 )}
                                 {confirmPassword && confirmPassword === newPassword && newPassword.length >= 6 && (
                                     <p className="text-[11px] text-emerald-600 mt-1.5 font-medium flex items-center gap-1">
-                                        <CheckCircle className="h-3 w-3" /> Passwords match
+                                        <CheckCircle className="h-3 w-3" /> {t('user.profile.passwords_match')}
                                     </p>
                                 )}
                             </div>
@@ -502,7 +503,7 @@ export default function Profile() {
                                 className="flex items-center gap-2 bg-amber-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
                             >
                                 <Lock className="h-4 w-4" />
-                                {passwordLoading ? 'Updating...' : 'Update Password'}
+                                {passwordLoading ? t('user.profile.updating') : t('user.profile.update_password')}
                             </button>
                         </div>
                     </form>
@@ -519,13 +520,13 @@ export default function Profile() {
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
                             <Bell className="h-5 w-5 text-amber-500" />
-                            Notifications
+                            {t('user.profile.notifications_title')}
                         </h3>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-800">Email Alerts</p>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">Booking confirmations & reminders via email</p>
+                                    <p className="text-sm font-semibold text-gray-800">{t('user.profile.email_alerts')}</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{t('user.profile.email_alerts_desc')}</p>
                                 </div>
                                 <button
                                     type="button"
@@ -537,8 +538,8 @@ export default function Profile() {
                             </div>
                             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-800">Push Notifications</p>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">In-app alerts for queue & status updates</p>
+                                    <p className="text-sm font-semibold text-gray-800">{t('user.profile.push_notifications')}</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{t('user.profile.push_notifications_desc')}</p>
                                 </div>
                                 <button
                                     type="button"
@@ -555,27 +556,27 @@ export default function Profile() {
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
                             <Sparkles className="h-5 w-5 text-purple-500" />
-                            Account Summary
+                            {t('user.profile.account_summary')}
                         </h3>
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
                                 <Calendar className="h-4 w-4 text-indigo-500" />
                                 <div className="flex-1">
-                                    <p className="text-xs text-gray-500">Total Appointments</p>
+                                    <p className="text-xs text-gray-500">{t('user.profile.total_appointments')}</p>
                                     <p className="text-sm font-bold text-gray-900">{totalAppointments}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
                                 <CheckCircle className="h-4 w-4 text-emerald-500" />
                                 <div className="flex-1">
-                                    <p className="text-xs text-gray-500">Completed</p>
+                                    <p className="text-xs text-gray-500">{t('user.profile.completed')}</p>
                                     <p className="text-sm font-bold text-gray-900">{completedAppointments}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 p-3 bg-purple-50/50 rounded-xl border border-purple-100/50">
                                 <Award className="h-4 w-4 text-purple-500" />
                                 <div className="flex-1">
-                                    <p className="text-xs text-gray-500">Success Rate</p>
+                                    <p className="text-xs text-gray-500">{t('user.profile.success_rate')}</p>
                                     <p className="text-sm font-bold text-gray-900">
                                         {totalAppointments > 0
                                             ? `${Math.round((completedAppointments / totalAppointments) * 100)}%`
@@ -590,22 +591,22 @@ export default function Profile() {
                     <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 text-white">
                         <h3 className="font-bold flex items-center gap-2 mb-3">
                             <Shield className="h-5 w-5 text-emerald-400" />
-                            Security
+                            {t('user.profile.security')}
                         </h3>
                         <div className="space-y-2 text-sm text-slate-300">
                             <div className="flex items-center justify-between">
-                                <span>Account Status</span>
+                                <span>{t('user.profile.account_status')}</span>
                                 <span className="text-emerald-400 font-bold text-xs flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                                    Active
+                                    {t('user.profile.active')}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Role</span>
+                                <span>{t('user.profile.role')}</span>
                                 <span className="font-semibold text-white capitalize">{user?.role}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Member Since</span>
+                                <span>{t('user.profile.member_since', { date: '' }).replace('{{date}}', '').trim()}</span>
                                 <span className="font-semibold text-white">{memberSince}</span>
                             </div>
                         </div>
@@ -619,16 +620,16 @@ export default function Profile() {
                     >
                         <h3 className="font-bold text-red-700 flex items-center gap-2 mb-1">
                             <AlertTriangle className="h-5 w-5" />
-                            Danger Zone
+                            {t('user.profile.danger_zone')}
                         </h3>
-                        <p className="text-xs text-red-500 mb-4">This will permanently delete your account and all data.</p>
+                        <p className="text-xs text-red-500 mb-4">{t('user.profile.danger_zone_desc')}</p>
                         <button
                             type="button"
                             onClick={() => setShowDeleteModal(true)}
                             className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-red-700 transition-all"
                         >
                             <Trash2 className="h-4 w-4" />
-                            Delete My Account
+                            {t('user.profile.delete_account_btn')}
                         </button>
                     </motion.div>
                 </motion.div>
@@ -645,18 +646,18 @@ export default function Profile() {
                     >
                         <div className="flex items-center gap-3 mb-1">
                             <div className="p-2 bg-red-100 rounded-xl"><Trash2 className="h-5 w-5 text-red-600" /></div>
-                            <h2 className="font-bold text-gray-900 text-lg">Delete Account</h2>
+                            <h2 className="font-bold text-gray-900 text-lg">{t('user.profile.delete_modal_title')}</h2>
                         </div>
                         <p className="text-sm text-gray-500 mb-4 ml-12">
-                            This action is <strong>irreversible</strong>. All your appointments and data will be permanently deleted.
+                            {t('user.profile.delete_modal_desc')}
                         </p>
                         <div className="mb-4">
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Enter your password to confirm</label>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t('user.profile.confirm_with_password')}</label>
                             <input
                                 type="password"
                                 value={deletePassword}
                                 onChange={e => setDeletePassword(e.target.value)}
-                                placeholder="Your current password"
+                                placeholder={t('user.profile.password_placeholder')}
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-100 focus:border-red-400 outline-none text-sm"
                             />
                         </div>
@@ -666,7 +667,7 @@ export default function Profile() {
                                 onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }}
                                 className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                             <button
                                 type="button"
@@ -674,7 +675,7 @@ export default function Profile() {
                                 disabled={deleting || !deletePassword}
                                 className="flex-1 flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
                             >
-                                {deleting ? 'Deleting...' : 'Yes, Delete'}
+                                {deleting ? t('user.profile.deleting') : t('user.profile.yes_delete')}
                             </button>
                         </div>
                     </motion.div>
