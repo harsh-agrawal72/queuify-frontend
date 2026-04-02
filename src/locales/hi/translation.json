@@ -58,6 +58,8 @@
     "view": "देखें",
     "actions": "कार्रवाइयाँ",
     "status": "स्थिति",
+    "previous": "पिछला",
+    "page_of": "पृष्ठ {{current}} का {{total}}",
     "name": "नाम",
     "description": "विवरण",
     "date": "तारीख",

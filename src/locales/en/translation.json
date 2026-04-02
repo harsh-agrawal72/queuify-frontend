@@ -58,6 +58,8 @@
     "view": "View",
     "actions": "Actions",
     "status": "Status",
+    "previous": "Previous",
+    "page_of": "Page {{current}} of {{total}}",
     "name": "Name",
     "description": "Description",
     "date": "Date",

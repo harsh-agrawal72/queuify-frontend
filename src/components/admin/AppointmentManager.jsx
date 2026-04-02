@@ -24,8 +24,7 @@ import {
     Award,
     History,
     ShieldCheck,
-    RefreshCw,
-    Download
+    RefreshCw
 } from 'lucide-react';
 import UserHistoryModal from './UserHistoryModal';
 import toast from 'react-hot-toast';
@@ -594,24 +593,6 @@ const AppointmentManager = () => {
                                                                     </>
                                                                 )}
 
-                                                                {apt.status === 'completed' && (
-                                                                    <>
-                                                                        <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
-                                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.receipt_action', 'Receipt')}</p>
-                                                                        </div>
-                                                                        <div className="p-1">
-                                                                            <button 
-                                                                                onClick={async () => {
-                                                                                    const { generateInvoice } = await import('../../utils/pdfGenerator');
-                                                                                    generateInvoice(apt, orgProfile);
-                                                                                }} 
-                                                                                className="w-full text-left px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
-                                                                            >
-                                                                                <Download className="h-4 w-4" /> {t('appointment.download_receipt', 'Download Receipt')}
-                                                                            </button>
-                                                                        </div>
-                                                                    </>
-                                                                )}
                                                                 <div className="h-px bg-gray-100 my-1"></div>
 
                                                                 <div className="p-1">

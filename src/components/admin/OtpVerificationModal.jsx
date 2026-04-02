@@ -5,8 +5,7 @@ import {
     CheckCircle2, 
     AlertCircle,
     Loader2,
-    Lock,
-    Download
+    Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
@@ -139,17 +138,6 @@ const OtpVerificationModal = ({ isOpen, onClose, appointment, onVerified, org })
                             </div>
 
                             <div className="space-y-3 pt-4">
-                                <button 
-                                    onClick={async () => {
-                                        const { generateInvoice } = await import('../../utils/pdfGenerator');
-                                        generateInvoice(appointment, org);
-                                    }}
-                                    className="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                >
-                                    <Download className="h-5 w-5" />
-                                    <span>Download Receipt</span>
-                                </button>
-                                
                                 <button 
                                     onClick={onClose}
                                     className="w-full bg-gray-50 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-100 transition-all"

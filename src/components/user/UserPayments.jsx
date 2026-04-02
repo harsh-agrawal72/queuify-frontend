@@ -73,8 +73,11 @@ const UserPayments = ({ bookings }) => {
     }, [bookings]);
 
     // 3. Filtered History
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     const filteredHistory = useMemo(() => {
-        return bookings.filter(b => {
+        const filtered = bookings.filter(b => {
             const searchStr = `${b.org_name} ${b.service_name} ${b.payment_id} ${b.razorpay_refund_id}`.toLowerCase();
             const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
             
@@ -86,7 +89,20 @@ const UserPayments = ({ bookings }) => {
             
             return matchesSearch && matchesFilter;
         }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        return filtered;
     }, [bookings, searchTerm, filterStatus]);
+
+    // Reset pagination on filter change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterStatus]);
+
+    const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+    const paginatedHistory = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredHistory.slice(start, start + itemsPerPage);
+    }, [filteredHistory, currentPage]);
 
     const copyToClipboard = (text, type) => {
         navigator.clipboard.writeText(text);
@@ -259,11 +275,11 @@ const UserPayments = ({ bookings }) => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            <AnimatePresence>
-                                {filteredHistory.map((row, idx) => (
+                            <AnimatePresence mode="wait">
+                                {paginatedHistory.map((row, idx) => (
                                     <motion.tr 
                                         key={row.id}
-                                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.03 }}
+                                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ delay: idx * 0.03 }}
                                         className="hover:bg-gray-50/50 transition-colors group"
                                     >
                                         <td className="px-8 py-6">
@@ -354,6 +370,51 @@ const UserPayments = ({ bookings }) => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            {t('common.page_of', { current: currentPage, total: totalPages })}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className={clsx(
+                                    "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                                    currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-indigo-600 hover:bg-indigo-50"
+                                )}
+                            >
+                                {t('common.previous')}
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i + 1}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={clsx(
+                                            "w-8 h-8 rounded-lg text-xs font-black transition-all",
+                                            currentPage === i + 1 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "text-gray-400 hover:bg-gray-100"
+                                        )}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className={clsx(
+                                    "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                                    currentPage === totalPages ? "text-gray-300 cursor-not-allowed" : "text-indigo-600 hover:bg-indigo-50"
+                                )}
+                            >
+                                {t('common.next')}
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
