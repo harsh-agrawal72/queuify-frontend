@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { 
     Wallet, 
     TrendingUp, 
@@ -24,6 +25,7 @@ import { format } from 'date-fns';
 
 const WalletDashboard = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [wallet, setWallet] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -306,7 +308,14 @@ const WalletDashboard = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-xs text-gray-500 font-medium whitespace-nowrap">
-                                                    {tx.created_at ? format(new Date(tx.created_at), 'MMM dd, HH:mm') : 'N/A'}
+                                                    {tx.created_at ? (() => {
+                                                        try {
+                                                            const date = new Date(tx.created_at);
+                                                            return isNaN(date.getTime()) ? 'N/A' : format(date, 'MMM dd, HH:mm');
+                                                        } catch (e) {
+                                                            return 'N/A';
+                                                        }
+                                                    })() : 'N/A'}
                                                 </td>
                                             </motion.tr>
                                         ))}

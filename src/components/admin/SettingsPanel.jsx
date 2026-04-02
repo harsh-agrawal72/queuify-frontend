@@ -100,7 +100,7 @@ const SettingsPanel = () => {
                 }
             } catch (error) {
                 console.error("Failed to fetch settings", error);
-                toast.error(t('settings.load_failed', 'Failed to load organization details'));
+                toast.error(t('admin.settings.load_failed', 'Failed to load organization details'));
             } finally {
                 setLoading(false);
             }
@@ -124,25 +124,25 @@ const SettingsPanel = () => {
         setInviting(true);
         try {
             const res = await api.post('/admin/admins/invite', { email: inviteEmail, name: inviteName });
-            toast.success(t('settings.admins.invite_success', 'Admin invited successfully'));
+            toast.success(t('admin.settings.admins.invite_success', 'Admin invited successfully'));
             setAdmins([res.data, ...admins]);
             setInviteEmail('');
             setInviteName('');
         } catch (error) {
-            toast.error(error.response?.data?.message || t('settings.admins.invite_failed', 'Failed to invite admin'));
+            toast.error(error.response?.data?.message || t('admin.settings.admins.invite_failed', 'Failed to invite admin'));
         } finally {
             setInviting(false);
         }
     };
 
     const handleDeleteAdmin = async (adminId) => {
-        if (!window.confirm(t('settings.admins.remove_confirm', 'Are you sure you want to remove this admin?'))) return;
+        if (!window.confirm(t('admin.settings.admins.remove_confirm', 'Are you sure you want to remove this admin?'))) return;
         try {
             await api.delete(`/admin/admins/${adminId}`);
-            toast.success(t('settings.admins.remove_success', 'Admin removed'));
+            toast.success(t('admin.settings.admins.remove_success', 'Admin removed'));
             setAdmins(admins.filter(a => a.id !== adminId));
         } catch (error) {
-            toast.error(error.response?.data?.message || t('settings.admins.remove_failed', 'Failed to remove admin'));
+            toast.error(error.response?.data?.message || t('admin.settings.admins.remove_failed', 'Failed to remove admin'));
         }
     };
 
@@ -170,10 +170,10 @@ const SettingsPanel = () => {
                 payout_ifsc: formData.payout_ifsc,
                 payout_upi_id: formData.payout_upi_id
             });
-            toast.success(t('settings.save_success', "Settings updated successfully"));
+            toast.success(t('admin.settings.save_success', "Settings updated successfully"));
         } catch (error) {
             console.error(error);
-            toast.error(t('settings.save_failed', "Failed to update settings"));
+            toast.error(t('admin.settings.save_failed', "Failed to update settings"));
         } finally {
             setSaving(false);
         }
@@ -187,13 +187,13 @@ const SettingsPanel = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-gray-100 pb-4 mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">{t('settings.general.title', 'General Information')}</h2>
-                            <p className="text-sm text-gray-500">{t('settings.general.subtitle', 'Update your public facing business details.')}</p>
+                            <h2 className="text-lg font-semibold text-gray-800">{t('admin.settings.general.title', 'General Information')}</h2>
+                            <p className="text-sm text-gray-500">{t('admin.settings.general.subtitle', 'Update your public facing business details.')}</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                    <Building2 className="h-4 w-4 text-gray-400" /> {t('settings.general.org_name', 'Organization Name')}
+                                    <Building2 className="h-4 w-4 text-gray-400" /> {t('admin.settings.general.org_name', 'Organization Name')}
                                 </label>
                                 <input
                                     type="text"
@@ -206,7 +206,7 @@ const SettingsPanel = () => {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-gray-400" /> {t('settings.general.email', 'Support Email')}
+                                    <Mail className="h-4 w-4 text-gray-400" /> {t('admin.settings.general.email', 'Support Email')}
                                 </label>
                                 <input
                                     type="email"
@@ -219,7 +219,7 @@ const SettingsPanel = () => {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-gray-400" /> {t('settings.general.phone', 'Phone Number')}
+                                    <Phone className="h-4 w-4 text-gray-400" /> {t('admin.settings.general.phone', 'Phone Number')}
                                 </label>
                                 <input
                                     type="tel"
@@ -233,7 +233,7 @@ const SettingsPanel = () => {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                                    <MapPin className="h-4 w-4 text-gray-400" /> {t('settings.general.address', 'Address')}
+                                    <MapPin className="h-4 w-4 text-gray-400" /> {t('admin.settings.general.address', 'Address')}
                                 </label>
                                 <input
                                     type="text"
@@ -252,14 +252,14 @@ const SettingsPanel = () => {
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-gray-100 pb-4 mb-4">
                             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1.5">
-                                Business Hours
-                                <InfoTooltip text={t('settings.hours.tooltip', "Global operating timings for your organization. Bookings can only be made within these hours.")} />
+                                {t('admin.settings.hours.title', 'Business Hours')}
+                                <InfoTooltip text={t('admin.settings.hours.tooltip', "Global operating timings for your organization. Bookings can only be made within these hours.")} />
                             </h2>
-                            <p className="text-sm text-gray-500">{t('settings.hours.subtitle', "Manage your operating timings.")}</p>
+                            <p className="text-sm text-gray-500">{t('admin.settings.hours.subtitle', "Manage your operating timings.")}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-8 max-w-lg">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">{t('settings.hours.open', 'Open Time')}</label>
+                                <label className="text-sm font-medium text-gray-700">{t('admin.settings.hours.open', 'Open Time')}</label>
                                 <input
                                     type="time"
                                     name="openTime"
@@ -269,7 +269,7 @@ const SettingsPanel = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700">{t('settings.hours.close', 'Close Time')}</label>
+                                <label className="text-sm font-medium text-gray-700">{t('admin.settings.hours.close', 'Close Time')}</label>
                                 <input
                                     type="time"
                                     name="closeTime"
@@ -285,8 +285,8 @@ const SettingsPanel = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-gray-100 pb-4 mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">{t('settings.notifications.title', 'Notifications')}</h2>
-                            <p className="text-sm text-gray-500">{t('settings.notifications.subtitle', 'Control how you receive alerts.')}</p>
+                            <h2 className="text-lg font-semibold text-gray-800">{t('admin.settings.notifications.title', 'Notifications')}</h2>
+                            <p className="text-sm text-gray-500">{t('admin.settings.notifications.subtitle', 'Control how you receive alerts.')}</p>
                         </div>
                         <div className="space-y-4 max-w-lg">
                             {Object.entries(notifications).map(([key, val]) => (
@@ -294,7 +294,7 @@ const SettingsPanel = () => {
                                     <div className="flex items-center gap-3">
                                         <Bell className="h-4 w-4 text-gray-500" />
                                         <span className="text-gray-700 font-medium capitalize">
-                                            {key === 'emailAlerts' ? t('settings.notifications.email', 'Email Alerts') : t('settings.notifications.new_booking', 'New Booking Notify')}
+                                            {key === 'emailAlerts' ? t('admin.settings.notifications.email', 'Email Alerts') : t('admin.settings.notifications.new_booking', 'New Booking Notify')}
                                         </span>
                                     </div>
                                     <button
@@ -313,20 +313,20 @@ const SettingsPanel = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-gray-100 pb-4 mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">{t('settings.security.title', 'Security Settings')}</h2>
-                            <p className="text-sm text-gray-500">{t('settings.security.subtitle', 'Manage account security and access.')}</p>
+                            <h2 className="text-lg font-semibold text-gray-800">{t('admin.settings.security.title', 'Security Settings')}</h2>
+                            <p className="text-sm text-gray-500">{t('admin.settings.security.subtitle', 'Manage account security and access.')}</p>
                         </div>
                         <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex gap-4">
                             <Shield className="h-6 w-6 text-orange-600 flex-shrink-0" />
                             <div>
-                                <h3 className="font-semibold text-orange-800">{t('settings.security.password_title', 'Password & Authentication')}</h3>
-                                <p className="text-sm text-orange-700 mt-1">{t('settings.security.password_desc', 'To change your password or update security settings, please visit your user profile.')}</p>
+                                <h3 className="font-semibold text-orange-800">{t('admin.settings.security.password_title', 'Password & Authentication')}</h3>
+                                <p className="text-sm text-orange-700 mt-1">{t('admin.settings.security.password_desc', 'To change your password or update security settings, please visit your user profile.')}</p>
                                 <button
                                     type="button"
                                     onClick={openProfileModal}
                                     className="mt-3 text-sm font-medium text-orange-900 bg-orange-100 px-3 py-1.5 rounded-lg hover:bg-orange-200 transition-colors"
                                 >
-                                    Go to Profile
+                                    {t('common.go_to_profile', 'Go to Profile')}
                                 </button>
                             </div>
                         </div>
@@ -343,7 +343,7 @@ const SettingsPanel = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 flex justify-between">
-                                    IFSC Code
+                                    {t('admin.payout_settings.ifsc', 'IFSC Code')}
                                     {formData.payout_ifsc && (
                                         <button
                                             type="button"
@@ -433,26 +433,26 @@ const SettingsPanel = () => {
                 return (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-gray-100 pb-4 mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">{t('settings.admins.title', 'Admin Management')}</h2>
-                            <p className="text-sm text-gray-500">{t('settings.admins.subtitle', 'Invite and manage administrators for your organization.')}</p>
+                            <h2 className="text-lg font-semibold text-gray-800">{t('admin.settings.admins.title', 'Admin Management')}</h2>
+                            <p className="text-sm text-gray-500">{t('admin.settings.admins.subtitle', 'Invite and manage administrators for your organization.')}</p>
                         </div>
 
                         {/* Invite Form */}
                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                             <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                                <UserPlus className="h-4 w-4 text-indigo-500" /> {t('settings.admins.invite_new', 'Invite New Admin')}
+                                <UserPlus className="h-4 w-4 text-indigo-500" /> {t('admin.settings.admins.invite_new', 'Invite New Admin')}
                             </h3>
                             <div className="flex flex-col md:flex-row gap-3">
                                 <input
                                     type="text"
-                                    placeholder={t('settings.admins.name_placeholder', 'Name (e.g. John Doe)')}
+                                    placeholder={t('admin.settings.admins.name_placeholder', 'Name (e.g. John Doe)')}
                                     value={inviteName}
                                     onChange={(e) => setInviteName(e.target.value)}
                                     className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none"
                                 />
                                 <input
                                     type="email"
-                                    placeholder={t('settings.admins.email_placeholder', 'Email Address')}
+                                    placeholder={t('admin.settings.admins.email_placeholder', 'Email Address')}
                                     value={inviteEmail}
                                     onChange={(e) => setInviteEmail(e.target.value)}
                                     className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none"
@@ -463,16 +463,16 @@ const SettingsPanel = () => {
                                     disabled={inviting || !inviteEmail || !inviteName}
                                     className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                                 >
-                                    {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('settings.admins.send_invite', 'Send Invite')}
+                                    {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('admin.settings.admins.send_invite', 'Send Invite')}
                                 </button>
                             </div>
                         </div>
 
                         {/* Admin List */}
                         <div className="space-y-3">
-                            <h3 className="text-sm font-medium text-gray-700">{t('settings.admins.current', 'Current Admins')}</h3>
+                            <h3 className="text-sm font-medium text-gray-700">{t('admin.settings.admins.current', 'Current Admins')}</h3>
                             {admins.length === 0 ? (
-                                <p className="text-sm text-gray-500 italic">{t('settings.admins.none', 'No admins found.')}</p>
+                                <p className="text-sm text-gray-500 italic">{t('admin.settings.admins.none', 'No admins found.')}</p>
                             ) : (
                                 <div className="border border-gray-100 rounded-xl overflow-hidden">
                                     {admins.map((admin, idx) => (
@@ -535,14 +535,14 @@ const SettingsPanel = () => {
                         ctx.fillText(orgName, canvas.width / 2, img.height + 60);
                         ctx.font = '12px sans-serif';
                         ctx.fillStyle = '#6B7280';
-                        ctx.fillText('Scan to Book Appointment', canvas.width / 2, img.height + 80);
+                        ctx.fillText(t('admin.qr.scan_to_book', 'Scan to Book Appointment'), canvas.width / 2, img.height + 80);
                         
                         const pngFile = canvas.toDataURL('image/png');
                         const downloadLink = document.createElement('a');
                         downloadLink.download = `${orgName.replace(/\s+/g, '_')}_QR.png`;
                         downloadLink.href = pngFile;
                         downloadLink.click();
-                        toast.success('QR Code downloaded!');
+                        toast.success(t('admin.qr.download_success', 'QR Code downloaded!'));
                     };
                     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
                 };
@@ -569,7 +569,7 @@ const SettingsPanel = () => {
                                 <div class="card">
                                     <img src="${base64}" width="300" height="300" />
                                     <h1>${orgName}</h1>
-                                    <p>Scan this QR to book an appointment</p>
+                                    <p>${t('admin.qr.scan_desc', 'Scan this QR to book an appointment')}</p>
                                 </div>
                                 <script>setTimeout(() => { window.print(); window.close(); }, 500);</script>
                             </body>
@@ -709,25 +709,25 @@ const SettingsPanel = () => {
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="border-b border-red-100 pb-4 mb-4">
                             <h2 className="text-lg font-semibold text-red-700 flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5" /> {t('settings.danger.title', 'Danger Zone')}
+                                <AlertTriangle className="h-5 w-5" /> {t('admin.settings.danger.title', 'Danger Zone')}
                             </h2>
-                            <p className="text-sm text-gray-500 mt-1">{t('settings.danger.subtitle', 'These actions are permanent and cannot be undone.')}</p>
+                            <p className="text-sm text-gray-500 mt-1">{t('admin.settings.danger.subtitle', 'These actions are permanent and cannot be undone.')}</p>
                         </div>
 
                         <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-                            <h3 className="font-bold text-red-800 text-base mb-1">{t('settings.danger.delete_org', 'Delete Organization')}</h3>
+                            <h3 className="font-bold text-red-800 text-base mb-1">{t('admin.settings.danger.delete_org', 'Delete Organization')}</h3>
                             <p className="text-sm text-red-600 mb-4">
-                                {t('settings.danger.delete_desc', 'Permanently deletes {{name}} and all associated data — admins, services, slots, and appointments. This cannot be reversed.', { name: orgName })}
+                                {t('admin.settings.danger.delete_desc', 'Permanently deletes {{name}} and all associated data — admins, services, slots, and appointments. This cannot be reversed.', { name: orgName })}
                             </p>
                             <div className="mb-4">
                                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    {t('settings.danger.confirm_placeholder', 'Type {{code}} to confirm', { code: 'DELETE' })}
+                                    {t('admin.settings.danger.confirm_placeholder', 'Type {{code}} to confirm', { code: 'DELETE' })}
                                 </label>
                                 <input
                                     type="text"
                                     value={deleteConfirmText}
                                     onChange={e => setDeleteConfirmText(e.target.value)}
-                                    placeholder={t('settings.danger.input_placeholder', 'Type DELETE here')}
+                                    placeholder={t('admin.settings.danger.input_placeholder', 'Type DELETE here')}
                                     className="w-full px-4 py-2.5 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-100 focus:border-red-400 outline-none text-sm font-mono"
                                 />
                             </div>
@@ -738,11 +738,11 @@ const SettingsPanel = () => {
                                     setDeletingOrg(true);
                                     try {
                                         await api.delete('/admin/org', { data: { confirmText: 'DELETE' } });
-                                        toast.success(t('settings.danger.delete_success', 'Organization deleted'));
+                                        toast.success(t('admin.settings.danger.delete_success', 'Organization deleted'));
                                         logout();
                                         navigate('/');
                                     } catch (err) {
-                                        toast.error(err.response?.data?.message || t('settings.danger.delete_failed', 'Failed to delete organization'));
+                                        toast.error(err.response?.data?.message || t('admin.settings.danger.delete_failed', 'Failed to delete organization'));
                                     } finally {
                                         setDeletingOrg(false);
                                     }
@@ -750,7 +750,7 @@ const SettingsPanel = () => {
                                 className="flex items-center gap-2 bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <Trash2 className="h-4 w-4" />
-                                {deletingOrg ? t('common.deleting', 'Deleting...') : t('settings.danger.confirm_btn', 'Permanently Delete Organization')}
+                                {deletingOrg ? t('common.deleting', 'Deleting...') : t('admin.settings.danger.confirm_btn', 'Permanently Delete Organization')}
                             </button>
                         </div>
                     </div>
@@ -761,20 +761,20 @@ const SettingsPanel = () => {
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
-            <h1 className="text-2xl font-bold text-gray-900">{t('settings.header', 'Organization Settings')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('admin.settings.header', 'Organization Settings')}</h1>
 
             <div className="flex flex-col md:grid md:grid-cols-12 gap-6 md:gap-8">
                 {/* Navigation/Sidebar */}
                 <div className="md:col-span-3 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                     {[
-                        { id: 'general', icon: Building2, label: t('settings.tabs.general', 'General') },
-                        { id: 'hours', icon: Clock, label: t('settings.tabs.hours', 'Hours') },
-                        { id: 'qrcode', icon: QrCode, label: t('navigation.qr_code', 'QR Code') },
-                        { id: 'notifications', icon: Bell, label: t('settings.tabs.alerts', 'Alerts') },
-                        { id: 'payout', icon: CreditCard, label: t('navigation.payout', 'Payout') },
-                        { id: 'security', icon: Shield, label: t('settings.tabs.security', 'Security') },
-                        { id: 'admins', icon: Users, label: t('settings.tabs.admins', 'Admins') },
-                        { id: 'danger', icon: AlertTriangle, label: t('settings.tabs.danger', 'Danger') }
+                        { id: 'general', icon: Building2, label: t('admin.settings.tabs.general', 'General') },
+                        { id: 'hours', icon: Clock, label: t('admin.settings.tabs.hours', 'Hours') },
+                        { id: 'qrcode', icon: QrCode, label: t('admin.settings.tabs.qrcode', 'QR Code') },
+                        { id: 'notifications', icon: Bell, label: t('admin.settings.tabs.alerts', 'Alerts') },
+                        { id: 'payout', icon: CreditCard, label: t('admin.settings.tabs.payout', 'Payout') },
+                        { id: 'security', icon: Shield, label: t('admin.settings.tabs.security', 'Security') },
+                        { id: 'admins', icon: Users, label: t('admin.settings.tabs.admins', 'Admins') },
+                        { id: 'danger', icon: AlertTriangle, label: t('admin.settings.tabs.danger', 'Danger') }
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -799,7 +799,7 @@ const SettingsPanel = () => {
                                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
                             >
                                 {saving ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
-                                {t('common.save_changes', 'Save Changes')}
+                                {saving ? t('admin.settings.common.saving', 'Saving...') : t('admin.settings.common.save_changes', 'Save Changes')}
                             </button>
                         </div>
                     </form>

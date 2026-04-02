@@ -106,6 +106,7 @@
     "user": "I'm a User",
     "business": "I'm a Business",
     "tomorrow": "Tomorrow",
+    "go_to_profile": "Go to Profile",
     "all_types": "All Types",
     "credits": "Credits",
     "payouts": "Payouts",
@@ -458,6 +459,8 @@
         "hours": "Hours",
         "alerts": "Alerts",
         "security": "Security",
+        "qrcode": "QR Code",
+        "payout": "Payout",
         "admins": "Admins",
         "danger": "Danger"
       },
@@ -470,6 +473,7 @@
         "address": "Address"
       },
       "hours": {
+        "title": "Business Hours",
         "subtitle": "Manage your operating timings.",
         "open": "Open Time",
         "close": "Close Time",
@@ -512,6 +516,10 @@
         "delete_success": "Organization deleted",
         "delete_failed": "Failed to delete organization",
         "confirm_btn": "Permanently Delete Organization"
+      },
+      "common": {
+        "saving": "Saving...",
+        "save_changes": "Save Changes"
       }
     },
     "about": {
@@ -607,6 +615,47 @@
       "saved_account": "Saved Bank Account",
       "verify_transfer": "Verify & Transfer Funds",
       "go_to_settings": "Go to settings to add bank details"
+    },
+    "qr": {
+      "title": "Organization QR Code",
+      "subtitle": "Generate and print your unique QR code for easy customer access.",
+      "missing_link": "Missing Public Link!",
+      "missing_link_desc": "Your organization doesn't have a unique public link yet. This is required to generate a QR code.",
+      "generate_btn": "Generate Public Link",
+      "generating": "Generating your public link...",
+      "gen_success": "Public link generated!",
+      "gen_failed": "Failed to generate link. Please contact support.",
+      "scan_to_book": "Scan to Book Appointment",
+      "scan_desc": "Scan this QR to book an appointment",
+      "download": "Download",
+      "print": "Print",
+      "how_to_use": "How to use?",
+      "step1_title": "Print & Display",
+      "step1_desc": "Download and print this QR code to display at your reception or entrance.",
+      "step2_title": "Instant Scan",
+      "step2_desc": "Customers scan the code using their phone camera.",
+      "step3_title": "Automated Flow",
+      "step3_desc": "They will be instantly redirected to your booking page. New users will be prompted to join Queuify first.",
+      "public_link": "Public Link",
+      "link_copied": "Link copied!"
+    },
+    "payout_settings": {
+      "title": "Payout & Bank Settings",
+      "subtitle": "Securely store your account details for fast withdrawals.",
+      "ifsc": "IFSC Code",
+      "ifsc_placeholder": "e.g. HDFC0001234",
+      "ifsc_verify": "Verify IFSC",
+      "ifsc_invalid_msg": "Please enter a valid 11-digit IFSC code.",
+      "verifying": "Verifying...",
+      "invalid_ifsc": "Invalid IFSC code.",
+      "verified_bank": "Verified: {{bank}}",
+      "verify_error": "Verification failed. Please check the code.",
+      "bank_name": "Bank Name",
+      "bank_placeholder": "e.g. HDFC Bank",
+      "holder_name": "Account Holder Name",
+      "acc_number": "Account Number",
+      "upi_id": "UPI ID (Alternative)",
+      "upi_placeholder": "e.g. name@upi"
     }
   },
   "user": {
