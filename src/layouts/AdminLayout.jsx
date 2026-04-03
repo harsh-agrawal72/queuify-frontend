@@ -33,11 +33,12 @@ import Logo from '../components/common/Logo';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
+import BroadcastBanner from '../components/common/BroadcastBanner';
 
 const AdminLayout = () => {
     const { user, logout } = useAuth();
     const { queueData } = useQueueSocket(user?.org_id);
-    const { notification } = useUserSocket(user?.id);
+    const { notification, broadcast } = useUserSocket(user?.id);
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
@@ -138,6 +139,14 @@ const AdminLayout = () => {
             fetchNotifications(); // instantly update the bell icon count
         }
     }, [queueData, t]);
+
+    // Refresh on Broadcast
+    useEffect(() => {
+        if (broadcast) {
+            fetchNotifications();
+            toast(t('dashboard.new_msg', 'New global broadcast received'), { icon: '📢' });
+        }
+    }, [broadcast]);
 
     // Global WebSocket Listener for Personal Admin Notifications
     useEffect(() => {
@@ -292,6 +301,13 @@ const AdminLayout = () => {
 
             {/* Main Content Wrapper */}
             <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isSidebarOpen ? 'md:ml-[260px]' : 'md:ml-[80px]'}`}>
+                <BroadcastBanner 
+                    notifications={notifications} 
+                    onDismiss={async (id) => {
+                        await api.patch(`/admin/notifications/${id}/read`);
+                        fetchNotifications();
+                    }}
+                />
 
                 {/* Top Navbar */}
                 <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 h-16 flex items-center justify-between px-4 sticky top-0 z-20 shadow-sm">

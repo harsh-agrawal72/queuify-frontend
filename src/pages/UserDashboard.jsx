@@ -14,6 +14,8 @@ import MyBookings from '../components/MyBookings';
 import WaitlistTrackerCard from '../components/user/WaitlistTrackerCard';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import BroadcastBanner from '../components/common/BroadcastBanner';
+import { Bell } from 'lucide-react';
 
 const UserDashboard = () => {
     const { user } = useAuth();
@@ -32,7 +34,7 @@ const UserDashboard = () => {
     const [loadingNotifications, setLoadingNotifications] = useState(false);
     const { t } = useTranslation();
 
-    const { update } = useUserSocket(user?.id);
+    const { update, broadcast } = useUserSocket(user?.id);
 
     // Fetch initial data
     useEffect(() => {
@@ -43,15 +45,18 @@ const UserDashboard = () => {
 
     // Refresh on socket update
     useEffect(() => {
-        if (update) {
-            console.log('[Dashboard] Refreshing due to real-time update');
+        if (update || broadcast) {
+            console.log('[Dashboard] Refreshing due to real-time update/broadcast');
             fetchMyBookings();
             fetchNotifications();
+            if (update?.type === 'reassignment' || (broadcast && !update)) {
+                toast(t('dashboard.new_msg', 'New system message received'), { icon: '🔔' });
+            }
             if (selectedOrg) {
                 handleViewSlots(selectedOrg);
             }
         }
-    }, [update]);
+    }, [update, broadcast]);
 
     const fetchOrganizations = async (query = '', type = 'All') => {
         try {
@@ -76,8 +81,13 @@ const UserDashboard = () => {
     const fetchNotifications = async () => {
         setLoadingNotifications(true);
         try {
-            const response = await apiService.getMyNotifications();
-            setNotifications(response.data);
+            const [trackers, general] = await Promise.all([
+                apiService.getMyNotifications(),
+                apiService.getNotifications()
+            ]);
+            // Ensure slot notifications are typed as 'waitlist'
+            const trackerData = (trackers.data || []).map(n => ({ ...n, type: 'waitlist' }));
+            setNotifications([...trackerData, ...(general.data || [])]);
         } catch (error) {
             console.error('Error fetching notifications:', error);
         } finally {
@@ -184,7 +194,15 @@ const UserDashboard = () => {
     };
 
     return (
-        <div className="w-full px-4 py-8 max-w-7xl mx-auto">
+        <div className="w-full">
+            <BroadcastBanner 
+                notifications={notifications} 
+                onDismiss={async (id) => {
+                    await apiService.markNotificationAsRead(id);
+                    fetchNotifications();
+                }} 
+            />
+            <div className="px-4 py-8 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <h1 className="text-3xl font-black mb-0 text-gray-900 tracking-tight">{t('user_dashboard.title', 'User Dashboard')}</h1>
                 
@@ -248,7 +266,7 @@ const UserDashboard = () => {
                     </div>
 
                     {/* Waitlist Trackers Section */}
-                    {notifications.length > 0 && (
+                    {notifications.filter(n => n.type === 'waitlist').length > 0 && (
                         <div className="mb-12 animate-in fade-in slide-in-from-left-4 duration-700">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-indigo-600 rounded-lg text-white">
@@ -260,7 +278,7 @@ const UserDashboard = () => {
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {notifications.map(sn => (
+                                {notifications.filter(n => n.type === 'waitlist').map(sn => (
                                     <WaitlistTrackerCard 
                                         key={sn.id} 
                                         notification={sn} 
@@ -382,6 +400,7 @@ const UserDashboard = () => {
                 />
             )}
 
+        </div>
         </div>
     );
 };
