@@ -31,6 +31,9 @@ const WalletDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [transLoading, setTransLoading] = useState(false);
     const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [isExporting, setIsExporting] = useState(false);
     
     // Search, Filter & Pagination State
     const [search, setSearch] = useState('');
@@ -92,7 +95,9 @@ const WalletDashboard = () => {
                     offset: (currentPage - 1) * itemsPerPage,
                     search: debouncedSearch,
                     type: typeFilter,
-                    status: statusFilter
+                    status: statusFilter,
+                    startDate,
+                    endDate
                 }
             });
             setTransactions(res.data.transactions || []);
@@ -105,18 +110,47 @@ const WalletDashboard = () => {
         }
     };
 
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            const response = await api.get('/payments/transactions/export', {
+                params: {
+                    search: debouncedSearch,
+                    type: typeFilter,
+                    status: statusFilter,
+                    startDate,
+                    endDate
+                },
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `transactions_report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success(t('admin.wallet.export_success', 'Report downloaded successfully'));
+        } catch (error) {
+            toast.error(t('admin.wallet.export_failed', 'Failed to download report'));
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     useEffect(() => {
         fetchWalletStatus();
     }, []);
 
     useEffect(() => {
         fetchTransactions();
-    }, [currentPage, debouncedSearch, typeFilter, statusFilter]);
+    }, [currentPage, debouncedSearch, typeFilter, statusFilter, startDate, endDate]);
 
     // Reset to page 1 on filter change
     useEffect(() => {
         setCurrentPage(1);
-    }, [debouncedSearch, typeFilter, statusFilter]);
+    }, [debouncedSearch, typeFilter, statusFilter, startDate, endDate]);
 
     const handlePayoutRequest = async (e) => {
         e.preventDefault();
@@ -224,7 +258,29 @@ const WalletDashboard = () => {
                                 </div>
                                 <h2 className="text-lg font-bold text-gray-900">{t('admin.wallet.ledger', 'Transaction Ledger')}</h2>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap items-center gap-3">
+                                {/* Date Range */}
+                                <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                        <input 
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="pl-3 pr-3 py-2 border border-gray-100 rounded-xl text-xs focus:ring-2 focus:ring-indigo-100 outline-none bg-white h-10"
+                                        />
+                                        {!startDate && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none uppercase font-bold tracking-tighter">From</span>}
+                                    </div>
+                                    <div className="relative">
+                                        <input 
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="pl-3 pr-3 py-2 border border-gray-100 rounded-xl text-xs focus:ring-2 focus:ring-indigo-100 outline-none bg-white h-10"
+                                        />
+                                        {!endDate && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none uppercase font-bold tracking-tighter">To</span>}
+                                    </div>
+                                </div>
+
                                 <div className="relative group">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                                     <input 
@@ -232,22 +288,49 @@ const WalletDashboard = () => {
                                         placeholder={t('common.search', 'Search transactions...')}
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-9 pr-4 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-48 transition-all"
+                                        className="pl-9 pr-4 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-48 transition-all h-10"
                                     />
                                 </div>
                                 <select 
                                     value={typeFilter}
                                     onChange={(e) => setTypeFilter(e.target.value)}
-                                    className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer"
+                                    className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
                                 >
                                     <option value="">{t('common.all_types', 'All Types')}</option>
                                     <option value="credit">{t('common.credits', 'Credits')}</option>
                                     <option value="payout">{t('common.payouts', 'Payouts')}</option>
                                     <option value="refund">{t('common.refunds', 'Refunds')}</option>
                                 </select>
-                                {(search || typeFilter) && (
+                                <select 
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
+                                >
+                                    <option value="">{t('common.all_status', 'All Status')}</option>
+                                    <option value="pending">{t('status.pending', 'Pending')}</option>
+                                    <option value="completed">{t('status.completed', 'Completed')}</option>
+                                    <option value="rejected">{t('status.rejected', 'Rejected')}</option>
+                                    <option value="failed">{t('status.failed', 'Failed')}</option>
+                                </select>
+
+                                <button 
+                                    onClick={handleExport}
+                                    disabled={isExporting || transactions.length === 0}
+                                    className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all active:scale-95 disabled:opacity-50 h-10"
+                                >
+                                    {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4 rotate-180" />}
+                                    {t('admin.wallet.download_csv', 'Download CSV')}
+                                </button>
+
+                                {(search || typeFilter || statusFilter || startDate || endDate) && (
                                     <button 
-                                        onClick={() => { setSearch(''); setTypeFilter(''); }}
+                                        onClick={() => { 
+                                            setSearch(''); 
+                                            setTypeFilter(''); 
+                                            setStatusFilter(''); 
+                                            setStartDate(''); 
+                                            setEndDate(''); 
+                                        }}
                                         className="text-xs font-bold text-indigo-600 hover:text-indigo-700 px-2"
                                     >
                                         {t('common.clear', 'Clear')}

@@ -85,6 +85,7 @@
     "view": "View",
     "actions": "Actions",
     "status": "Status",
+    "all_status": "All Status",
     "previous": "Previous",
     "page_of": "Page {{current}} of {{total}}",
     "name": "Name",
@@ -146,7 +147,6 @@
     "system": "System",
     "search_placeholder": "Search accounts...",
     "all_resources": "All Resources",
-    "all_status": "All Status",
     "guest_user": "Guest User",
     "general_service": "General Service",
     "unassigned": "Unassigned",
@@ -409,7 +409,11 @@
     "past": "Past",
     "full": "Full",
     "almost_full": "Almost Full",
-    "available": "Available"
+    "available": "Available",
+    "requested": "Requested",
+    "locked": "Locked",
+    "failed": "Failed",
+    "rejected": "Rejected"
   },
   "queue": {
     "live_queue": "Live Queue",
@@ -782,7 +786,10 @@
       "load_failed": "Failed to load transactions",
       "insufficient_balance": "Insufficient available balance",
       "payout_request_success": "Payout request submitted successfully",
-      "payout_request_failed": "Payout request failed"
+      "payout_request_failed": "Payout request failed",
+      "download_csv": "Download CSV",
+      "export_success": "Report downloaded successfully",
+      "export_failed": "Failed to download report"
     },
     "qr": {
       "title": "Organization QR Code",

@@ -71,7 +71,7 @@ const PayoutControl = () => {
                 <div className="flex items-center gap-1.5 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 w-fit">
                     <CreditCard className="h-3 w-3" /> {d.accountNumber}
                 </div>
-                <div className="text-indigo-600 font-black tracking-wider">IFSC: {d.ifscCode}</div>
+                <div className="text-indigo-600 font-black tracking-wider bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 w-fit">IFSC: {d.ifsc}</div>
                 {d.upiId && <div className="text-purple-600 font-medium italic">UPI: {d.upiId}</div>}
             </div>
         );

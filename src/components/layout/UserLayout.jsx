@@ -12,6 +12,7 @@ import NotificationPanel from '../user/NotificationPanel';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import ChatWidget from '../chat/ChatWidget';
+import BroadcastBanner from '../common/BroadcastBanner';
 import { useUserSocket } from '../../hooks/useUserSocket';
 import { toast } from 'react-hot-toast';
 
@@ -22,14 +23,16 @@ export default function UserLayout() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isNotifOpen, setNotifOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [notifications, setNotifications] = useState([]);
 
-    const { notification } = useUserSocket(user?.id);
+    const { notification, broadcast } = useUserSocket(user?.id);
 
-    const fetchUnreadCount = async () => {
+    const fetchNotifications = async () => {
         if (!user) return;
         try {
             const res = await api.get('/notifications');
             if (res.data && Array.isArray(res.data)) {
+                setNotifications(res.data);
                 const unread = res.data.filter(n => !n.is_read).length;
                 setUnreadCount(unread);
             }
@@ -39,11 +42,20 @@ export default function UserLayout() {
         }
     };
 
+    const handleDismiss = async (notificationId) => {
+        try {
+            await api.patch(`/notifications/${notificationId}/read`);
+            fetchNotifications();
+        } catch (error) {
+            console.error('Failed to dismiss notification:', error);
+        }
+    };
+
     useEffect(() => {
         if (!user) return;
 
-        fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 30000); // Check every 30s
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000); // Check every 30s
         return () => clearInterval(interval);
     }, [user]);
 
@@ -62,9 +74,17 @@ export default function UserLayout() {
                     { duration: 6000, icon: '📫' }
                 );
             }
-            fetchUnreadCount();
+            fetchNotifications();
         }
     }, [notification]);
+
+    // Refresh on Broadcast
+    useEffect(() => {
+        if (broadcast) {
+            fetchNotifications();
+            toast(t('dashboard.new_msg', 'New global broadcast received'), { icon: '📢' });
+        }
+    }, [broadcast]);
 
     const handleLogout = () => {
         logout();
@@ -166,6 +186,11 @@ export default function UserLayout() {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                <BroadcastBanner 
+                    notifications={notifications} 
+                    onDismiss={handleDismiss} 
+                />
+                
                 {/* Topbar */}
                 <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
                     <button
@@ -192,7 +217,7 @@ export default function UserLayout() {
                                 isOpen={isNotifOpen}
                                 onClose={() => {
                                     setNotifOpen(false);
-                                    fetchUnreadCount();
+                                    fetchNotifications();
                                 }}
                             />
                         </div>

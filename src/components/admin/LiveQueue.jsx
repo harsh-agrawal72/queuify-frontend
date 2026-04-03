@@ -449,9 +449,9 @@ const AdminLiveQueue = () => {
                             <Clock className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.avg_service_time', 'Avg. Session')}</p>
+                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">{t('analytics.active_queues', 'Active Queues')}</p>
                             <p className="text-2xl font-black text-slate-900 leading-none">
-                                {predictiveInsights?.averageDurations?.[0]?.minutes || 15}<span className="text-xs text-slate-400 ml-1 uppercase">{t('common.minutes_short', 'min')}</span>
+                                {queues.length}
                             </p>
                         </div>
                     </div>
@@ -498,18 +498,20 @@ const AdminLiveQueue = () => {
                                               <div className="h-14 w-14 bg-gradient-to-br from-white to-slate-50 shadow-md border border-slate-200/60 rounded-2xl flex-shrink-0 flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-all duration-300 group-hover:shadow-indigo-100">
                                                  <User className="h-7 w-7" />
                                              </div>
-                                             <div className="min-w-0">
-                                                 <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-2 truncate">
-                                                     {formatName(queue.resource_name)}
-                                                 </h3>
-                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                     <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg uppercase tracking-wider border border-indigo-100/50 shadow-sm whitespace-nowrap">{queue.name}</span>
-                                                     <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 whitespace-nowrap">
-                                                         <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                                         {t('common.status_active', 'Active')}
-                                                     </span>
-                                                 </div>
-                                             </div>
+                                             <div className="flex flex-col">
+                                                <h3 className="text-sm font-black text-slate-900 tracking-tight leading-none mb-1">{queue.resource_name || queue.name}</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-tighter">
+                                                        <Activity className="h-2.5 w-2.5" />
+                                                        {queue.scope === 'PER_RESOURCE' ? t('resource.professional', 'Professional') : t('service.central_queue', 'Central')}
+                                                    </span>
+                                                    {predictiveInsights?.averageDurations?.find(d => d.resource === queue.resource_name || d.service === queue.name) && (
+                                                        <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md border border-indigo-100 uppercase tracking-tighter">
+                                                            Avg: {predictiveInsights?.averageDurations?.find(d => d.resource === queue.resource_name || d.service === queue.name)?.minutes}m
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                          </div>
                                          
                                           <div className="flex items-center gap-3 ml-auto sm:ml-0 lg:ml-auto self-stretch sm:self-auto min-w-0 flex-wrap sm:flex-nowrap">

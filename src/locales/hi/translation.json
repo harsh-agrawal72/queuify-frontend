@@ -409,7 +409,11 @@
     "past": "पिछला",
     "full": "पूर्ण",
     "almost_full": "लगभग पूर्ण",
-    "available": "उपलब्ध"
+    "available": "उपलब्ध",
+    "requested": "अनुरोधित",
+    "locked": "लॉक",
+    "failed": "विफल",
+    "rejected": "अस्वीकार"
   },
   "queue": {
     "live_queue": "लाइव कतार",
@@ -481,7 +485,14 @@
     "add_to_queue": "पुष्टि करें और जोड़ें",
     "avg_service_time": "औसत सत्र",
     "no_activity": "आज कोई गतिविधि नहीं है",
-    "check_back": "जैसे ही ग्राहक जुड़ेंगे, कतारें यहाँ दिखाई देंगी।"
+    "check_back": "जैसे ही ग्राहक जुड़ेंगे, कतारें यहाँ दिखाई देंगी.",
+    "load_failed": "लेनदेन लोड करने में विफल",
+    "insufficient_balance": "अपर्याप्त उपलब्ध शेष राशि",
+    "payout_request_success": "पेआउट अनुरोध सफलतापूर्वक सबमिट किया गया",
+    "payout_request_failed": "पेआउट अनुरोध विफल रहा",
+    "download_csv": "रिपोर्ट डाउनलोड करें",
+    "export_success": "रिपोर्ट सफलतापूर्वक डाउनलोड हो गई",
+    "export_failed": "रिपोर्ट डाउनलोड करने में विफल"
   },
   "admin": {
     "dashboard_title": "व्यवस्थापक डैशबोर्ड",

@@ -304,9 +304,28 @@ export default function UserDashboard() {
                                                     <div className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-indigo-400" /><span className="truncate max-w-[150px]">{nextApt.org_address}</span></div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10"><Users className="h-3.5 w-3.5 text-slate-400" /><span className="text-[10px] font-black text-white">{nextApt.people_ahead || 0} Ahead</span></div>
-                                                <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10"><Sparkles className="h-3.5 w-3.5 text-indigo-400" /><span className="text-[10px] font-black text-white">Serving #{nextApt.current_serving_number || 0}</span></div>
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10">
+                                                    <Users className="h-3.5 w-3.5 text-slate-400" />
+                                                    <span className="text-[10px] font-black text-white">{nextApt.people_ahead || 0} {t('queue.ahead', 'Ahead')}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-3 py-2 rounded-xl border border-white/10">
+                                                    <Clock className="h-3.5 w-3.5 text-indigo-400" />
+                                                    <span className="text-[10px] font-black text-white">{nextApt.estimated_wait_time || 0} {t('common.minutes_short', 'min')} {t('queue.wait', 'Wait')}</span>
+                                                </div>
+                                                {nextApt.time_drift_minutes !== undefined && Math.abs(nextApt.time_drift_minutes) > 5 && (
+                                                    <div className={clsx(
+                                                        "flex items-center gap-1.5 px-3 py-2 rounded-xl border backdrop-blur-md",
+                                                        nextApt.time_drift_minutes > 5 
+                                                            ? "bg-amber-500/10 border-amber-500/20 text-amber-400" 
+                                                            : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                                    )}>
+                                                        {nextApt.time_drift_minutes > 5 ? <TrendingUp className="h-3.5 w-3.5 rotate-90" /> : <TrendingUp className="h-3.5 w-3.5" />}
+                                                        <span className="text-[10px] font-black uppercase tracking-tight">
+                                                            {nextApt.time_drift_minutes > 5 ? t('queue.slower', 'Moving Slower') : t('queue.faster', 'Moving Faster!')}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="relative z-10 flex flex-col bg-white rounded-3xl text-slate-900 shadow-2xl min-w-[180px] overflow-hidden border border-white">
