@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
 import { getSocket } from '../services/socketService';
+import { useAuth } from '../context/AuthContext';
 
 export const useUserSocket = (userId) => {
     const [connected, setConnected] = useState(false);
     const [update, setUpdate] = useState(null);
     const [notification, setNotification] = useState(null);
     const [broadcast, setBroadcast] = useState(null);
+    const { user } = useAuth();
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId || !user?.role) return;
 
         const socket = getSocket();
 
         const onConnect = () => {
             console.log('User socket connected');
             setConnected(true);
-            socket.emit('join_user', userId);
+            socket.emit('join_user', { userId, role: user.role });
         };
 
         const onUpdate = (data) => {

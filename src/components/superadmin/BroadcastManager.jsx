@@ -19,6 +19,15 @@ const BroadcastManager = () => {
         link: ''
     });
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 4;
+    const totalPages = Math.ceil(history.length / itemsPerPage);
+    const paginatedHistory = history.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     const fetchHistory = async () => {
         try {
             const res = await api.get('/superadmin/broadcast');
@@ -44,6 +53,7 @@ const BroadcastManager = () => {
             toast.success("Broadcast sent successfully!");
             setFormData({ target: 'all', title: '', message: '', type: 'info', link: '' });
             fetchHistory();
+            setCurrentPage(1); // Reset to first page to see new broadcast
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to send broadcast");
         } finally {
@@ -172,25 +182,50 @@ const BroadcastManager = () => {
                             ) : history.length === 0 ? (
                                 <div className="py-10 text-center text-slate-400 italic text-sm">No recent broadcasts</div>
                             ) : (
-                                history.map((item) => (
-                                    <div key={item.id} className="p-4 rounded-[2rem] border border-slate-50 hover:border-indigo-100 hover:bg-indigo-50/10 transition-all group">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border ${getTypeStyles(item.type)}`}>
-                                                {item.type}
-                                            </span>
-                                            <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                                                <Clock className="h-3 w-3" />
-                                                {format(parseISO(item.created_at), 'MMM d, HH:mm')}
-                                            </span>
+                                <>
+                                    {paginatedHistory.map((item) => (
+                                        <div key={item.id} className="p-4 rounded-[2rem] border border-slate-50 hover:border-indigo-100 hover:bg-indigo-50/10 transition-all group">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border ${getTypeStyles(item.type)}`}>
+                                                    {item.type}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                    <Clock className="h-3 w-3" />
+                                                    {format(parseISO(item.created_at), 'MMM d, HH:mm')}
+                                                </span>
+                                            </div>
+                                            <h3 className="text-sm font-bold text-slate-900 mb-1 line-clamp-1">{item.title}</h3>
+                                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">{item.message}</p>
+                                            <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-tighter border-t border-slate-50 pt-3">
+                                                <span className="flex items-center gap-1"><Users className="h-3 w-3" /> To: {item.target}</span>
+                                                <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> By: {item.sender_name?.split(' ')[0]}</span>
+                                            </div>
                                         </div>
-                                        <h3 className="text-sm font-bold text-slate-900 mb-1 line-clamp-1">{item.title}</h3>
-                                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">{item.message}</p>
-                                        <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-tighter border-t border-slate-50 pt-3">
-                                            <span className="flex items-center gap-1"><Users className="h-3 w-3" /> To: {item.target}</span>
-                                            <span className="flex items-center gap-1"><ArrowRight className="h-3 w-3" /> By: {item.sender_name?.split(' ')[0]}</span>
+                                    ))}
+
+                                    {/* Pagination Controls */}
+                                    {totalPages > 1 && (
+                                        <div className="flex items-center justify-between px-2 pt-4 border-t border-slate-50">
+                                            <button 
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ArrowRight className="h-4 w-4 rotate-180" />
+                                            </button>
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                Page {currentPage} of {totalPages}
+                                            </div>
+                                            <button 
+                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ArrowRight className="h-4 w-4" />
+                                            </button>
                                         </div>
-                                    </div>
-                                ))
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
