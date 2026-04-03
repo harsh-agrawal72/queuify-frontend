@@ -63,26 +63,35 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
     const previewBreakdown = useMemo(() => calculatePaymentBreakdown(basePrice), [basePrice]);
 
     // Helper to generate time intervals between slot boundaries
-    const getTimeOptions = (slot) => {
+    const getTimeOptions = (slot, minTimeStr) => {
         if (!slot?.start_time || !slot?.end_time) return [];
         const start = parseISO(slot.start_time);
         const end = parseISO(slot.end_time);
+        const minTime = minTimeStr ? parseISO(minTimeStr) : null;
+        
         const options = [];
         let curr = new Date(start);
         
         // Add intervals every 15 minutes
         while (curr <= end) {
-            options.push({
-                value: format(curr, 'HH:mm'),
-                label: format(curr, 'h:mm a'),
-                date: new Date(curr)
-            });
+            // Only add if it's after minTime (or no minTime provided)
+            const isAfterMin = !minTime || curr > minTime;
+            
+            if (isAfterMin) {
+                options.push({
+                    value: format(curr, 'HH:mm'),
+                    label: format(curr, 'h:mm a'),
+                    date: new Date(curr)
+                });
+            }
             curr = new Date(curr.getTime() + 15 * 60000);
         }
         
-        // Ensure end time is included if not already
+        // Ensure end time is included if not already and it's after minTime
         const lastVal = format(end, 'HH:mm');
-        if (options.length === 0 || options[options.length-1].value !== lastVal) {
+        const isEndAfterMin = !minTime || end > minTime;
+
+        if (isEndAfterMin && (options.length === 0 || options[options.length-1].value !== lastVal)) {
             options.push({
                 value: lastVal,
                 label: format(end, 'h:mm a'),
@@ -468,16 +477,16 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             <div className="pt-2 border-t border-indigo-100">
                                 <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">{t('booking.wizard.notify_me.title', 'Not free at this time?')}</p>
                                 <div className="flex flex-col gap-3">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-col sm:flex-row sm:items-end gap-3">
                                         <div className="flex flex-col flex-1">
                                             <span className="text-[10px] text-indigo-400 font-bold uppercase ml-1 mb-0.5">{t('booking.wizard.notify_me.desired', 'Desired Time')}</span>
                                             <select
                                                 value={notificationTime}
                                                 onChange={(e) => setNotificationTime(e.target.value)}
-                                                className="text-sm border-gray-200 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                                className="w-full text-sm border-gray-200 rounded-lg p-3 sm:p-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm"
                                             >
                                                 <option value="">{t('booking.wizard.notify_me.select', 'Select Time...')}</option>
-                                                {getTimeOptions(selectedSlot).map(opt => (
+                                                {getTimeOptions(selectedSlot, selectedSlot.estimated_next_time).map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                                 ))}
                                             </select>
@@ -487,7 +496,8 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                                 if (!notificationTime) return toast.error(t('booking.wizard.notify_me.select', "Please pick a time"));
                                                 setRequestingNotification(true);
                                                 try {
-                                                    const desiredOption = getTimeOptions(selectedSlot).find(o => o.value === notificationTime);
+                                                    const options = getTimeOptions(selectedSlot, selectedSlot.estimated_next_time);
+                                                    const desiredOption = options.find(o => o.value === notificationTime);
                                                     const desiredDate = desiredOption ? desiredOption.date : null;
                                                     
                                                     if (!desiredDate) return toast.error(t('common.error', "Invalid time selected"));
@@ -509,9 +519,9 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                                 }
                                             }}
                                             disabled={requestingNotification}
-                                            className="mt-4 text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-sm"
+                                            className="w-full sm:w-auto h-[42px] px-6 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-md shadow-indigo-100 flex items-center justify-center"
                                         >
-                                            {requestingNotification ? <Loader2 className="h-3 w-3 animate-spin"/> : t('booking.wizard.notify_me.button', 'Notify Me')}
+                                            {requestingNotification ? <Loader2 className="h-4 w-4 animate-spin"/> : t('booking.wizard.notify_me.button', 'Notify Me')}
                                         </button>
                                     </div>
                                 </div>
@@ -618,10 +628,12 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         <span className="text-gray-400 font-medium">{t('booking.wizard.steps.resource', 'Resource')}</span>
                         <span className="text-gray-900 font-bold">{selectedResource?.name}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm border-b border-gray-100 pb-4">
-                        <span className="text-gray-400 font-medium">{t('booking.wizard.steps.time', 'Time')}</span>
-                        <span className="text-gray-900 font-bold">{format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}</span>
-                    </div>
+                    {selectedSlot && (
+                        <div className="flex justify-between items-center text-sm border-b border-gray-100 pb-4">
+                            <span className="text-gray-400 font-medium">{t('booking.wizard.steps.time', 'Time')}</span>
+                            <span className="text-gray-900 font-bold">{format(parseISO(selectedSlot.start_time), 'MMM d, h:mm a')}</span>
+                        </div>
+                    )}
 
                     {/* Breakdown of Fees */}
                     <div className="space-y-2 py-2">

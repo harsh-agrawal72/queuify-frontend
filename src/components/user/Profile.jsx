@@ -378,10 +378,42 @@ export default function Profile() {
                                  </div>
                              </div>
                              
-                             <p className="text-[11px] text-gray-400 -mt-2 flex items-center gap-1">
-                                 {t('user.profile.location_hint')}
-                             </p>
 
+                             {/* Notification Preferences Integrated into Form */}
+                             <div className="pt-6 mt-6 border-t border-gray-100">
+                                 <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+                                     <Bell className="h-5 w-5 text-amber-500" />
+                                     {t('user.profile.notifications_title')}
+                                 </h3>
+                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                         <div>
+                                             <p className="text-sm font-semibold text-gray-800">{t('user.profile.email_alerts')}</p>
+                                             <p className="text-[11px] text-gray-400 mt-0.5">{t('user.profile.email_alerts_desc')}</p>
+                                         </div>
+                                         <button
+                                             type="button"
+                                             onClick={() => setEmailNotifications(!emailNotifications)}
+                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${emailNotifications ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                                         >
+                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${emailNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
+                                         </button>
+                                     </div>
+                                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                         <div>
+                                             <p className="text-sm font-semibold text-gray-800">{t('user.profile.push_notifications')}</p>
+                                             <p className="text-[11px] text-gray-400 mt-0.5">{t('user.profile.push_notifications_desc')}</p>
+                                         </div>
+                                         <button
+                                             type="button"
+                                             onClick={() => setNotificationAlerts(!notificationAlerts)}
+                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${notificationAlerts ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                                         >
+                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${notificationAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
                          </div>
 
                         {/* Save Button */}

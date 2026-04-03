@@ -130,7 +130,8 @@ const AdminLayout = () => {
         if (queueData) {
             // Only show generic toast for non-booking updates (like cancellations)
             // since bookings trigger a personal notification toast with details
-            if (queueData.type !== 'new_booking') {
+            // Suppress if user is already on the Live Queue page
+            if (queueData.type !== 'new_booking' && location.pathname !== '/admin/queue') {
                 toast.success(t('queue.queue_updated', 'Active queue updated!'), {
                     icon: '🔔',
                     duration: 4000,
@@ -138,7 +139,7 @@ const AdminLayout = () => {
             }
             fetchNotifications(); // instantly update the bell icon count
         }
-    }, [queueData, t]);
+    }, [queueData, t, location.pathname]);
 
     // Refresh on Broadcast
     useEffect(() => {

@@ -326,6 +326,7 @@ const AnalyticsPanel = () => {
 
     // Chart Refs
     const trendChartRef = useRef(null);
+    const utilizationChartRef = useRef(null);
     const statusPieRef = useRef(null);
     const serviceBarRef = useRef(null);
 
@@ -432,6 +433,7 @@ const AnalyticsPanel = () => {
 
         // Capture charts first
         const trendImg = await captureChart(trendChartRef);
+        const utilImg = await captureChart(utilizationChartRef);
         const statusImg = await captureChart(statusPieRef);
         const serviceImg = await captureChart(serviceBarRef);
 
@@ -568,6 +570,13 @@ const AnalyticsPanel = () => {
             const imageId = workbook.addImage({ base64: trendImg, extension: 'png' });
             workbook.getWorksheet('Daily Trends').addImage(imageId, {
                 tl: { col: 2.5, row: 1 },
+                ext: { width: 500, height: 300 }
+            });
+        }
+        if (utilImg) {
+            const imageId = workbook.addImage({ base64: utilImg, extension: 'png' });
+            workbook.getWorksheet('Daily Trends').addImage(imageId, {
+                tl: { col: 2.5, row: 18 },
                 ext: { width: 500, height: 300 }
             });
         }
@@ -946,34 +955,40 @@ const AnalyticsPanel = () => {
                 </motion.div>
             </div>
 
+            {/* ═══ Charts Row 2: Utilization Trend ═══ */}
+
             {/* ═══ Charts Row 2: Bookings by Service ═══ */}
-            <div className="grid grid-cols-1 gap-5">
-                {/* Bookings by Service */}
+            <div className="grid grid-cols-1">
+                {/* Utilization Trend — Area Chart */}
                 <motion.div
-                    ref={serviceBarRef}
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                    ref={utilizationChartRef}
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
                 >
-                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
-                        <BarChart3 className="h-5 w-5 text-teal-500" /> {t('analytics.bookings_by_service', 'Bookings by Service')}
-                    </h3>
-                    {stats.bookingsByService?.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={260}>
-                            <BarChart data={stats.bookingsByService} margin={{ top: 5, right: 20, left: -10, bottom: 5 }} barCategoryGap="30%">
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} interval={0} angle={-20} textAnchor="end" height={60} />
-                                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} allowDecimals={false} />
-                                <Tooltip content={<CustomTooltip suffix=" bookings" />} />
-                                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                                    {stats.bookingsByService.map((_, i) => (
-                                        <Cell key={i} fill={SERVICE_COLORS[i % SERVICE_COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <Activity className="h-5 w-5 text-blue-500" /> {t('analytics.utilization_trend', 'Slot Utilization Trend (%)')}
+                        </h3>
+                    </div>
+                    {stats.dailyBookings?.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={280}>
+                            <AreaChart data={stats.dailyBookings} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                <defs>
+                                    <linearGradient id="utilGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => v.slice(5)} />
+                                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} domain={[0, 100]} tickFormatter={v => `${v}%`} />
+                                <Tooltip content={<CustomTooltip suffix="%" />} />
+                                <Area type="monotone" dataKey="utilization" stroke="#3b82f6" strokeWidth={2.5} fill="url(#utilGrad)" dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                            </AreaChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="h-[260px] flex items-center justify-center text-gray-400">
-                            <p>{t('analytics.no_service_data', 'No service data for this period')}</p>
+                        <div className="h-[280px] flex items-center justify-center text-gray-400">
+                            <p>{t('analytics.no_utilization_data', 'No utilization data')}</p>
                         </div>
                     )}
                 </motion.div>

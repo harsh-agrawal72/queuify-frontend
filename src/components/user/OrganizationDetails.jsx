@@ -158,10 +158,12 @@ export default function OrganizationDetails() {
                                 <span className="flex items-center gap-1.5"><Mail className="h-4 w-4 text-indigo-400" /> {org.contact_email}</span>
                             </div>
                         </div>
-                        <div className="md:pb-2">
+                        {/* Favorite Button: Repositioned for Mobile Optimization */}
+                        <div className="absolute top-2 right-6 md:relative md:top-0 md:right-0 md:pb-2">
                             <button
                                 type="button"
-                                onClick={async () => {
+                                onClick={async (e) => {
+                                    e.stopPropagation(); // Avoid potential bubble up issues
                                     try {
                                         const res = await api.post(`/organizations/${org.id}/favorite`);
                                         setOrg(prev => ({ ...prev, is_favorite: res.data.isFavorite }));
@@ -169,16 +171,16 @@ export default function OrganizationDetails() {
                                         console.error("Failed to toggle favorite", err);
                                     }
                                 }}
-                                className={`group relative p-4 rounded-[2rem] border transition-all duration-500 hover:scale-110 active:scale-95 shadow-xl ${
+                                className={`group relative p-3 md:p-4 rounded-[2rem] border transition-all duration-500 hover:scale-110 active:scale-95 shadow-xl backdrop-blur-md ${
                                     org.is_favorite 
-                                    ? 'bg-rose-50 text-rose-600 border-rose-100 shadow-rose-200/50' 
-                                    : 'bg-white text-gray-400 border-gray-100 hover:text-rose-500 hover:bg-rose-50/50 hover:border-rose-100'
+                                    ? 'bg-rose-50/90 text-rose-600 border-rose-100 shadow-rose-200/50 fill-rose-600' 
+                                    : 'bg-white/90 text-gray-400 border-gray-100 hover:text-rose-500 hover:bg-rose-50/50 hover:border-rose-100'
                                 }`}
                                 title={org.is_favorite ? "Remove from Favorites" : "Add to Favorites"}
                             >
-                                <Star className={`h-7 w-7 transition-transform duration-500 ${org.is_favorite ? 'fill-rose-600 rotate-[360deg]' : 'group-hover:rotate-12'}`} />
-                                <div className={`absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center border-2 ${org.is_favorite ? 'border-rose-500' : 'border-gray-200 opacity-0'}`}>
-                                    {org.is_favorite && <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />}
+                                <Star className={`h-5 w-5 md:h-7 md:w-7 transition-transform duration-500 ${org.is_favorite ? 'rotate-[360deg] fill-rose-600' : 'group-hover:rotate-12'}`} />
+                                <div className={`absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-white rounded-full flex items-center justify-center border-2 ${org.is_favorite ? 'border-rose-500' : 'border-gray-200 opacity-0'}`}>
+                                    {org.is_favorite && <div className="w-1 md:w-1.5 h-1 md:h-1.5 bg-rose-500 rounded-full animate-pulse" />}
                                 </div>
                             </button>
                         </div>

@@ -445,13 +445,13 @@ const AdminLiveQueue = () => {
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow hidden md:block group">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2.5 bg-emerald-50 rounded-xl group-hover:scale-110 transition-transform">
-                            <Clock className="h-5 w-5 text-emerald-600" />
+                        <div className="p-2.5 bg-indigo-50 rounded-xl group-hover:scale-110 transition-transform">
+                            <Clock className="h-5 w-5 text-indigo-600" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">{t('analytics.active_queues', 'Active Queues')}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Avg. Wait Time</p>
                             <p className="text-2xl font-black text-slate-900 leading-none">
-                                {queues.length}
+                                {Math.round(predictiveInsights?.averageDurations?.reduce((acc, d) => acc + (d.minutes || 0), 0) / (predictiveInsights?.averageDurations?.length || 1))}<span className="text-xs ml-1 text-slate-400 font-bold uppercase">Min</span>
                             </p>
                         </div>
                     </div>
@@ -505,11 +505,6 @@ const AdminLiveQueue = () => {
                                                         <Activity className="h-2.5 w-2.5" />
                                                         {queue.scope === 'PER_RESOURCE' ? t('resource.professional', 'Professional') : t('service.central_queue', 'Central')}
                                                     </span>
-                                                    {predictiveInsights?.averageDurations?.find(d => d.resource === queue.resource_name || d.service === queue.name) && (
-                                                        <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md border border-indigo-100 uppercase tracking-tighter">
-                                                            Avg: {predictiveInsights?.averageDurations?.find(d => d.resource === queue.resource_name || d.service === queue.name)?.minutes}m
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
                                          </div>
@@ -544,14 +539,14 @@ const AdminLiveQueue = () => {
  
                                               {/* Stats Cards Group */}
                                               <div className="flex gap-2 min-w-0">
-                                                  <div className="min-w-[64px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center flex-shrink-0">
-                                                      <p className="text-[9px] text-slate-400 font-black uppercase tracking-tighter mb-0.5">{t('queue.waiting_status', 'Wait')}</p>
-                                                      <p className="text-sm font-black text-slate-900 leading-none">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending' || a.status === 'waitlisted_urgent').length}</p>
+                                                  <div className="min-w-[70px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center flex-shrink-0">
+                                                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter mb-1">{t('queue.waiting_status', 'Wait')}</p>
+                                                      <p className="text-base font-black text-slate-900 leading-none">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending' || a.status === 'waitlisted_urgent').length}</p>
                                                   </div>
-                                                  <div className="min-w-[72px] bg-slate-900 px-3 py-2 rounded-2xl shadow-sm text-center flex-shrink-0">
-                                                      <p className="text-[9px] text-slate-400 font-black uppercase tracking-tighter mb-0.5">{t('queue.est_wait', 'Est.')}</p>
-                                                      <p className="text-sm font-black text-white leading-none whitespace-nowrap">
-                                                          {predictiveInsights?.currentPredictions?.find(p => p.queue_name === (queue.resource_name || queue.name))?.predicted_total_wait || 0}<span className="text-[9px] ml-0.5 text-slate-400 uppercase font-black">m</span>
+                                                  <div className="min-w-[90px] bg-indigo-600 px-4 py-2 rounded-2xl shadow-md shadow-indigo-100 text-center flex-shrink-0 border border-indigo-500">
+                                                      <p className="text-[10px] text-indigo-100 font-black uppercase tracking-tighter mb-1">Avg. Time</p>
+                                                      <p className="text-base font-black text-white leading-none whitespace-nowrap">
+                                                          {predictiveInsights?.averageDurations?.find(d => d.resource === queue.resource_name || d.service === queue.name)?.minutes || 15}<span className="text-[10px] ml-0.5 text-indigo-200 uppercase font-black">m</span>
                                                       </p>
                                                   </div>
                                               </div>

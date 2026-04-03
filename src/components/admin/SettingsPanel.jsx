@@ -792,11 +792,11 @@ const SettingsPanel = () => {
                     <form onSubmit={handleSave} className="bg-white p-5 md:p-8 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col justify-between">
                         {renderContent()}
                         
-                        <div className="pt-6 mt-6 flex justify-end border-t border-gray-50">
+                        <div className="pt-6 mt-auto flex justify-end border-t border-gray-50 bg-white sticky bottom-0 md:relative z-10 -mx-5 -mb-5 p-5 md:m-0 md:p-0 md:bg-transparent rounded-b-2xl">
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
                             >
                                 {saving ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
                                 {saving ? t('admin.settings.common.saving', 'Saving...') : t('admin.settings.common.save_changes', 'Save Changes')}

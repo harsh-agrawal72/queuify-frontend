@@ -3,7 +3,7 @@ import { api } from '../../services/api';
 import {
     Loader2, Plus, Edit2, ShieldOff, ShieldCheck,
     MoreVertical, LogIn, CreditCard, Trash2, Search,
-    ChevronDown, ChevronUp, MapPin, Info, FileText, Globe, Building2, ExternalLink
+    ChevronDown, ChevronUp, MapPin, Info, FileText, Globe, Building2, ExternalLink, Phone
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -352,7 +352,16 @@ const OrganizationManager = () => {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <p className="text-gray-500 text-xs">{org.contact_email}</p>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <p className="text-gray-500 text-[10px] flex items-center gap-1">
+                                                            <FileText className="h-2.5 w-2.5" /> {org.contact_email}
+                                                        </p>
+                                                        {org.profile_phone && (
+                                                            <p className="text-gray-400 text-[10px] flex items-center gap-1">
+                                                                <Phone className="h-2.5 w-2.5" /> {org.profile_phone}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 border border-gray-200">
@@ -418,6 +427,16 @@ const OrganizationManager = () => {
                                                                         <p className="text-sm text-gray-600">
                                                                             {org.address || org.city ? `${org.address || ''}, ${org.city || ''}, ${org.state || ''} ${org.pincode || ''}` : 'No address provided'}
                                                                         </p>
+                                                                    </div>
+                                                                    {org.profile_phone && (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Phone className="h-4 w-4 text-gray-400" />
+                                                                            <p className="text-sm text-gray-600">{org.profile_phone}</p>
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="flex items-center gap-2">
+                                                                        <FileText className="h-4 w-4 text-gray-400" />
+                                                                        <p className="text-sm text-gray-600">{org.contact_email}</p>
                                                                     </div>
                                                                     {org.website_url && (
                                                                         <div className="flex items-center gap-2 text-blue-600">

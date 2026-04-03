@@ -225,10 +225,10 @@ const WalletDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard 
                     title={t('admin.wallet.total_revenue', 'Total Revenue')} 
-                    amount={parseFloat(wallet?.available_balance || 0) + parseFloat(wallet?.locked_funds || 0)} 
+                    amount={wallet?.total_earned || 0} 
                     icon={Wallet} 
                     color="bg-indigo-500"
-                    subtitle={t('admin.wallet.revenue_hint', 'Includes locked and available funds')}
+                    subtitle={t('admin.wallet.revenue_hint', 'Lifetime verified earnings')}
                 />
                 <StatCard 
                     title={t('admin.wallet.available_balance', 'Available Balance')} 
@@ -260,24 +260,25 @@ const WalletDashboard = () => {
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
                                 {/* Date Range */}
-                                <div className="flex items-center gap-2">
-                                    <div className="relative">
+                                <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-2xl border border-gray-100 shadow-inner">
+                                    <div className="flex items-center bg-white border border-gray-100 rounded-xl px-3 h-10 transition-all focus-within:border-indigo-200 focus-within:ring-2 focus-within:ring-indigo-50 shadow-sm">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2 border-r border-slate-100 pr-2 whitespace-nowrap">{t('common.from', 'From')}</span>
                                         <input 
                                             type="date"
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            className="pl-3 pr-3 py-2 border border-gray-100 rounded-xl text-xs focus:ring-2 focus:ring-indigo-100 outline-none bg-white h-10"
+                                            className="border-none p-0 text-xs focus:ring-0 bg-transparent w-24 sm:w-28 text-slate-600 font-bold"
                                         />
-                                        {!startDate && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none uppercase font-bold tracking-tighter">From</span>}
                                     </div>
-                                    <div className="relative">
+                                    <div className="w-2 h-px bg-slate-200"></div>
+                                    <div className="flex items-center bg-white border border-gray-100 rounded-xl px-3 h-10 transition-all focus-within:border-indigo-200 focus-within:ring-2 focus-within:ring-indigo-50 shadow-sm">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2 border-r border-slate-100 pr-2 whitespace-nowrap">{t('common.to', 'To')}</span>
                                         <input 
                                             type="date"
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
-                                            className="pl-3 pr-3 py-2 border border-gray-100 rounded-xl text-xs focus:ring-2 focus:ring-indigo-100 outline-none bg-white h-10"
+                                            className="border-none p-0 text-xs focus:ring-0 bg-transparent w-24 sm:w-28 text-slate-600 font-bold"
                                         />
-                                        {!endDate && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none uppercase font-bold tracking-tighter">To</span>}
                                     </div>
                                 </div>
 

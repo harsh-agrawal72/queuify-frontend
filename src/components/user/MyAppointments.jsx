@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import ReviewModal from './ReviewModal';
 import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';
+import { generateInvoice } from '../../utils/pdfGenerator';
 
 // ─── Memoized Appointment Item ───
 const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap }) => {
@@ -226,18 +227,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                 {appt.status === 'completed' && (
                                     <button
                                         onClick={async () => {
-                                            const { generateInvoice } = await import('../../utils/pdfGenerator');
-                                            // Construct a temporary org object from appointment data
-                                            const org = {
-                                                name: appt.org_name,
-                                                address: appt.org_address,
-                                                city: '', // Users might not have this in basic appt object
-                                                state: '',
-                                                pincode: '',
-                                                contact_phone: '',
-                                                contact_email: ''
-                                            };
-                                            generateInvoice(appt, org);
+                                            generateInvoice(appt);
                                         }}
                                         className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
                                     >

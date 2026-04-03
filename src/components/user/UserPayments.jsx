@@ -19,29 +19,27 @@ const UserPayments = ({ bookings }) => {
 
     // 1. Calculate Advanced Analytics
     const stats = useMemo(() => {
-        const paidOnly = bookings.filter(b => b.payment_status === 'paid');
-        const refundedOnly = bookings.filter(b => b.payment_status === 'refunded');
+        const spentBookings = bookings.filter(b => b.payment_status === 'paid' || b.payment_status === 'refunded');
         const pending = bookings.filter(b => 
             b.payment_status === 'pending_payment' || 
             (b.status === 'confirmed' && b.payment_status !== 'paid' && b.payment_status !== 'refunded' && parseFloat(b.price) > 0)
         );
         
-        // Net spent = Sum(Prices of Paid) - Sum(Refund Amounts)
-        const totalPaidAmount = paidOnly.reduce((sum, b) => sum + parseFloat(b.price || 0), 0);
-        const totalRefundedAmount = refundedOnly.reduce((sum, b) => sum + parseFloat(b.refund_amount || 0), 0);
-        
-        // For partial refunds that are still marked as 'paid' (if any)
-        const partialRefunds = paidOnly.reduce((sum, b) => sum + parseFloat(b.refund_amount || 0), 0);
-        
-        const totalNetSpent = Math.max(0, totalPaidAmount - totalRefundedAmount - partialRefunds);
-        const totalRefunds = totalRefundedAmount + partialRefunds;
+        // Sum of all successful payments minus any processed refunds
+        const totalNetSpent = spentBookings.reduce((sum, b) => {
+            const paidAmount = parseFloat(b.total_payable || b.price || 0);
+            const refundAmount = parseFloat(b.refund_amount || 0);
+            return sum + Math.max(0, paidAmount - refundAmount);
+        }, 0);
+
+        const totalRefunds = bookings.reduce((sum, b) => sum + parseFloat(b.refund_amount || 0), 0);
 
         return {
             totalNetSpent,
             totalRefunds,
-            pendingAmount: pending.reduce((sum, b) => sum + parseFloat(b.price || 0), 0),
-            paidCount: paidOnly.length,
-            refundCount: refundedOnly.length,
+            pendingAmount: pending.reduce((sum, b) => sum + parseFloat(b.total_payable || b.price || 0), 0),
+            paidCount: bookings.filter(b => b.payment_status === 'paid').length,
+            refundCount: bookings.filter(b => b.payment_status === 'refunded' || parseFloat(b.refund_amount || 0) > 0).length,
             pendingCount: pending.length,
             totalBookings: bookings.length
         };
@@ -60,9 +58,9 @@ const UserPayments = ({ bookings }) => {
             const spentInMonth = bookings
                 .filter(b => (b.payment_status === 'paid' || b.payment_status === 'refunded') && isSameMonth(parseISO(b.created_at || new Date().toISOString()), monthStart))
                 .reduce((sum, b) => {
-                    const price = b.payment_status === 'paid' ? parseFloat(b.price || 0) : 0;
-                    const refund = parseFloat(b.refund_amount || 0);
-                    return sum + (price - refund);
+                    const originalAmount = parseFloat(b.total_payable || b.price || 0);
+                    const refundAmount = parseFloat(b.refund_amount || 0);
+                    return sum + Math.max(0, originalAmount - refundAmount);
                 }, 0);
             
             return {
