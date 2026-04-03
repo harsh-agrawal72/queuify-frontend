@@ -232,8 +232,16 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 }));
             }
 
+            const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+            if (!rzpKey) {
+                console.error('[Payment] Razorpay Key ID is missing!');
+                toast.error("Payment configuration missing. Please contact support.");
+                setLoadingCreation(false);
+                return;
+            }
+
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                key: rzpKey,
                 amount: order.amount,
                 currency: order.currency,
                 name: "Queuify",
@@ -625,19 +633,19 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             <span>{t('booking.wizard.payment.convenience_fee', 'Convenience Fee')}</span>
                             <span>
                                 ₹{pendingAppointment?.breakdown 
-                                    ? (parseFloat(pendingAppointment.breakdown.platformFee) + parseFloat(pendingAppointment.breakdown.transactionFee)).toFixed(2) 
+                                    ? ((parseFloat(pendingAppointment.breakdown.platformFee) || 0) + (parseFloat(pendingAppointment.breakdown.transactionFee) || 0)).toFixed(2) 
                                     : (previewBreakdown.platformFee + previewBreakdown.transactionFee).toFixed(2)}
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-xs text-gray-500">
                             <span>{t('booking.wizard.payment.gst', 'GST (18%)')}</span>
-                            <span>₹{pendingAppointment?.breakdown?.paymentGst || previewBreakdown.paymentGst || 0}</span>
+                            <span>₹{parseFloat(pendingAppointment?.breakdown?.paymentGst || previewBreakdown.paymentGst || 0).toFixed(2)}</span>
                         </div>
                     </div>
 
                     <div className="flex justify-between items-center pt-2 border-t border-indigo-100">
                         <span className="text-gray-900 font-bold">{t('booking.wizard.payment.total', 'Total Amount')}</span>
-                        <span className="text-2xl font-black text-indigo-600 font-mono">₹{pendingAppointment?.total_payable || previewBreakdown.totalPayable || basePrice || 0}</span>
+                        <span className="text-2xl font-black text-indigo-600 font-mono">₹{parseFloat(pendingAppointment?.total_payable || previewBreakdown.totalPayable || basePrice || 0).toFixed(2)}</span>
                     </div>
                 </div>
             </div>

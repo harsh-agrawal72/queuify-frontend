@@ -464,9 +464,9 @@ const AdminLayout = () => {
                                 </div>
                             </div>
                             {user?.role === 'admin' && (
-                                <Link to="/admin/about" className="relative z-10 text-sm font-black bg-amber-600 text-white px-6 py-3 rounded-2xl hover:bg-amber-700 transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-200 uppercase tracking-widest whitespace-nowrap">
+                                <div className="relative z-10 text-xs font-bold text-amber-600 uppercase tracking-widest whitespace-nowrap">
                                     {t('setup.complete_now', 'Complete Now')}
-                                </Link>
+                                </div>
                             )}
                         </div>
                     )}
