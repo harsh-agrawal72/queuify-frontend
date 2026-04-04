@@ -14,37 +14,39 @@ export default function AdminReviews() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRating, setFilterRating] = useState('all');
+    const [pagination, setPagination] = useState({ page: 1, limit: 20, hasMore: false });
+
+    const fetchReviews = async (pageNumber = 1, shouldAppend = false) => {
+        if (!user?.org_id) return;
+        try {
+            if (!shouldAppend) setLoading(true);
+            const res = await apiService.getOrgReviews(user.org_id, { page: pageNumber, limit: 20 });
+            
+            console.log('Admin Reviews Fetched (Page ' + pageNumber + '):', res.data);
+            
+            setStats(res.data.stats);
+            if (shouldAppend) {
+                setReviews(prev => [...prev, ...(res.data.reviews || [])]);
+            } else {
+                setReviews(res.data.reviews || []);
+            }
+            setPagination(res.data.pagination);
+        } catch (err) {
+            console.error("Failed to fetch reviews", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        let mounted = true;
-
-        const fetchReviews = async () => {
-            if (!user?.org_id) return;
-            try {
-                setLoading(true);
-                const res = await apiService.getOrgReviews(user.org_id);
-                if (mounted) {
-                    console.log('Admin Reviews Fetched:', res.data);
-                    setStats(res.data.stats);
-                    setReviews(res.data.reviews || []);
-                }
-            } catch (err) {
-                console.error("Failed to fetch reviews", err);
-            } finally {
-                if (mounted) setLoading(false);
-            }
-        };
-
-        if (user?.org_id) {
-            fetchReviews();
-        } else {
-            setLoading(false); // don't hang if no org_id
-        }
-
-        return () => {
-            mounted = false;
-        };
+        fetchReviews(1, false);
     }, [user?.org_id]);
+
+    const handleLoadMore = () => {
+        if (pagination.hasMore) {
+            fetchReviews(pagination.page + 1, true);
+        }
+    };
 
     const filteredReviews = reviews.filter(review => {
         const matchesSearch = review.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -175,6 +177,17 @@ export default function AdminReviews() {
                     </div>
                 )}
             </div>
+
+            {pagination.hasMore && (
+                <div className="flex justify-center pt-4">
+                    <button
+                        onClick={handleLoadMore}
+                        className="px-6 py-2 bg-white border border-gray-200 text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-colors shadow-sm"
+                    >
+                        Load More Reviews
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
