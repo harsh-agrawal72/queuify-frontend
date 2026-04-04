@@ -234,6 +234,14 @@ const AdminLiveQueue = () => {
         }
     };
 
+    // Fetch services and slots whenever resource changes in manual entry
+    useEffect(() => {
+        if (manualEntryData.resourceId && isManualModalOpen) {
+            fetchSlotsForResource(manualEntryData.resourceId);
+            fetchServicesForResource(manualEntryData.resourceId);
+        }
+    }, [manualEntryData.resourceId, isManualModalOpen]);
+
     // Initial Fetch
     useEffect(() => {
         fetchQueue();
@@ -749,6 +757,7 @@ const AdminLiveQueue = () => {
                             </div>
 
                             <form onSubmit={submitManualEntry} className="space-y-6">
+                                {/* Professional Selection */}
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.professional', 'Professional')}</label>
                                     <select
@@ -758,59 +767,86 @@ const AdminLiveQueue = () => {
                                         onChange={e => {
                                             const newId = e.target.value;
                                             setManualEntryData({ ...manualEntryData, resourceId: newId, slotId: '', serviceId: '' });
-                                            fetchSlotsForResource(newId);
-                                            fetchServicesForResource(newId);
+                                            // Manual trigger for immediate feedback, though useEffect also handles it
+                                            if (newId) {
+                                                fetchSlotsForResource(newId);
+                                                fetchServicesForResource(newId);
+                                            }
                                         }}
                                     >
                                         <option value="">{t('queue.select_professional', 'Select professional')}</option>
                                         {queues.map(q => (
-                                            <option key={q.resource_id} value={q.resource_id}>{q.resource_name}</option>
+                                            <option key={q.resource_id || q.id} value={q.resource_id || q.id}>{q.resource_name || q.name}</option>
                                         ))}
                                     </select>
                                 </div>
 
+                                {/* Service Selection */}
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.service', 'Service')}</label>
-                                    <select
-                                        required
-                                        disabled={!manualEntryData.resourceId || isLoadingServices}
-                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 disabled:opacity-50 disabled:bg-slate-50"
-                                        value={manualEntryData.serviceId}
-                                        onChange={e => setManualEntryData({ ...manualEntryData, serviceId: e.target.value })}
-                                    >
-                                        <option value="">
-                                            {isLoadingServices ? t('common.loading', 'Loading...') : t('queue.select_service', 'Select service')}
-                                        </option>
-                                        {availableServicesForManual.map(svc => (
-                                            <option key={svc.id} value={svc.id}>
-                                                {svc.name} - ₹{svc.price} ({svc.estimated_service_time}m)
+                                    <div className="relative">
+                                        <select
+                                            required
+                                            className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 disabled:opacity-50 disabled:bg-slate-50 appearance-none"
+                                            value={manualEntryData.serviceId}
+                                            onChange={e => setManualEntryData({ ...manualEntryData, serviceId: e.target.value })}
+                                            disabled={!manualEntryData.resourceId || isLoadingServices}
+                                        >
+                                            <option value="">
+                                                {isLoadingServices ? t('common.loading', 'Loading...') : t('queue.select_service', 'Select service')}
                                             </option>
-                                        ))}
-                                    </select>
-                                    {manualEntryData.resourceId && availableServicesForManual.length === 0 && !isLoadingServices && (
+                                            {availableServicesForManual && availableServicesForManual.length > 0 ? (
+                                                availableServicesForManual.map(svc => (
+                                                    <option key={svc.id} value={svc.id}>
+                                                        {svc.name} - ₹{svc.price} ({svc.estimated_service_time}m)
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                !isLoadingServices && manualEntryData.resourceId && (
+                                                    <option value="" disabled>-- No services linked to this professional --</option>
+                                                )
+                                            )}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <div className="h-2 w-2 border-r-2 border-b-2 border-slate-400 rotate-45 transform" />
+                                        </div>
+                                    </div>
+                                    {manualEntryData.resourceId && !isLoadingServices && availableServicesForManual.length === 0 && (
                                         <p className="text-[10px] text-rose-500 font-bold ml-1">{t('queue.no_services_found', 'No services linked to this professional')}</p>
                                     )}
                                 </div>
 
+                                {/* Slot Selection */}
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.time_slot', 'Time Slot')}</label>
-                                    <select
-                                        required
-                                        disabled={!manualEntryData.resourceId || isLoadingSlots}
-                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 disabled:opacity-50 disabled:bg-slate-50"
-                                        value={manualEntryData.slotId}
-                                        onChange={e => setManualEntryData({ ...manualEntryData, slotId: e.target.value })}
-                                    >
-                                        <option value="">
-                                            {isLoadingSlots ? t('common.loading', 'Loading...') : t('queue.select_slot', 'Select time slot')}
-                                        </option>
-                                        {availableSlotsForManual.map(slot => (
-                                            <option key={slot.id} value={slot.id}>
-                                                {new Date(slot.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    <div className="relative">
+                                        <select
+                                            required
+                                            className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 disabled:opacity-50 disabled:bg-slate-50 appearance-none"
+                                            value={manualEntryData.slotId}
+                                            onChange={e => setManualEntryData({ ...manualEntryData, slotId: e.target.value })}
+                                            disabled={!manualEntryData.resourceId || isLoadingSlots}
+                                        >
+                                            <option value="">
+                                                {isLoadingSlots ? t('common.loading', 'Loading...') : t('queue.select_slot', 'Select time slot')}
                                             </option>
-                                        ))}
-                                    </select>
-                                    {manualEntryData.resourceId && availableSlotsForManual.length === 0 && !isLoadingSlots && (
+                                            {availableSlotsForManual && availableSlotsForManual.length > 0 ? (
+                                                availableSlotsForManual.map(slot => (
+                                                    <option key={slot.id} value={slot.id}>
+                                                        {new Date(slot.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                !isLoadingSlots && manualEntryData.resourceId && (
+                                                    <option value="" disabled>-- No slots available for today --</option>
+                                                )
+                                            )}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <div className="h-2 w-2 border-r-2 border-b-2 border-slate-400 rotate-45 transform" />
+                                        </div>
+                                    </div>
+                                    {manualEntryData.resourceId && !isLoadingSlots && availableSlotsForManual.length === 0 && (
                                         <p className="text-[10px] text-rose-500 font-bold ml-1">{t('queue.no_slots_today', 'No slots available for today')}</p>
                                     )}
                                 </div>

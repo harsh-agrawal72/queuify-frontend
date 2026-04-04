@@ -8,10 +8,13 @@ import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 import QueueVisualization from '../../components/user/QueueVisualization';
 import { getSocket } from '../../services/socketService';
+import ReceiptModal from '../../components/user/ReceiptModal';
+import { FileText } from 'lucide-react';
 
 const MyAppointments = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedAppointmentForReceipt, setSelectedAppointmentForReceipt] = useState(null);
 
     const fetchAppointments = async () => {
         try {
@@ -146,12 +149,32 @@ const MyAppointments = () => {
 
                                         {appt.status !== 'cancelled' && appt.status !== 'completed' && (
                                             <div className="flex items-center gap-3 border-t md:border-t-0 pt-4 md:pt-0">
+                                                {['confirmed', 'serving'].includes(appt.status) && (
+                                                    <button
+                                                        onClick={() => setSelectedAppointmentForReceipt(appt)}
+                                                        className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-2"
+                                                    >
+                                                        <FileText className="h-4 w-4" />
+                                                        Receipt
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleCancel(appt.id)}
                                                     className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2"
                                                 >
                                                     <XCircle className="h-4 w-4" />
                                                     Cancel Booking
+                                                </button>
+                                            </div>
+                                        )}
+                                        {appt.status === 'completed' && (
+                                            <div className="flex items-center gap-3 border-t md:border-t-0 pt-4 md:pt-0">
+                                                <button
+                                                    onClick={() => setSelectedAppointmentForReceipt(appt)}
+                                                    className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-2"
+                                                >
+                                                    <FileText className="h-4 w-4" />
+                                                    Get Receipt
                                                 </button>
                                             </div>
                                         )}
@@ -185,6 +208,12 @@ const MyAppointments = () => {
                     )}
                 </AnimatePresence>
             </div>
+
+            <ReceiptModal 
+                isOpen={!!selectedAppointmentForReceipt}
+                onClose={() => setSelectedAppointmentForReceipt(null)}
+                appointment={selectedAppointmentForReceipt}
+            />
         </div>
     );
 };

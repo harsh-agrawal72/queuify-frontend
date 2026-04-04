@@ -36,3 +36,39 @@
     100% { background-position: 200% 0; }
   }
 }
+
+/* Receipt Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-container, .print-container * {
+    visibility: visible;
+  }
+  .print-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 5mm !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Ensure modal backdrop doesn't block printing */
+  .fixed.inset-0 {
+    position: absolute !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  /* Reset scale animations for print */
+  div {
+    transform: none !important;
+    animation: none !important;
+  }
+}
