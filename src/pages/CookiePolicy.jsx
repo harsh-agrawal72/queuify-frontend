@@ -2,8 +2,10 @@ import React from 'react';
 import { Cookie } from 'lucide-react';
 import Footer from '../components/layout/Footer';
 import Navbar from '../components/layout/Navbar';
+import { useTranslation } from 'react-i18next';
 
 const CookiePolicy = () => {
+    const { t } = useTranslation();
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
             <Navbar />

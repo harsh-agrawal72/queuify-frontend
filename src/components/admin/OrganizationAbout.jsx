@@ -209,37 +209,66 @@ const OrganizationAbout = () => {
     return (
         <div className="space-y-8 pb-20">
             {/* Setup Progress Checklist (Only if incomplete) */}
-            {isSetupIncomplete && (
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-indigo-50 border border-indigo-100 p-6 rounded-3xl shadow-sm"
-                >
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-indigo-600 text-white rounded-lg">
-                            <ShieldAlert className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-indigo-900">{t('setup.checklist_title', 'Mandatory Setup Checklist')}</h2>
-                            <p className="text-sm text-indigo-700">{t('setup.checklist_subtitle', 'Please complete the following blocks to unlock all features.')}</p>
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[
-                            { label: t('setup.check_basic', 'Description & Keywords'), done: profile.description && profile.keywords },
-                            { label: t('setup.check_contact', 'Phone & Address'), done: profile.contact_phone && profile.address && profile.city },
-                            { label: t('setup.check_documents', 'Identity (PAN & Aadhar)'), done: profile.images?.some(img => img.image_type === 'pan_card') && profile.images?.some(img => img.image_type === 'aadhar_card') },
-                            { label: t('setup.check_logo', 'Organization Logo'), done: profile.images?.some(img => img.image_type === 'logo') }
-                        ].map((item, idx) => (
-                            <div key={idx} className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${item.done ? 'bg-white border-emerald-100 text-emerald-700' : 'bg-indigo-100/50 border-indigo-200 text-indigo-400'}`}>
-                                {item.done ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertCircle className="h-4 w-4" />}
-                                <span className="text-xs font-bold tracking-tight">{item.label}</span>
+            {isSetupIncomplete && (() => {
+                const checklist = [
+                    { label: t('setup.check_basic', 'Description & Keywords'), done: profile.description && profile.keywords },
+                    { label: t('setup.check_contact', 'Phone & Address'), done: profile.contact_phone && profile.address && profile.city },
+                    { label: t('setup.check_documents', 'Identity (PAN & Aadhar)'), done: profile.images?.some(img => img.image_type === 'pan_card') && profile.images?.some(img => img.image_type === 'aadhar_card') },
+                    { label: t('setup.check_logo', 'Organization Logo'), done: profile.images?.some(img => img.image_type === 'logo') }
+                ];
+                const isAllDone = checklist.every(item => item.done);
+
+                return (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`p-6 rounded-3xl shadow-sm border transition-all duration-500 ${
+                            isAllDone ? "bg-emerald-50 border-emerald-100" : "bg-indigo-50 border-indigo-100"
+                        }`}
+                    >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className={`p-3 rounded-2xl shadow-lg transition-colors ${
+                                    isAllDone ? "bg-emerald-600 text-white" : "bg-indigo-600 text-white"
+                                }`}>
+                                    {isAllDone ? <CheckCircle2 className="h-6 w-6" /> : <ShieldAlert className="h-6 w-6" />}
+                                </div>
+                                <div>
+                                    <h2 className={`text-lg font-black tracking-tight ${
+                                        isAllDone ? "text-emerald-900" : "text-indigo-900"
+                                    }`}>
+                                        {isAllDone 
+                                            ? t('setup.all_set_title', 'You are all set!') 
+                                            : t('setup.checklist_title', 'Mandatory Setup Checklist')
+                                        }
+                                    </h2>
+                                    <p className={`text-sm font-medium ${
+                                        isAllDone ? "text-emerald-700" : "text-indigo-700"
+                                    }`}>
+                                        {isAllDone 
+                                            ? t('setup.all_set_subtitle', 'We will verify your details ASAP, then you can use all your features.') 
+                                            : t('setup.checklist_subtitle', 'Please complete the following blocks to unlock all features.')
+                                        }
+                                    </p>
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                </motion.div>
-            )}
+
+                            {!isAllDone && (
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                    {checklist.map((item, idx) => (
+                                        <div key={idx} className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                                            item.done ? "bg-white border-emerald-100 text-emerald-700" : "bg-indigo-100/50 border-indigo-200 text-indigo-400"
+                                        }`}>
+                                            {item.done ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <AlertCircle className="h-3.5 w-3.5" />}
+                                            <span className="text-[10px] font-black uppercase tracking-tight">{item.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                );
+            })()}
 
             {/* Header & Verification Status */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-800 text-white">
