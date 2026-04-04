@@ -61,95 +61,75 @@ const WalletDashboard = () => {
         return () => clearTimeout(timer);
     }, [search]);
 
-    const fetchWalletStatus = async () => {
+    const fetchWalletData = async (isInitial = false) => {
+        if (isInitial) setLoading(true);
+        else setTransLoading(true);
+
         try {
-            const [walletRes, orgRes] = await Promise.all([
-                api.get('/payments/status'),
-                api.get('/admin/org')
-            ]);
-            setWallet(walletRes.data);
-            
-            if (orgRes.data && (orgRes.data.payout_account_number || orgRes.data.payout_upi_id)) {
-                setPayoutForm(prev => ({
-                    ...prev,
-                    bankDetails: {
-                        accountHolder: orgRes.data.payout_account_holder || '',
-                        accountNumber: orgRes.data.payout_account_number || '',
-                        ifsc: orgRes.data.payout_ifsc || '',
-                        bankName: orgRes.data.payout_bank_name || '',
-                        upiId: orgRes.data.payout_upi_id || ''
-                    }
-                }));
+            const params = {
+                limit: itemsPerPage,
+                offset: (currentPage - 1) * itemsPerPage,
+                search: debouncedSearch,
+                type: typeFilter,
+                status: statusFilter,
+                startDate,
+                endDate
+            };
+
+            if (isInitial) {
+                // 🚀 Parallel INITIAL load: Status + Org (bank info) + First Page of Transactions
+                const [walletRes, orgRes, transRes] = await Promise.all([
+                    api.get('/payments/status'),
+                    api.get('/admin/org'),
+                    api.get('/payments/transactions', { params })
+                ]);
+
+                setWallet(walletRes.data);
+                if (orgRes.data && (orgRes.data.payout_account_number || orgRes.data.payout_upi_id)) {
+                    setPayoutForm(prev => ({
+                        ...prev,
+                        bankDetails: {
+                            accountHolder: orgRes.data.payout_account_holder || '',
+                            accountNumber: orgRes.data.payout_account_number || '',
+                            ifsc: orgRes.data.payout_ifsc || '',
+                            bankName: orgRes.data.payout_bank_name || '',
+                            upiId: orgRes.data.payout_upi_id || ''
+                        }
+                    }));
+                }
+                setTransactions(transRes.data.transactions || []);
+                setTotalTransactions(transRes.data.total || 0);
+            } else {
+                // Subsequent updates (pagination/filters) only fetch transactions
+                const transRes = await api.get('/payments/transactions', { params });
+                setTransactions(transRes.data.transactions || []);
+                setTotalTransactions(transRes.data.total || 0);
             }
         } catch (error) {
-            console.error("Wallet status fetch failed", error);
-        }
-    };
-
-    const fetchTransactions = async (isBackground = false) => {
-        if (!isBackground) setTransLoading(true);
-        try {
-            const res = await api.get('/payments/transactions', {
-                params: {
-                    limit: itemsPerPage,
-                    offset: (currentPage - 1) * itemsPerPage,
-                    search: debouncedSearch,
-                    type: typeFilter,
-                    status: statusFilter,
-                    startDate,
-                    endDate
-                }
-            });
-            setTransactions(res.data.transactions || []);
-            setTotalTransactions(res.data.total || 0);
-        } catch (error) {
-            toast.error(t('admin.wallet.load_failed', 'Failed to load transactions'));
+            console.error("Wallet data fetch failed", error);
+            toast.error(t('admin.wallet.load_failed', 'Failed to load wallet information'));
         } finally {
-            setTransLoading(false);
             setLoading(false);
-        }
-    };
-
-    const handleExport = async () => {
-        setIsExporting(true);
-        try {
-            const response = await api.get('/payments/transactions/export', {
-                params: {
-                    search: debouncedSearch,
-                    type: typeFilter,
-                    status: statusFilter,
-                    startDate,
-                    endDate
-                },
-                responseType: 'blob'
-            });
-
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `transactions_report_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            toast.success(t('admin.wallet.export_success', 'Report downloaded successfully'));
-        } catch (error) {
-            toast.error(t('admin.wallet.export_failed', 'Failed to download report'));
-        } finally {
-            setIsExporting(false);
+            setTransLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchWalletStatus();
+        fetchWalletData(true);
     }, []);
 
     useEffect(() => {
-        fetchTransactions();
+        // Only re-fetch if NOT the initial load (which is already handled by the first useEffect)
+        if (!loading) {
+            fetchWalletData(false);
+        }
     }, [currentPage, debouncedSearch, typeFilter, statusFilter, startDate, endDate]);
 
     // Reset to page 1 on filter change
     useEffect(() => {
-        setCurrentPage(1);
+        if (!loading) {
+            setCurrentPage(1);
+        }
     }, [debouncedSearch, typeFilter, statusFilter, startDate, endDate]);
 
     const handlePayoutRequest = async (e) => {

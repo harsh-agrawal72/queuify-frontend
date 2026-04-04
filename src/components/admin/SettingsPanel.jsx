@@ -73,50 +73,45 @@ const SettingsPanel = () => {
     });
 
     useEffect(() => {
-        const fetchSettings = async () => {
+        const fetchInitialData = async () => {
             try {
-                const res = await api.get('/admin/org');
-                if (res.data) {
+                const [settingsRes, adminsRes] = await Promise.all([
+                    api.get('/admin/org'),
+                    api.get('/admin/admins')
+                ]);
+
+                if (settingsRes.data) {
                     setFormData({
-                        name: res.data.name || '',
-                        email: res.data.contact_email || res.data.email || '',
-                        phone: res.data.phone || '',
-                        address: res.data.address || '',
-                        openTime: res.data.open_time || '09:00',
-                        closeTime: res.data.close_time || '17:00',
-                        queue_mode_default: res.data.queue_mode_default || 'CENTRAL',
-                        payout_bank_name: res.data.payout_bank_name || '',
-                        payout_account_holder: res.data.payout_account_holder || '',
-                        payout_account_number: res.data.payout_account_number || '',
-                        payout_ifsc: res.data.payout_ifsc || '',
-                        payout_upi_id: res.data.payout_upi_id || ''
+                        name: settingsRes.data.name || '',
+                        email: settingsRes.data.contact_email || settingsRes.data.email || '',
+                        phone: settingsRes.data.phone || '',
+                        address: settingsRes.data.address || '',
+                        openTime: settingsRes.data.open_time || '09:00',
+                        closeTime: settingsRes.data.close_time || '17:00',
+                        queue_mode_default: settingsRes.data.queue_mode_default || 'CENTRAL',
+                        payout_bank_name: settingsRes.data.payout_bank_name || '',
+                        payout_account_holder: settingsRes.data.payout_account_holder || '',
+                        payout_account_number: settingsRes.data.payout_account_number || '',
+                        payout_ifsc: settingsRes.data.payout_ifsc || '',
+                        payout_upi_id: settingsRes.data.payout_upi_id || ''
                     });
-                    setOrgName(res.data.name || '');
-                    setOrgSlug(res.data.slug || '');
+                    setOrgName(settingsRes.data.name || '');
+                    setOrgSlug(settingsRes.data.slug || '');
                     setNotifications({
-                        emailAlerts: res.data.email_notification ?? true,
-                        newBookingNotify: res.data.new_booking_notification ?? true
+                        emailAlerts: settingsRes.data.email_notification ?? true,
+                        newBookingNotify: settingsRes.data.new_booking_notification ?? true
                     });
                 }
+                setAdmins(adminsRes.data || []);
             } catch (error) {
-                console.error("Failed to fetch settings", error);
-                toast.error(t('admin.settings.load_failed', 'Failed to load organization details'));
+                console.error("Failed to fetch initial settings data", error);
+                toast.error(t('admin.settings.load_failed', 'Failed to load organization settings'));
             } finally {
                 setLoading(false);
             }
         };
 
-        const fetchAdmins = async () => {
-            try {
-                const res = await api.get('/admin/admins');
-                setAdmins(res.data);
-            } catch (error) {
-                console.error("Failed to fetch admins", error);
-            }
-        };
-
-        fetchSettings();
-        fetchAdmins();
+        fetchInitialData();
     }, []);
 
     const handleInviteAdmin = async (e) => {
