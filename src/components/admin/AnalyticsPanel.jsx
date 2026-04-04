@@ -801,7 +801,7 @@ const AnalyticsPanel = () => {
                                     <div className="relative">
                                         <select value={resourceId} onChange={e => setResourceId(e.target.value)}
                                             className="appearance-none border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none min-w-[160px]">
-                                            <option value="">{t('resource.all_resources', 'All Resources')}</option>
+                                            <option value="">{t('resource_mgmt.all_resources', 'All Resources')}</option>
                                             {resources.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                                         </select>
                                         <ChevronDown className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
