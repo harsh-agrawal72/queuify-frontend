@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -15,13 +15,39 @@ import {
     IndianRupee,
     Loader2,
     Search,
-    Filter,
     ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
+
+// 🚀 Move StatCard outside to prevent re-definitions and potential hook-related white screens
+const StatCard = ({ title, amount, icon: Icon, color, subtitle, t }) => (
+    <motion.div 
+        whileHover={{ y: -5 }}
+        className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group"
+    >
+        <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-5 transition-transform group-hover:scale-150 duration-500 ${color}`} />
+        <div className="flex justify-between items-start mb-4">
+            <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
+                <Icon className={`h-6 w-6 ${color.replace('bg-', 'text-')}`} />
+            </div>
+            <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-full">
+                <TrendingUp className="h-3 w-3" />
+                +12%
+            </div>
+        </div>
+        <div>
+            <p className="text-gray-500 text-sm font-medium">{title}</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1 flex items-center">
+                <IndianRupee className="h-5 w-5 mr-0.5" />
+                {parseFloat(amount || 0).toLocaleString(t('common.locale', 'en-IN'))}
+            </h3>
+            {subtitle && <p className="text-xs text-gray-400 mt-2">{subtitle}</p>}
+        </div>
+    </motion.div>
+);
 
 const WalletDashboard = () => {
     const { t } = useTranslation();
@@ -77,7 +103,7 @@ const WalletDashboard = () => {
             };
 
             if (isInitial) {
-                // 🚀 Parallel INITIAL load: Status + Org (bank info) + First Page of Transactions
+                // 🚀 Parallel INITIAL load
                 const [walletRes, orgRes, transRes] = await Promise.all([
                     api.get('/payments/status'),
                     api.get('/admin/org'),
@@ -100,13 +126,13 @@ const WalletDashboard = () => {
                 setTransactions(transRes.data.transactions || []);
                 setTotalTransactions(transRes.data.total || 0);
             } else {
-                // Subsequent updates (pagination/filters) only fetch transactions
                 const transRes = await api.get('/payments/transactions', { params });
                 setTransactions(transRes.data.transactions || []);
                 setTotalTransactions(transRes.data.total || 0);
             }
         } catch (error) {
             console.error("Wallet data fetch failed", error);
+            // Don't crash, just show error
             toast.error(t('admin.wallet.load_failed', 'Failed to load wallet information'));
         } finally {
             setLoading(false);
@@ -114,18 +140,19 @@ const WalletDashboard = () => {
         }
     };
 
+    // Initial Load
     useEffect(() => {
         fetchWalletData(true);
     }, []);
 
+    // Subsequent updates (avoid double fetch on mount)
     useEffect(() => {
-        // Only re-fetch if NOT the initial load (which is already handled by the first useEffect)
         if (!loading) {
             fetchWalletData(false);
         }
     }, [currentPage, debouncedSearch, typeFilter, statusFilter, startDate, endDate]);
 
-    // Reset to page 1 on filter change
+    // Reset page on filter change
     useEffect(() => {
         if (!loading) {
             setCurrentPage(1);
@@ -143,10 +170,38 @@ const WalletDashboard = () => {
             await api.post('/payments/payout', payoutForm);
             toast.success(t('admin.wallet.payout_request_success', 'Payout request submitted successfully'));
             setIsPayoutModalOpen(false);
-            fetchWalletStatus();
-            fetchTransactions();
+            fetchWalletData(true); 
         } catch (error) {
             toast.error(error.response?.data?.message || t('admin.wallet.payout_request_failed', 'Payout request failed'));
+        }
+    };
+
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            const response = await api.get('/payments/transactions/export', {
+                params: {
+                    search: debouncedSearch,
+                    type: typeFilter,
+                    status: statusFilter,
+                    startDate,
+                    endDate
+                },
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `transactions_report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success(t('admin.wallet.export_success', 'Report downloaded successfully'));
+        } catch (error) {
+            toast.error(t('admin.wallet.export_failed', 'Failed to download report'));
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -157,32 +212,6 @@ const WalletDashboard = () => {
             </div>
         );
     }
-
-    const StatCard = ({ title, amount, icon: Icon, color, subtitle }) => (
-        <motion.div 
-            whileHover={{ y: -5 }}
-            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group"
-        >
-            <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-5 transition-transform group-hover:scale-150 duration-500 ${color}`} />
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
-                    <Icon className={`h-6 w-6 ${color.replace('bg-', 'text-')}`} />
-                </div>
-                <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-full">
-                    <TrendingUp className="h-3 w-3" />
-                    +12%
-                </div>
-            </div>
-            <div>
-                <p className="text-gray-500 text-sm font-medium">{title}</p>
-                <h3 className="text-2xl font-bold text-gray-900 mt-1 flex items-center">
-                    <IndianRupee className="h-5 w-5 mr-0.5" />
-                    {parseFloat(amount).toLocaleString(t('common.locale', 'en-IN'))}
-                </h3>
-                {subtitle && <p className="text-xs text-gray-400 mt-2">{subtitle}</p>}
-            </div>
-        </motion.div>
-    );
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-12">
@@ -209,6 +238,7 @@ const WalletDashboard = () => {
                     icon={Wallet} 
                     color="bg-indigo-500"
                     subtitle={t('admin.wallet.revenue_hint', 'Lifetime verified earnings')}
+                    t={t}
                 />
                 <StatCard 
                     title={t('admin.wallet.available_balance', 'Available Balance')} 
@@ -216,6 +246,7 @@ const WalletDashboard = () => {
                     icon={CheckCircle2} 
                     color="bg-emerald-500"
                     subtitle={t('admin.wallet.ready_for_payout', 'Ready for payout transfer')}
+                    t={t}
                 />
                 <StatCard 
                     title={t('admin.wallet.locked_escrow', 'Locked in Escrow')} 
@@ -223,6 +254,7 @@ const WalletDashboard = () => {
                     icon={Lock} 
                     color="bg-amber-500"
                     subtitle={t('admin.wallet.locked_hint', 'Pending check-in verification')}
+                    t={t}
                 />
             </div>
 
@@ -231,7 +263,7 @@ const WalletDashboard = () => {
                 {/* Transaction History */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div className="px-6 py-6 border-b border-gray-50 flex items-center justify-between">
+                        <div className="px-6 py-6 border-b border-gray-50 flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-gray-50 rounded-lg text-gray-600">
                                     <History className="h-5 w-5" />
@@ -239,85 +271,48 @@ const WalletDashboard = () => {
                                 <h2 className="text-lg font-bold text-gray-900">{t('admin.wallet.ledger', 'Transaction Ledger')}</h2>
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
-                                {/* Date Range */}
-                                <div className="flex items-center gap-2 bg-gray-50/50 p-1 rounded-2xl border border-gray-100 shadow-inner">
-                                    <div className="flex items-center bg-white border border-gray-100 rounded-xl px-3 h-10 transition-all focus-within:border-indigo-200 focus-within:ring-2 focus-within:ring-indigo-50 shadow-sm">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2 border-r border-slate-100 pr-2 whitespace-nowrap">{t('common.from', 'From')}</span>
-                                        <input 
-                                            type="date"
-                                            value={startDate}
-                                            onChange={(e) => setStartDate(e.target.value)}
-                                            className="border-none p-0 text-xs focus:ring-0 bg-transparent w-24 sm:w-28 text-slate-600 font-bold"
-                                        />
-                                    </div>
-                                    <div className="w-2 h-px bg-slate-200"></div>
-                                    <div className="flex items-center bg-white border border-gray-100 rounded-xl px-3 h-10 transition-all focus-within:border-indigo-200 focus-within:ring-2 focus-within:ring-indigo-50 shadow-sm">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2 border-r border-slate-100 pr-2 whitespace-nowrap">{t('common.to', 'To')}</span>
-                                        <input 
-                                            type="date"
-                                            value={endDate}
-                                            onChange={(e) => setEndDate(e.target.value)}
-                                            className="border-none p-0 text-xs focus:ring-0 bg-transparent w-24 sm:w-28 text-slate-600 font-bold"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="relative group">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
-                                    <input 
-                                        type="text"
-                                        placeholder={t('common.search', 'Search transactions...')}
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-9 pr-4 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-48 transition-all h-10"
-                                    />
-                                </div>
-                                <select 
-                                    value={typeFilter}
-                                    onChange={(e) => setTypeFilter(e.target.value)}
-                                    className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
-                                >
-                                    <option value="">{t('common.all_types', 'All Types')}</option>
-                                    <option value="credit">{t('common.credits', 'Credits')}</option>
-                                    <option value="payout">{t('common.payouts', 'Payouts')}</option>
-                                    <option value="refund">{t('common.refunds', 'Refunds')}</option>
-                                </select>
-                                <select 
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
-                                >
-                                    <option value="">{t('common.all_status', 'All Status')}</option>
-                                    <option value="pending">{t('status.pending', 'Pending')}</option>
-                                    <option value="completed">{t('status.completed', 'Completed')}</option>
-                                    <option value="rejected">{t('status.rejected', 'Rejected')}</option>
-                                    <option value="failed">{t('status.failed', 'Failed')}</option>
-                                </select>
-
                                 <button 
                                     onClick={handleExport}
-                                    disabled={isExporting || transactions.length === 0}
+                                    disabled={isExporting || (transactions && transactions.length === 0)}
                                     className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all active:scale-95 disabled:opacity-50 h-10"
                                 >
                                     {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4 rotate-180" />}
-                                    {t('admin.wallet.download_csv', 'Download CSV')}
+                                    {t('admin.wallet.download_csv', 'CSV')}
                                 </button>
-
-                                {(search || typeFilter || statusFilter || startDate || endDate) && (
-                                    <button 
-                                        onClick={() => { 
-                                            setSearch(''); 
-                                            setTypeFilter(''); 
-                                            setStatusFilter(''); 
-                                            setStartDate(''); 
-                                            setEndDate(''); 
-                                        }}
-                                        className="text-xs font-bold text-indigo-600 hover:text-indigo-700 px-2"
-                                    >
-                                        {t('common.clear', 'Clear')}
-                                    </button>
-                                )}
                             </div>
+                        </div>
+
+                        {/* Filters Row */}
+                        <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-50 flex flex-wrap gap-4 items-center">
+                            <div className="relative group min-w-[200px]">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                                <input 
+                                    type="text"
+                                    placeholder={t('common.search', 'Search transactions...')}
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="pl-9 pr-4 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-full transition-all h-10 bg-white"
+                                />
+                            </div>
+                            <select 
+                                value={typeFilter}
+                                onChange={(e) => setTypeFilter(e.target.value)}
+                                className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
+                            >
+                                <option value="">{t('common.all_types', 'All Types')}</option>
+                                <option value="credit">{t('common.credits', 'Credits')}</option>
+                                <option value="payout">{t('common.payouts', 'Payouts')}</option>
+                                <option value="refund">{t('common.refunds', 'Refunds')}</option>
+                            </select>
+                            <select 
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
+                            >
+                                <option value="">{t('common.all_status', 'All Status')}</option>
+                                <option value="pending">{t('status.pending', 'Pending')}</option>
+                                <option value="completed">{t('status.completed', 'Completed')}</option>
+                            </select>
                         </div>
 
                         <div className="overflow-x-auto">
@@ -325,8 +320,7 @@ const WalletDashboard = () => {
                                 <thead className="bg-gray-50/50">
                                     <tr>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.type', 'Type')}</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.customer', 'Customer')}</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.service', 'Service')} & {t('common.transaction', 'Transaction')}</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.details', 'Details')}</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.amount', 'Amount')}</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.status', 'Status')}</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-widest">{t('common.date', 'Date')}</th>
@@ -334,12 +328,12 @@ const WalletDashboard = () => {
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     <AnimatePresence>
-                                        {transactions.map((tx, idx) => (
+                                        {(transactions || []).map((tx, idx) => (
                                             <motion.tr 
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
-                                                key={tx.id} 
+                                                key={tx.id || idx} 
                                                 className="hover:bg-gray-50/50 transition-colors group"
                                             >
                                                 <td className="px-6 py-4">
@@ -348,17 +342,8 @@ const WalletDashboard = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm font-semibold text-gray-900">{tx.customer_name || t('common.system', 'System')}</p>
-                                                    <p className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">{tx.customer_email || t('admin.wallet.internal_tx', 'Internal Transaction')}</p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-sm font-semibold text-gray-900">{tx.service_name || tx.description}</p>
-                                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                                        <p className="text-[10px] text-indigo-500 uppercase font-black tracking-tight bg-indigo-50 px-1.5 py-0.5 rounded">
-                                                            {tx.razorpay_payment_id || `REF: ${tx.reference_id?.substring(0,8)}`}
-                                                        </p>
-                                                        {tx.razorpay_payment_id && <span className="text-[9px] text-gray-300 font-bold uppercase">Razorpay</span>}
-                                                    </div>
+                                                    <p className="text-sm font-semibold text-gray-900">{tx.service_name || tx.description || 'Transaction'}</p>
+                                                    <p className="text-[10px] text-gray-400 font-medium">{tx.customer_name || 'System'}</p>
                                                 </td>
                                                 <td className="px-6 py-4 font-bold text-sm text-gray-900 whitespace-nowrap">
                                                     {tx.type === 'credit' ? '+' : '-'}₹{tx.amount}
@@ -372,39 +357,33 @@ const WalletDashboard = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-xs text-gray-500 font-medium whitespace-nowrap">
-                                                    {tx.created_at ? (() => {
-                                                        try {
-                                                            const date = new Date(tx.created_at);
-                                                            return isNaN(date.getTime()) ? 'N/A' : format(date, t('common.date_format_short', 'MMM dd, HH:mm'));
-                                                        } catch (e) {
-                                                            return 'N/A';
-                                                        }
-                                                    })() : 'N/A'}
+                                                    {tx.created_at ? format(new Date(tx.created_at), 'MMM dd, HH:mm') : 'N/A'}
                                                 </td>
                                             </motion.tr>
                                         ))}
                                     </AnimatePresence>
                                 </tbody>
                             </table>
-                            {transLoading ? (
+                            {transLoading && (
                                 <div className="flex items-center justify-center py-20">
                                     <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
                                 </div>
-                            ) : transactions.length === 0 ? (
+                            )}
+                            {(!transactions || transactions.length === 0) && !transLoading && (
                                 <div className="py-20 text-center space-y-3">
                                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
                                         <History className="h-8 w-8 text-gray-300" />
                                     </div>
                                     <p className="text-gray-400 text-sm font-medium">{t('admin.wallet.no_transactions', 'No transactions found')}</p>
                                 </div>
-                            ) : null}
+                            )}
                         </div>
 
                         {/* Pagination Footer */}
                         {totalTransactions > itemsPerPage && (
                             <div className="px-6 py-4 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
                                 <p className="text-xs text-gray-500 font-medium">
-                                    {t('common.showing_range', 'Showing {{start}} to {{end}} of {{total}} transactions', {
+                                    {t('common.showing_range', 'Showing {{start}} to {{end}} of {{total}}', {
                                         start: (currentPage - 1) * itemsPerPage + 1,
                                         end: Math.min(currentPage * itemsPerPage, totalTransactions),
                                         total: totalTransactions
@@ -414,14 +393,14 @@ const WalletDashboard = () => {
                                     <button 
                                         disabled={currentPage === 1}
                                         onClick={() => setCurrentPage(p => p - 1)}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all font-sans"
                                     >
-                                        {t('common.previous', 'Previous')}
+                                        {t('common.previous', 'Prev')}
                                     </button>
                                     <button 
                                         disabled={currentPage * itemsPerPage >= totalTransactions}
                                         onClick={() => setCurrentPage(p => p + 1)}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all font-sans"
                                     >
                                         {t('common.next', 'Next')}
                                     </button>
@@ -431,7 +410,7 @@ const WalletDashboard = () => {
                     </div>
                 </div>
 
-                {/* Right Panel: Payout Summary & Cards */}
+                {/* Right Panel: Payout Summary */}
                 <div className="space-y-6">
                     <div className="bg-gradient-to-br from-indigo-900 to-indigo-700 p-8 rounded-3xl text-white relative overflow-hidden shadow-xl shadow-indigo-100">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -439,7 +418,7 @@ const WalletDashboard = () => {
                         </div>
                         <div className="relative z-10 space-y-6">
                             <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold uppercase tracking-widest opacity-60">{t('admin.wallet.verified_revenue', 'Verified Revenue')}</span>
+                                <span className="text-xs font-bold uppercase tracking-widest opacity-60">{t('admin.wallet.verified_revenue', 'Verified Balance')}</span>
                                 <CreditCard className="h-5 w-5 opacity-60" />
                             </div>
                             <div>
@@ -447,18 +426,6 @@ const WalletDashboard = () => {
                                     <span className="text-xl mr-1 opacity-60">₹</span>
                                     {parseFloat(wallet?.available_balance || 0).toLocaleString(t('common.locale', 'en-IN'))}
                                 </h1>
-                                <p className="text-xs text-indigo-300 font-medium mt-2">{t('admin.wallet.withdrawal_limit', 'Maximum withdrawal limit: ₹50,000/day')}</p>
-                            </div>
-                            <div className="pt-4 flex items-center gap-2">
-                                <div className="h-2 flex-1 bg-white/10 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] transition-all duration-1000" 
-                                        style={{ width: `${Math.min(100, ((parseFloat(wallet?.available_balance || 0) / 50000) * 100)).toFixed(1)}%` }}
-                                    />
-                                </div>
-                                <span className="text-[10px] font-bold">
-                                    {Math.min(100, ((parseFloat(wallet?.available_balance || 0) / 50000) * 100)).toFixed(1)}%
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -475,7 +442,7 @@ const WalletDashboard = () => {
                             onClick={() => setIsPayoutModalOpen(true)}
                             className="w-full text-xs font-bold text-indigo-600 bg-indigo-50 py-3 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 group"
                         >
-                            {t('admin.wallet.request_now', 'Request a Payout Now')}
+                            {t('admin.wallet.request_now', 'Request Payout')}
                             <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>
@@ -501,7 +468,7 @@ const WalletDashboard = () => {
                         >
                             <div className="p-8 space-y-6">
                                 <div className="flex justify-between items-center">
-                                    <h2 className="text-xl font-black text-gray-900">{t('admin.wallet.modal_title', 'Request Fund Transfer')}</h2>
+                                    <h2 className="text-xl font-black text-gray-900">{t('admin.wallet.modal_title', 'Transfer Funds')}</h2>
                                     <button onClick={() => setIsPayoutModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                         <XCircle className="h-6 w-6 text-gray-400" />
                                     </button>
@@ -509,7 +476,7 @@ const WalletDashboard = () => {
 
                                 <form onSubmit={handlePayoutRequest} className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('admin.wallet.withdraw_amount', 'Amount to Withdraw (Min. ₹500)')}</label>
+                                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">{t('admin.wallet.withdraw_amount', 'Amount (Min. ₹500)')}</label>
                                         <div className="relative">
                                             <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                             <input 
@@ -522,35 +489,24 @@ const WalletDashboard = () => {
                                                 onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
                                             />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 mt-2 ml-1">{t('admin.wallet.available_balance', 'Available Balance')}: ₹{wallet?.available_balance || 0}</p>
                                     </div>
 
                                     <div className="space-y-4 pt-2">
-                                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t('admin.wallet.destination', 'Transfer Destination')}</p>
+                                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{t('admin.wallet.destination', 'Destination')}</p>
                                         {payoutForm.bankDetails.accountNumber ? (
                                             <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                                                        <CreditCard className="h-4 w-4 text-indigo-600" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{t('admin.wallet.saved_account', 'Saved Bank Account')}</p>
-                                                        <p className="text-sm font-bold text-indigo-900 truncate">
-                                                            {payoutForm.bankDetails.bankName} •••• {payoutForm.bankDetails.accountNumber.slice(-4)}
-                                                        </p>
-                                                        <p className="text-[10px] text-indigo-700 font-medium">{payoutForm.bankDetails.accountHolder}</p>
-                                                    </div>
-                                                </div>
+                                                <p className="text-sm font-bold text-indigo-900 truncate">
+                                                    {payoutForm.bankDetails.bankName} •••• {payoutForm.bankDetails.accountNumber.slice(-4)}
+                                                </p>
                                             </div>
                                         ) : (
-                                            <div className="p-4 rounded-xl border-2 border-dashed border-gray-200 text-center space-y-2">
-                                                <p className="text-xs text-gray-500">{t('admin.wallet.no_details', 'No bank details saved.')}</p>
+                                            <div className="p-4 rounded-xl border-2 border-dashed border-gray-200 text-center">
                                                 <button 
                                                     type="button"
                                                     onClick={() => navigate('/admin/settings')}
                                                     className="text-[10px] font-black text-indigo-600 uppercase hover:underline"
                                                 >
-                                                    {t('admin.wallet.go_to_settings', 'Go to Settings to add Bank Info')}
+                                                    {t('admin.wallet.add_bank_info', 'Add Bank Info in Settings')}
                                                 </button>
                                             </div>
                                         )}
@@ -559,9 +515,9 @@ const WalletDashboard = () => {
                                     <button 
                                         type="submit"
                                         disabled={!payoutForm.bankDetails.accountNumber || parseFloat(payoutForm.amount) < 500}
-                                        className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 mt-4 disabled:opacity-50 disabled:grayscale"
+                                        className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 mt-4 disabled:opacity-50"
                                     >
-                                        {t('admin.wallet.verify_transfer', 'Verify & Transfer Funds')}
+                                        {t('admin.wallet.verify_transfer', 'Verify & Transfer')}
                                     </button>
                                 </form>
                             </div>

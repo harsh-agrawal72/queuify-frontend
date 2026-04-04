@@ -4,7 +4,7 @@ import { api, apiService } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
-    Calendar, Clock, MapPin, XCircle, Search, Ticket,
+    Calendar, Clock, MapPin, XCircle, Search, Ticket, User,
     ArrowRight, Star, Building2, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,17 +14,15 @@ import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';
 import { generateInvoice } from '../../utils/pdfGenerator';
 
-// ─── Memoized Appointment Item ───
 const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap }) => {
     const getStatusConfig = (status) => {
         switch (status) {
-            case 'confirmed': return { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' };
-            case 'pending': return { color: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' };
-            case 'serving': return { color: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500 animate-pulse' };
-            case 'completed': return { color: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' };
-            case 'cancelled': return { color: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' };
-            case 'no_show': return { color: 'bg-gray-50 text-gray-600 border-gray-200', dot: 'bg-gray-400' };
-            default: return { color: 'bg-gray-50 text-gray-600 border-gray-200', dot: 'bg-gray-400' };
+            case 'confirmed': return { color: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500', label: t('status.confirmed', 'Confirmed') };
+            case 'pending': return { color: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500', label: t('status.pending', 'Pending') };
+            case 'serving': return { color: 'bg-purple-50 text-purple-700 border-purple-100', dot: 'bg-purple-500 animate-pulse', label: t('status.serving', 'Serving') };
+            case 'completed': return { color: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500', label: t('status.completed', 'Completed') };
+            case 'cancelled': return { color: 'bg-rose-50 text-rose-700 border-rose-100', dot: 'bg-rose-500', label: t('status.cancelled', 'Cancelled') };
+            default: return { color: 'bg-gray-50 text-gray-600 border-gray-100', dot: 'bg-gray-400', label: status };
         }
     };
 
@@ -36,227 +34,175 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, delay: idx * 0.02 }}
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden group relative flex"
         >
-            <div className="flex flex-col md:flex-row">
-                {/* Date Block */}
-                <div className={`flex md:flex-col items-center justify-center w-full md:w-28 py-3 md:py-6 gap-2 md:gap-0 flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-100 ${isPendingReassignment ? 'bg-gradient-to-br from-amber-50 to-orange-50' : 'bg-gradient-to-br from-indigo-50 to-purple-50'}`}>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isPendingReassignment ? 'text-amber-500' : 'text-indigo-500'}`}>
-                        {isDateValid ? format(startDate, 'EEE') : '---'}
+            {/* 🎟️ Ticket Sidebar (Compact) */}
+            <div className={`relative flex flex-col items-center justify-center w-16 md:w-20 py-4 flex-shrink-0 border-r border-dashed border-gray-200 ${isPendingReassignment ? 'bg-amber-50/50' : 'bg-indigo-50/30'}`}>
+                <div className="absolute top-0 right-[-1px] bottom-0 w-[1px] border-r-2 border-dashed border-gray-200"></div>
+                <div className="absolute top-[-8px] right-[-8px] w-4 h-4 bg-gray-50 rounded-full border border-gray-100"></div>
+                <div className="absolute bottom-[-8px] right-[-8px] w-4 h-4 bg-gray-50 rounded-full border border-gray-100"></div>
+                
+                <span className="text-[10px] font-black uppercase tracking-tighter text-gray-400 mb-1">
+                    {isDateValid ? format(startDate, 'MMM') : '---'}
+                </span>
+                <span className="text-2xl font-black text-gray-900 leading-none">
+                    {isDateValid ? format(startDate, 'd') : '??'}
+                </span>
+                <span className="text-[10px] font-bold text-indigo-500 mt-1 uppercase">
+                    {isDateValid ? format(startDate, 'EEE') : '---'}
+                </span>
+                <div className="mt-3 bg-white px-1.5 py-0.5 rounded-md border border-gray-100 shadow-sm">
+                    <span className="text-[9px] font-black text-gray-700 whitespace-nowrap">
+                        {appt.start_time ? format(parseISO(appt.start_time), 'h:mm a') : 'TBD'}
                     </span>
-                    <span className="text-3xl font-black text-gray-900">
-                        {isDateValid ? format(startDate, 'd') : '??'}
-                    </span>
-                    <span className={`text-xs font-bold ${isPendingReassignment ? 'text-amber-600' : 'text-indigo-600'}`}>
-                        {isDateValid ? format(startDate, 'MMM yyyy') : t('common.date_tbd', 'Date TBD')}
-                    </span>
-                    <div className="hidden md:block mt-2 bg-white/80 px-2.5 py-1 rounded-lg">
-                        <span className="text-[11px] font-bold text-gray-700">
-                            {appt.start_time ? format(parseISO(appt.start_time), 'h:mm a') : (isPendingReassignment ? t('appointment.slot_pending', 'Slot Pending') : t('common.no_time', 'No Time'))}
-                        </span>
-                    </div>
                 </div>
+            </div>
 
-                {/* Proposal Banner */}
-                {appt.reschedule_status === 'pending' && (
-                    <div className="absolute top-0 right-0 left-0 bg-amber-50 border-b border-amber-100 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 z-10 animate-in slide-in-from-top duration-300">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-amber-100 p-2 rounded-lg">
-                                <Clock className="h-4 w-4 text-amber-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold text-amber-900">{t('appointment.reschedule_proposed', 'Reschedule Proposed by Business')}</p>
-                                <p className="text-[10px] text-amber-700 font-medium">
-                                {t('appointment.new_time', 'New Time')}: <span className="font-bold">{appt.proposed_start_time ? format(parseISO(appt.proposed_start_time), 'PPp') : 'TBD'}</span>
-                                </p>
-                                {appt.reschedule_reason && (
-                                    <p className="text-[10px] text-amber-600 italic mt-0.5">"{appt.reschedule_reason}"</p>
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onRespond(appt.id, 'accept'); }}
-                                className="bg-amber-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-700 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-                            >
-                                <Star className="h-3 w-3 fill-white" /> {t('appointment.accept_priority', 'Accept & Get Priority #1')}
-                            </button>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onRespond(appt.id, 'decline'); }}
-                                className="bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-50 transition-all active:scale-95"
-                            >
-                                {t('appointment.keep_original', 'Keep Original')}
-                            </button>
+            {/* 📋 Main Info Section */}
+            <div className="flex-1 min-w-0 p-4 md:p-5 flex flex-col md:flex-row gap-4 relative">
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="mb-2">
+                        <h3 className="font-bold text-gray-900 text-sm md:text-base truncate group-hover:text-indigo-600 transition-colors">
+                            {appt.service_name || t('appointment.title', 'Appointment')}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                                <Building2 className="h-3 w-3" /> {appt.org_name}
+                            </p>
                         </div>
                     </div>
-                )}
 
-                {/* Content */}
-                <div className="flex-1 p-5 flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-3 mb-3">
-                            <div>
-                                <h3 className="font-bold text-gray-900 text-lg leading-tight">{appt.service_name || t('appointment.title', 'Appointment')}</h3>
-                                {appt.org_name && (
-                                    <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-1">
-                                        <Building2 className="h-3.5 w-3.5 text-gray-400" />
-                                        {appt.org_name}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${statusConfig.color}`}>
+                            <span className={`w-1 h-1 rounded-full ${statusConfig.dot}`}></span>
+                            {statusConfig.label}
+                        </span>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border ${statusConfig.color}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
-                                {appt.status === 'cancelled' && appt.cancelled_by
-                                    ? (appt.cancelled_by === 'admin' ? t('appointment.cancelled_by_admin') : t('appointment.cancelled_by_you'))
-                                    : t(`status.${appt.status}`, appt.status)}
+                        {(appt.live_queue_number || appt.queue_number) && !isPendingReassignment && (
+                            <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-500 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border border-gray-100">
+                                <Ticket className="h-3 w-3" /> #{appt.live_queue_number || appt.queue_number}
                             </span>
+                        )}
 
-                            {(appt.live_queue_number || appt.queue_number) && !isPendingReassignment && (
-                                <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-600 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-gray-100">
-                                    <Ticket className="h-3 w-3" />
-                                    {t('appointment.token_label', 'Queue #')}{(appt.live_queue_number && appt.live_queue_number > 0) ? appt.live_queue_number : appt.queue_number}
-                                </span>
-                            )}
-
-                            {isPendingReassignment && (
-                                <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-amber-100 animate-pulse">
-                                    <RefreshCw className="h-3 w-3" />
-                                    {t('appointment.waiting_for_slot', 'Waiting for New Slot')}
-                                </span>
-                            )}
-
-                            <span className="md:hidden inline-flex items-center gap-1 text-gray-400 text-[11px] font-medium">
-                                <Clock className="h-3 w-3" />
-                                {isDateValid ? format(startDate, 'h:mm a') : t('common.tbd', 'TBD')}
+                        {appt.resource_name && (
+                            <span className="inline-flex items-center gap-1 text-gray-400 text-[10px] font-bold">
+                                <User className="h-3 w-3" /> {appt.resource_name}
                             </span>
-
-                            {appt.resource_name && (
-                                <span className="inline-flex items-center gap-1 text-gray-400 text-[11px] font-medium">
-                                    <MapPin className="h-3 w-3" />
-                                    {appt.resource_name}
-                                </span>
-                            )}
-                        </div>
-
-                        {appt.status === 'cancelled' && (
-                            <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl relative overflow-hidden group/reason">
-                                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/reason:opacity-20 transition-opacity">
-                                    <AlertCircle className="h-12 w-12 text-rose-500 -rotate-12" />
-                                </div>
-                                <p className="text-[10px] font-bold text-rose-800 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                    <XCircle className="h-3 w-3" /> {t('appointment.cancellation_reason', 'Cancellation Reason')}
-                                </p>
-                                <p className="text-sm text-rose-700 font-medium leading-relaxed italic">
-                                    "{appt.cancellation_reason || t('appointment.no_reason_provided', 'No reason provided')}"
-                                </p>
-                                {appt.refund_amount > 0 && (
-                                    <p className="mt-2 text-xs font-bold text-emerald-600">
-                                    {t('appointment.amount_refunded', 'Amount Refunded')}: ₹{appt.refund_amount}
-                                    </p>
-                                )}
-                            </div>
                         )}
                     </div>
+                    
+                    {appt.status === 'cancelled' && appt.cancellation_reason && (
+                        <div className="mt-3 text-[11px] text-rose-500 font-medium italic border-l-2 border-rose-200 pl-2 py-0.5 line-clamp-1">
+                            “{appt.cancellation_reason}”
+                        </div>
+                    )}
+                </div>
 
-                    <div className="grid grid-cols-2 md:flex md:flex-col gap-2 justify-end items-stretch flex-shrink-0 md:min-w-[150px]">
+                {/* ⚡ Action Controls */}
+                <div className="flex flex-wrap md:flex-nowrap items-center md:items-end justify-between md:justify-end gap-3 flex-shrink-0">
+                    {filter === 'upcoming' && appt.otp_code && ['confirmed', 'pending', 'serving'].includes(appt.status) && (
+                        <div className="bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-800 shadow-lg flex flex-col items-center justify-center min-w-[70px]">
+                            <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">Check-in</span>
+                            <span className="text-sm font-black text-indigo-400 tracking-widest leading-none">{appt.otp_code}</span>
+                        </div>
+                    )}
+
+                    <div className="flex items-center gap-1.5">
                         {filter === 'upcoming' && appt.status !== 'cancelled' && (
                             <>
                                 <Link
                                     to={`/queue/${appt.id}`}
-                                    className="col-span-2 flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-200"
+                                    className="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+                                    title={t('appointment.live_queue')}
                                 >
-                                    <Zap className="h-4 w-4" /> {t('appointment.live_queue')}
+                                    <Zap className="h-4 w-4" />
                                 </Link>
                                 <button
-                                    onClick={() => onCancel(appt.id)}
-                                    className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-500 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                                    onClick={() => onSetMap(appt)}
+                                    className="p-2.5 bg-white border border-gray-100 text-gray-500 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
+                                    title={t('appointment.view_map')}
                                 >
-                                    <XCircle className="h-4 w-4" /> {t('appointment.cancel')}
+                                    <Navigation className="h-4 w-4" />
                                 </button>
-                                {(!appt.reschedule_count || appt.reschedule_count < 1) && (
-                                    <button
-                                        onClick={() => onSetReschedule(appt)}
-                                        className="flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all shadow-sm"
-                                    >
-                                        <Calendar className="h-4 w-4" /> {t('appointment.reschedule')}
-                                    </button>
-                                )}
                                 <button
                                     onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id, orgName: appt.org_name } }))}
-                                    className="flex items-center justify-center gap-2 bg-violet-50 text-violet-700 border border-violet-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all shadow-sm"
+                                    className="p-2.5 bg-white border border-gray-100 text-indigo-400 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
                                 >
-                                    <MessageCircle className="h-4 w-4" /> {t('appointment.chat')}
+                                    <MessageCircle className="h-4 w-4" />
                                 </button>
-                                {appt.org_address && (
-                                    <button
-                                        onClick={() => onSetMap(appt)}
-                                        className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
-                                    >
-                                        <Navigation className="h-4 w-4" /> {t('appointment.view_map')}
-                                    </button>
-                                )}
-                                {parseFloat(appt.price) > 0 && ['confirmed', 'pending', 'serving'].includes(appt.status) && (
-                                    <div className="col-span-2 mt-2 p-4 bg-gray-900 text-white rounded-2xl border-2 border-dashed border-gray-700">
-                                        <div className="flex flex-col items-center">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t('appointment.checkin_otp', 'Check-in OTP')}</p>
-                                            <p className="text-4xl font-black tracking-[0.2em] text-indigo-400 font-mono">{appt.otp_code || '****'}</p>
-                                            <p className="text-[9px] text-gray-500 mt-2 text-center">{t('appointment.otp_hint', 'Show this to staff to verify your check-in.')}</p>
-                                        </div>
-                                    </div>
-                                )}
+                                <div className="ml-1 w-px h-6 bg-gray-50 mx-1 hidden md:block"></div>
+                                <button
+                                    onClick={() => onCancel(appt.id)}
+                                    className="px-3 py-2 text-xs font-bold text-gray-400 hover:text-rose-500 transition-colors"
+                                >
+                                    {t('common.cancel', 'Cancel')}
+                                </button>
                             </>
                         )}
 
                         {filter === 'history' && (
-                            <>
+                            <div className="flex gap-2">
                                 {appt.status === 'completed' && !appt.review_id && (
                                     <button
                                         onClick={() => onSetReview(appt)}
-                                        className="flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-100 transition-all"
+                                        className="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-100 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all"
                                     >
-                                        <Star className="h-4 w-4" /> {t('appointment.rate', 'Rate')}
-                                    </button>
-                                )}
-                                {appt.status === 'completed' && (
-                                    <button
-                                        onClick={async () => {
-                                            generateInvoice(appt);
-                                        }}
-                                        className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
-                                    >
-                                        <Download className="h-4 w-4" /> {t('appointment.download_receipt', 'Download Receipt')}
+                                        {t('appointment.rate', 'Rate')}
                                     </button>
                                 )}
                                 <Link
                                     to="/organizations"
-                                    className="flex items-center justify-center gap-2 text-indigo-600 bg-indigo-50 border border-indigo-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all"
+                                    className="px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-all"
                                 >
-                                    <ArrowRight className="h-4 w-4" /> {t('appointment.book_again', 'Book Again')}
+                                    {t('appointment.book_again', 'Book Again')}
                                 </Link>
-                            </>
+                            </div>
                         )}
-
+                        
                         {filter === 'cancelled' && (
-                            <Link
+                             <Link
                                 to="/organizations"
-                                className="flex items-center justify-center gap-2 text-indigo-600 bg-indigo-50 border border-indigo-100 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all"
+                                className="px-4 py-2 bg-gray-50 text-gray-700 border border-gray-100 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all"
                             >
-                                <ArrowRight className="h-4 w-4" /> {t('appointment.rebook', 'Rebook')}
+                                {t('appointment.rebook', 'Rebook')}
                             </Link>
                         )}
                     </div>
                 </div>
             </div>
+            
+            {/* Proposal Banner */}
+            {appt.reschedule_status === 'pending' && (
+                <div className="absolute top-0 right-0 left-0 bg-amber-50 border-b border-amber-100 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 z-10 animate-in slide-in-from-top duration-300">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-amber-100 p-2 rounded-lg">
+                            <Clock className="h-4 w-4 text-amber-600" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-amber-900">{t('appointment.reschedule_proposed', 'Reschedule Proposed by Business')}</p>
+                            <p className="text-[10px] text-amber-700 font-medium whitespace-nowrap">
+                            {t('appointment.new_time', 'New Time')}: <span className="font-semibold">{appt.proposed_start_time ? format(parseISO(appt.proposed_start_time), 'PPp') : 'TBD'}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); onRespond(appt.id, 'accept'); }} className="bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-700">
+                            {t('appointment.accept', 'Accept')}
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); onRespond(appt.id, 'decline'); }} className="bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-50">
+                            {t('appointment.decline', 'Decline')}
+                        </button>
+                    </div>
+                </div>
+            )}
         </motion.div>
     );
 });
+
 AppointmentItem.displayName = 'AppointmentItem';
 
 export default function MyAppointments() {
@@ -296,7 +242,6 @@ export default function MyAppointments() {
             return;
         }
 
-        // Optimistic UI Update
         const previousAppointments = [...appointments];
         setAppointments(prev => prev.map(appt => 
             appt.id === id ? { ...appt, status: 'cancelled', cancelled_by: 'user', cancellation_reason: reason } : appt
