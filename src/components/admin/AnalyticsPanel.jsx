@@ -609,6 +609,11 @@ const AnalyticsPanel = () => {
         if (!stats) return [];
         return [
             {
+                title: t('dashboard.lifetime_earning', 'Lifetime Earning'), value: `₹${stats.lifetimeEarning || 0}`,
+                icon: TrendingUp,
+                color: 'from-violet-500 to-fuchsia-600', lightBg: 'bg-violet-50', lightText: 'text-violet-600'
+            },
+            {
                 title: t('dashboard.total_bookings', 'Total Bookings'), value: stats.totalBookings,
                 growth: stats.growth?.bookings, icon: CalendarDays,
                 color: 'from-indigo-500 to-purple-600', lightBg: 'bg-indigo-50', lightText: 'text-indigo-600'

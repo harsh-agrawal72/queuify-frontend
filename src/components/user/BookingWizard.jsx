@@ -266,6 +266,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 },
                 modal: {
                     ondismiss: function() {
+                        console.log('[Payment] Modal dismissed. Releasing seat...');
+                        // Instant cleanup call (Fire and forget, we don't want to block UI)
+                        apiService.cancelPendingPayment(appointment.id).catch(e => {
+                            console.warn('[Payment] Instant cleanup failed:', e.message);
+                        });
                         setLoadingCreation(false);
                     }
                 }

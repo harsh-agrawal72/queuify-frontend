@@ -70,6 +70,7 @@ const apiService = {
     bookAppointment: (data) => api.post('/appointments', data),
     myAppointments: () => api.get('/appointments/my'),
     cancelAppointment: (id) => api.post(`/appointments/${id}/cancel`),
+    cancelPendingPayment: (id) => api.delete(`/appointments/${id}/cancel-pending`),
 
     // Analytics
     getAnalytics: () => api.get('/admin/analytics'),

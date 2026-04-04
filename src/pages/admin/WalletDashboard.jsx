@@ -15,7 +15,9 @@ import {
     IndianRupee,
     Loader2,
     Search,
-    ArrowRight
+    ArrowRight,
+    Calendar,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
@@ -293,6 +295,35 @@ const WalletDashboard = () => {
                                     onChange={(e) => setSearch(e.target.value)}
                                     className="pl-9 pr-4 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-full transition-all h-10 bg-white"
                                 />
+                            </div>
+
+                            {/* Date Filter */}
+                            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 h-10 shadow-sm transition-all focus-within:ring-2 focus-within:ring-indigo-100">
+                                <Calendar className="h-4 w-4 text-gray-400" />
+                                <input 
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="text-xs font-semibold outline-none bg-transparent cursor-pointer text-gray-700"
+                                    placeholder={t('common.start_date', 'Start Date')}
+                                />
+                                <span className="text-gray-300 font-bold px-1">/</span>
+                                <input 
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="text-xs font-semibold outline-none bg-transparent cursor-pointer text-gray-700"
+                                    placeholder={t('common.end_date', 'End Date')}
+                                />
+                                {(startDate || endDate) && (
+                                    <button 
+                                        onClick={() => { setStartDate(''); setEndDate(''); }}
+                                        className="ml-2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-rose-500 transition-colors"
+                                        title={t('common.clear_filters', 'Clear Filters')}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                )}
                             </div>
                             <select 
                                 value={typeFilter}
