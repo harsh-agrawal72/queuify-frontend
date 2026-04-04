@@ -307,7 +307,7 @@ const SlotManagement = () => {
                 overwrite: copyOverwrite
             };
 
-            await api.post('/admin/slots/bulk-copy', payload);
+            await api.post('/slots/bulk-copy', payload);
             toast.success(t('admin.slots.bulk_success', 'Slots copied successfully'));
             setIsCopyModalOpen(false);
             fetchSlots();
