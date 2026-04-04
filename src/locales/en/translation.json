@@ -25,6 +25,7 @@
     "profile": "Profile",
     "analytics": "Analytics",
     "service_management": "Service Management",
+    "resource_management": "Resource Management",
     "manage_slots": "Manage Slots",
     "appointments": "Appointments",
     "live_queue": "Live Queue",
@@ -186,7 +187,7 @@
     "esc_to_close": "Press ESC to close",
     "resource": "Resource"
   },
-  "resource": {
+  "resource_mgmt": {
     "mgmt_title": "Resource Management",
     "mgmt_tooltip": "Resources are doctors, staff, rooms, or equipment. Create them here and link them to multiple services with specific fees.",
     "mgmt_subtitle": "Manage independent resources and their service-specific pricing.",
