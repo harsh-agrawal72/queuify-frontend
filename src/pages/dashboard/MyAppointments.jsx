@@ -100,8 +100,8 @@ const MyAppointments = () => {
 
             <div className="space-y-4">
                 <AnimatePresence>
-                    {appointments.length > 0 ? (
-                        appointments.map((appt, index) => (
+                        {appointments.filter(appt => appt.status !== 'pending_payment').length > 0 ? (
+                        appointments.filter(appt => appt.status !== 'pending_payment').map((appt, index) => (
                             <motion.div
                                 key={appt.id}
                                 initial={{ opacity: 0, y: 20 }}
