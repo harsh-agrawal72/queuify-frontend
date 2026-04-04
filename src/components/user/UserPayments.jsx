@@ -11,11 +11,13 @@ import { format, parseISO, startOfMonth, eachMonthOfInterval, subMonths, isSameM
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import ReceiptModal from './ReceiptModal';
 
 const UserPayments = ({ bookings }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [selectedReceipt, setSelectedReceipt] = useState(null);
 
     // 1. Calculate Advanced Analytics
     const stats = useMemo(() => {
@@ -342,20 +344,31 @@ const UserPayments = ({ bookings }) => {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <span className={clsx(
-                                                "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all",
-                                                row.payment_status === 'paid' && "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
-                                                row.payment_status === 'refunded' && "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
-                                                row.status === 'cancelled' && row.payment_status !== 'refunded' && "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
-                                                parseFloat(row.price || 0) === 0 && row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled' && "bg-gray-50 text-gray-700 border-gray-100 hover:bg-gray-100",
-                                                (parseFloat(row.price || 0) > 0 && (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled'))) && "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100"
-                                            )}>
-                                                {row.payment_status === 'paid' && <><CheckCircle2 className="h-3.5 w-3.5" /> {t('payments_user.status.paid', 'Paid')}</>}
-                                                {row.payment_status === 'refunded' && <><RefreshCw className="h-3.5 w-3.5" /> {t('payments_user.status.refunded', 'Refunded')}</>}
-                                                {row.status === 'cancelled' && row.payment_status !== 'refunded' && <><XCircle className="h-3.5 w-3.5" /> {t('payments_user.status.cancelled', 'Cancelled')}</>}
-                                                {parseFloat(row.price || 0) === 0 && row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled' && <><Info className="h-3.5 w-3.5" /> {t('payments_user.status.free', 'FREE')}</>}
-                                                {parseFloat(row.price || 0) > 0 && (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && <><Clock className="h-3.5 w-3.5" /> {t('payments_user.status.pending', 'Pending')}</>}
-                                            </span>
+                                            <div className="flex justify-end items-center gap-2">
+                                                {row.payment_status === 'paid' && (
+                                                    <button 
+                                                        onClick={() => setSelectedReceipt(row)}
+                                                        className="p-1.5 hover:bg-emerald-50 rounded-lg transition-colors text-emerald-600 border border-transparent hover:border-emerald-100 group/receipt"
+                                                        title="Download Receipt"
+                                                    >
+                                                        <Download className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                                <span className={clsx(
+                                                    "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all",
+                                                    row.payment_status === 'paid' && "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
+                                                    row.payment_status === 'refunded' && "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
+                                                    row.status === 'cancelled' && row.payment_status !== 'refunded' && "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
+                                                    parseFloat(row.price || 0) === 0 && row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled' && "bg-gray-50 text-gray-700 border-gray-100 hover:bg-gray-100",
+                                                    (parseFloat(row.price || 0) > 0 && (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled'))) && "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100"
+                                                )}>
+                                                    {row.payment_status === 'paid' && <><CheckCircle2 className="h-3.5 w-3.5" /> {t('payments_user.status.paid', 'Paid')}</>}
+                                                    {row.payment_status === 'refunded' && <><RefreshCw className="h-3.5 w-3.5" /> {t('payments_user.status.refunded', 'Refunded')}</>}
+                                                    {row.status === 'cancelled' && row.payment_status !== 'refunded' && <><XCircle className="h-3.5 w-3.5" /> {t('payments_user.status.cancelled', 'Cancelled')}</>}
+                                                    {parseFloat(row.price || 0) === 0 && row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled' && <><Info className="h-3.5 w-3.5" /> {t('payments_user.status.free', 'FREE')}</>}
+                                                    {parseFloat(row.price || 0) > 0 && (row.payment_status === 'pending_payment' || (row.payment_status !== 'paid' && row.payment_status !== 'refunded' && row.status !== 'cancelled')) && <><Clock className="h-3.5 w-3.5" /> {t('payments_user.status.pending', 'Pending')}</>}
+                                                </span>
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 ))}
@@ -421,6 +434,12 @@ const UserPayments = ({ bookings }) => {
                     </div>
                 )}
             </div>
+
+            <ReceiptModal 
+                isOpen={!!selectedReceipt} 
+                onClose={() => setSelectedReceipt(null)} 
+                appointment={selectedReceipt} 
+            />
         </div>
     );
 };

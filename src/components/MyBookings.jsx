@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { apiService } from '../services/api';
 import clsx from 'clsx';
-import { MapPin, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle2, ShieldAlert, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import ReceiptModal from './user/ReceiptModal';
 
 const MyBookings = ({ bookings, onCancel }) => {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(null);
+    const [selectedReceipt, setSelectedReceipt] = useState(null);
 
     const handleArrived = async (id) => {
         setLoading(`arrive-${id}`);
@@ -123,6 +125,15 @@ const MyBookings = ({ bookings, onCancel }) => {
                                 #{booking.token_number || booking.id.slice(-4).toUpperCase()}
                             </div>
 
+                            {booking.status === 'completed' && (
+                                <button
+                                    onClick={() => setSelectedReceipt(booking)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
+                                >
+                                    <Download className="h-3.5 w-3.5" /> {t('appointments.actions.receipt', 'Receipt')}
+                                </button>
+                            )}
+
                             {booking.status !== 'cancelled' && booking.status !== 'completed' && (
                                 <button
                                     onClick={() => onCancel(booking.id)}
@@ -135,6 +146,12 @@ const MyBookings = ({ bookings, onCancel }) => {
                     </div>
                 </div>
             ))}
+
+            <ReceiptModal 
+                isOpen={!!selectedReceipt} 
+                onClose={() => setSelectedReceipt(null)} 
+                appointment={selectedReceipt} 
+            />
         </div>
     );
 };

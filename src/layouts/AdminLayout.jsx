@@ -128,16 +128,8 @@ const AdminLayout = () => {
     // Global WebSocket Listener for Notifications
     useEffect(() => {
         if (queueData) {
-            // Only show generic toast for non-booking updates (like cancellations)
-            // since bookings trigger a personal notification toast with details
-            // Suppress if user is already on the Live Queue page
-            if (queueData.type !== 'new_booking' && location.pathname !== '/admin/queue') {
-                toast.success(t('queue.queue_updated', 'Active queue updated!'), {
-                    icon: '🔔',
-                    duration: 4000,
-                });
-            }
-            fetchNotifications(); // instantly update the bell icon count
+            // instant update the bell icon count without showing a toast every time
+            fetchNotifications(); 
         }
     }, [queueData, t, location.pathname]);
 
