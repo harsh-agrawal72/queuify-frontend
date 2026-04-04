@@ -9,7 +9,8 @@ import {
     Save,
     Users,
     Monitor,
-    Info
+    Info,
+    IndianRupee
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import InfoTooltip from '../common/InfoTooltip';
@@ -30,7 +31,7 @@ const ResourceManager = () => {
         description: '',
         concurrent_capacity: 1,
         is_active: true,
-        serviceIds: []
+        serviceIds: [] // Array of { id, price }
     });
 
     const fetchResources = async () => {
@@ -76,23 +77,42 @@ const ResourceManager = () => {
     const openEditModal = (res) => {
         setIsEditMode(true);
         setCurrentId(res.id);
+        
+        // Backend now returns service_mappings (array of {id, price})
         setFormData({
             name: res.name,
             type: res.type,
             description: res.description || '',
             concurrent_capacity: res.concurrent_capacity || 1,
             is_active: res.is_active !== false,
-            serviceIds: res.service_ids || []
+            serviceIds: res.service_mappings || []
         });
         setIsModalOpen(true);
     };
 
     const handleServiceToggle = (serviceId) => {
+        setFormData(prev => {
+            const exists = prev.serviceIds.some(s => s.id === serviceId);
+            if (exists) {
+                return {
+                    ...prev,
+                    serviceIds: prev.serviceIds.filter(s => s.id !== serviceId)
+                };
+            } else {
+                return {
+                    ...prev,
+                    serviceIds: [...prev.serviceIds, { id: serviceId, price: 0 }]
+                };
+            }
+        });
+    };
+
+    const handlePriceChange = (serviceId, price) => {
         setFormData(prev => ({
             ...prev,
-            serviceIds: prev.serviceIds.includes(serviceId)
-                ? prev.serviceIds.filter(id => id !== serviceId)
-                : [...prev.serviceIds, serviceId]
+            serviceIds: prev.serviceIds.map(s => 
+                s.id === serviceId ? { ...s, price: parseFloat(price) || 0 } : s
+            )
         }));
     };
 
@@ -100,7 +120,6 @@ const ResourceManager = () => {
         e.preventDefault();
         try {
             if (isEditMode) {
-                // Explicitly pick only editable fields to avoid 400 validation errors
                 const updatePayload = {
                     name: formData.name,
                     type: formData.type,
@@ -141,9 +160,9 @@ const ResourceManager = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {t('navigation.resource_management', 'Resource Management')}
-                        <InfoTooltip text={t('resource.mgmt_tooltip', 'Resources are doctors, staff, rooms, or equipment. Create them here and link them to multiple services.')} />
+                        <InfoTooltip text={t('resource.mgmt_tooltip', 'Resources are doctors, staff, rooms, or equipment. Create them here and link them to multiple services with specific fees.')} />
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">{t('resource.mgmt_subtitle', 'Manage independent resources and their service mappings.')}</p>
+                    <p className="text-sm text-gray-500 mt-1">{t('resource.mgmt_subtitle', 'Manage independent resources and their service-specific pricing.')}</p>
                 </div>
                 <button 
                     onClick={openCreateModal} 
@@ -178,23 +197,32 @@ const ResourceManager = () => {
                                 <div className={`p-3 rounded-xl ${resource.type === 'staff' ? 'bg-purple-100 text-purple-600' : 'bg-orange-100 text-orange-600'}`}>
                                     {resource.type === 'staff' ? <Users className="h-6 w-6" /> : <Monitor className="h-6 w-6" />}
                                 </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">{resource.name}</h3>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-gray-900 truncate">{resource.name}</h3>
                                     <p className="text-xs text-gray-500 line-clamp-2 mt-1 min-h-[2.5em]">{resource.description || 'No description'}</p>
-                                    <div className="flex flex-wrap gap-2 mt-3">
-                                        <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-lg capitalize">
+                                    
+                                    <div className="mt-3 space-y-1.5">
+                                        {(resource.service_mappings || []).slice(0, 3).map(m => {
+                                            const s = services.find(serv => serv.id === m.id);
+                                            return (
+                                                <div key={m.id} className="flex items-center justify-between text-[10px] bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                                                    <span className="font-medium text-gray-700 truncate mr-2">{s?.name || 'Service'}</span>
+                                                    <span className="text-indigo-600 font-bold shrink-0">₹{m.price || 0}</span>
+                                                </div>
+                                            );
+                                        })}
+                                        {resource.service_mappings?.length > 3 && (
+                                            <p className="text-[10px] text-gray-400 text-center">+{resource.service_mappings.length - 3} more services</p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 mt-3 border-t border-gray-50 pt-3">
+                                        <span className="text-[10px] font-medium px-2 py-0.5 bg-gray-100 text-gray-600 rounded-lg capitalize">
                                             {resource.type}
                                         </span>
-                                        <span className="text-xs font-medium px-2 py-1 bg-blue-50 text-blue-700 rounded-lg">
+                                        <span className="text-[10px] font-medium px-2 py-0.5 bg-blue-50 text-blue-700 rounded-lg">
                                             Cap: {resource.concurrent_capacity}
                                         </span>
-                                    </div>
-                                    <div className="mt-2 flex flex-wrap gap-1">
-                                        {services.filter(s => resource.service_ids?.includes(s.id)).map(s => (
-                                            <span key={s.id} className="text-[10px] px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded">
-                                                {s.name}
-                                            </span>
-                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -222,9 +250,8 @@ const ResourceManager = () => {
                                         <div>
                                             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
                                                 Resource Type
-                                                <InfoTooltip text="Staff: People providing service. Room/Equipment: Physical assets. Counter: Service desks." />
                                             </label>
-                                            <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                                            <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm">
                                                 <option value="staff">Staff</option>
                                                 <option value="room">Room</option>
                                                 <option value="equipment">Equipment</option>
@@ -233,27 +260,26 @@ const ResourceManager = () => {
                                         </div>
                                         <div>
                                             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
-                                                Concurrent Capacity
-                                                <InfoTooltip text="How many people can this resource serve simultaneously? Default is 1." />
+                                                Capacity
                                             </label>
-                                            <input type="number" required min="1" value={formData.concurrent_capacity} onChange={e => setFormData({ ...formData, concurrent_capacity: parseInt(e.target.value) })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" />
+                                            <input type="number" required min="1" value={formData.concurrent_capacity} onChange={e => setFormData({ ...formData, concurrent_capacity: parseInt(e.target.value) })} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm" />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                        <textarea placeholder="e.g. Senior expert in dermatology..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" rows="2" />
+                                        <textarea placeholder="e.g. Senior expert in dermatology..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm resize-none" rows="2" />
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900">Resource Status</p>
-                                            <p className="text-xs text-gray-500">Only active resources appear in the appointment booking filter.</p>
+                                            <p className="text-xs font-semibold text-gray-900">Resource Status</p>
+                                            <p className="text-[10px] text-gray-400">Enable to make it bookable.</p>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.is_active ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                                            className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${formData.is_active ? 'bg-indigo-600' : 'bg-gray-200'}`}
                                         >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${formData.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
                                 </div>
@@ -262,30 +288,50 @@ const ResourceManager = () => {
                             <div className="h-px bg-gray-100" />
 
                             <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Assigned Services</h3>
-                                <p className="text-xs text-gray-500">Pick the services this resource can provide.</p>
-                                <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-gray-50 rounded-2xl border border-gray-100 custom-scrollbar">
-                                    {services.map(service => (
-                                        <label key={service.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer group ${formData.serviceIds.includes(service.id) ? 'bg-white border-indigo-200 shadow-sm' : 'border-transparent hover:bg-white'}`}>
-                                            <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${formData.serviceIds.includes(service.id) ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-300 group-hover:border-indigo-400'}`}>
-                                                {formData.serviceIds.includes(service.id) && <Plus className="h-3 w-3 text-white rotate-45" style={{ transform: 'rotate(0deg)' }} />}
+                                <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Assigned Services & Fees</h3>
+                                <p className="text-xs text-gray-500">Select services and set specific fees for this resource.</p>
+                                
+                                <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                                    {services.map(service => {
+                                        const mapping = formData.serviceIds.find(s => s.id === service.id);
+                                        const isSelected = !!mapping;
+
+                                        return (
+                                            <div key={service.id} className={`p-3 rounded-2xl border transition-all ${isSelected ? 'bg-indigo-50/30 border-indigo-200 ring-4 ring-indigo-500/5' : 'bg-white border-gray-100 hover:border-indigo-100'}`}>
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
+                                                        <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-300'}`}>
+                                                            {isSelected && <Plus className="h-3 w-3 text-white" />}
+                                                        </div>
+                                                        <input type="checkbox" className="hidden" checked={isSelected} onChange={() => handleServiceToggle(service.id)} />
+                                                        <span className="text-sm font-medium text-gray-700 truncate">{service.name}</span>
+                                                    </label>
+                                                    
+                                                    {isSelected && (
+                                                        <div className="relative w-24 animate-in fade-in slide-in-from-right-2 duration-200">
+                                                            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+                                                                <IndianRupee className="h-3 w-3" />
+                                                            </div>
+                                                            <input 
+                                                                type="number" 
+                                                                placeholder="Fee"
+                                                                value={mapping.price}
+                                                                onChange={(e) => handlePriceChange(service.id, e.target.value)}
+                                                                className="w-full pl-7 pr-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-bold text-indigo-600"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <input
-                                                type="checkbox"
-                                                className="hidden"
-                                                checked={formData.serviceIds.includes(service.id)}
-                                                onChange={() => handleServiceToggle(service.id)}
-                                            />
-                                            <span className="text-sm font-medium text-gray-700">{service.name}</span>
-                                        </label>
-                                    ))}
-                                    {services.length === 0 && <p className="text-center py-4 text-sm text-gray-400">No services found. Create some first.</p>}
+                                        );
+                                    })}
+                                    {services.length === 0 && <p className="text-center py-4 text-sm text-gray-400">No services found.</p>}
                                 </div>
                             </div>
 
                             <div className="pt-4">
                                 <button type="submit" className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all font-semibold shadow-lg shadow-indigo-200 hover:shadow-indigo-300">
-                                    <Save className="h-5 w-5" /> {isEditMode ? 'Update Resource' : 'Create Resource'}
+                                    <Save className="h-5 w-5" /> {isEditMode ? 'Update Changes' : 'Create Resource'}
                                 </button>
                             </div>
                         </form>
