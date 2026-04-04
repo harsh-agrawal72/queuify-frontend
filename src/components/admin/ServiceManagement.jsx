@@ -1,32 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import {
     Plus,
     Edit2,
-    Trash2,
     Loader2,
     X,
     Save,
     Briefcase,
     User,
     ChevronDown,
-    ChevronRight,
-    Clock,
-    DollarSign,
     Users,
     AlertCircle,
     Layers,
-    Info,
-    AlertTriangle
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import InfoTooltip from '../common/InfoTooltip';
 import { useTranslation } from 'react-i18next';
 
 // ──────────────────────────────────────────────
-// UNIFIED SERVICE MANAGEMENT
-// Service → Resources (nested accordion)
-// Slots managed via separate Slot Management page
+// UNIFIED SERVICE MANAGEMENT (Read-only Resources)
+// Services are managed here.
+// Resources (Doctors/Staff) are managed in the Resource Management tab.
 // ──────────────────────────────────────────────
 
 const ServiceManagement = () => {
@@ -41,7 +37,6 @@ const ServiceManagement = () => {
 
     // Modals
     const [serviceModal, setServiceModal] = useState({ open: false, edit: false, data: null });
-    const [resourceModal, setResourceModal] = useState({ open: false, edit: false, data: null, serviceId: null });
 
     // ─── Fetch Services ───
     const fetchServices = useCallback(async () => {
@@ -54,7 +49,7 @@ const ServiceManagement = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => { fetchServices(); }, [fetchServices]);
 
@@ -81,9 +76,7 @@ const ServiceManagement = () => {
         }
     };
 
-    // ═══════════════════════════════════════════
-    // SERVICE CRUD
-    // ═══════════════════════════════════════════
+    // ─── Service CRUD ───
     const handleServiceSubmit = async (formData) => {
         try {
             if (serviceModal.edit) {
@@ -112,7 +105,7 @@ const ServiceManagement = () => {
     };
 
     const handleDeleteService = async (id) => {
-        if (!confirm(t('service.delete_confirm', "Delete this service and all its resources?"))) return;
+        if (!confirm(t('service.delete_confirm', "Delete this service? This will not delete the doctors/resources linked to it, only the service itself."))) return;
         try {
             await api.delete(`/services/${id}`);
             setServices(prev => prev.filter(s => s.id !== id));
@@ -122,57 +115,6 @@ const ServiceManagement = () => {
         }
     };
 
-    // ═══════════════════════════════════════════
-    // RESOURCE CRUD (belongs to service)
-    // ═══════════════════════════════════════════
-    const handleResourceSubmit = async (formData) => {
-        const { serviceId } = resourceModal;
-        try {
-            if (resourceModal.edit) {
-                const updatePayload = {
-                    name: formData.name,
-                    type: formData.type,
-                    description: formData.description,
-                    concurrent_capacity: formData.concurrent_capacity,
-                    serviceIds: [{ id: serviceId, price: formData.price || 0 }]
-                };
-                await api.patch(`/resources/${resourceModal.data.id}`, updatePayload);
-                toast.success(t('resource.updated', "Resource updated"));
-            } else {
-                await api.post('/resources', {
-                    name: formData.name,
-                    type: formData.type,
-                    description: formData.description,
-                    concurrent_capacity: formData.concurrent_capacity,
-                    serviceIds: [{ id: serviceId, price: formData.price || 0 }]
-                });
-                toast.success(t('resource.created', "Resource created"));
-            }
-            setResourceModal({ open: false, edit: false, data: null, serviceId: null });
-            fetchResourcesForService(serviceId);
-        } catch (error) {
-            toast.error(error.response?.data?.message || t('common.operation_failed', "Operation failed"));
-        }
-    };
-
-    const handleDeleteResource = async (resourceId, serviceId) => {
-        if (!confirm(t('resource.delete_confirm', "Delete this resource and its slots?"))) return;
-        try {
-            await api.delete(`/resources/${resourceId}`);
-            setResourcesByService(prev => ({
-                ...prev,
-                [serviceId]: prev[serviceId]?.filter(r => r.id !== resourceId)
-            }));
-            toast.success(t('resource.deleted', "Resource deleted"));
-        } catch (error) {
-            toast.error(error.response?.data?.message || t('resource.delete_failed', "Failed to delete resource"));
-        }
-    };
-
-    // ═══════════════════════════════════════════
-    // RENDER
-    // ═══════════════════════════════════════════
-
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -180,9 +122,9 @@ const ServiceManagement = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {t('navigation.service_management', 'Service Management')}
-                        <InfoTooltip align="start" text={t('service.mgmt_tooltip', 'Services are the top-level categories of what you offer (e.g., Dental Checkup, Haircut). First create a Service, then add specific Resources (staff/rooms) to it.')} />
+                        <InfoTooltip align="start" text={t('service.mgmt_tooltip', 'Services are the categories of what you offer. Resources (like doctors) are managed in their own tab and then linked to these services.')} />
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">{t('service.mgmt_subtitle', 'Create services and assign resources (staff, rooms, equipment) to them.')}</p>
+                    <p className="text-sm text-gray-500 mt-1">{t('service.mgmt_subtitle', 'Create and manage the types of services your organization provides.')}</p>
                 </div>
                 <button
                     onClick={() => setServiceModal({ open: true, edit: false, data: null })}
@@ -226,22 +168,11 @@ const ServiceManagement = () => {
                                     </div>
 
                                     <div className="flex items-center gap-1 sm:gap-2">
-                                        {resources.length > 0 && (
-                                            <span className="hidden sm:inline-block text-xs font-medium px-2.5 py-1 bg-purple-50 text-purple-600 rounded-full">
-                                                {t('service.resource_count', { count: resources.length, defaultValue: resources.length === 1 ? '1 resource' : `${resources.length} resources` })}
-                                            </span>
-                                        )}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setServiceModal({ open: true, edit: true, data: service }); }}
                                             className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                         >
                                             <Edit2 className="h-4 w-4" />
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteService(service.id); }}
-                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
                                         </button>
                                         <div className={`p-2 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
                                             <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -254,15 +185,15 @@ const ServiceManagement = () => {
                                     <div className="p-5 bg-gray-50/30">
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
-                                                <Users className="h-4 w-4" /> {t('service.resources', 'Resources')}
-                                                <InfoTooltip align="start" text={t('service.resources_tooltip', "Resources are the actual assets or people who perform the service. Each resource can have their own schedule later in 'Slot Management'.")} />
+                                                <Users className="h-4 w-4" /> {t('service.resources', 'Linked Resources')}
+                                                <InfoTooltip align="start" text={t('service.resources_tooltip', "These are the doctors or staff currently assigned to this service. Manage them in the 'Resources' tab.")} />
                                             </h4>
-                                            <button
-                                                onClick={() => setResourceModal({ open: true, edit: false, data: null, serviceId: service.id })}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-600 border border-indigo-200 rounded-lg text-xs font-medium hover:bg-indigo-50 transition-colors"
+                                            <Link
+                                                to="/admin/resources"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-indigo-600 border border-indigo-200 rounded-lg text-xs font-medium hover:bg-indigo-50 transition-colors shadow-sm"
                                             >
-                                                <Plus className="h-3 w-3" /> {t('service.add_resource', 'Add Resource')}
-                                            </button>
+                                                <Edit2 className="h-3 w-3" /> {t('service.manage_resources', 'Manage Mappings')}
+                                            </Link>
                                         </div>
 
                                         {isLoadingRes ? (
@@ -270,45 +201,25 @@ const ServiceManagement = () => {
                                         ) : resources.length === 0 ? (
                                             <div className="text-center py-6 bg-white rounded-xl border border-dashed border-gray-200">
                                                 <AlertCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                                                <p className="text-sm text-gray-500">{t('service.no_resources', 'No resources for this service.')}</p>
-                                                <p className="text-xs text-gray-400 mt-1">{t('service.add_resource_hint', 'Add a resource to start creating time slots.')}</p>
+                                                <p className="text-sm text-gray-500">{t('service.no_resources', 'No resources linked.')}</p>
+                                                <p className="text-xs text-gray-400 mt-1">{t('service.add_resource_hint', "Go to 'Resources' tab to link a doctor/staff to this service.")}</p>
                                             </div>
                                         ) : (
-                                            <div className="space-y-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                 {resources.map(resource => (
-                                                    <div key={resource.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
+                                                    <div key={resource.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100">
                                                         <div className="flex items-center gap-3">
-                                                            <div className={`p-2 rounded-lg ${resource.type === 'staff' ? 'bg-purple-50 text-purple-500' :
-                                                                resource.type === 'room' ? 'bg-blue-50 text-blue-500' :
-                                                                    resource.type === 'counter' ? 'bg-teal-50 text-teal-500' :
-                                                                        'bg-orange-50 text-orange-500'
-                                                                }`}>
+                                                            <div className={`p-2 rounded-lg ${resource.type === 'staff' ? 'bg-purple-50 text-purple-500' : 'bg-blue-50 text-blue-500'}`}>
                                                                 <User className="h-4 w-4" />
                                                             </div>
                                                             <div>
                                                                 <p className="font-medium text-gray-900 text-sm">{resource.name}</p>
-                                                                <div className="flex items-center gap-2 mt-0.5">
-                                                                    <span className="text-xs text-gray-400 capitalize">{t(`resource_type.${resource.type}`, resource.type)}</span>
-                                                                    <span className="text-xs text-blue-600 font-medium flex items-center gap-0.5">
-                                                                        <Users className="h-3 w-3" /> {t('service.capacity', 'Cap')}: {resource.concurrent_capacity}
-                                                                    </span>
-                                                                </div>
+                                                                <p className="text-[10px] text-gray-400 capitalize">{t(`resource_type.${resource.type}`, resource.type)}</p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <button
-                                                                onClick={() => setResourceModal({ open: true, edit: true, data: { ...resource, price: resource.price || 0 }, serviceId: service.id })}
-                                                                className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                                                            >
-                                                                <Edit2 className="h-3.5 w-3.5" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteResource(resource.id, service.id)}
-                                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        </div>
+                                                        <Link to="/admin/resources" className="p-1.5 text-gray-400 hover:text-indigo-600">
+                                                            <Edit2 className="h-3.5 w-3.5" />
+                                                        </Link>
                                                     </div>
                                                 ))}
                                             </div>
@@ -354,22 +265,6 @@ const ServiceManagement = () => {
                     estimated_service_time: 30
                 }}
             />
-
-            {/* ═══ RESOURCE MODAL ═══ */}
-            <FormModal
-                open={resourceModal.open}
-                title={resourceModal.edit ? t('admin.services.edit_resource', 'Edit Resource') : t('admin.services.new_resource', 'New Resource')}
-                onClose={() => setResourceModal({ open: false, edit: false, data: null, serviceId: null })}
-                onSubmit={handleResourceSubmit}
-                fields={[
-                    { name: 'name', label: t('admin.services.resource_name', 'Resource Name'), type: 'text', required: true },
-                    { name: 'type', label: t('common.type', 'Type'), type: 'select', options: ['staff', 'room', 'equipment', 'counter', 'machine'], required: true, translateOptions: true },
-                    { name: 'concurrent_capacity', label: t('admin.services.concurrent_capacity', 'Concurrent Capacity'), type: 'number', min: 1, required: true },
-                    { name: 'price', label: t('admin.services.price', 'Fee / Price (₹)'), type: 'number', min: 0, required: false, help: t('admin.services.price_help', 'Set a fee for this service. Users will be asked to pay this amount during booking.') },
-                    { name: 'description', label: t('common.description', 'Description'), type: 'textarea' },
-                ]}
-                defaults={resourceModal.edit ? resourceModal.data : { name: '', type: 'staff', description: '', concurrent_capacity: 1, price: 0 }}
-            />
         </div>
     );
 };
@@ -384,7 +279,7 @@ const FormModal = ({ open, title, onClose, onSubmit, fields, defaults }) => {
 
     useEffect(() => {
         if (open) setFormData(defaults || {});
-    }, [open]);
+    }, [open, defaults]);
 
     if (!open) return null;
 
@@ -407,57 +302,42 @@ const FormModal = ({ open, title, onClose, onSubmit, fields, defaults }) => {
                 </div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
                     {fields.map(field => (
-                        <div key={field.name} className={`${field.dependsOn && !formData[field.dependsOn] ? 'hidden' : 'block'}`}>
-                            {field.type === 'checkbox' ? (
-                                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData[field.name] || false}
-                                        onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.checked }))}
-                                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <span className="text-sm font-medium text-gray-700">{field.label}</span>
-                                </label>
+                        <div key={field.name}>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">{field.label}</label>
+                            {field.type === 'textarea' ? (
+                                <textarea
+                                    value={formData[field.name] || ''}
+                                    onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm resize-none"
+                                    rows="3"
+                                />
+                            ) : field.type === 'select' ? (
+                                <select
+                                    value={formData[field.name] || ''}
+                                    onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm bg-white"
+                                >
+                                    {field.options.map(opt => (
+                                        <option key={opt} value={opt}>
+                                            {t(`option.${opt}`, opt.charAt(0).toUpperCase() + opt.slice(1))}
+                                        </option>
+                                    ))}
+                                </select>
                             ) : (
-                                <>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{field.label}</label>
-                                    {field.type === 'textarea' ? (
-                                        <textarea
-                                            value={formData[field.name] || ''}
-                                            onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm resize-none"
-                                            rows="3"
-                                        />
-                                    ) : field.type === 'select' ? (
-                                        <select
-                                            value={formData[field.name] || ''}
-                                            onChange={e => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm bg-white"
-                                        >
-                                            {field.options.map(opt => (
-                                                <option key={opt} value={opt}>
-                                                    {field.translateOptions ? t(`option.${opt}`, opt.charAt(0).toUpperCase() + opt.slice(1)) : opt.charAt(0).toUpperCase() + opt.slice(1)}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <input
-                                            type={field.type}
-                                            required={field.required}
-                                            min={field.min}
-                                            step={field.step}
-                                            value={formData[field.name] ?? ''}
-                                            onChange={e => setFormData(prev => ({ ...prev, [field.name]: field.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
-                                        />
-                                    )}
-                                    {field.help && (
-                                        <p className="mt-1.5 text-[11px] text-gray-400 flex items-start gap-1 px-1">
-                                            <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                            {field.help}
-                                        </p>
-                                    )}
-                                </>
+                                <input
+                                    type={field.type}
+                                    required={field.required}
+                                    min={field.min}
+                                    value={formData[field.name] ?? ''}
+                                    onChange={e => setFormData(prev => ({ ...prev, [field.name]: field.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value }))}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm"
+                                />
+                            )}
+                            {field.help && (
+                                <p className="mt-1.5 text-[11px] text-gray-400 flex items-start gap-1 px-1">
+                                    <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                    {field.help}
+                                </p>
                             )}
                         </div>
                     ))}

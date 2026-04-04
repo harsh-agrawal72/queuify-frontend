@@ -186,6 +186,7 @@ const AdminLayout = () => {
     const menuItems = [
         { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics'), disabled: setupIncomplete },
         { path: '/admin/services', icon: Briefcase, label: t('navigation.service_management'), disabled: setupIncomplete },
+        { path: '/admin/resources', icon: Users, label: t('navigation.resource_management', 'Resource Management'), disabled: setupIncomplete },
         { path: '/admin/slots', icon: Clock, label: t('navigation.manage_slots'), disabled: setupIncomplete },
         { path: '/admin/appointments', icon: Users, label: t('navigation.appointments'), disabled: setupIncomplete },
         { path: '/admin/queue', icon: ListVideo, label: t('navigation.live_queue'), disabled: setupIncomplete },

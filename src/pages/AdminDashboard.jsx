@@ -4,6 +4,7 @@ import AdminLayout from '../layouts/AdminLayout';
 
 const AppointmentManager = lazy(() => import('../components/admin/AppointmentManager'));
 const ServiceManagement = lazy(() => import('../components/admin/ServiceManagement'));
+const ResourceManager = lazy(() => import('../components/admin/ResourceManager'));
 const SlotManagement = lazy(() => import('../components/admin/SlotManagement'));
 const LiveQueue = lazy(() => import('../components/admin/LiveQueue'));
 const AnalyticsPanel = lazy(() => import('../components/admin/AnalyticsPanel'));
@@ -31,6 +32,7 @@ const AdminDashboard = () => {
                     <Route index element={<Navigate to="analytics" replace />} />
                     <Route path="analytics" element={<AnalyticsPanel />} />
                     <Route path="services" element={<ServiceManagement />} />
+                    <Route path="resources" element={<ResourceManager />} />
                     <Route path="slots" element={<SlotManagement />} />
                     <Route path="appointments" element={<AppointmentManager />} />
                     <Route path="queue" element={<LiveQueue />} />

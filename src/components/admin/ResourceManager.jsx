@@ -13,8 +13,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import InfoTooltip from '../common/InfoTooltip';
+import { useTranslation } from 'react-i18next';
 
 const ResourceManager = () => {
+    const { t } = useTranslation();
     const [resources, setResources] = useState([]);
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -135,13 +137,19 @@ const ResourceManager = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
-                    <p className="text-sm text-gray-500">Manage staff, rooms, or equipment.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        {t('navigation.resource_management', 'Resource Management')}
+                        <InfoTooltip text={t('resource.mgmt_tooltip', 'Resources are doctors, staff, rooms, or equipment. Create them here and link them to multiple services.')} />
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">{t('resource.mgmt_subtitle', 'Manage independent resources and their service mappings.')}</p>
                 </div>
-                <button onClick={openCreateModal} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm">
-                    <Plus className="h-4 w-4" /> Add Resource
+                <button 
+                    onClick={openCreateModal} 
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
+                >
+                    <Plus className="h-4 w-4" /> {t('resource.add_resource', 'Add Resource')}
                 </button>
             </div>
 
