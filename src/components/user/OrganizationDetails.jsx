@@ -34,29 +34,31 @@ export default function OrganizationDetails() {
     useEffect(() => {
         const fetchAllDetails = async () => {
             try {
-                // Single optimized call for all public data
-                const profileRes = await api.get(`/organizations/public-profile/${slug}`);
-                const data = profileRes.data;
-                
-                setOrg(data);
-                setServices(data.services || []);
-                setReviewsData(data.reviews_stats ? { stats: data.reviews_stats, reviews: data.recent_reviews } : null);
+                // ⚡ Parallel Fetch: Load Profile & User context simultaneously
+                const [profileRes, myApptsRes] = await Promise.allSettled([
+                    api.get(`/organizations/public-profile/${slug}`),
+                    api.get('/appointments/my')
+                ]);
 
-                // Fetch User Context (Past Appointments) if logged in
-                // We do this in parallel with the main load to save time
-                try {
-                    const myApptsRes = await api.get('/appointments/my');
-                    const completedForOrg = myApptsRes.data.filter(
-                        appt => appt.org_id === data.id && appt.status === 'completed'
-                    );
-                    setPastAppointments(completedForOrg);
-                } catch (e) {
-                    // Not critically failing if user is guest
-                    console.log('User context fetch skipped or failed');
+                if (profileRes.status === 'fulfilled') {
+                    const data = profileRes.value.data;
+                    setOrg(data);
+                    setServices(data.services || []);
+                    setReviewsData(data.reviews_stats ? { stats: data.reviews_stats, reviews: data.recent_reviews } : null);
+
+                    // Handle User Context (Past Appointments) from the parallel call
+                    if (myApptsRes.status === 'fulfilled') {
+                        const completedForOrg = myApptsRes.value.data.filter(
+                            appt => appt.org_id === data.id && appt.status === 'completed'
+                        );
+                        setPastAppointments(completedForOrg);
+                    }
+                } else {
+                    console.error('Failed to load org profile:', profileRes.reason);
                 }
 
             } catch (err) {
-                console.error('Failed to load unified org profile', err);
+                console.error('Unified load failed:', err);
             } finally {
                 setLoading(false);
             }
@@ -65,8 +67,35 @@ export default function OrganizationDetails() {
         fetchAllDetails();
     }, [slug]);
 
-    if (loading) return <div className="p-12 text-center">Loading...</div>;
-    if (!org) return <div className="p-12 text-center">Organization not found</div>;
+    if (loading) {
+        return (
+            <div className="space-y-8 animate-pulse">
+                {/* Header Skeleton */}
+                <div className="relative">
+                    <div className="h-48 md:h-64 rounded-3xl bg-gray-100 mb-4"></div>
+                    <div className="px-8 -mt-12 flex items-end gap-6">
+                        <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl p-1.5 shadow-xl">
+                            <div className="w-full h-full bg-gray-200 rounded-2xl"></div>
+                        </div>
+                        <div className="flex-1 space-y-3 pb-2">
+                            <div className="h-8 w-64 bg-gray-200 rounded-lg"></div>
+                            <div className="h-4 w-48 bg-gray-100 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="h-48 bg-white rounded-3xl border border-gray-100"></div>
+                        <div className="h-64 bg-white rounded-3xl border border-gray-100"></div>
+                    </div>
+                    <div className="h-96 bg-white rounded-3xl border border-gray-100"></div>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!org) return <div className="p-12 text-center text-gray-500 font-medium bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">Organization not found</div>;
 
     return (
         <div className="space-y-8 pb-20">

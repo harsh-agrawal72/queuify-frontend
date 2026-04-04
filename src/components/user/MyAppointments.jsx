@@ -111,38 +111,37 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                         </div>
                     )}
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-3">
                         {filter === 'upcoming' && appt.status !== 'cancelled' && (
                             <>
                                 <Link
                                     to={`/queue/${appt.id}`}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-md active:scale-95 group/btn"
-                                    title={t('appointment.live_queue')}
+                                    className="relative flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 group/btn overflow-hidden"
                                 >
-                                    <Zap className="h-3.5 w-3.5" />
-                                    <span className="text-[10px] font-black uppercase tracking-tight">Live</span>
+                                    {/* 💥 Pulse Effect for Live Button */}
+                                    <span className="absolute inset-0 bg-white/20 animate-pulse-slow"></span>
+                                    <Zap className="h-4 w-4 relative z-10" />
+                                    <span className="text-xs font-black uppercase tracking-wider relative z-10">Live Queue</span>
                                 </Link>
                                 <button
                                     onClick={() => onSetMap(appt)}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-100 text-gray-500 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
-                                    title={t('appointment.view_map')}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-100 text-gray-600 rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all active:scale-95 shadow-sm"
                                 >
-                                    <Navigation className="h-3.5 w-3.5" />
-                                    <span className="text-[10px] font-black uppercase tracking-tight">Map</span>
+                                    <Navigation className="h-4 w-4" />
+                                    <span className="text-xs font-black uppercase tracking-wider">View Map</span>
                                 </button>
                                 <button
                                     onClick={() => window.dispatchEvent(new CustomEvent('openChat', { detail: { orgId: appt.org_id, orgName: appt.org_name } }))}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-100 text-indigo-400 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-100 text-indigo-500 rounded-xl hover:border-indigo-600 hover:text-indigo-600 transition-all active:scale-95 shadow-sm"
                                 >
-                                    <MessageCircle className="h-3.5 w-3.5" />
-                                    <span className="text-[10px] font-black uppercase tracking-tight">Chat</span>
+                                    <MessageCircle className="h-4 w-4" />
+                                    <span className="text-xs font-black uppercase tracking-wider">Chat</span>
                                 </button>
-                                <div className="ml-1 w-px h-6 bg-gray-50 mx-1 hidden md:block"></div>
                                 <button
                                     onClick={() => onCancel(appt.id)}
-                                    className="px-3 py-2 text-[10px] font-black uppercase text-gray-400 hover:text-rose-500 transition-colors tracking-tight"
+                                    className="px-4 py-2.5 text-xs font-black uppercase text-gray-400 hover:text-rose-500 transition-colors tracking-widest ml-auto md:ml-2"
                                 >
-                                    {t('common.cancel', 'Cancel')}
+                                    Cancel Appt
                                 </button>
                             </>
                         )}
