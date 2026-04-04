@@ -445,13 +445,13 @@ const AdminLiveQueue = () => {
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow hidden md:block group">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2.5 bg-indigo-50 rounded-xl group-hover:scale-110 transition-transform">
-                            <Clock className="h-5 w-5 text-indigo-600" />
+                        <div className="p-2.5 bg-emerald-50 rounded-xl group-hover:scale-110 transition-transform">
+                            <Activity className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Avg. Wait Time</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Working Queues</p>
                             <p className="text-2xl font-black text-slate-900 leading-none">
-                                {Math.round(predictiveInsights?.averageDurations?.reduce((acc, d) => acc + (d.minutes || 0), 0) / (predictiveInsights?.averageDurations?.length || 1))}<span className="text-xs ml-1 text-slate-400 font-bold uppercase">Min</span>
+                                {queues.length}
                             </p>
                         </div>
                     </div>
