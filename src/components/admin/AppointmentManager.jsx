@@ -800,7 +800,7 @@ const AppointmentManager = () => {
                         </button>
                         <button
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                            disabled={page === totalPages}
+                            disabled={page >= totalPages || totalPages === 0}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:shadow-none transition-all border border-transparent hover:border-gray-200"
                         >
                             {t('common.next', 'Next')} <ChevronRight className="h-4 w-4" />

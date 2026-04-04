@@ -1,12 +1,21 @@
 import { X, Printer, Download, CheckCircle2, Building2, User, Calendar, Clock, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { generateInvoice } from '../../utils/pdfGenerator';
 
 const ReceiptModal = ({ isOpen, onClose, appointment }) => {
     if (!appointment) return null;
 
     const handlePrint = () => {
         window.print();
+    };
+
+    const handleDownload = async () => {
+        try {
+            await generateInvoice(appointment);
+        } catch (error) {
+            console.error("PDF generation failed:", error);
+        }
     };
 
     // Calculate Breakdown (Matching backend logic)
@@ -159,7 +168,7 @@ const ReceiptModal = ({ isOpen, onClose, appointment }) => {
                                 Print Receipt
                             </button>
                             <button
-                                onClick={handlePrint}
+                                onClick={handleDownload}
                                 className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
                             >
                                 <Download className="h-5 w-5" />

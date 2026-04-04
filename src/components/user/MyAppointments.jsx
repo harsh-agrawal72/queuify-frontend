@@ -148,13 +148,25 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
 
                         {filter === 'history' && (
                             <div className="flex gap-2">
-                                {appt.status === 'completed' && !appt.review_id && (
-                                    <button
-                                        onClick={() => onSetReview(appt)}
-                                        className="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-100 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all"
-                                    >
-                                        {t('appointment.rate', 'Rate')}
-                                    </button>
+                                {appt.status === 'completed' && (
+                                    <>
+                                        <button
+                                            onClick={() => generateInvoice(appt)}
+                                            className="px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-all flex items-center gap-2"
+                                            title="Download Receipt"
+                                        >
+                                            <Download className="h-4 w-4" />
+                                            {t('appointment.receipt', 'Receipt')}
+                                        </button>
+                                        {!appt.review_id && (
+                                            <button
+                                                onClick={() => onSetReview(appt)}
+                                                className="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-100 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all"
+                                            >
+                                                {t('appointment.rate', 'Rate')}
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                                 <Link
                                     to="/organizations"
