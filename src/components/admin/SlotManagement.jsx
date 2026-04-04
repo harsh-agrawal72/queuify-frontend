@@ -168,6 +168,11 @@ const SlotManagement = () => {
     };
 
     const handleEditSlot = (slot) => {
+        const isPast = new Date(slot.end_time) < new Date();
+        if (isPast) {
+            toast.error(t('admin.slots.past_edit_denied', "Cannot edit past slots."));
+            return;
+        }
         setEditingSlotId(slot.id);
         const resource = allResources.find(r => r.id === slot.resource_id);
         setSelectedModalResource(resource);
@@ -184,7 +189,14 @@ const SlotManagement = () => {
     };
 
     const handleDeleteSlot = async (slotId) => {
-        if (!confirm(t('admin.slots.delete_confirm', 'Delete this slot?'))) return;
+        const slot = slots.find(s => s.id === slotId);
+        const isPast = slot && new Date(slot.end_time) < new Date();
+        
+        if (isPast) {
+            if (!confirm(t('admin.slots.delete_past_confirm', 'This is a past slot. Deleting it will remove historical data from reports. Continue?'))) return;
+        } else {
+            if (!confirm(t('admin.slots.delete_confirm', 'Delete this slot?'))) return;
+        }
         try {
             await api.delete(`/slots/${slotId}`);
             setSlots(prev => prev.filter(s => s.id !== slotId));
@@ -407,8 +419,15 @@ const SlotManagement = () => {
                                     const isPast = end < new Date();
 
                                     return (
-                                        <tr key={slot.id} className={`hover:bg-gray-50/50 transition-colors ${isPast ? 'opacity-50' : ''}`}>
-                                            <td className="px-5 py-4 font-medium">{format(start, 'MMM d, yyyy')}</td>
+                                        <tr key={slot.id} className={`hover:bg-gray-50/50 transition-colors ${isPast ? 'bg-slate-50/50 grayscale-[0.3]' : ''}`}>
+                                            <td className="px-5 py-4 font-medium flex items-center gap-2">
+                                                {format(start, 'MMM d, yyyy')}
+                                                {isPast && (
+                                                    <span className="inline-flex items-center gap-1 bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-300">
+                                                        {t('common.past', 'Past')}
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${slot.resource_type === 'staff' ? 'bg-purple-100 text-purple-600' : 'bg-orange-100 text-orange-600'}`}>
@@ -433,7 +452,10 @@ const SlotManagement = () => {
                                                 </div>
                                             </td>
                                             <td className="px-5 py-4 text-gray-600 font-medium">
-                                                {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
+                                                <div className="flex items-center gap-2">
+                                                    {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
+                                                    {isPast && <AlertCircle className="h-3 w-3 text-amber-500" title="This slot time has passed" />}
+                                                </div>
                                             </td>
                                             <td className="px-5 py-4 text-center">
                                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full border border-gray-100">

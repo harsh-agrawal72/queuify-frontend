@@ -52,12 +52,15 @@ const formatTime = (isoString) => {
 
 // ─── Memoized Appointment Card ───
 const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, onUpdateStatus, onCallPatient, t, predictiveInsights, onVerifyCheckin }) => {
+    const isPastDue = appt.is_past && !isCompleted && !isServing;
+
     return (
         <motion.div
             layout
             className={`
                 p-5 rounded-[1.5rem] border transition-all duration-300 flex items-center gap-5 group
                 ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02] z-10' :
+                    isPastDue ? 'bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100' :
                     isNext ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' :
                         isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
             `}
@@ -76,6 +79,11 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                     )}
                     {isNext && (
                         <span className="text-[9px] font-black bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-2.5 py-1 rounded-full tracking-widest uppercase shadow-sm shadow-indigo-200">{t('status.next', 'UP NEXT')}</span>
+                    )}
+                    {isPastDue && (
+                        <span className="flex items-center gap-1 text-[9px] font-black bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full tracking-widest uppercase border border-amber-200">
+                             <AlertCircle className="h-2.5 w-2.5" /> {t('status.past_due', 'Past Due')}
+                        </span>
                     )}
                 </div>
                
