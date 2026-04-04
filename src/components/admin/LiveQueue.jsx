@@ -157,9 +157,11 @@ const AdminLiveQueue = () => {
     const [predictiveInsights, setPredictiveInsights] = useState(null);
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
     const [activeQueueForManual, setActiveQueueForManual] = useState(null);
-    const [manualEntryData, setManualEntryData] = useState({ customer_name: '', customer_phone: '', resourceId: '', slotId: '' });
+    const [manualEntryData, setManualEntryData] = useState({ customer_name: '', customer_phone: '', resourceId: '', slotId: '', serviceId: '' });
     const [availableSlotsForManual, setAvailableSlotsForManual] = useState([]);
+    const [availableServicesForManual, setAvailableServicesForManual] = useState([]);
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+    const [isLoadingServices, setIsLoadingServices] = useState(false);
     const [otpModal, setOtpModal] = useState({ isOpen: false, appointment: null });
     const [orgProfile, setOrgProfile] = useState(null);
 
@@ -196,6 +198,24 @@ const AdminLiveQueue = () => {
             setPredictiveInsights(res.data);
         } catch (error) {
             console.error('Failed to fetch predictions', error);
+        }
+    };
+
+    const fetchServicesForResource = async (resourceId) => {
+        if (!resourceId) return;
+        setIsLoadingServices(true);
+        try {
+            const res = await api.get(`/admin/resources/${resourceId}/services`);
+            setAvailableServicesForManual(res.data);
+            // Auto-select if only one service exists
+            if (res.data.length === 1) {
+                setManualEntryData(prev => ({ ...prev, serviceId: res.data[0].id }));
+            }
+        } catch (error) {
+            console.error('Failed to fetch services', error);
+            toast.error("Failed to load available services");
+        } finally {
+            setIsLoadingServices(false);
         }
     };
 
@@ -349,10 +369,14 @@ const AdminLiveQueue = () => {
             customer_name: '', 
             customer_phone: '', 
             resourceId: queue?.resource_id || '',
-            slotId: ''
+            slotId: '',
+            serviceId: ''
         });
+        setAvailableServicesForManual([]);
+        setAvailableSlotsForManual([]);
         if (queue?.resource_id) {
             fetchSlotsForResource(queue.resource_id);
+            fetchServicesForResource(queue.resource_id);
         }
         setIsManualModalOpen(true);
     };
@@ -360,10 +384,16 @@ const AdminLiveQueue = () => {
     const submitManualEntry = async (e) => {
         e.preventDefault();
         const loadingToast = toast.loading(t('queue.adding_walkin', "Adding walk-in..."));
+        
+        if (!manualEntryData.serviceId) {
+            toast.error("Please select a service", { id: loadingToast });
+            return;
+        }
+
         try {
             await api.post('/admin/appointments', {
                 ...manualEntryData,
-                serviceId: activeQueueForManual.service_id,
+                serviceId: manualEntryData.serviceId,
                 resourceId: manualEntryData.resourceId,
                 slotId: manualEntryData.slotId,
                 status: 'confirmed'
@@ -727,8 +757,9 @@ const AdminLiveQueue = () => {
                                         value={manualEntryData.resourceId}
                                         onChange={e => {
                                             const newId = e.target.value;
-                                            setManualEntryData({ ...manualEntryData, resourceId: newId, slotId: '' });
+                                            setManualEntryData({ ...manualEntryData, resourceId: newId, slotId: '', serviceId: '' });
                                             fetchSlotsForResource(newId);
+                                            fetchServicesForResource(newId);
                                         }}
                                     >
                                         <option value="">{t('queue.select_professional', 'Select professional')}</option>
@@ -736,6 +767,29 @@ const AdminLiveQueue = () => {
                                             <option key={q.resource_id} value={q.resource_id}>{q.resource_name}</option>
                                         ))}
                                     </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.service', 'Service')}</label>
+                                    <select
+                                        required
+                                        disabled={!manualEntryData.resourceId || isLoadingServices}
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-bold text-slate-700 disabled:opacity-50 disabled:bg-slate-50"
+                                        value={manualEntryData.serviceId}
+                                        onChange={e => setManualEntryData({ ...manualEntryData, serviceId: e.target.value })}
+                                    >
+                                        <option value="">
+                                            {isLoadingServices ? t('common.loading', 'Loading...') : t('queue.select_service', 'Select service')}
+                                        </option>
+                                        {availableServicesForManual.map(svc => (
+                                            <option key={svc.id} value={svc.id}>
+                                                {svc.name} - ₹{svc.price} ({svc.estimated_service_time}m)
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {manualEntryData.resourceId && availableServicesForManual.length === 0 && !isLoadingServices && (
+                                        <p className="text-[10px] text-rose-500 font-bold ml-1">{t('queue.no_services_found', 'No services linked to this professional')}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">

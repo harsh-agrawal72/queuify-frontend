@@ -13,7 +13,9 @@ import {
     Users,
     Pencil,
     Copy,
-    Search
+    Search,
+    Sparkles,
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO, addDays, addWeeks } from 'date-fns';
@@ -58,6 +60,10 @@ const SlotManagement = () => {
     const [copying, setCopying] = useState(false);
     const [copyMode, setCopyMode] = useState('manual');
 
+    // ─── AI Capacity Stats ───
+    const [performanceLoading, setPerformanceLoading] = useState(false);
+    const [resourcePerformance, setResourcePerformance] = useState(null);
+
     // ═══════════════════════════════════════════
     // FETCH INITIAL DATA
     // ═══════════════════════════════════════════
@@ -79,6 +85,26 @@ const SlotManagement = () => {
         };
         fetchData();
     }, [t]);
+
+    // Fetch AI performance when resource is selected
+    useEffect(() => {
+        if (selectedModalResource?.id && modalStep === 2) {
+            const fetchPerformance = async () => {
+                setPerformanceLoading(true);
+                try {
+                    const res = await api.get(`/admin/resources/${selectedModalResource.id}/performance`);
+                    setResourcePerformance(res.data);
+                } catch (e) {
+                    console.error('Failed to fetch performance:', e);
+                } finally {
+                    setPerformanceLoading(false);
+                }
+            };
+            fetchPerformance();
+        } else {
+            setResourcePerformance(null);
+        }
+    }, [selectedModalResource, modalStep]);
 
     // ═══════════════════════════════════════════
     // FETCH SLOTS
@@ -182,6 +208,102 @@ const SlotManagement = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setEditingSlotId(null);
+    };
+
+    // ═══════════════════════════════════════════
+    // SMART HELPERS (Rounding & End Time)
+    // ═══════════════════════════════════════════
+    const updateEndTimeSuggestion = (newStartTime) => {
+        if (!newStartTime) return;
+        try {
+            const [h, m] = newStartTime.split(':').map(Number);
+            const date = new Date();
+            date.setHours(h, m, 0, 0);
+            
+            // Use 30 min as default if no service selected, or pick the first assigned service's time
+            const duration = 30; 
+            const end = new Date(date.getTime() + duration * 60 * 1000);
+            setSlotEndTime(format(end, 'HH:mm'));
+        } catch (e) {
+            console.error("End time calc failed", e);
+        }
+    };
+
+    const roundToNearest5 = (timeStr) => {
+        if (!timeStr) return '';
+        try {
+            const [h, m] = timeStr.split(':').map(Number);
+            const date = new Date();
+            date.setHours(h, m, 0, 0);
+            const coeff = 1000 * 60 * 5; // 5 mins
+            const rounded = new Date(Math.round(date.getTime() / coeff) * coeff);
+            return format(rounded, 'HH:mm');
+        } catch (e) {
+            return timeStr;
+        }
+    };
+
+    const getAiSuggestedCapacity = () => {
+        if (!slotTime || !slotEndTime || !resourcePerformance?.avg_service_time) return 1;
+        
+        try {
+            const start = new Date(`2000-01-01T${slotTime}`);
+            const end = new Date(`2000-01-01T${slotEndTime}`);
+            let diffMins = (end - start) / 60000;
+            if (diffMins < 0) diffMins += 24 * 60; // Handle overnight slots
+            
+            const capacity = Math.floor(diffMins / resourcePerformance.avg_service_time);
+            return capacity > 0 ? capacity : 1;
+        } catch (e) {
+            return 1;
+        }
+    };
+
+    // ═══════════════════════════════════════════
+    // BULK COPY LOGIC
+    // ═══════════════════════════════════════════
+    const handleCopyModeChange = (mode) => {
+        setCopyMode(mode);
+        const source = new Date(copySourceDate);
+        let targets = [];
+
+        if (mode === 'next_7_days') {
+            for (let i = 1; i <= 7; i++) {
+                targets.push(format(addDays(source, i), 'yyyy-MM-dd'));
+            }
+        } else if (mode === 'next_4_weeks') {
+            // Same day of the week for next 4 weeks
+            for (let i = 1; i <= 4; i++) {
+                targets.push(format(addWeeks(source, i), 'yyyy-MM-dd'));
+            }
+        }
+        setCopyTargetDates(targets);
+    };
+
+    const handleBulkCopy = async () => {
+        if (copyTargetDates.length === 0) {
+            toast.error(t('admin.slots.select_target_dates', 'Please select target dates'));
+            return;
+        }
+
+        setCopying(true);
+        try {
+            const payload = {
+                sourceDate: copySourceDate,
+                targetDates: copyTargetDates,
+                resourceId: copyResourceId || null,
+                overwrite: copyOverwrite
+            };
+
+            await api.post('/admin/slots/bulk-copy', payload);
+            toast.success(t('admin.slots.bulk_success', 'Slots copied successfully'));
+            setIsCopyModalOpen(false);
+            fetchSlots();
+        } catch (error) {
+            toast.error(error.response?.data?.message || t('admin.slots.bulk_failed', 'Bulk copy failed'));
+        } finally {
+            setCopying(false);
+        }
     };
 
     // Filter resources for step 1
@@ -435,20 +557,75 @@ const SlotManagement = () => {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Start Time</label>
-                                                <input type="time" value={slotTime} onChange={e => setSlotTime(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium" />
+                                                <input 
+                                                    type="time" 
+                                                    value={slotTime} 
+                                                    onChange={e => {
+                                                        setSlotTime(e.target.value);
+                                                        updateEndTimeSuggestion(e.target.value);
+                                                    }} 
+                                                    onBlur={e => {
+                                                        const rounded = roundToNearest5(e.target.value);
+                                                        if (rounded && rounded !== e.target.value) {
+                                                            setSlotTime(rounded);
+                                                            updateEndTimeSuggestion(rounded);
+                                                            toast(t('slot.time_rounded', 'Time rounded to nearest 5 minutes'), { icon: 'ℹ️' });
+                                                        }
+                                                    }}
+                                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium" 
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">End Time</label>
-                                                <input type="time" value={slotEndTime} onChange={e => setSlotEndTime(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium" />
+                                                <input 
+                                                    type="time" 
+                                                    value={slotEndTime} 
+                                                    onChange={e => setSlotEndTime(e.target.value)} 
+                                                    onBlur={e => {
+                                                        const rounded = roundToNearest5(e.target.value);
+                                                        if (rounded && rounded !== e.target.value) {
+                                                            setSlotEndTime(rounded);
+                                                            toast(t('slot.time_rounded', 'Time rounded to nearest 5 minutes'), { icon: 'ℹ️' });
+                                                        }
+                                                    }}
+                                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium" 
+                                                />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                                Slot Capacity
-                                                <InfoTooltip text="Maximum number of simultaneous bookings for this time slot." />
-                                            </label>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                    Slot Capacity
+                                                    <InfoTooltip text="Maximum number of simultaneous bookings for this time slot." />
+                                                </label>
+                                                
+                                                {/* AI Suggestion Badge */}
+                                                {!performanceLoading && resourcePerformance?.avg_service_time && slotTime && slotEndTime && (
+                                                    <button 
+                                                        onClick={() => setSlotCapacity(getAiSuggestedCapacity())}
+                                                        className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-all group animate-in fade-in slide-in-from-right-2"
+                                                        title="Based on historical average service speed"
+                                                    >
+                                                        <Sparkles className="h-3 w-3" />
+                                                        <span className="text-[10px] font-bold">AI Suggests: {getAiSuggestedCapacity()}</span>
+                                                    </button>
+                                                )}
+                                                {performanceLoading && (
+                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 text-gray-400 rounded-lg animate-pulse">
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                        <span className="text-[10px] font-bold">AI Calculating...</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <input type="number" min="1" value={slotCapacity} onChange={e => setSlotCapacity(parseInt(e.target.value))} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium" />
+                                            
+                                            {resourcePerformance?.avg_service_time && (
+                                                <p className="text-[9px] text-gray-400 mt-1.5 flex items-center gap-1">
+                                                    <Info className="h-2.5 w-2.5" />
+                                                    Resource average speed: <span className="font-bold text-gray-500">{resourcePerformance.avg_service_time} mins</span> / patient
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -462,6 +639,120 @@ const SlotManagement = () => {
                                     </button>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══ BULK COPY MODAL ═══ */}
+            {isCopyModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                            <h2 className="font-bold text-gray-900">{t('admin.slots.copy_schedule', 'Copy Schedule')}</h2>
+                            <button onClick={() => setIsCopyModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X className="h-5 w-5 text-gray-400" /></button>
+                        </div>
+
+                        <div className="p-8 space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t('admin.slots.source_date', 'Source Date')}</label>
+                                    <input 
+                                        type="date" 
+                                        value={copySourceDate} 
+                                        onChange={e => setCopySourceDate(e.target.value)}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm font-medium" 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{t('admin.slots.copy_for', 'Copy For')}</label>
+                                    <select
+                                        value={copyResourceId}
+                                        onChange={e => setCopyResourceId(e.target.value)}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm font-medium"
+                                    >
+                                        <option value="">{t('admin.slots.all_resources', 'All Resources')}</option>
+                                        {allResources.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">{t('admin.slots.target_date_mode', 'Select Target Dates')}</label>
+                                <div className="grid grid-cols-3 gap-2 mb-4">
+                                    <button 
+                                        onClick={() => handleCopyModeChange('next_7_days')}
+                                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${copyMode === 'next_7_days' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-500 border-gray-100 hover:border-indigo-200'}`}
+                                    >
+                                        Next 7 Days
+                                    </button>
+                                    <button 
+                                        onClick={() => handleCopyModeChange('next_4_weeks')}
+                                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${copyMode === 'next_4_weeks' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-500 border-gray-100 hover:border-indigo-200'}`}
+                                    >
+                                        Weekly (4w)
+                                    </button>
+                                    <button 
+                                        onClick={() => setCopyMode('manual')}
+                                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${copyMode === 'manual' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-500 border-gray-100 hover:border-indigo-200'}`}
+                                    >
+                                        Manual
+                                    </button>
+                                </div>
+
+                                {copyMode === 'manual' ? (
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] text-gray-400 font-bold uppercase">Add Specific Date</label>
+                                        <input 
+                                            type="date" 
+                                            onChange={e => {
+                                                if (e.target.value && !copyTargetDates.includes(e.target.value)) {
+                                                    setCopyTargetDates([...copyTargetDates, e.target.value]);
+                                                }
+                                                e.target.value = '';
+                                            }}
+                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm" 
+                                        />
+                                    </div>
+                                ) : null}
+
+                                <div className="mt-4 flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 font-mono text-[11px]">
+                                    {copyTargetDates.map(date => (
+                                        <span key={date} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100">
+                                            {format(parseISO(date), 'EEE, MMM d')}
+                                            <button onClick={() => setCopyTargetDates(copyTargetDates.filter(d => d !== date))} className="hover:text-red-500"><X className="h-3 w-3" /></button>
+                                        </span>
+                                    ))}
+                                    {copyTargetDates.length === 0 && (
+                                        <span className="text-gray-300 italic text-sm">No target dates selected</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                                <div className="flex-1">
+                                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={copyOverwrite} 
+                                            onChange={e => setCopyOverwrite(e.target.checked)}
+                                            className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500" 
+                                        />
+                                        <span className="text-xs font-bold text-amber-900">{t('admin.slots.overwrite_existing', 'Overwrite existing slots')}</span>
+                                    </label>
+                                    <p className="text-[10px] text-amber-700 mt-0.5">If checked, target dates will be cleared before copying.</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleBulkCopy}
+                                disabled={copying || copyTargetDates.length === 0}
+                                className="w-full flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all font-bold shadow-xl shadow-indigo-100 disabled:opacity-50"
+                            >
+                                {copying ? <Loader2 className="h-5 w-5 animate-spin" /> : <Copy className="h-5 w-5" />}
+                                {t('admin.slots.confirm_copy', 'Copy Schedule Now')}
+                            </button>
                         </div>
                     </div>
                 </div>
