@@ -32,59 +32,38 @@ export default function OrganizationDetails() {
 
 
     useEffect(() => {
-        const fetchDetails = async () => {
+        const fetchAllDetails = async () => {
             try {
-                // 1. Fetch Org
-                const orgRes = await api.get(`/organizations/slug/${slug}`);
-                setOrg(orgRes.data);
+                // Single optimized call for all public data
+                const profileRes = await api.get(`/organizations/public-profile/${slug}`);
+                const data = profileRes.data;
+                
+                setOrg(data);
+                setServices(data.services || []);
+                setReviewsData(data.reviews_stats ? { stats: data.reviews_stats, reviews: data.recent_reviews } : null);
 
-                // 2. Fetch Services
-                const servicesRes = await api.get(`/organizations/${orgRes.data.id}/services`);
-                setServices(servicesRes.data);
-
-                // 3. Fetch Reviews
-                const reviewsRes = await apiService.getOrgReviews(orgRes.data.id);
-                setReviewsData(reviewsRes.data);
+                // Fetch User Context (Past Appointments) if logged in
+                // We do this in parallel with the main load to save time
+                try {
+                    const myApptsRes = await api.get('/appointments/my');
+                    const completedForOrg = myApptsRes.data.filter(
+                        appt => appt.org_id === data.id && appt.status === 'completed'
+                    );
+                    setPastAppointments(completedForOrg);
+                } catch (e) {
+                    // Not critically failing if user is guest
+                    console.log('User context fetch skipped or failed');
+                }
 
             } catch (err) {
-                console.error('Failed to load org details or reviews', err);
+                console.error('Failed to load unified org profile', err);
             } finally {
                 setLoading(false);
             }
         };
 
-        const fetchUserPastAppointments = async () => {
-            if (!org) return; // Wait until org is loaded
-            try {
-                const myApptsRes = await api.get('/appointments/my');
-                const completedForOrg = myApptsRes.data.filter(
-                    appt => appt.org_id === org.id && appt.status === 'completed'
-                );
-                setPastAppointments(completedForOrg);
-            } catch (e) {
-                console.log('User might not be logged in or no appointments', e);
-            }
-        };
-
-        fetchDetails();
+        fetchAllDetails();
     }, [slug]);
-
-    useEffect(() => {
-        if (org) {
-            const fetchUserPastAppointments = async () => {
-                try {
-                    const myApptsRes = await api.get('/appointments/my');
-                    const completedForOrg = myApptsRes.data.filter(
-                        appt => appt.org_id === org.id && appt.status === 'completed'
-                    );
-                    setPastAppointments(completedForOrg);
-                } catch (e) {
-                    console.log('User might not be logged in or no appointments', e);
-                }
-            };
-            fetchUserPastAppointments();
-        }
-    }, [org]);
 
     if (loading) return <div className="p-12 text-center">Loading...</div>;
     if (!org) return <div className="p-12 text-center">Organization not found</div>;
