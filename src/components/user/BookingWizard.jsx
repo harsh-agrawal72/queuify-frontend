@@ -16,7 +16,8 @@ import {
     X,
     CalendarCheck,
     LayoutDashboard,
-    ArrowRight
+    ArrowRight,
+    RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO, isValid } from 'date-fns';
@@ -667,11 +668,19 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 </div>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                    {t('booking.wizard.payment.escrow_note', 'Payments are held in escrow and released only after your appointment is verified or successfully completed.')}
-                </p>
+            <div className="flex flex-col gap-3">
+                <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                    <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                        {t('booking.wizard.payment.escrow_note', 'Payments are held in escrow and released only after your appointment is verified or successfully completed.')}
+                    </p>
+                </div>
+                <div className="flex items-start gap-3 p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <RefreshCw className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-indigo-800 leading-relaxed font-medium">
+                        {t('booking.wizard.payment.refund_policy', 'Refund Policy: Full refund if cancelled 3+ hours before. 85% refund if cancelled within 3 hours.')}
+                    </p>
+                </div>
             </div>
 
             <button

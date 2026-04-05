@@ -23,7 +23,7 @@ const USER_TERMS = [
         icon: RefreshCw,
         color: 'emerald',
         title: "Refunds & Cancellation Policy",
-        content: "If you cancel more than 6 hours before your slot, you receive a 100% refund. Cancellations within 6 hours receive a 50% refund. Admin-initiated cancellations always entitle you to a full refund. No refund is issued for 'No Show' status."
+        content: "If you cancel more than 3 hours before your slot, you receive a 100% refund. Cancellations within 3 hours receive an 85% refund. Admin-initiated cancellations always entitle you to a full refund. No refund is issued for 'No Show' status."
     },
     {
         icon: Lock,

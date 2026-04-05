@@ -246,9 +246,6 @@ export default function MyAppointments() {
     }, [fetchAppointments]);
 
     const handleCancel = useCallback(async (id) => {
-        const confirmMsg = t('appointment.cancel_confirm', 'Are you sure you want to cancel this appointment?');
-        if (!window.confirm(confirmMsg)) return;
-
         const reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
         if (reason === null) return;
         if (!reason.trim()) {
@@ -256,21 +253,38 @@ export default function MyAppointments() {
             return;
         }
 
-        const previousAppointments = [...appointments];
-        setAppointments(prev => prev.map(appt => 
-            appt.id === id ? { ...appt, status: 'cancelled', cancelled_by: 'user', cancellation_reason: reason } : appt
-        ));
-
         try {
+            // First, get a refund preview from the backend
+            const { data: preview } = await api.get(`/payments/refund-preview/${id}`);
+            
+            const refundAmount = preview.refundAmount || 0;
+            const refundPercentage = preview.policy?.percentage || 0;
+            const isLate = refundPercentage < 100;
+
+            let confirmMsg = "";
+            if (isLate) {
+                confirmMsg = t('appointment.cancel_confirm_refund_late', 
+                    'Are you sure you want to cancel? Since it is less than 3 hours before the slot, you will receive an 85% refund (₹{{amount}}).', 
+                    { amount: refundAmount.toFixed(2) }
+                );
+            } else {
+                confirmMsg = t('appointment.cancel_confirm_refund_full', 
+                    'Are you sure you want to cancel? You will receive a 100% full refund (₹{{amount}}).', 
+                    { amount: refundAmount.toFixed(2) }
+                );
+            }
+
+            if (!window.confirm(confirmMsg)) return;
+
+            // Proceed with cancellation
             await api.post(`/appointments/${id}/cancel`, { reason });
-            toast.success(t('appointment.cancel_success', 'Appointment cancelled'));
+            toast.success(t('appointment.cancel_success', 'Appointment cancelled successfully'));
             fetchAppointments();
         } catch (err) {
             console.error(err);
-            setAppointments(previousAppointments);
-            toast.error(err.response?.data?.message || 'Failed to cancel');
+            toast.error(err.response?.data?.message || 'Failed to cancel appointment');
         }
-    }, [t, appointments, fetchAppointments]);
+    }, [fetchAppointments, t]);
 
     const handleRespond = useCallback(async (id, action) => {
         try {

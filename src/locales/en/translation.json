@@ -1069,7 +1069,7 @@
       "sec5_title": "5. Payment & Escrow Service",
       "sec5_desc": "Queuify uses a secure escrow system for paid bookings. Funds are held by Queuify and only released to the Organization's wallet after the service is marked as 'Completed' via OTP verification or check-in. In non-production environments, mock payments may be used.",
       "sec6_title": "6. Refund & Cancellation Policy",
-      "sec6_desc": "Full refunds are issued if an organization cancels your appointment. For user cancellations, refunds are processed based on the organization's timing policy (e.g., full refund if cancelled >24h before). No refunds are provided for 'No Show' statuses.",
+      "sec6_desc": "Full refunds are issued if an organization cancels your appointment. For user cancellations, 100% refund is provided if cancelled at least 3 hours before start time. Cancellations within 3 hours are eligible for an 85% refund. No refunds are provided for 'No Show' statuses.",
       "sec7_title": "7. Settlements & Payouts (for Businesses)",
       "sec7_desc": "Organizations can withdraw their Available Balance to verified bank accounts or UPI IDs. Payout requests are typically processed within 1-3 business days. Organizations must maintain accurate KYC and banking details to receive funds.",
       "sec8_title": "8. User Responsibilities",
@@ -1090,6 +1090,13 @@
       },
       "sec4_title": "4. Managing cookies",
       "sec4_desc": "Most web browsers allow some control of most cookies through the browser settings. To find out more about cookies, including how to see what cookies have been set, visit www.aboutcookies.org or www.allaboutcookies.org."
+    }
+  },
+  "booking": {
+    "wizard": {
+      "payment": {
+        "refund_policy": "Refund Policy: Full refund if cancelled 3+ hours before. 85% refund if cancelled within 3 hours."
+      }
     }
   },
   "analytics": {
