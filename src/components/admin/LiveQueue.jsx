@@ -96,6 +96,11 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                      <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
                          <Clock className="h-3 w-3 opacity-60" /> {appt.slot_start ? formatTime(appt.slot_start) : <span className="text-[10px] uppercase tracking-tighter opacity-70">{t('queue.no_slot', 'No Slot')}</span>}
                      </span>
+                     {appt.service_name && (
+                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${isServing ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700 border border-indigo-100/50'}`}>
+                             {appt.service_name}
+                         </span>
+                     )}
                      {!isServing && !isCompleted && (
                          <span className={`text-[11px] font-black flex items-center gap-1.5 transition-colors ${isNext ? 'text-indigo-600' : 'text-slate-400 opacity-80'}`}>
                              <div className={`h-1.5 w-1.5 rounded-full ${isNext ? 'bg-indigo-500 animate-pulse' : 'bg-current opacity-30'}`}></div>
