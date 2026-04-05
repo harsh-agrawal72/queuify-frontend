@@ -172,6 +172,7 @@
     "start_date": "आरंभ तिथि",
     "end_date": "अंतिम तिथि",
     "clear_filters": "फ़िल्टर साफ़ करें",
+    "filters_cleared": "फ़िल्टर साफ़ कर दिए गए हैं",
     "search_users": "यूज़र्स खोजें...",
     "no_conversations": "कोई बातचीत नहीं मिली।",
     "no_messages": "अभी तक कोई संदेश नहीं है",

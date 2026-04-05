@@ -172,6 +172,7 @@
     "start_date": "Start Date",
     "end_date": "End Date",
     "clear_filters": "Clear Filters",
+    "filters_cleared": "Filters cleared",
     "search_users": "Search users...",
     "no_conversations": "No conversations found.",
     "no_messages": "No messages yet",

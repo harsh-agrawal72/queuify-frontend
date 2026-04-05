@@ -364,8 +364,24 @@ const SlotManagement = () => {
 
             {/* ═══ FILTERS ═══ */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-center gap-2 mb-4 text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                    <Filter className="h-4 w-4" /> {t('common.filters', 'Filters')}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                        <Filter className="h-4 w-4" /> {t('common.filters', 'Filters')}
+                    </div>
+                    {(filterService || filterResource || filterDate !== format(new Date(), 'yyyy-MM-dd')) && (
+                        <button
+                            onClick={() => {
+                                setFilterService('');
+                                setFilterResource('');
+                                setFilterDate(format(new Date(), 'yyyy-MM-dd'));
+                                toast.success(t('common.filters_cleared', 'Filters cleared'));
+                            }}
+                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1"
+                        >
+                            <X className="h-3 w-3" />
+                            {t('common.clear_filters', 'Clear Filters')}
+                        </button>
+                    )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>

@@ -103,8 +103,16 @@ const AppointmentManager = () => {
                     date: selectedDate
                 }
             });
-            setAppointments(res.data.appointments);
-            setTotalPages(res.data.totalPages);
+            setAppointments(res.data.appointments || []);
+            const apiTotalPages = res.data.totalPages;
+            const apiTotal = res.data.total;
+            
+            // Calculate totalPages if API doesn't provide it, or use API value
+            if (apiTotalPages !== undefined) {
+                setTotalPages(apiTotalPages);
+            } else if (apiTotal !== undefined) {
+                setTotalPages(Math.ceil(apiTotal / 10));
+            }
         } catch (error) {
             console.error("Failed to fetch appointments", error);
             if (!isBackground) {
@@ -793,14 +801,19 @@ const AppointmentManager = () => {
                     <div className="flex gap-2">
                         <button
                             onClick={() => setPage(p => Math.max(1, p - 1))}
-                            disabled={page === 1}
+                            disabled={page <= 1}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:shadow-none transition-all border border-transparent hover:border-gray-200"
                         >
                             <ChevronLeft className="h-4 w-4" /> {t('common.previous', 'Previous')}
                         </button>
                         <button
-                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                            disabled={page >= totalPages || totalPages === 0}
+                            onClick={() => {
+                                const nextPage = page + 1;
+                                if (!isNaN(totalPages) && nextPage <= totalPages) {
+                                    setPage(nextPage);
+                                }
+                            }}
+                            disabled={page >= totalPages || totalPages <= 0 || isNaN(totalPages)}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:shadow-none transition-all border border-transparent hover:border-gray-200"
                         >
                             {t('common.next', 'Next')} <ChevronRight className="h-4 w-4" />
