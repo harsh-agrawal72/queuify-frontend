@@ -499,7 +499,7 @@ const WalletDashboard = () => {
                         >
                             <div className="p-8 space-y-6">
                                 <div className="flex justify-between items-center">
-                                    <h2 className="text-xl font-black text-gray-900">{t('admin.wallet.modal_title', 'Transfer Funds')}</h2>
+                                    <h2 className="text-xl font-black text-gray-900">{t('admin.wallet.modal_title', 'Request Fund Transfer')}</h2>
                                     <button onClick={() => setIsPayoutModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                         <XCircle className="h-6 w-6 text-gray-400" />
                                     </button>
@@ -527,7 +527,13 @@ const WalletDashboard = () => {
                                         {payoutForm.bankDetails.accountNumber ? (
                                             <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                                                 <p className="text-sm font-bold text-indigo-900 truncate">
-                                                    {payoutForm.bankDetails.bankName} •••• {payoutForm.bankDetails.accountNumber.slice(-4)}
+                                                    {payoutForm.bankDetails.bankName || 'Bank Account'} •••• {payoutForm.bankDetails.accountNumber.slice(-4)}
+                                                </p>
+                                            </div>
+                                        ) : payoutForm.bankDetails.upiId ? (
+                                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                                <p className="text-sm font-bold text-indigo-900 truncate uppercase">
+                                                    {t('admin.wallet.upi_label', { id: payoutForm.bankDetails.upiId })}
                                                 </p>
                                             </div>
                                         ) : (
@@ -545,7 +551,7 @@ const WalletDashboard = () => {
 
                                     <button 
                                         type="submit"
-                                        disabled={!payoutForm.bankDetails.accountNumber || parseFloat(payoutForm.amount) < 500}
+                                        disabled={(!payoutForm.bankDetails.accountNumber && !payoutForm.bankDetails.upiId) || parseFloat(payoutForm.amount) < 500}
                                         className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 mt-4 disabled:opacity-50"
                                     >
                                         {t('admin.wallet.verify_transfer', 'Verify & Transfer')}

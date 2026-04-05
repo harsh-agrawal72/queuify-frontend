@@ -828,6 +828,8 @@
       "destination": "Transfer Destination",
       "saved_account": "Saved Bank Account",
       "verify_transfer": "Verify & Transfer Funds",
+      "upi_id": "UPI ID",
+      "upi_label": "UPI • {{id}}",
       "go_to_settings": "Go to Settings to add Bank Info",
       "no_details": "No bank details saved.",
       "load_failed": "Failed to load transactions",
