@@ -50,6 +50,7 @@ const SlotManagement = () => {
     const [slotCapacity, setSlotCapacity] = useState(1);
     const [editingSlotId, setEditingSlotId] = useState(null);
     const [resourceSearch, setResourceSearch] = useState('');
+    const [wasCapacityManuallySet, setWasCapacityManuallySet] = useState(false);
 
     // ─── Bulk Copy Modal ───
     const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
@@ -105,6 +106,16 @@ const SlotManagement = () => {
             setResourcePerformance(null);
         }
     }, [selectedModalResource, modalStep]);
+
+    // Handle Auto-Capacity Suggestion
+    useEffect(() => {
+        if (!wasCapacityManuallySet && slotTime && slotEndTime && resourcePerformance?.avg_service_time) {
+            const suggested = getAiSuggestedCapacity();
+            if (suggested !== slotCapacity) {
+                setSlotCapacity(suggested);
+            }
+        }
+    }, [slotTime, slotEndTime, resourcePerformance, wasCapacityManuallySet, slotCapacity]);
 
     // ═══════════════════════════════════════════
     // FETCH SLOTS
@@ -215,6 +226,7 @@ const SlotManagement = () => {
         setSlotEndTime('');
         setSlotCapacity(1);
         setResourceSearch('');
+        setWasCapacityManuallySet(false);
     };
 
     const closeModal = () => {
@@ -624,28 +636,41 @@ const SlotManagement = () => {
                                                 
                                                 {/* AI Suggestion Badge */}
                                                 {!performanceLoading && resourcePerformance?.avg_service_time && slotTime && slotEndTime && (
-                                                    <button 
-                                                        onClick={() => setSlotCapacity(getAiSuggestedCapacity())}
-                                                        className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-all group animate-in fade-in slide-in-from-right-2"
-                                                        title="Based on historical average service speed"
+                                                    <div 
+                                                        className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 animate-in fade-in slide-in-from-right-2"
+                                                        title={resourcePerformance.isHistorical ? "Based on historical average speed" : "Based on service time estimates"}
                                                     >
-                                                        <Sparkles className="h-3 w-3" />
-                                                        <span className="text-[10px] font-bold">AI Suggests: {getAiSuggestedCapacity()}</span>
-                                                    </button>
+                                                        <Sparkles className="h-3 w-3 fill-indigo-500 text-indigo-500" />
+                                                        <span className="text-[10px] font-black tracking-tight">{resourcePerformance.isHistorical ? 'Historical' : 'Estimated'} Suggestions: {getAiSuggestedCapacity()}</span>
+                                                    </div>
                                                 )}
                                                 {performanceLoading && (
                                                     <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 text-gray-400 rounded-lg animate-pulse">
                                                         <Loader2 className="h-3 w-3 animate-spin" />
-                                                        <span className="text-[10px] font-bold">AI Calculating...</span>
+                                                        <span className="text-[10px] font-bold">Smart Calc...</span>
                                                     </div>
                                                 )}
                                             </div>
-                                            <input type="number" min="1" value={slotCapacity} onChange={e => setSlotCapacity(parseInt(e.target.value))} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium" />
+                                            <div className="relative">
+                                                <input 
+                                                    type="number" 
+                                                    min="1" 
+                                                    value={slotCapacity} 
+                                                    onChange={e => {
+                                                        setSlotCapacity(parseInt(e.target.value) || 1);
+                                                        setWasCapacityManuallySet(true);
+                                                    }} 
+                                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium pr-10" 
+                                                />
+                                                {slotCapacity === getAiSuggestedCapacity() && !wasCapacityManuallySet && resourcePerformance?.avg_service_time && (
+                                                    <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400 pointer-events-none" />
+                                                )}
+                                            </div>
                                             
                                             {resourcePerformance?.avg_service_time && (
                                                 <p className="text-[9px] text-gray-400 mt-1.5 flex items-center gap-1">
                                                     <Info className="h-2.5 w-2.5" />
-                                                    Resource average speed: <span className="font-bold text-gray-500">{resourcePerformance.avg_service_time} mins</span> / patient
+                                                    {resourcePerformance.isHistorical ? 'Recorded' : 'Expected'} speed: <span className="font-bold text-gray-500">{resourcePerformance.avg_service_time} mins</span> / patient
                                                 </p>
                                             )}
                                         </div>

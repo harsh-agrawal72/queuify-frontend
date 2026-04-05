@@ -592,7 +592,10 @@ const AdminLiveQueue = () => {
                                                   <div className="min-w-[90px] bg-indigo-600 px-4 py-2 rounded-2xl shadow-md shadow-indigo-100 text-center flex-shrink-0 border border-indigo-500">
                                                       <p className="text-[10px] text-indigo-100 font-black uppercase tracking-tighter mb-1">Avg. Time</p>
                                                       <p className="text-base font-black text-white leading-none whitespace-nowrap">
-                                                          {predictiveInsights?.averageDurations?.find(d => d.resource === queue.resource_name || d.service === queue.name)?.minutes || 15}<span className="text-[10px] ml-0.5 text-indigo-200 uppercase font-black">m</span>
+                                                          {queue.scope === 'PER_RESOURCE' 
+                                                              ? (predictiveInsights?.resourceAverages?.find(d => d.resourceId === queue.resource_id || d.resourceName === queue.resource_name)?.minutes || 15)
+                                                              : (predictiveInsights?.averageDurations?.find(d => d.service === queue.name)?.minutes || 15)
+                                                          }<span className="text-[10px] ml-0.5 text-indigo-200 uppercase font-black">m</span>
                                                       </p>
                                                   </div>
                                               </div>
