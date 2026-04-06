@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import ReviewModal from './ReviewModal';
 import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';
+import DisputeModal from './DisputeModal';
 import { generateInvoice } from '../../utils/pdfGenerator';
 
 const ScannerView = ({ onScanSuccess, onCancel }) => {
@@ -99,7 +100,7 @@ const ScannerView = ({ onScanSuccess, onCancel }) => {
     );
 };
 
-const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap, onDelayed }) => {
+const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap, onDelayed, onSetDispute }) => {
     const getStatusConfig = (status) => {
         switch (status) {
             case 'confirmed': return { color: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500', label: t('status.confirmed', 'Confirmed') };
@@ -289,6 +290,20 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                         )}
                                     </>
                                 )}
+                                {filter === 'history' && (appt.status === 'completed' || appt.status === 'no_show') && appt.dispute_status !== 'flagged' && appt.dispute_status !== 'resolved' && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onSetDispute(appt); }}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-rose-100 transition-all font-sans"
+                                    >
+                                        <AlertCircle className="h-3.5 w-3.5" /> Report Issue
+                                    </button>
+                                )}
+
+                                {appt.dispute_status === 'flagged' && (
+                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-rose-200">
+                                        <ShieldCheck className="h-3.5 w-3.5" /> Issue Reported
+                                    </div>
+                                )}
                                 <Link
                                     to="/organizations"
                                     className="flex-1 flex items-center justify-center py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-indigo-100"
@@ -361,7 +376,14 @@ export default function MyAppointments() {
 
     const handleAutoArrive = useCallback(async (orgId) => {
         setLoadingAction(true);
-        const relevantAppt = appointments.find(a => 
+        // Sort appointments by start_time ASC to ensure chronological order
+        const sortedAppts = [...appointments].sort((a, b) => {
+            const timeA = a.start_time ? new Date(a.start_time).getTime() : 0;
+            const timeB = b.start_time ? new Date(b.start_time).getTime() : 0;
+            return timeA - timeB;
+        });
+
+        const relevantAppt = sortedAppts.find(a => 
             a.org_id === orgId && 
             ['confirmed', 'pending', 'serving'].includes(a.status) &&
             a.check_in_method !== 'user_signal'
@@ -409,6 +431,7 @@ export default function MyAppointments() {
     const [reviewModalAppt, setReviewModalAppt] = useState(null);
     const [reschedulingAppt, setReschedulingAppt] = useState(null);
     const [mapModalAppt, setMapModalAppt] = useState(null);
+    const [disputeModalAppt, setDisputeModalAppt] = useState(null);
 
     useEffect(() => {
         fetchAppointments();
@@ -461,9 +484,20 @@ export default function MyAppointments() {
             fetchAppointments();
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data?.message || 'Failed to respond');
+            toast.error(err.response?.data?.message || 'Failed to update reschedule status');
         }
     }, [fetchAppointments, t]);
+
+    const handleDispute = useCallback(async (id, reason) => {
+        try {
+            await api.post(`/appointments/${id}/dispute`, { reason });
+            toast.success('Issue reported successfully. A Superadmin will review this case.', { duration: 5000 });
+            fetchAppointments();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Failed to submit report');
+        }
+    }, [fetchAppointments]);
 
     const counts = useMemo(() => {
         return appointments.reduce((acc, appt) => {
@@ -550,6 +584,7 @@ export default function MyAppointments() {
                                 onSetReschedule={setReschedulingAppt}
                                 onSetReview={setReviewModalAppt}
                                 onSetMap={setMapModalAppt}
+                                onSetDispute={setDisputeModalAppt}
                                 onDelayed={handleDelayed}
                             />
                         ))}

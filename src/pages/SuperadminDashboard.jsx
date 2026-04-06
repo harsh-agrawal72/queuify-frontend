@@ -16,7 +16,8 @@ import GlobalAuditLog from '../components/superadmin/GlobalAuditLog';
 import PremiumAnalytics from '../components/superadmin/PremiumAnalytics';
 import BroadcastManager from '../components/superadmin/BroadcastManager';
 import PayoutControl from '../components/superadmin/PayoutControl';
-import { Megaphone, Wallet } from 'lucide-react';
+import GlobalDisputes from '../components/superadmin/GlobalDisputes';
+import { Megaphone, Wallet, ShieldAlert } from 'lucide-react';
 
 
 
@@ -42,6 +43,7 @@ const SuperadminDashboard = () => {
         { id: 'admins', label: 'System Admins', icon: ShieldCheck },
         { id: 'broadcast', label: 'Broadcast', icon: Megaphone },
         { id: 'payouts', label: 'Payout Requests', icon: Wallet },
+        { id: 'disputes', label: 'Complaints', icon: ShieldAlert },
         { id: 'system', label: 'System Health', icon: PieChart },
     ];
 
@@ -104,6 +106,7 @@ const SuperadminDashboard = () => {
                         <Route path="admins" element={<AdminManager />} />
                         <Route path="broadcast" element={<BroadcastManager />} />
                         <Route path="payouts" element={<PayoutControl />} />
+                        <Route path="disputes" element={<GlobalDisputes />} />
                         <Route path="system" element={<SystemHealth />} />
                     </Routes>
                 </div>
