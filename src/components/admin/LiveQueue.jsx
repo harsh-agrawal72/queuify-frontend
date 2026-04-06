@@ -701,15 +701,33 @@ const AdminLiveQueue = () => {
                                         <CheckCircle className="h-5 w-5" />
                                         {t('queue.completed_successfully', 'Completed Successfully')}
                                     </button>
-                                    {transitioningQueue.currentAppt.check_in_method !== 'user_signal' && (
-                                        <button
-                                            onClick={() => completeTransition('no_show')}
-                                            className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
-                                        >
-                                            <SkipForward className="h-5 w-5" />
-                                            {t('status.no_show', 'Mark as No-Show')}
-                                        </button>
-                                    )}
+                                    {transitioningQueue.currentAppt.check_in_method !== 'user_signal' && (() => {
+                                        const now = new Date();
+                                        const slotEnd = new Date(transitioningQueue.currentAppt.slot_end_time || transitioningQueue.currentAppt.end_time);
+                                        const isSlotOver = now >= slotEnd;
+
+                                        if (isSlotOver) {
+                                            return (
+                                                <button
+                                                    onClick={() => completeTransition('no_show')}
+                                                    className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
+                                                >
+                                                    <SkipForward className="h-5 w-5" />
+                                                    {t('status.no_show', 'Mark as No-Show')}
+                                                </button>
+                                            );
+                                        } else {
+                                            return (
+                                                <button
+                                                    onClick={() => setTransitioningQueue(null)}
+                                                    className="w-full py-5 bg-amber-50 text-amber-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-amber-500 hover:text-white transition-all border border-amber-100 shadow-sm active:scale-95"
+                                                >
+                                                    <SkipForward className="h-5 w-5" />
+                                                    {t('status.not_arrived', 'Not Arrived (Skip)')}
+                                                </button>
+                                            );
+                                        }
+                                    })()}
                                     <button
                                         onClick={() => setTransitioningQueue(null)}
                                         className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all text-sm mt-2"
