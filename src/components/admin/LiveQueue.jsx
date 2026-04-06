@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Users, Clock, CheckCircle, SkipForward, Play, 
     Activity, Calendar, RefreshCw, Volume2, User, UserPlus, ArrowRightCircle,
-    XCircle, X, Loader2, Info, AlertCircle
+    XCircle, X, Loader2, Info, AlertCircle, QrCode
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import api from '../../services/api';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { toast } from 'react-hot-toast';
@@ -142,14 +143,15 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                         >
                             <CheckCircle className="h-5 w-5" />
                         </button>
-                        <button
-                            onClick={() => onUpdateStatus(appt.id, 'no_show')}
-                            disabled={appt.check_in_method === 'user_signal'}
-                            className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 ${appt.check_in_method === 'user_signal' ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 text-white hover:bg-rose-500'}`}
-                            title={appt.check_in_method === 'user_signal' ? t('status.no_show_disabled', 'Cannot mark Arrived user as No Show') : t('status.no_show', 'No Show / Skip')}
-                        >
-                            <SkipForward className="h-5 w-5" />
-                        </button>
+                        {appt.check_in_method !== 'user_signal' && (
+                            <button
+                                onClick={() => onUpdateStatus(appt.id, 'no_show')}
+                                className="h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 bg-white/10 text-white hover:bg-rose-500"
+                                title={t('status.no_show', 'No Show / Skip')}
+                            >
+                                <SkipForward className="h-5 w-5" />
+                            </button>
+                        )}
                     </>
                 ) : (appt.status === 'confirmed' || appt.status === 'pending') ? (
                     <button
@@ -190,6 +192,7 @@ const AdminLiveQueue = () => {
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
     const [isLoadingServices, setIsLoadingServices] = useState(false);
     const [otpModal, setOtpModal] = useState({ isOpen: false, appointment: null });
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
     const fetchQueue = useCallback(async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -439,6 +442,14 @@ const AdminLiveQueue = () => {
                     >
                         <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin text-indigo-600' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
                     </button>
+
+                    <button
+                        onClick={() => setIsQrModalOpen(true)}
+                        className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+                    >
+                        <QrCode className="h-4 w-4 text-indigo-400" />
+                        Clinic QR
+                    </button>
                 </div>
             </div>
 
@@ -612,7 +623,18 @@ const AdminLiveQueue = () => {
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
                                                         onVerifyCheckin={(appt) => {
-                                                            setOtpModal({ isOpen: true, appointment: appt });
+                                                            const handleVerifyCheckin = (appt) => {
+                                                                // --- BYPASS OTP IF ARRIVED VIA QR ---
+                                                                if (appt.check_in_method === 'user_signal' || appt.check_in_method === 'user_delayed') {
+                                                                    const confirmComplete = window.confirm(`User has already verified arrival at clinic. Complete visit for ${appt.user_name} and release funds?`);
+                                                                    if (confirmComplete) {
+                                                                        updateStatus(appt.id, 'completed');
+                                                                    }
+                                                                    return;
+                                                                }
+                                                                setOtpModal({ isOpen: true, appointment: appt });
+                                                            };
+                                                            handleVerifyCheckin(appt);
                                                         }}
                                                     />
                                                 </div>
@@ -675,13 +697,15 @@ const AdminLiveQueue = () => {
                                         <CheckCircle className="h-5 w-5" />
                                         {t('queue.completed_successfully', 'Completed Successfully')}
                                     </button>
-                                    <button
-                                        onClick={() => completeTransition('no_show')}
-                                        className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
-                                    >
-                                        <SkipForward className="h-5 w-5" />
-                                        {t('status.no_show', 'Mark as No-Show')}
-                                    </button>
+                                    {transitioningQueue.currentAppt.check_in_method !== 'user_signal' && (
+                                        <button
+                                            onClick={() => completeTransition('no_show')}
+                                            className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
+                                        >
+                                            <SkipForward className="h-5 w-5" />
+                                            {t('status.no_show', 'Mark as No-Show')}
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => setTransitioningQueue(null)}
                                         className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all text-sm mt-2"
@@ -865,6 +889,64 @@ const AdminLiveQueue = () => {
                     fetchQueue(true);
                 }}
             />
+            {/* 📱 Clinic Check-in QR Modal */}
+            <AnimatePresence>
+                {isQrModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+                            onClick={() => setIsQrModalOpen(false)}
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden p-10 text-center"
+                        >
+                            <div className="mb-8">
+                                <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <QrCode className="h-8 w-8" />
+                                </div>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Clinic Check-in</h3>
+                                <p className="text-sm text-slate-500 mt-2 font-medium">Customers should scan this QR from their dashboard to signal arrival.</p>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-3xl border-4 border-slate-50 shadow-inner flex items-center justify-center mb-8 mx-auto w-fit">
+                                <QRCodeSVG 
+                                    value={`queuify:${user?.org_id}`} 
+                                    size={200}
+                                    level="H"
+                                    includeMargin={false}
+                                    imageSettings={{
+                                        src: "/logo.png",
+                                        x: undefined,
+                                        y: undefined,
+                                        height: 40,
+                                        width: 40,
+                                        excavate: true,
+                                    }}
+                                />
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3 text-left">
+                                    <div className="h-8 w-8 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-600 shrink-0 font-black text-xs">01</div>
+                                    <p className="text-xs text-slate-600 font-bold leading-relaxed">Place this QR at your reception desk or entrance.</p>
+                                </div>
+                                <button 
+                                    onClick={() => setIsQrModalOpen(false)}
+                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all"
+                                >
+                                    Close Dashboard
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

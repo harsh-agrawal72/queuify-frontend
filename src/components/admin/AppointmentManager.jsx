@@ -573,8 +573,9 @@ const AppointmentManager = () => {
                                                                                     <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
                                                                                 </button>
                                                                             )}
-                                                                            {apt.check_in_method !== 'user_signal' && (
+                                                                            {apt.check_in_method !== 'user_signal' && apt.check_in_method !== 'user_delayed' && (
                                                                                 <button onClick={() => {
+                                                                                        console.log('Marking No-Show for:', apt.id, 'Arrival Method:', apt.check_in_method);
                                                                                         if (window.confirm(t('appointment.confirm_no_show', 'Mark this user as No-Show?'))) {
                                                                                             handleStatusUpdate(apt.id, 'no_show');
                                                                                         }
@@ -758,7 +759,7 @@ const AppointmentManager = () => {
                                                         <ShieldCheck className="h-4 w-4" /> {t('appointment.verify_checkin', 'Verify & Complete')}
                                                     </button>
                                                 )}
-                                                {apt.status === 'confirmed' && apt.check_in_method !== 'user_signal' && (
+                                                {apt.status === 'confirmed' && apt.check_in_method !== 'user_signal' && apt.check_in_method !== 'user_delayed' && (
                                                     <button 
                                                         onClick={() => {
                                                             if (window.confirm('Mark this user as No-Show? Funds will be settled accordingly.')) {
