@@ -224,6 +224,68 @@ export default function MyAppointments() {
     const [scannerLoading, setScannerLoading] = useState(false);
     const html5QrCodeRef = useRef(null);
 
+    const stopScanner = async () => {
+        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+            try {
+                await html5QrCodeRef.current.stop();
+                html5QrCodeRef.current.clear();
+            } catch (err) {
+                console.error("Scanner stop error:", err);
+            }
+        }
+        setIsScannerOpen(false);
+    };
+
+    const fetchAppointments = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data } = await api.get('/appointments');
+            setAppointments(data);
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to load appointments');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const handleAutoArrive = useCallback(async (orgId) => {
+        setLoadingAction(true);
+        const relevantAppt = appointments.find(a => 
+            a.org_id === orgId && 
+            ['confirmed', 'pending', 'serving'].includes(a.status) &&
+            a.check_in_method !== 'user_signal'
+        );
+
+        if (!relevantAppt) {
+            toast.error("No active appointment found for this clinic.");
+            setLoadingAction(false);
+            return;
+        }
+
+        const loadingToast = toast.loading("Checking you in...");
+        try {
+            await api.post(`/appointments/${relevantAppt.id}/arrive`, { scannedOrgId: orgId });
+            toast.success(`Arrived at ${relevantAppt.org_name}! Admin notified.`, { id: loadingToast });
+            fetchAppointments();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Check-in failed.", { id: loadingToast });
+        } finally {
+            setLoadingAction(false);
+        }
+    }, [appointments, fetchAppointments]);
+
+    const onScanSuccess = useCallback(async (decodedText) => {
+        if (!decodedText.startsWith('queuify:')) {
+            toast.error("Invalid QR Code. Please scan the clinic's check-in QR.");
+            return;
+        }
+
+        const scannedOrgId = decodedText.split(':')[1];
+        await stopScanner();
+        handleAutoArrive(scannedOrgId);
+    }, [handleAutoArrive]);
+
     const startScanner = async () => {
         setIsScannerOpen(true);
         setScannerLoading(true);
@@ -250,71 +312,10 @@ export default function MyAppointments() {
         }, 300);
     };
 
-    const stopScanner = async () => {
-        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-            try {
-                await html5QrCodeRef.current.stop();
-                html5QrCodeRef.current.clear();
-            } catch (err) {
-                console.error("Scanner stop error:", err);
-            }
-        }
-        setIsScannerOpen(false);
-    };
-
-    const onScanSuccess = async (decodedText) => {
-        if (!decodedText.startsWith('queuify:')) {
-            toast.error("Invalid QR Code. Please scan the clinic's check-in QR.");
-            return;
-        }
-
-        const scannedOrgId = decodedText.split(':')[1];
-        await stopScanner();
-        handleAutoArrive(scannedOrgId);
-    };
-
-    const handleAutoArrive = async (orgId) => {
-        setLoadingAction(true);
-        const relevantAppt = appointments.find(a => 
-            a.org_id === orgId && 
-            ['confirmed', 'pending', 'serving'].includes(a.status) &&
-            a.check_in_method !== 'user_signal'
-        );
-
-        if (!relevantAppt) {
-            toast.error("No active appointment found for this clinic.");
-            setLoadingAction(false);
-            return;
-        }
-
-        const loadingToast = toast.loading("Checking you in...");
-        try {
-            await api.post(`/appointments/${relevantAppt.id}/arrive`, { scannedOrgId: orgId });
-            toast.success(`Arrived at ${relevantAppt.org_name}! Admin notified.`, { id: loadingToast });
-            fetchAppointments();
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Check-in failed.", { id: loadingToast });
-        } finally {
-            setLoadingAction(false);
-        }
-    };
     const [filter, setFilter] = useState('upcoming');
     const [reviewModalAppt, setReviewModalAppt] = useState(null);
     const [reschedulingAppt, setReschedulingAppt] = useState(null);
     const [mapModalAppt, setMapModalAppt] = useState(null);
-
-    const fetchAppointments = useCallback(async () => {
-        setLoading(true);
-        try {
-            const { data } = await api.get('/appointments');
-            setAppointments(data);
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to load appointments');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
 
     useEffect(() => {
         fetchAppointments();
@@ -445,8 +446,6 @@ export default function MyAppointments() {
                                 onSetReschedule={setReschedulingAppt}
                                 onSetReview={setReviewModalAppt}
                                 onSetMap={setMapModalAppt}
-                                onArrived={handleArrived}
-                                onDelayed={handleDelayed}
                             />
                         ))}
                     </AnimatePresence>
