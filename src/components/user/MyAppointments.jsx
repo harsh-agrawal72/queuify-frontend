@@ -15,6 +15,90 @@ import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';
 import { generateInvoice } from '../../utils/pdfGenerator';
 
+const ScannerView = ({ onScanSuccess, onCancel }) => {
+    const [scannerLoading, setScannerLoading] = useState(true);
+    const html5QrCodeRef = useRef(null);
+
+    useEffect(() => {
+        // --- DELAYED INITIALIZATION ---
+        // We wait for the modal animation to finish completely
+        const timer = setTimeout(async () => {
+            const element = document.getElementById("qr-reader");
+            if (!element) {
+                console.error("Scanner element not found in DOM");
+                setScannerLoading(false);
+                return;
+            }
+
+            try {
+                const scanner = new Html5QrcodeScanner(
+                    "qr-reader",
+                    { 
+                        fps: 10, 
+                        qrbox: { width: 250, height: 250 },
+                        rememberLastUsedCamera: true,
+                        aspectRatio: 1.0,
+                        showTorchButtonIfSupported: true,
+                    },
+                    /* verbose= */ false
+                );
+
+                scanner.render(
+                    (text) => {
+                        onScanSuccess(text);
+                    }, 
+                    (err) => { /* ignore frame errors */ }
+                );
+
+                html5QrCodeRef.current = scanner;
+                setScannerLoading(false);
+            } catch (err) {
+                console.error("Scanner start error:", err);
+                toast.error("Could not start camera. Please ensure permissions are granted and you are using HTTPS.");
+                setScannerLoading(false);
+            }
+        }, 800); // Robust delay for modal animation
+
+        return () => {
+            clearTimeout(timer);
+            if (html5QrCodeRef.current) {
+                html5QrCodeRef.current.clear().catch(e => console.error("Cleanup error:", e));
+            }
+        };
+    }, [onScanSuccess]);
+
+    return (
+        <div className="p-8">
+            <div className="relative min-h-[300px] bg-slate-50 rounded-3xl overflow-hidden border-2 border-slate-200">
+                {scannerLoading && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm">
+                        <Loader2 className="h-8 w-8 text-indigo-600 animate-spin mb-3" />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center px-4">
+                            Waking up camera...<br/>Please wait
+                        </p>
+                    </div>
+                )}
+                <div id="qr-reader" className="w-full"></div>
+            </div>
+
+            <div className="mt-8 space-y-4">
+                 <div className="p-4 bg-indigo-50 rounded-2xl flex items-start gap-3">
+                     <ShieldCheck className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+                     <p className="text-xs text-indigo-700 font-bold leading-relaxed">
+                         Scanning marks you as "Arrived." Once scanned, the admin can complete your visit without an OTP.
+                     </p>
+                 </div>
+                 <button 
+                    onClick={onCancel}
+                    className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all shadow-sm"
+                 >
+                     Cancel Scan
+                 </button>
+            </div>
+        </div>
+    );
+};
+
 const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap }) => {
     const getStatusConfig = (status) => {
         switch (status) {
@@ -221,18 +305,9 @@ export default function MyAppointments() {
     const [loading, setLoading] = useState(true);
     const [loadingAction, setLoadingAction] = useState(false);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
-    const [scannerLoading, setScannerLoading] = useState(false);
     const html5QrCodeRef = useRef(null);
 
     const stopScanner = useCallback(async () => {
-        if (html5QrCodeRef.current) {
-            try {
-                await html5QrCodeRef.current.clear();
-                html5QrCodeRef.current = null;
-            } catch (err) {
-                console.error("Scanner cleanup error:", err);
-            }
-        }
         setIsScannerOpen(false);
     }, []);
 
@@ -285,34 +360,6 @@ export default function MyAppointments() {
         await stopScanner();
         handleAutoArrive(scannedOrgId);
     }, [handleAutoArrive, stopScanner]);
-
-    // Use useEffect to initialize scanner when modal opens
-    useEffect(() => {
-        if (isScannerOpen) {
-            const scanner = new Html5QrcodeScanner(
-                "qr-reader",
-                { 
-                    fps: 10, 
-                    qrbox: { width: 250, height: 250 },
-                    rememberLastUsedCamera: true,
-                    aspectRatio: 1.0
-                },
-                /* verbose= */ false
-            );
-
-            scanner.render(onScanSuccess, (err) => {
-                // Ignore frequent scan errors (failed to find QR in frame)
-            });
-
-            html5QrCodeRef.current = scanner;
-
-            return () => {
-                if (html5QrCodeRef.current) {
-                    html5QrCodeRef.current.clear().catch(e => console.error(e));
-                }
-            };
-        }
-    }, [isScannerOpen, onScanSuccess]);
 
     const startScanner = () => {
         // --- SECURE CONTEXT CHECK ---
@@ -490,38 +537,7 @@ export default function MyAppointments() {
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
                         >
-                            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
-                                        <Camera className="h-5 w-5" />
-                                    </div>
-                                    <h3 className="font-black text-slate-900 tracking-tight">Scan Clinic QR</h3>
-                                </div>
-                                <button onClick={stopScanner} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                    <X className="h-5 w-5 text-gray-400" />
-                                </button>
-                            </div>
-
-                            <div className="p-8">
-                                <div className="relative min-h-[300px] bg-slate-50 rounded-3xl overflow-hidden border-2 border-slate-200">
-                                    <div id="qr-reader" className="w-full h-full"></div>
-                                </div>
-
-                                <div className="mt-8 space-y-4">
-                                     <div className="p-4 bg-indigo-50 rounded-2xl flex items-start gap-3">
-                                         <ShieldCheck className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
-                                         <p className="text-xs text-indigo-700 font-bold leading-relaxed">
-                                             Scanning proves your physical presence at the clinic. Once scanned, the admin can complete your visit without asking for an OTP.
-                                         </p>
-                                     </div>
-                                     <button 
-                                        onClick={stopScanner}
-                                        className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all"
-                                     >
-                                         Cancel Scan
-                                     </button>
-                                </div>
-                            </div>
+                            <ScannerView onScanSuccess={onScanSuccess} onCancel={stopScanner} />
                         </motion.div>
                     </div>
                 )}
