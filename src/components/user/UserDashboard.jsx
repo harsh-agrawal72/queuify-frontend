@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     Calendar, CheckCircle, Clock, MapPin, ArrowRight, XCircle, Search, Activity, Users, Star,
-    Building2, TrendingUp, Sparkles, Award, ChevronRight
+    Building2, TrendingUp, Sparkles, Award, ChevronRight, ShieldCheck
 } from 'lucide-react';
 import { format, parseISO, formatDistanceToNow, isValid, isToday, isTomorrow } from 'date-fns';
 import { useQueueSocket } from '../../hooks/useQueueSocket';

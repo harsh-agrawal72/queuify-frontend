@@ -104,7 +104,7 @@ const AppointmentManager = () => {
             setAppointments(res.data.appointments || []);
             const apiTotalPages = res.data.totalPages;
             const apiTotal = res.data.total;
-            
+
             // Calculate totalPages if API doesn't provide it, or use API value
             if (apiTotalPages !== undefined) {
                 setTotalPages(apiTotalPages);
@@ -137,7 +137,7 @@ const AppointmentManager = () => {
 
     // --- REAL-TIME UPDATES VIA SOCKET HOOK ---
     const { queueData } = useQueueSocket(user?.org_id);
-    
+
     useEffect(() => {
         if (queueData) {
             console.log('[AdminSocket] Appointment refresh triggered:', queueData);
@@ -163,11 +163,11 @@ const AppointmentManager = () => {
         if (newStatus === 'cancelled') {
             const apt = appointments.find(a => a.id === id);
             const isPaid = apt?.payment_status === 'paid' && apt?.price > 0;
-            
-            const confirmMsg = isPaid 
+
+            const confirmMsg = isPaid
                 ? t('appointment.confirm_cancel_paid', 'Are you sure? This is a PAID appointment and a 100% REFUND will be issued automatically.')
                 : t('appointment.confirm_cancel_generic', 'Are you sure you want to cancel this appointment?');
-                
+
             if (!window.confirm(confirmMsg)) return;
 
             reason = window.prompt(t('appointment.enter_cancel_reason', 'Please enter a reason for cancellation:'));
@@ -177,7 +177,7 @@ const AppointmentManager = () => {
                 return;
             }
         }
-        
+
         setProcessingId(id);
         try {
             await api.patch(`/admin/appointments/${id}`, { status: newStatus, reason });
@@ -195,7 +195,7 @@ const AppointmentManager = () => {
 
     const handleDelete = async (apt) => {
         setActiveActionId(null);
-        
+
         const isPaid = apt.payment_status === 'paid' && apt.price > 0;
         const isCancelled = apt.status === 'cancelled';
 
@@ -205,11 +205,11 @@ const AppointmentManager = () => {
         setProcessingId(apt.id);
         try {
             await api.delete(`/admin/appointments/${apt.id}`, { data: { reason } });
-            
+
             // Immediately remove from the local state for instant UI feedback
             setAppointments(prev => prev.filter(a => a.id !== apt.id));
             toast.success(t('appointment.delete_success', "Appointment deleted successfully"));
-            
+
             // Optional: Background refresh to sync any other changes
             fetchAppointments(true);
         } catch (error) {
@@ -250,7 +250,7 @@ const AppointmentManager = () => {
 
     const getStatusBadge = (apt) => {
         const { status, cancelled_by, reschedule_status, payment_status } = apt;
-        
+
         if (reschedule_status === 'pending') {
             return (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-orange-200 bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-100 animate-pulse">
@@ -288,8 +288,8 @@ const AppointmentManager = () => {
 
         let displayLabel = t(`status.${status}`, status);
         if (status === 'cancelled' && cancelled_by) {
-            displayLabel = cancelled_by === 'admin' 
-                ? t('status.cancelled_by_admin', 'Cancelled by Admin') 
+            displayLabel = cancelled_by === 'admin'
+                ? t('status.cancelled_by_admin', 'Cancelled by Admin')
                 : t('status.cancelled_by_user', 'Cancelled by User');
         }
 
@@ -303,11 +303,11 @@ const AppointmentManager = () => {
 
     const getLoyaltyBadge = (count) => {
         if (!count || count < 1) return null;
-        
-        let tier = { 
-            name: t('loyalty.bronze', 'Bronze'), 
-            color: 'bg-orange-50 text-orange-700 border-orange-200', 
-            icon: <Award className="h-2.5 w-2.5" /> 
+
+        let tier = {
+            name: t('loyalty.bronze', 'Bronze'),
+            color: 'bg-orange-50 text-orange-700 border-orange-200',
+            icon: <Award className="h-2.5 w-2.5" />
         };
         if (count >= 10) tier = { name: t('loyalty.diamond', 'Diamond'), color: 'bg-cyan-50 text-cyan-700 border-cyan-200', icon: <Award className="h-2.5 w-2.5" /> };
         else if (count >= 5) tier = { name: t('loyalty.gold', 'Gold'), color: 'bg-amber-50 text-amber-700 border-amber-200', icon: <Award className="h-2.5 w-2.5" /> };
@@ -486,7 +486,7 @@ const AppointmentManager = () => {
                                                     <span className="text-sm font-medium text-gray-700">{apt.resource_name || t('common.unassigned', 'Unassigned')}</span>
                                                 </div>
                                             </td>
-                                             <td className="px-6 py-4">
+                                            <td className="px-6 py-4">
                                                 {getStatusBadge(apt)}
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -518,38 +518,38 @@ const AppointmentManager = () => {
                                                                 <div className="px-3 py-2 border-b border-gray-50 bg-gray-50/50">
                                                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.actions', 'Actions')}</p>
                                                                 </div>
-                                                                 <div className="p-1">
+                                                                <div className="p-1">
                                                                     {apt.status !== 'completed' && apt.status !== 'cancelled' && (
-                                                                        <button 
+                                                                        <button
                                                                             onClick={() => {
                                                                                 setReschedulingAppt(apt);
                                                                                 setActiveActionId(null);
-                                                                            }} 
+                                                                            }}
                                                                             className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
                                                                         >
                                                                             <CalendarClock className="h-4 w-4 text-indigo-500" /> {t('appointment.transfer_slot', 'Transfer Slot')}
                                                                         </button>
                                                                     )}
                                                                     {apt.user_id && (
-                                                                        <button 
+                                                                        <button
                                                                             onClick={() => {
                                                                                 setHistoryModal({ isOpen: true, userId: apt.user_id, userName: apt.user_name });
                                                                                 setActiveActionId(null);
-                                                                            }} 
+                                                                            }}
                                                                             className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors"
                                                                         >
                                                                             <History className="h-4 w-4 text-indigo-500" /> {t('appointment.view_history', 'View Visit History')}
                                                                         </button>
                                                                     )}
                                                                     {apt.status !== 'completed' && apt.status !== 'cancelled' && (
-                                                                        <button 
+                                                                        <button
                                                                             onClick={() => {
                                                                                 const isWalkIn = !apt.user_id;
                                                                                 if (isWalkIn || apt.check_in_method === 'user_signal' || apt.check_in_method === 'user_delayed') {
-                                                                                    const confirmMsg = isWalkIn 
+                                                                                    const confirmMsg = isWalkIn
                                                                                         ? `Complete walk-in visit for ${apt.user_name}?`
                                                                                         : `User has verified arrival via QR. Complete visit for ${apt.user_name} and release funds?`;
-                                                                                    
+
                                                                                     if (window.confirm(confirmMsg)) {
                                                                                         handleStatusUpdate(apt.id, 'completed');
                                                                                     }
@@ -557,14 +557,14 @@ const AppointmentManager = () => {
                                                                                     toast.error("Online customers MUST scan the clinic QR code first.");
                                                                                 }
                                                                                 setActiveActionId(null);
-                                                                            }} 
+                                                                            }}
                                                                             className="w-full text-left px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
                                                                         >
                                                                             <ShieldCheck className="h-4 w-4" /> {t('appointment.verify_checkin', 'Verify & Complete')}
                                                                         </button>
                                                                     )}
                                                                 </div>
-                                                                 {apt.status !== 'completed' && apt.status !== 'cancelled' && (
+                                                                {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                                     <>
                                                                         <div className="px-3 py-1 border-y border-gray-50 bg-gray-50/50">
                                                                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.update_status', 'Update Status')}</p>
@@ -584,11 +584,11 @@ const AppointmentManager = () => {
                                                                             )}
                                                                             {apt.check_in_method !== 'user_signal' && apt.check_in_method !== 'user_delayed' && (
                                                                                 <button onClick={() => {
-                                                                                        console.log('Marking No-Show for:', apt.id, 'Arrival Method:', apt.check_in_method);
-                                                                                        if (window.confirm(t('appointment.confirm_no_show', 'Mark this user as No-Show?'))) {
-                                                                                            handleStatusUpdate(apt.id, 'no_show');
-                                                                                        }
-                                                                                    }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                                    console.log('Marking No-Show for:', apt.id, 'Arrival Method:', apt.check_in_method);
+                                                                                    if (window.confirm(t('appointment.confirm_no_show', 'Mark this user as No-Show?'))) {
+                                                                                        handleStatusUpdate(apt.id, 'no_show');
+                                                                                    }
+                                                                                }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">
                                                                                     <div className="w-2 h-2 rounded-full bg-orange-500"></div> {t('status.no_show', 'No-Show')}
                                                                                 </button>
                                                                             )}
@@ -605,8 +605,8 @@ const AppointmentManager = () => {
                                                                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.payment_action', 'Payment Action')}</p>
                                                                         </div>
                                                                         <div className="p-1">
-                                                                            <button 
-                                                                                onClick={() => handleRetryRefund(apt.id)} 
+                                                                            <button
+                                                                                onClick={() => handleRetryRefund(apt.id)}
                                                                                 className="w-full text-left px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
                                                                             >
                                                                                 <DollarSign className="h-4 w-4" /> {t('appointment.retry_refund', 'Retry Refund')}
@@ -618,16 +618,16 @@ const AppointmentManager = () => {
                                                                 <div className="h-px bg-gray-100 my-1"></div>
 
                                                                 <div className="p-1">
-                                                                 {apt.status !== 'confirmed' && apt.status !== 'pending' && (
-                                                                    <div className="p-1">
-                                                                        <button
-                                                                            onClick={() => handleDelete(apt)}
-                                                                            className="w-full text-left px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition-colors"
-                                                                        >
-                                                                            <Trash2 className="h-4 w-4" /> {t('common.delete', 'Delete')}
-                                                                        </button>
-                                                                    </div>
-                                                                 )}
+                                                                    {apt.status !== 'confirmed' && apt.status !== 'pending' && (
+                                                                        <div className="p-1">
+                                                                            <button
+                                                                                onClick={() => handleDelete(apt)}
+                                                                                className="w-full text-left px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition-colors"
+                                                                            >
+                                                                                <Trash2 className="h-4 w-4" /> {t('common.delete', 'Delete')}
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -674,18 +674,17 @@ const AppointmentManager = () => {
                                             <div className="flex items-center gap-2">
                                                 <p className="font-bold text-gray-900 leading-tight">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
                                                 {apt.completed_count > 0 && (
-                                                    <Award className={`h-3 w-3 ${
-                                                        apt.completed_count >= 10 ? "text-cyan-500" :
-                                                        apt.completed_count >= 5 ? "text-amber-500" :
-                                                        apt.completed_count >= 3 ? "text-slate-400" : "text-orange-500"
-                                                    }`} />
+                                                    <Award className={`h-3 w-3 ${apt.completed_count >= 10 ? "text-cyan-500" :
+                                                            apt.completed_count >= 5 ? "text-amber-500" :
+                                                                apt.completed_count >= 3 ? "text-slate-400" : "text-orange-500"
+                                                        }`} />
                                                 )}
                                             </div>
                                             <p className="text-[10px] text-gray-500 mt-0.5">{apt.user_email || '-'}</p>
                                             {apt.user_phone && <p className="text-[10px] text-indigo-600 font-bold mt-0.5">{apt.user_phone}</p>}
                                         </div>
                                     </div>
-                                     <div className="flex flex-col items-end gap-2">
+                                    <div className="flex flex-col items-end gap-2">
                                         {getStatusBadge(apt)}
                                         <button
                                             onClick={(e) => {
@@ -735,7 +734,7 @@ const AppointmentManager = () => {
                                             </div>
                                             <div className="flex flex-col gap-2 mb-3">
                                                 {apt.status !== 'completed' && apt.status !== 'cancelled' && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => {
                                                             setReschedulingAppt(apt);
                                                             setActiveActionId(null);
@@ -746,7 +745,7 @@ const AppointmentManager = () => {
                                                     </button>
                                                 )}
                                                 {apt.user_id && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => {
                                                             setHistoryModal({ isOpen: true, userId: apt.user_id, userName: apt.user_name });
                                                             setActiveActionId(null);
@@ -757,7 +756,7 @@ const AppointmentManager = () => {
                                                     </button>
                                                 )}
                                                 {apt.status !== 'completed' && apt.status !== 'cancelled' && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => {
                                                             const isWalkin = !(apt.payment_status === 'paid' && parseFloat(apt.price) > 0);
                                                             setOtpModal({ isOpen: true, appointmentId: apt.id, isWalkin });
@@ -769,7 +768,7 @@ const AppointmentManager = () => {
                                                     </button>
                                                 )}
                                                 {apt.status === 'confirmed' && apt.check_in_method !== 'user_signal' && apt.check_in_method !== 'user_delayed' && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => {
                                                             if (window.confirm('Mark this user as No-Show? Funds will be settled accordingly.')) {
                                                                 handleStatusUpdate(apt.id, 'no_show');
@@ -781,16 +780,16 @@ const AppointmentManager = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                                 {apt.status !== 'completed' && apt.status !== 'cancelled' && (
-                                                    <div className="grid grid-cols-2 gap-2 flex-grow mt-2">
-                                                        <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
-                                                        <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
-                                                        {!(apt.payment_status === 'paid' && parseFloat(apt.price) > 0) && (
-                                                            <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">{t('status.completed', 'Completed')}</button>
-                                                        )}
-                                                        <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">{t('status.cancelled', 'Cancelled')}</button>
-                                                    </div>
-                                                )}
+                                            {apt.status !== 'completed' && apt.status !== 'cancelled' && (
+                                                <div className="grid grid-cols-2 gap-2 flex-grow mt-2">
+                                                    <button onClick={() => handleStatusUpdate(apt.id, 'pending')} className="py-2 text-xs font-bold rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">{t('status.pending', 'Pending')}</button>
+                                                    <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="py-2 text-xs font-bold rounded-xl border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">{t('status.confirmed', 'Confirmed')}</button>
+                                                    {!(apt.payment_status === 'paid' && parseFloat(apt.price) > 0) && (
+                                                        <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="py-2 text-xs font-bold rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">{t('status.completed', 'Completed')}</button>
+                                                    )}
+                                                    <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="py-2 text-xs font-bold rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors">{t('status.cancelled', 'Cancelled')}</button>
+                                                </div>
+                                            )}
                                             <button
                                                 onClick={() => handleDelete(apt)}
                                                 className="mt-3 w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors flex items-center justify-center gap-2"
@@ -847,7 +846,7 @@ const AppointmentManager = () => {
                 )}
             </AnimatePresence>
 
-            <UserHistoryModal 
+            <UserHistoryModal
                 isOpen={historyModal.isOpen}
                 userId={historyModal.userId}
                 userName={historyModal.userName}

@@ -416,7 +416,7 @@ export default function MyAppointments() {
 
     const handleDelayed = useCallback(async (id) => {
         try {
-            await api.post(`/appointments/${id}/mark-delayed`);
+            await api.post(`/appointments/${id}/delay`);
             toast.success(t('appointment.delayed_success', 'Status updated: "On the Way"'));
             fetchAppointments();
         } catch (err) {

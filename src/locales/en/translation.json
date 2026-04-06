@@ -79,6 +79,7 @@
     "language": "Language",
     "submit": "Submit",
     "close": "Close",
+    "not_arrived": "Not Arrived",
     "back": "Back",
     "next": "Next",
     "confirm": "Confirm",
@@ -186,6 +187,7 @@
     "search_typo_hint": "Try checking for typos or using different keywords.",
     "no_description": "No description",
     "esc_to_close": "Press ESC to close",
+    "complete": "Complete",
     "resource": "Resource"
   },
   "resource_mgmt": {
@@ -450,6 +452,7 @@
     "completed": "Completed",
     "serving": "Serving",
     "no_show": "No Show",
+    "not_arrived": "No Arrived",
     "next": "Up Next",
     "active": "Active",
     "inactive": "Inactive",

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Users, Clock, CheckCircle, SkipForward, Play, 
+import {
+    Users, Clock, CheckCircle, SkipForward, Play,
     Activity, Calendar, RefreshCw, Volume2, User, UserPlus, ArrowRightCircle,
     XCircle, X, Loader2, Info, AlertCircle, QrCode
 } from 'lucide-react';
@@ -60,27 +60,27 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                 p-5 rounded-[1.5rem] border transition-all duration-300 flex items-center gap-5 group
                 ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02] z-10' :
                     isPastDue ? 'bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100' :
-                    isNext ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' :
-                        isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
+                        isNext ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' :
+                            isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
             `}
         >
             <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-all duration-300 ${isServing ? 'bg-white/20 scale-110' : 'bg-white border border-slate-100 text-slate-400 group-hover:border-indigo-200 group-hover:text-indigo-500'}`}>
                 {appt.queue_number}
             </div>
-            
+
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1.5">
                     <h4 className={`text-lg font-bold truncate tracking-tight ${isServing ? 'text-white' : 'text-slate-900'}`}>{formatName(appt.user_name)}</h4>
-                    
+
                     {appt.check_in_method === 'user_signal' && (
                         <span className="flex items-center gap-1.5 text-[9px] font-black bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full tracking-widest uppercase border border-emerald-200 animate-pulse">
-                             <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full"></div> {t('status.arrived', 'ARRIVED')}
+                            <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full"></div> {t('status.arrived', 'ARRIVED')}
                         </span>
                     )}
 
                     {appt.check_in_method === 'user_delayed' && (
                         <span className="flex items-center gap-1.5 text-[9px] font-black bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full tracking-widest uppercase border border-amber-200">
-                             <Clock className="h-2.5 w-2.5" /> {t('status.delayed', 'DELAYED')}
+                            <Clock className="h-2.5 w-2.5" /> {t('status.delayed', 'DELAYED')}
                         </span>
                     )}
 
@@ -94,40 +94,40 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                     )}
                     {isPastDue && (
                         <span className="flex items-center gap-1 text-[9px] font-black bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full tracking-widest uppercase border border-amber-200">
-                             <AlertCircle className="h-2.5 w-2.5" /> {t('status.past_due', 'Past Due')}
+                            <AlertCircle className="h-2.5 w-2.5" /> {t('status.past_due', 'Past Due')}
                         </span>
                     )}
                 </div>
-               
+
                 <div className="flex items-center gap-3 flex-wrap">
                     {appt.user_phone && (
                         <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
                             <Users className="h-3 w-3 opacity-60" /> {appt.user_phone}
                         </span>
                     )}
-                     <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
-                         <Clock className="h-3 w-3 opacity-60" /> {appt.slot_start ? formatTime(appt.slot_start) : <span className="text-[10px] uppercase tracking-tighter opacity-70">{t('queue.no_slot', 'No Slot')}</span>}
-                     </span>
-                     {appt.service_name && (
-                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${isServing ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700 border border-indigo-100/50'}`}>
-                             {appt.service_name}
-                         </span>
-                     )}
-                     {!isServing && !isCompleted && (
-                         <span className={`text-[11px] font-black flex items-center gap-1.5 transition-colors ${isNext ? 'text-indigo-600' : 'text-slate-400 opacity-80'}`}>
-                             <div className={`h-1.5 w-1.5 rounded-full ${isNext ? 'bg-indigo-500 animate-pulse' : 'bg-current opacity-30'}`}></div>
-                             {t('queue.wait_label', 'Wait')}: {(() => {
-                                 const ahead = queue.appointments.filter((a, idx) => 
-                                     idx < i && (a.status === 'confirmed' || a.status === 'pending' || a.status === 'serving' || a.status === 'waitlisted_urgent')
-                                 ).length;
-                                 const avg = predictiveInsights?.averageDurations?.find(d => d.resource === appt.resource_name)?.minutes || 15;
-                                 return ahead * avg;
-                             })()}m
-                         </span>
-                     )}
-                     <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border transition-all ${isServing ? 'bg-white/10 text-white border-white/20' : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100/50'}`}>
-                         {appt.token_number}
-                     </span>
+                    <span className={`text-[11px] font-bold flex items-center gap-1.5 ${isServing ? 'text-white/80' : 'text-slate-500'}`}>
+                        <Clock className="h-3 w-3 opacity-60" /> {appt.slot_start ? formatTime(appt.slot_start) : <span className="text-[10px] uppercase tracking-tighter opacity-70">{t('queue.no_slot', 'No Slot')}</span>}
+                    </span>
+                    {appt.service_name && (
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${isServing ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700 border border-indigo-100/50'}`}>
+                            {appt.service_name}
+                        </span>
+                    )}
+                    {!isServing && !isCompleted && (
+                        <span className={`text-[11px] font-black flex items-center gap-1.5 transition-colors ${isNext ? 'text-indigo-600' : 'text-slate-400 opacity-80'}`}>
+                            <div className={`h-1.5 w-1.5 rounded-full ${isNext ? 'bg-indigo-500 animate-pulse' : 'bg-current opacity-30'}`}></div>
+                            {t('queue.wait_label', 'Wait')}: {(() => {
+                                const ahead = queue.appointments.filter((a, idx) =>
+                                    idx < i && (a.status === 'confirmed' || a.status === 'pending' || a.status === 'serving' || a.status === 'waitlisted_urgent')
+                                ).length;
+                                const avg = predictiveInsights?.averageDurations?.find(d => d.resource === appt.resource_name)?.minutes || 15;
+                                return ahead * avg;
+                            })()}m
+                        </span>
+                    )}
+                    <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border transition-all ${isServing ? 'bg-white/10 text-white border-white/20' : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100/50'}`}>
+                        {appt.token_number}
+                    </span>
                 </div>
             </div>
 
@@ -141,15 +141,21 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                         >
                             <CheckCircle className="h-5 w-5" />
                         </button>
-                        {appt.check_in_method !== 'user_signal' && (
-                            <button
-                                onClick={() => onUpdateStatus(appt.id, 'no_show')}
-                                className="h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 bg-white/10 text-white hover:bg-rose-500"
-                                title={t('status.no_show', 'No Show / Skip')}
-                            >
-                                <SkipForward className="h-5 w-5" />
-                            </button>
-                        )}
+                        {appt.check_in_method !== 'user_signal' && (() => {
+                            const now = new Date();
+                            const slotEndTime = appt.slot_end_time || appt.end_time || appt.slot_end;
+                            const isSlotOver = slotEndTime ? now >= new Date(slotEndTime) : false;
+                            
+                            return (
+                                <button
+                                    onClick={() => onUpdateStatus(appt.id, 'no_show')}
+                                    className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 bg-white/10 text-white ${isSlotOver ? 'hover:bg-rose-500' : 'hover:bg-amber-500'}`}
+                                    title={isSlotOver ? t('status.no_show', 'No Show') : t('status.not_arrived', 'Not Arrived')}
+                                >
+                                    <SkipForward className="h-5 w-5" />
+                                </button>
+                            );
+                        })()}
                     </>
                 ) : (appt.status === 'confirmed' || appt.status === 'pending') ? (
                     <button
@@ -360,9 +366,9 @@ const AdminLiveQueue = () => {
 
     const handleAddWalkIn = (queue) => {
         setActiveQueueForManual(queue);
-        setManualEntryData({ 
-            customer_name: '', 
-            customer_phone: '', 
+        setManualEntryData({
+            customer_name: '',
+            customer_phone: '',
             resourceId: queue?.resource_id || '',
             slotId: '',
             serviceId: ''
@@ -379,7 +385,7 @@ const AdminLiveQueue = () => {
     const submitManualEntry = async (e) => {
         e.preventDefault();
         const loadingToast = toast.loading(t('queue.adding_walkin', "Adding walk-in..."));
-        
+
         if (!manualEntryData.serviceId) {
             toast.error("Please select a service", { id: loadingToast });
             return;
@@ -431,7 +437,7 @@ const AdminLiveQueue = () => {
                             className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0 pr-4"
                         />
                     </div>
-                    
+
                     <button
                         onClick={handleRefresh}
                         className={`p-3 bg-white border border-slate-200 rounded-2xl shadow-sm hover:bg-slate-50 transition-all text-slate-500 group ${refreshing ? 'cursor-not-allowed' : 'active:scale-95'}`}
@@ -521,13 +527,13 @@ const AdminLiveQueue = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[400px]"
                             >
-                                 <div className="p-6 bg-slate-50/50 border-b border-slate-100">
-                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-4 gap-x-4 flex-wrap">
-                                         <div className="flex items-center gap-5 min-w-0">
-                                              <div className="h-14 w-14 bg-gradient-to-br from-white to-slate-50 shadow-md border border-slate-200/60 rounded-2xl flex-shrink-0 flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-all duration-300 group-hover:shadow-indigo-100">
-                                                 <User className="h-7 w-7" />
-                                             </div>
-                                             <div className="flex flex-col">
+                                <div className="p-6 bg-slate-50/50 border-b border-slate-100">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-4 gap-x-4 flex-wrap">
+                                        <div className="flex items-center gap-5 min-w-0">
+                                            <div className="h-14 w-14 bg-gradient-to-br from-white to-slate-50 shadow-md border border-slate-200/60 rounded-2xl flex-shrink-0 flex items-center justify-center text-indigo-600 transform -rotate-3 hover:rotate-0 transition-all duration-300 group-hover:shadow-indigo-100">
+                                                <User className="h-7 w-7" />
+                                            </div>
+                                            <div className="flex flex-col">
                                                 <h3 className="text-sm font-black text-slate-900 tracking-tight leading-none mb-1">{queue.resource_name || queue.name}</h3>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase tracking-tighter">
@@ -536,53 +542,53 @@ const AdminLiveQueue = () => {
                                                     </span>
                                                 </div>
                                             </div>
-                                         </div>
-                                         
-                                          <div className="flex items-center gap-3 ml-auto sm:ml-0 lg:ml-auto self-stretch sm:self-auto min-w-0 flex-wrap sm:flex-nowrap">
-                                              <div className="flex items-center gap-1.5 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 shadow-inner">
-                                                  <button
-                                                      onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
-                                                      className="p-2 bg-white text-slate-600 rounded-xl hover:bg-slate-50 border border-slate-100 shadow-sm transition-all h-9 w-9 flex items-center justify-center group/btn relative"
-                                                  >
-                                                      <RefreshCw className="h-4 w-4 group-hover/btn:rotate-180 transition-transform duration-500" />
-                                                      <div className="absolute -top-1.5 -right-1.5 scale-75 origin-bottom-left">
-                                                          <InfoTooltip text={t('queue.rebalance_tooltip', "Optimally redistribute pending appointments across available time slots.")} />
-                                                      </div>
-                                                  </button>
- 
-                                                  <div className="w-px h-6 bg-slate-200 mx-0.5"></div>
- 
-                                                  <button
-                                                      onClick={() => handleAddWalkIn(queue)}
-                                                      className="p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-slate-100 shadow-sm transition-all h-9 w-9 flex items-center justify-center group/btn relative"
-                                                  >
-                                                      <UserPlus className="h-4 w-4 group-hover/btn:scale-110 transition-transform" />
-                                                      <div className="absolute -top-1.5 -right-1.5 scale-75 origin-bottom-left">
-                                                          <InfoTooltip text={t('queue.walkin_tooltip', "Quickly add a walk-in customer who has arrived without a prior appointment.")} />
-                                                      </div>
-                                                  </button>
-                                              </div>
- 
-                                              <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
- 
-                                              <div className="flex gap-2 min-w-0">
-                                                  <div className="min-w-[70px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center flex-shrink-0">
-                                                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter mb-1">{t('queue.waiting_status', 'Wait')}</p>
-                                                      <p className="text-base font-black text-slate-900 leading-none">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending' || a.status === 'waitlisted_urgent').length}</p>
-                                                  </div>
-                                                  <div className="min-w-[90px] bg-indigo-600 px-4 py-2 rounded-2xl shadow-md shadow-indigo-100 text-center flex-shrink-0 border border-indigo-500">
-                                                      <p className="text-[10px] text-indigo-100 font-black uppercase tracking-tighter mb-1">Avg. Time</p>
-                                                      <p className="text-base font-black text-white leading-none whitespace-nowrap">
-                                                          {queue.scope === 'PER_RESOURCE' 
-                                                              ? (predictiveInsights?.resourceAverages?.find(d => d.resourceId === queue.resource_id || d.resourceName === queue.resource_name)?.minutes || 15)
-                                                              : (predictiveInsights?.averageDurations?.find(d => d.service === queue.name)?.minutes || 15)
-                                                          }<span className="text-[10px] ml-0.5 text-indigo-200 uppercase font-black">m</span>
-                                                      </p>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                     </div>
-                                 </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 ml-auto sm:ml-0 lg:ml-auto self-stretch sm:self-auto min-w-0 flex-wrap sm:flex-nowrap">
+                                            <div className="flex items-center gap-1.5 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 shadow-inner">
+                                                <button
+                                                    onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
+                                                    className="p-2 bg-white text-slate-600 rounded-xl hover:bg-slate-50 border border-slate-100 shadow-sm transition-all h-9 w-9 flex items-center justify-center group/btn relative"
+                                                >
+                                                    <RefreshCw className="h-4 w-4 group-hover/btn:rotate-180 transition-transform duration-500" />
+                                                    <div className="absolute -top-1.5 -right-1.5 scale-75 origin-bottom-left">
+                                                        <InfoTooltip text={t('queue.rebalance_tooltip', "Optimally redistribute pending appointments across available time slots.")} />
+                                                    </div>
+                                                </button>
+
+                                                <div className="w-px h-6 bg-slate-200 mx-0.5"></div>
+
+                                                <button
+                                                    onClick={() => handleAddWalkIn(queue)}
+                                                    className="p-2 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 border border-slate-100 shadow-sm transition-all h-9 w-9 flex items-center justify-center group/btn relative"
+                                                >
+                                                    <UserPlus className="h-4 w-4 group-hover/btn:scale-110 transition-transform" />
+                                                    <div className="absolute -top-1.5 -right-1.5 scale-75 origin-bottom-left">
+                                                        <InfoTooltip text={t('queue.walkin_tooltip', "Quickly add a walk-in customer who has arrived without a prior appointment.")} />
+                                                    </div>
+                                                </button>
+                                            </div>
+
+                                            <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
+
+                                            <div className="flex gap-2 min-w-0">
+                                                <div className="min-w-[70px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center flex-shrink-0">
+                                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter mb-1">{t('queue.waiting_status', 'Wait')}</p>
+                                                    <p className="text-base font-black text-slate-900 leading-none">{queue.appointments.filter(a => a.status === 'confirmed' || a.status === 'pending' || a.status === 'waitlisted_urgent').length}</p>
+                                                </div>
+                                                <div className="min-w-[90px] bg-indigo-600 px-4 py-2 rounded-2xl shadow-md shadow-indigo-100 text-center flex-shrink-0 border border-indigo-500">
+                                                    <p className="text-[10px] text-indigo-100 font-black uppercase tracking-tighter mb-1">Avg. Time</p>
+                                                    <p className="text-base font-black text-white leading-none whitespace-nowrap">
+                                                        {queue.scope === 'PER_RESOURCE'
+                                                            ? (predictiveInsights?.resourceAverages?.find(d => d.resourceId === queue.resource_id || d.resourceName === queue.resource_name)?.minutes || 15)
+                                                            : (predictiveInsights?.averageDurations?.find(d => d.service === queue.name)?.minutes || 15)
+                                                        }<span className="text-[10px] ml-0.5 text-indigo-200 uppercase font-black">m</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                                     {queue.appointments.length === 0 ? (
@@ -622,10 +628,10 @@ const AdminLiveQueue = () => {
                                                         onVerifyCheckin={(appt) => {
                                                             const isWalkIn = !appt.user_id;
                                                             if (isWalkIn || appt.check_in_method === 'user_signal' || appt.check_in_method === 'user_delayed') {
-                                                                const confirmMsg = isWalkIn 
+                                                                const confirmMsg = isWalkIn
                                                                     ? `Complete walk-in visit for ${appt.user_name}?`
                                                                     : `User has verified arrival via QR. Complete visit for ${appt.user_name} and release funds?`;
-                                                                
+
                                                                 if (window.confirm(confirmMsg)) {
                                                                     updateStatus(appt.id, 'completed');
                                                                 }
@@ -699,12 +705,13 @@ const AdminLiveQueue = () => {
                                         className="w-full py-5 bg-emerald-50 text-emerald-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100 shadow-sm active:scale-95"
                                     >
                                         <CheckCircle className="h-5 w-5" />
-                                        {t('queue.completed_successfully', 'Completed Successfully')}
+                                        {t('common.complete', 'Complete')}
                                     </button>
                                     {transitioningQueue.currentAppt.check_in_method !== 'user_signal' && (() => {
                                         const now = new Date();
-                                        const slotEnd = new Date(transitioningQueue.currentAppt.slot_end_time || transitioningQueue.currentAppt.end_time);
-                                        const isSlotOver = now >= slotEnd;
+                                        const endProp = transitioningQueue.currentAppt.slot_end_time || transitioningQueue.currentAppt.end_time || transitioningQueue.currentAppt.slot_end;
+                                        const slotEnd = endProp ? new Date(endProp) : null;
+                                        const isSlotOver = slotEnd ? now >= slotEnd : false;
 
                                         if (isSlotOver) {
                                             return (
@@ -713,17 +720,17 @@ const AdminLiveQueue = () => {
                                                     className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
                                                 >
                                                     <SkipForward className="h-5 w-5" />
-                                                    {t('status.no_show', 'Mark as No-Show')}
+                                                    {t('status.no_show', 'No Show')}
                                                 </button>
                                             );
                                         } else {
                                             return (
                                                 <button
-                                                    onClick={() => setTransitioningQueue(null)}
+                                                    onClick={() => completeTransition('no_show')}
                                                     className="w-full py-5 bg-amber-50 text-amber-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-amber-500 hover:text-white transition-all border border-amber-100 shadow-sm active:scale-95"
                                                 >
                                                     <SkipForward className="h-5 w-5" />
-                                                    {t('status.not_arrived', 'Not Arrived (Skip)')}
+                                                    {t('status.not_arrived', 'No Arrived')}
                                                 </button>
                                             );
                                         }
@@ -906,14 +913,14 @@ const AdminLiveQueue = () => {
             <AnimatePresence>
                 {isQrModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
                             onClick={() => setIsQrModalOpen(false)}
                         />
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -928,8 +935,8 @@ const AdminLiveQueue = () => {
                             </div>
 
                             <div className="bg-white p-6 rounded-3xl border-4 border-slate-50 shadow-inner flex items-center justify-center mb-8 mx-auto w-fit">
-                                <QRCodeSVG 
-                                    value={`queuify:${user?.org_id}`} 
+                                <QRCodeSVG
+                                    value={`queuify:${user?.org_id}`}
                                     size={200}
                                     level="H"
                                     includeMargin={false}
@@ -949,7 +956,7 @@ const AdminLiveQueue = () => {
                                     <div className="h-8 w-8 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-600 shrink-0 font-black text-xs">01</div>
                                     <p className="text-xs text-slate-600 font-bold leading-relaxed">Place this QR at your reception desk or entrance.</p>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setIsQrModalOpen(false)}
                                     className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all"
                                 >

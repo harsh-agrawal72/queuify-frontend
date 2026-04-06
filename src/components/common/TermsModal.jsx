@@ -75,7 +75,7 @@ const ORG_TERMS = [
         icon: RefreshCw,
         color: 'amber',
         title: "Admin Cancellation Policy",
-        content: "If you cancel a paid appointment for any reason, the customer is entitled to a 100% full refund. Recurring admin cancellations may result in a ₹20 penalty per cancellation, deducted from your wallet balance."
+        content: "If you cancel a paid appointment for any reason, the customer is entitled to a 100% full refund. Recurring admin cancellations may lead to reviewed and potential account suspension to maintain platform trust."
     },
     {
         icon: Building2,

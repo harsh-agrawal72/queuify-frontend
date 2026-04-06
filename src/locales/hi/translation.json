@@ -186,6 +186,7 @@
     "search_typo_hint": "टाइपिंग की गलतियों की जाँच करें या अन्य शब्दों का उपयोग करें।",
     "no_description": "कोई विवरण नहीं",
     "esc_to_close": "बंद करने के लिए ESC दबाएं",
+    "complete": "पूर्ण",
     "resource": "संसाधन"
   },
   "resource_mgmt": {
@@ -450,6 +451,7 @@
     "completed": "पूर्ण",
     "serving": "सेवा दी जा रही है",
     "no_show": "अनुपस्थित",
+    "not_arrived": "नहीं आए",
     "next": "अगला",
     "active": "सक्रिय",
     "inactive": "निष्क्रिय",
