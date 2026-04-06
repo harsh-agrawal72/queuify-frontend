@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket, User,
-    ArrowRight, Star, Building2, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle, Download
+    ArrowRight, Star, Building2, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle, Download, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -14,7 +14,7 @@ import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';
 import { generateInvoice } from '../../utils/pdfGenerator';
 
-const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap }) => {
+const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap, onArrived, onDelayed }) => {
     const getStatusConfig = (status) => {
         switch (status) {
             case 'confirmed': return { color: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500', label: t('status.confirmed', 'Confirmed') };
@@ -22,6 +22,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
             case 'serving': return { color: 'bg-purple-50 text-purple-700 border-purple-100', dot: 'bg-purple-500 animate-pulse', label: t('status.serving', 'Serving') };
             case 'completed': return { color: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500', label: t('status.completed', 'Completed') };
             case 'cancelled': return { color: 'bg-rose-50 text-rose-700 border-rose-100', dot: 'bg-rose-500', label: t('status.cancelled', 'Cancelled') };
+            case 'no_show': return { color: 'bg-orange-50 text-orange-700 border-orange-100', dot: 'bg-orange-500', label: t('status.no_show', 'No Show') };
             default: return { color: 'bg-gray-50 text-gray-600 border-gray-100', dot: 'bg-gray-400', label: status };
         }
     };
@@ -30,6 +31,11 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
     const startDate = appt.start_time ? parseISO(appt.start_time) : (appt.preferred_date ? parseISO(appt.preferred_date) : null);
     const isDateValid = startDate && isValid(startDate);
     const isPendingReassignment = appt.status === 'pending' && !appt.slot_id;
+
+    // Arrival Signaling Logic
+    const now = new Date();
+    const diffMins = isDateValid ? (startDate - now) / (1000 * 60) : 999;
+    const showArrivalButtons = ['confirmed', 'pending', 'serving'].includes(appt.status) && diffMins <= 15;
 
     return (
         <motion.div
@@ -144,6 +150,39 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                     Cancel Appt
                                 </button>
                             </>
+                        )}
+
+                        {/* Arrival Signaling Controls */}
+                        {showArrivalButtons && (
+                            <div className="flex gap-2 ml-auto md:ml-0 bg-gray-50/50 p-1.5 rounded-xl border border-gray-100/50 shadow-inner">
+                                {appt.check_in_method === 'user_signal' ? (
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                                        <CheckCircle2 className="h-3.5 w-3.5" /> Arrived
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); onArrived(appt.id); }}
+                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-100 active:scale-95"
+                                        >
+                                            <MapPin className="h-3.5 w-3.5" /> I am here
+                                        </button>
+                                        
+                                        {appt.check_in_method !== 'user_delayed' ? (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); onDelayed(appt.id); }}
+                                                className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-all active:scale-95"
+                                            >
+                                                <Clock className="h-3.5 w-3.5" /> On the way
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-100">
+                                                <Clock className="h-3.5 w-3.5" /> Delayed / En Route
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         )}
 
                         {filter === 'history' && (
@@ -288,14 +327,34 @@ export default function MyAppointments() {
 
     const handleRespond = useCallback(async (id, action) => {
         try {
-            await apiService.respondToReschedule(id, { action });
-            toast.success(`Proposal ${action}ed`);
+            await api.post(`/appointments/${id}/reschedule-response`, { action });
+            toast.success(t('appointment.response_success', 'Response submitted successfully'));
             fetchAppointments();
         } catch (err) {
             console.error(err);
             toast.error(err.response?.data?.message || 'Failed to respond');
         }
     }, [fetchAppointments]);
+
+    const handleArrived = useCallback(async (id) => {
+        try {
+            await apiService.markArrived(id);
+            toast.success(t('appointments.messages.arrival_success', 'Arrival signaled! Admin notified.'));
+            fetchAppointments();
+        } catch (e) {
+            toast.error(t('appointments.messages.arrival_failed', 'Failed to signal arrival'));
+        }
+    }, [fetchAppointments, t]);
+
+    const handleDelayed = useCallback(async (id) => {
+        try {
+            await apiService.markDelayed(id);
+            toast.success(t('appointments.messages.delay_success', 'Delay signaled! Admin notified.'));
+            fetchAppointments();
+        } catch (e) {
+            toast.error(t('appointments.messages.delay_failed', 'Failed to signal delay'));
+        }
+    }, [fetchAppointments, t]);
 
     const counts = useMemo(() => {
         return appointments.reduce((acc, appt) => {
@@ -390,6 +449,8 @@ export default function MyAppointments() {
                                 onSetReschedule={setReschedulingAppt}
                                 onSetReview={setReviewModalAppt}
                                 onSetMap={setMapModalAppt}
+                                onArrived={handleArrived}
+                                onDelayed={handleDelayed}
                             />
                         ))}
                     </AnimatePresence>
