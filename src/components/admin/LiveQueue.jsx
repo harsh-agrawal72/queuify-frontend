@@ -148,7 +148,12 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                             
                             return (
                                 <button
-                                    onClick={() => onUpdateStatus(appt.id, 'no_show')}
+                                    onClick={() => {
+                                        const newStatus = isSlotOver ? 'no_show' : 'confirmed';
+                                        if (window.confirm(isSlotOver ? t('appointment.confirm_no_show', 'Mark this user as No-Show?') : t('appointment.confirm_not_arrived', 'User has not arrived? Keep in queue and advance.'))) {
+                                            onUpdateStatus(appt.id, newStatus);
+                                        }
+                                    }}
                                     className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 bg-white/10 text-white ${isSlotOver ? 'hover:bg-rose-500' : 'hover:bg-amber-500'}`}
                                     title={isSlotOver ? t('status.no_show', 'No Show') : t('status.not_arrived', 'Not Arrived')}
                                 >
@@ -726,11 +731,11 @@ const AdminLiveQueue = () => {
                                         } else {
                                             return (
                                                 <button
-                                                    onClick={() => completeTransition('no_show')}
+                                                    onClick={() => completeTransition('confirmed')}
                                                     className="w-full py-5 bg-amber-50 text-amber-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-amber-500 hover:text-white transition-all border border-amber-100 shadow-sm active:scale-95"
                                                 >
                                                     <SkipForward className="h-5 w-5" />
-                                                    {t('status.not_arrived', 'No Arrived')}
+                                                    {t('status.not_arrived', 'Not Arrived')}
                                                 </button>
                                             );
                                         }
