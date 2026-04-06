@@ -7,7 +7,7 @@ import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket, User,
     ArrowRight, Star, Building2, RefreshCw, Zap, MessageCircle, Navigation, AlertCircle, Download, CheckCircle2, QrCode, X, Loader2, Camera, ShieldCheck
 } from 'lucide-react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import ReviewModal from './ReviewModal';
@@ -224,17 +224,17 @@ export default function MyAppointments() {
     const [scannerLoading, setScannerLoading] = useState(false);
     const html5QrCodeRef = useRef(null);
 
-    const stopScanner = async () => {
-        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+    const stopScanner = useCallback(async () => {
+        if (html5QrCodeRef.current) {
             try {
-                await html5QrCodeRef.current.stop();
-                html5QrCodeRef.current.clear();
+                await html5QrCodeRef.current.clear();
+                html5QrCodeRef.current = null;
             } catch (err) {
-                console.error("Scanner stop error:", err);
+                console.error("Scanner cleanup error:", err);
             }
         }
         setIsScannerOpen(false);
-    };
+    }, []);
 
     const fetchAppointments = useCallback(async () => {
         setLoading(true);
@@ -284,64 +284,43 @@ export default function MyAppointments() {
         const scannedOrgId = decodedText.split(':')[1];
         await stopScanner();
         handleAutoArrive(scannedOrgId);
-    }, [handleAutoArrive]);
+    }, [handleAutoArrive, stopScanner]);
 
-    const startScanner = async () => {
-        // --- SECURE CONTEXT CHECK ---
-        if (!window.isSecureContext && window.location.hostname !== 'localhost') {
-            toast.error("Camera access requires a secure (HTTPS) connection. Please use localhost or an SSL-enabled domain.");
-            return;
-        }
-
-        setIsScannerOpen(true);
-        setScannerLoading(true);
-        
-        setTimeout(async () => {
-             try {
-                // Ensure any previous instance is cleaned up
-                if (html5QrCodeRef.current) {
-                    try { await html5QrCodeRef.current.clear(); } catch(e) {}
-                }
-
-                const html5QrCode = new Html5Qrcode("qr-reader");
-                html5QrCodeRef.current = html5QrCode;
-                
-                const config = { 
+    // Use useEffect to initialize scanner when modal opens
+    useEffect(() => {
+        if (isScannerOpen) {
+            const scanner = new Html5QrcodeScanner(
+                "qr-reader",
+                { 
                     fps: 10, 
                     qrbox: { width: 250, height: 250 },
+                    rememberLastUsedCamera: true,
                     aspectRatio: 1.0
-                };
-                
-                // Try to use the back camera (environment) first, fallback to any available camera
-                try {
-                    await html5QrCode.start(
-                        { facingMode: "environment" }, 
-                        config, 
-                        onScanSuccess
-                    );
-                } catch (firstErr) {
-                    console.warn("Back camera failed, trying default camera...", firstErr);
-                    await html5QrCode.start(
-                        { facingMode: "user" }, // Fallback to front camera if back fails
-                        config, 
-                        onScanSuccess
-                    );
+                },
+                /* verbose= */ false
+            );
+
+            scanner.render(onScanSuccess, (err) => {
+                // Ignore frequent scan errors (failed to find QR in frame)
+            });
+
+            html5QrCodeRef.current = scanner;
+
+            return () => {
+                if (html5QrCodeRef.current) {
+                    html5QrCodeRef.current.clear().catch(e => console.error(e));
                 }
-                
-                setScannerLoading(false);
-            } catch (err) {
-                console.error("Scanner start error:", err);
-                let errorMsg = "Failed to start camera.";
-                
-                if (err.name === 'NotAllowedError') errorMsg = "Permission denied. Please allow camera access in your browser settings.";
-                else if (err.name === 'NotFoundError') errorMsg = "No camera found on this device.";
-                else if (err.name === 'NotReadableError') errorMsg = "Camera is already in use by another app.";
-                
-                toast.error(errorMsg);
-                setIsScannerOpen(false);
-                setScannerLoading(false);
-            }
-        }, 400); // Slightly longer delay to ensure DOM is ready
+            };
+        }
+    }, [isScannerOpen, onScanSuccess]);
+
+    const startScanner = () => {
+        // --- SECURE CONTEXT CHECK ---
+        if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+            toast.error("Camera access requires a secure (HTTPS) connection.");
+            return;
+        }
+        setIsScannerOpen(true);
     };
 
     const [filter, setFilter] = useState('upcoming');
@@ -493,6 +472,60 @@ export default function MyAppointments() {
             {reviewModalAppt && <ReviewModal appointment={reviewModalAppt} onClose={() => setReviewModalAppt(null)} onSuccess={() => { setReviewModalAppt(null); fetchAppointments(); }} />}
             {reschedulingAppt && <RescheduleModal appointment={reschedulingAppt} onClose={() => setReschedulingAppt(null)} onSuccess={() => { setReschedulingAppt(null); fetchAppointments(); }} />}
             {mapModalAppt && <MapModal isOpen={!!mapModalAppt} onClose={() => setMapModalAppt(null)} address={mapModalAppt?.org_address} orgName={mapModalAppt?.org_name} />}
+
+            {/* 📸 QR Scanner Modal */}
+            <AnimatePresence>
+                {isScannerOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+                            onClick={stopScanner}
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                                        <Camera className="h-5 w-5" />
+                                    </div>
+                                    <h3 className="font-black text-slate-900 tracking-tight">Scan Clinic QR</h3>
+                                </div>
+                                <button onClick={stopScanner} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                    <X className="h-5 w-5 text-gray-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-8">
+                                <div className="relative min-h-[300px] bg-slate-50 rounded-3xl overflow-hidden border-2 border-slate-200">
+                                    <div id="qr-reader" className="w-full h-full"></div>
+                                </div>
+
+                                <div className="mt-8 space-y-4">
+                                     <div className="p-4 bg-indigo-50 rounded-2xl flex items-start gap-3">
+                                         <ShieldCheck className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
+                                         <p className="text-xs text-indigo-700 font-bold leading-relaxed">
+                                             Scanning proves your physical presence at the clinic. Once scanned, the admin can complete your visit without asking for an OTP.
+                                         </p>
+                                     </div>
+                                     <button 
+                                        onClick={stopScanner}
+                                        className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 transition-all"
+                                     >
+                                         Cancel Scan
+                                     </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
