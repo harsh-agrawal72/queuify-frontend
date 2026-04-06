@@ -176,17 +176,6 @@ const AdminLiveQueue = () => {
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
     const [isLoadingServices, setIsLoadingServices] = useState(false);
     const [otpModal, setOtpModal] = useState({ isOpen: false, appointment: null });
-    const [orgProfile, setOrgProfile] = useState(null);
-
-    // Fetch organization profile for PDF branding
-    const fetchOrgProfile = async () => {
-        try {
-            const res = await api.get('/organizations/profile');
-            setOrgProfile(res.data);
-        } catch (error) {
-            console.error('Failed to fetch org profile', error);
-        }
-    };
 
     const fetchQueue = useCallback(async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -220,7 +209,6 @@ const AdminLiveQueue = () => {
         try {
             const res = await api.get(`/admin/resources/${resourceId}/services`);
             setAvailableServicesForManual(res.data);
-            // Auto-select if only one service exists
             if (res.data.length === 1) {
                 setManualEntryData(prev => ({ ...prev, serviceId: res.data[0].id }));
             }
@@ -236,7 +224,6 @@ const AdminLiveQueue = () => {
         if (!resourceId) return;
         setIsLoadingSlots(true);
         try {
-            // Get slots specifically for the selected date on the dashboard
             const res = await api.get(`/admin/slots?resourceId=${resourceId}&date=${selectedDate}`);
             setAvailableSlotsForManual(res.data);
         } catch (error) {
@@ -247,7 +234,6 @@ const AdminLiveQueue = () => {
         }
     };
 
-    // Fetch services and slots whenever resource changes in manual entry
     useEffect(() => {
         if (manualEntryData.resourceId && isManualModalOpen) {
             fetchSlotsForResource(manualEntryData.resourceId);
@@ -255,37 +241,19 @@ const AdminLiveQueue = () => {
         }
     }, [manualEntryData.resourceId, isManualModalOpen]);
 
-    // Initial Fetch
     useEffect(() => {
         fetchQueue();
         fetchPredictiveInsights();
-        fetchOrgProfile();
     }, [selectedDate]);
 
-    // WebSocket Integration
     const user = JSON.parse(localStorage.getItem('user'));
     const { queueData, emitStatusChange } = useQueueSocket(user?.org_id);
 
     useEffect(() => {
         if (queueData) {
-            fetchQueue(true); // Always refresh on socket update for consistency
+            fetchQueue(true);
         }
     }, [queueData]);
-
-    const formatTime = (isoString) => {
-        if (!isoString) return '--:--';
-        try {
-            const date = new Date(isoString);
-            if (isNaN(date.getTime())) return '--:--';
-            return new Intl.DateTimeFormat('en-IN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            }).format(date);
-        } catch (e) {
-            return '--:--';
-        }
-    };
 
     const handleRefresh = () => {
         setRefreshing(true);
@@ -297,7 +265,6 @@ const AdminLiveQueue = () => {
             await api.patch(`/admin/appointments/${id}`, { status });
             if (!silent) toast.success(t('appointment.status_updated_generic', `Updated status to {{status}}`, { status: t(`status.${status}`, status.replace('_', ' ')) }));
 
-            // Emit via socket for real-time propagation
             emitStatusChange(id, status);
 
             if (!silent) fetchQueue(true);
@@ -323,8 +290,6 @@ const AdminLiveQueue = () => {
                 </div>
             </div>
         ), { duration: 5000 });
-
-        // In real app, this would trigger an announcement system
     }, [t]);
 
     const handleCallNext = async (queue) => {
@@ -337,14 +302,12 @@ const AdminLiveQueue = () => {
         }
 
         if (currentlyServing) {
-            // Need to transition the current one first
             setTransitioningQueue({
                 queueId: queue?.id,
                 currentAppt: currentlyServing,
                 nextAppt: nextInLine
             });
         } else {
-            // Just call the next one
             await updateStatus(nextInLine.id, 'serving');
             callPatient(nextInLine.token_number || '---');
         }
@@ -356,10 +319,7 @@ const AdminLiveQueue = () => {
         const loadingToast = toast.loading(t('queue.advancing', "Advancing queue..."));
 
         try {
-            // 1. Update current
             await updateStatus(currentAppt.id, status, true);
-
-            // 2. Call next
             await updateStatus(nextAppt.id, 'serving', true);
             callPatient(nextAppt.token_number || '---');
 
@@ -427,13 +387,11 @@ const AdminLiveQueue = () => {
         }
     };
 
-    // Stats
     const totalPending = useMemo(() => queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'pending' || a.status === 'confirmed').length, 0), [queues]);
     const totalServing = useMemo(() => queues.reduce((acc, q) => acc + q.appointments.filter(a => a.status === 'serving').length, 0), [queues]);
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
-            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-2">
                 <div>
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-4">
@@ -470,7 +428,6 @@ const AdminLiveQueue = () => {
                 </div>
             </div>
 
-            {/* Overall Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
                     <div className="flex items-center gap-3 mb-4">
@@ -542,7 +499,6 @@ const AdminLiveQueue = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[400px]"
                             >
-                                {/* Queue Header */}
                                  <div className="p-6 bg-slate-50/50 border-b border-slate-100">
                                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-y-4 gap-x-4 flex-wrap">
                                          <div className="flex items-center gap-5 min-w-0">
@@ -561,7 +517,6 @@ const AdminLiveQueue = () => {
                                          </div>
                                          
                                           <div className="flex items-center gap-3 ml-auto sm:ml-0 lg:ml-auto self-stretch sm:self-auto min-w-0 flex-wrap sm:flex-nowrap">
-                                              {/* Action Buttons Group */}
                                               <div className="flex items-center gap-1.5 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 shadow-inner">
                                                   <button
                                                       onClick={() => handleRebalance(queue.resource_id, queue.resource_name)}
@@ -588,7 +543,6 @@ const AdminLiveQueue = () => {
  
                                               <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
  
-                                              {/* Stats Cards Group */}
                                               <div className="flex gap-2 min-w-0">
                                                   <div className="min-w-[70px] bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-200 text-center flex-shrink-0">
                                                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter mb-1">{t('queue.waiting_status', 'Wait')}</p>
@@ -608,7 +562,6 @@ const AdminLiveQueue = () => {
                                      </div>
                                  </div>
 
-                                {/* Queue Body */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                                     {queue.appointments.length === 0 ? (
                                         <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-sm">{t('queue.empty_queue', 'Empty Queue')}</div>
@@ -645,11 +598,7 @@ const AdminLiveQueue = () => {
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
                                                         onVerifyCheckin={(appt) => {
-                                                            if (appt.payment_status === 'paid' && parseFloat(appt.price) > 0) {
-                                                                setOtpModal({ isOpen: true, appointment: appt });
-                                                            } else {
-                                                                updateStatus(appt.id, 'completed');
-                                                            }
+                                                            setOtpModal({ isOpen: true, appointment: appt });
                                                         }}
                                                     />
                                                 </div>
@@ -658,7 +607,6 @@ const AdminLiveQueue = () => {
                                     )}
                                 </div>
 
-                                {/* Queue Footer Action */}
                                 <div className="p-6 bg-white border-t border-slate-100">
                                     <button
                                         className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-indigo-600 shadow-lg shadow-slate-200 hover:shadow-indigo-200 transition-all active:scale-[0.98]"
@@ -674,7 +622,6 @@ const AdminLiveQueue = () => {
                 </div>
             )}
 
-            {/* Transition Modal */}
             <AnimatePresence>
                 {transitioningQueue && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -706,12 +653,8 @@ const AdminLiveQueue = () => {
                                 <div className="grid grid-cols-1 gap-4 pt-10">
                                     <button
                                         onClick={() => {
-                                            if (transitioningQueue.currentAppt.payment_status === 'paid' && parseFloat(transitioningQueue.currentAppt.price) > 0) {
-                                                setOtpModal({ isOpen: true, appointment: transitioningQueue.currentAppt });
-                                                setTransitioningQueue(null);
-                                            } else {
-                                                completeTransition('completed');
-                                            }
+                                            setOtpModal({ isOpen: true, appointment: transitioningQueue.currentAppt });
+                                            setTransitioningQueue(null);
                                         }}
                                         className="w-full py-5 bg-emerald-50 text-emerald-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100 shadow-sm active:scale-95"
                                     >
@@ -737,7 +680,6 @@ const AdminLiveQueue = () => {
                     </div>
                 )}
             </AnimatePresence>
-            {/* Manual Walk-in Modal */}
             <AnimatePresence>
                 {isManualModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -773,7 +715,6 @@ const AdminLiveQueue = () => {
                             </div>
 
                             <form onSubmit={submitManualEntry} className="space-y-6">
-                                {/* Professional Selection */}
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.professional', 'Professional')}</label>
                                     <select
@@ -783,7 +724,6 @@ const AdminLiveQueue = () => {
                                         onChange={e => {
                                             const newId = e.target.value;
                                             setManualEntryData({ ...manualEntryData, resourceId: newId, slotId: '', serviceId: '' });
-                                            // Manual trigger for immediate feedback, though useEffect also handles it
                                             if (newId) {
                                                 fetchSlotsForResource(newId);
                                                 fetchServicesForResource(newId);
@@ -797,7 +737,6 @@ const AdminLiveQueue = () => {
                                     </select>
                                 </div>
 
-                                {/* Service Selection */}
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.service', 'Service')}</label>
                                     <div className="relative">
@@ -832,7 +771,6 @@ const AdminLiveQueue = () => {
                                     )}
                                 </div>
 
-                                {/* Slot Selection */}
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.time_slot', 'Time Slot')}</label>
                                     <div className="relative">
@@ -908,8 +846,8 @@ const AdminLiveQueue = () => {
                 isOpen={otpModal.isOpen}
                 onClose={() => setOtpModal({ isOpen: false, appointment: null })}
                 appointment={otpModal.appointment}
-                org={orgProfile}
-                onVerified={() => {
+                onVerified={(id) => {
+                    setOtpModal({ isOpen: false, appointment: null });
                     fetchQueue(true);
                 }}
             />

@@ -215,7 +215,9 @@ const OtpVerificationModal = ({ isOpen, onClose, appointment, onVerified, org })
                             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                                 <>
                                     <ShieldCheck className="h-5 w-5" />
-                                    <span>Verify & Unlock Funds</span>
+                                    <span>
+                                        {parseFloat(appointment?.price || 0) > 0 ? 'Verify & Unlock Funds' : 'Verify & Complete Visit'}
+                                    </span>
                                 </>
                             )}
                         </button>
