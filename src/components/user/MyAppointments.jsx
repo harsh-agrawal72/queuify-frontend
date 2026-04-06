@@ -104,7 +104,7 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
 
                 {/* ⚡ Action Controls */}
                 <div className="flex flex-wrap md:flex-nowrap items-center md:items-end justify-between md:justify-end gap-3 flex-shrink-0">
-                    {filter === 'upcoming' && appt.otp_code && ['confirmed', 'pending', 'serving'].includes(appt.status) && (
+                    {appt.otp_code && ['confirmed', 'pending', 'serving'].includes(appt.status) && (
                         <div className="bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-800 shadow-lg flex flex-col items-center justify-center min-w-[70px]">
                             <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">Check-in</span>
                             <span className="text-sm font-black text-indigo-400 tracking-widest leading-none">{appt.otp_code}</span>
@@ -306,7 +306,7 @@ export default function MyAppointments() {
 
             if (isCancelledStatus) {
                 acc.cancelled++;
-            } else if (isHistoryStatus || (past && ['confirmed', 'pending'].includes(appt.status))) {
+            } else if (isHistoryStatus) {
                 acc.history++;
             } else {
                 acc.upcoming++;
@@ -322,8 +322,8 @@ export default function MyAppointments() {
             const endDate = appt.end_time ? parseISO(appt.end_time) : null;
             const past = (endDate && isValid(endDate)) ? isPast(endDate) : false;
 
-            if (filter === 'upcoming') return !isCancelledStatus && !isHistoryStatus && !past;
-            if (filter === 'history') return !isCancelledStatus && (isHistoryStatus || past);
+            if (filter === 'upcoming') return !isCancelledStatus && !isHistoryStatus;
+            if (filter === 'history') return isHistoryStatus;
             if (filter === 'cancelled') return isCancelledStatus;
             return true;
         });

@@ -72,6 +72,19 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1.5">
                     <h4 className={`text-lg font-bold truncate tracking-tight ${isServing ? 'text-white' : 'text-slate-900'}`}>{formatName(appt.user_name)}</h4>
+                    
+                    {appt.check_in_method === 'user_signal' && (
+                        <span className="flex items-center gap-1.5 text-[9px] font-black bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full tracking-widest uppercase border border-emerald-200 animate-pulse">
+                             <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full"></div> {t('status.arrived', 'ARRIVED')}
+                        </span>
+                    )}
+
+                    {appt.check_in_method === 'user_delayed' && (
+                        <span className="flex items-center gap-1.5 text-[9px] font-black bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full tracking-widest uppercase border border-amber-200">
+                             <Clock className="h-2.5 w-2.5" /> {t('status.delayed', 'DELAYED')}
+                        </span>
+                    )}
+
                     {isServing && (
                         <span className="flex items-center gap-1 text-[9px] font-black bg-white/20 px-2.5 py-1 rounded-full animate-pulse tracking-widest border border-white/10">
                             <div className="h-1 w-1 bg-white rounded-full"></div> {t('status.serving', 'SERVING')}
@@ -131,8 +144,9 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                         </button>
                         <button
                             onClick={() => onUpdateStatus(appt.id, 'no_show')}
-                            className="h-11 w-11 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-all active:scale-95"
-                            title={t('status.no_show', 'No Show / Skip')}
+                            disabled={appt.check_in_method === 'user_signal'}
+                            className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 ${appt.check_in_method === 'user_signal' ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 text-white hover:bg-rose-500'}`}
+                            title={appt.check_in_method === 'user_signal' ? t('status.no_show_disabled', 'Cannot mark Arrived user as No Show') : t('status.no_show', 'No Show / Skip')}
                         >
                             <SkipForward className="h-5 w-5" />
                         </button>

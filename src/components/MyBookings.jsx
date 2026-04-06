@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { apiService } from '../services/api';
 import clsx from 'clsx';
-import { MapPin, AlertCircle, CheckCircle2, ShieldAlert, Download } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle2, ShieldAlert, Download, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import ReceiptModal from './user/ReceiptModal';
+import receiptModal from './user/ReceiptModal'; // Adjust if case matters, usually components are capitalized
+import { toast } from 'react-hot-toast';
 
 const MyBookings = ({ bookings, onCancel }) => {
     const { t } = useTranslation();
@@ -14,9 +15,19 @@ const MyBookings = ({ bookings, onCancel }) => {
         setLoading(`arrive-${id}`);
         try {
             await apiService.markArrived(id);
-            alert(t('appointments.messages.arrival_success', 'Arrival signaled! Admin notified.'));
+            toast.success(t('appointments.messages.arrival_success', 'Arrival signaled! Admin notified.'));
             window.location.reload();
-        } catch (e) { alert(t('appointments.messages.arrival_failed', 'Failed to signal arrival')); }
+        } catch (e) { toast.error(t('appointments.messages.arrival_failed', 'Failed to signal arrival')); }
+        setLoading(null);
+    };
+
+    const handleDelayed = async (id) => {
+        setLoading(`delay-${id}`);
+        try {
+            await apiService.markDelayed(id);
+            toast.success(t('appointments.messages.delay_success', 'Delay signaled! Admin notified.'));
+            window.location.reload();
+        } catch (e) { toast.error(t('appointments.messages.delay_failed', 'Failed to signal delay')); }
         setLoading(null);
     };
 
@@ -88,33 +99,67 @@ const MyBookings = ({ bookings, onCancel }) => {
                                 )}
                             </div>
 
-                            <div className="flex gap-2">
-                                {booking.status === 'confirmed' && booking.check_in_method !== 'user_signal' && (
-                                    <button 
-                                        disabled={loading === `arrive-${booking.id}`}
-                                        onClick={() => handleArrived(booking.id)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                                    >
-                                        <MapPin className="h-3.5 w-3.5" /> {loading === `arrive-${booking.id}` ? t('appointments.actions.signaling', 'Signaling...') : t('appointments.actions.i_am_here', 'I am here')}
-                                    </button>
+                            <div className="flex flex-wrap gap-2">
+                                {['confirmed', 'pending', 'serving'].includes(booking.status) && (
+                                    (() => {
+                                        const now = new Date();
+                                        const slotStart = new Date(booking.start_time);
+                                        const diffMins = (slotStart - now) / (1000 * 60);
+                                        const showArrivalButtons = diffMins <= 15;
+
+                                        if (!showArrivalButtons) return null;
+
+                                        return (
+                                            <>
+                                                {booking.check_in_method === 'user_signal' ? (
+                                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-100">
+                                                        <CheckCircle2 className="h-3.5 w-3.5" /> Arrived
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <button 
+                                                            disabled={loading === `arrive-${booking.id}`}
+                                                            onClick={(e) => { e.stopPropagation(); handleArrived(booking.id); }}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                                                        >
+                                                            <MapPin className="h-3.5 w-3.5" /> {loading === `arrive-${booking.id}` ? 'Signaling Arrival...' : 'I am here'}
+                                                        </button>
+                                                        
+                                                        {booking.check_in_method !== 'user_delayed' && (
+                                                            <button 
+                                                                disabled={loading === `delay-${booking.id}`}
+                                                                onClick={(e) => { e.stopPropagation(); handleDelayed(booking.id); }}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
+                                                            >
+                                                                <Clock className="h-3.5 w-3.5" /> {loading === `delay-${booking.id}` ? 'Signaling Delay...' : 'I am on the way'}
+                                                            </button>
+                                                        )}
+                                                        
+                                                        {booking.check_in_method === 'user_delayed' && (
+                                                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-100">
+                                                                <Clock className="h-3.5 w-3.5" /> Delayed / En Route
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </>
+                                        );
+                                    })()
                                 )}
-                                {booking.check_in_method === 'user_signal' && booking.status !== 'completed' && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-100">
-                                        <CheckCircle2 className="h-3.5 w-3.5" /> {t('appointments.actions.arrived', 'Arrived')}
-                                    </div>
-                                )}
+
                                 {booking.payment_status === 'paid' && booking.dispute_status === 'none' && (
                                     <button 
                                         disabled={loading === `dispute-${booking.id}`}
-                                        onClick={() => handleDispute(booking.id)}
+                                        onClick={(e) => { e.stopPropagation(); handleDispute(booking.id); }}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
                                     >
-                                        <ShieldAlert className="h-3.5 w-3.5" /> {t('appointments.actions.report_issue', 'Report Issue')}
+                                        <ShieldAlert className="h-3.5 w-3.5" /> Report Issue
                                     </button>
                                 )}
+
                                 {booking.dispute_status === 'flagged' && (
                                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-bold">
-                                        <AlertCircle className="h-3.5 w-3.5" /> {t('appointments.actions.disputed', 'Disputed (Held)')}
+                                        <AlertCircle className="h-3.5 w-3.5" /> Disputed (Locked)
                                     </div>
                                 )}
                             </div>

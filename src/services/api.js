@@ -104,6 +104,7 @@ const apiService = {
 
     // User Presence & Disputes
     markArrived: (id) => api.post(`/appointments/${id}/arrive`),
+    markDelayed: (id) => api.post(`/appointments/${id}/delay`),
     flagDispute: (id, reason) => api.post(`/appointments/${id}/dispute`, { reason }),
 
     // Slot Notifications Tracker
