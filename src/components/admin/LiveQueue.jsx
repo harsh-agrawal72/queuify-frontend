@@ -145,21 +145,36 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                             const now = new Date();
                             const slotEndTime = appt.slot_end_time || appt.end_time || appt.slot_end;
                             const isSlotOver = slotEndTime ? now >= new Date(slotEndTime) : false;
-                            
                             return (
-                                <button
-                                    onClick={() => {
-                                        const newStatus = isSlotOver ? 'no_show' : 'confirmed';
-                                        if (window.confirm(isSlotOver ? t('appointment.confirm_no_show', 'Mark this user as No-Show?') : t('appointment.confirm_not_arrived', 'User has not arrived? Keep in queue and advance.'))) {
-                                            onUpdateStatus(appt.id, newStatus);
-                                        }
-                                    }}
-                                    className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 bg-white/10 text-white ${isSlotOver ? 'hover:bg-rose-500' : 'hover:bg-amber-500'}`}
-                                    title={isSlotOver ? t('status.no_show', 'No Show') : t('status.not_arrived', 'Not Arrived')}
-                                >
-                                    <SkipForward className="h-5 w-5" />
-                                </button>
-                            );
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm(t('appointment.confirm_not_arrived', 'User has not arrived? Keep in queue and advance.'))) {
+                                                onUpdateStatus(appt.id, 'confirmed');
+                                            }
+                                        }}
+                                        className="h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white"
+                                        title={t('status.not_arrived', 'Not Arrived (Keep in Queue)')}
+                                    >
+                                        <SkipForward className="h-5 w-5" />
+                                    </button>
+                                    
+                                    {isSlotOver && (
+                                        <button
+                                            onClick={() => {
+                                                if (window.confirm(t('appointment.confirm_no_show', 'Mark this user as No-Show and trigger refund/settlement?'))) {
+                                                    onUpdateStatus(appt.id, 'no_show');
+                                                }
+                                            }}
+                                            className="h-11 px-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex items-center gap-2 text-xs font-black uppercase"
+                                            title={t('status.no_show', 'No Show (Refund/Settle)')}
+                                        >
+                                            <XCircle className="h-4 w-4" />
+                                            {t('status.no_show', 'No Show')}
+                                        </button>
+                                    )}
+                                </div>
+                             );
                         })()}
                     </>
                 ) : (appt.status === 'confirmed' || appt.status === 'pending') ? (
@@ -718,18 +733,8 @@ const AdminLiveQueue = () => {
                                         const slotEnd = endProp ? new Date(endProp) : null;
                                         const isSlotOver = slotEnd ? now >= slotEnd : false;
 
-                                        if (isSlotOver) {
-                                            return (
-                                                <button
-                                                    onClick={() => completeTransition('no_show')}
-                                                    className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
-                                                >
-                                                    <SkipForward className="h-5 w-5" />
-                                                    {t('status.no_show', 'No Show')}
-                                                </button>
-                                            );
-                                        } else {
-                                            return (
+                                        return (
+                                            <div className="flex flex-col gap-2 w-full">
                                                 <button
                                                     onClick={() => completeTransition('confirmed')}
                                                     className="w-full py-5 bg-amber-50 text-amber-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-amber-500 hover:text-white transition-all border border-amber-100 shadow-sm active:scale-95"
@@ -737,8 +742,18 @@ const AdminLiveQueue = () => {
                                                     <SkipForward className="h-5 w-5" />
                                                     {t('status.not_arrived', 'Not Arrived')}
                                                 </button>
-                                            );
-                                        }
+
+                                                {isSlotOver && (
+                                                    <button
+                                                        onClick={() => completeTransition('no_show')}
+                                                        className="w-full py-5 bg-rose-50 text-rose-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm active:scale-95"
+                                                    >
+                                                        <SkipForward className="h-5 w-5" />
+                                                        {t('status.no_show', 'No Show')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
                                     })()}
                                     <button
                                         onClick={() => setTransitioningQueue(null)}
