@@ -573,13 +573,15 @@ const AppointmentManager = () => {
                                                                                     <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
                                                                                 </button>
                                                                             )}
-                                                                            <button onClick={() => {
-                                                                                    if (window.confirm(t('appointment.confirm_no_show', 'Mark this user as No-Show?'))) {
-                                                                                        handleStatusUpdate(apt.id, 'no_show');
-                                                                                    }
-                                                                                }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">
-                                                                                <div className="w-2 h-2 rounded-full bg-orange-500"></div> {t('status.no_show', 'No-Show')}
-                                                                            </button>
+                                                                            {apt.check_in_method !== 'user_signal' && (
+                                                                                <button onClick={() => {
+                                                                                        if (window.confirm(t('appointment.confirm_no_show', 'Mark this user as No-Show?'))) {
+                                                                                            handleStatusUpdate(apt.id, 'no_show');
+                                                                                        }
+                                                                                    }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg flex items-center gap-2 transition-colors">
+                                                                                    <div className="w-2 h-2 rounded-full bg-orange-500"></div> {t('status.no_show', 'No-Show')}
+                                                                                </button>
+                                                                            )}
                                                                             <button onClick={() => handleStatusUpdate(apt.id, 'cancelled')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
                                                                                 <div className="w-2 h-2 rounded-full bg-rose-500"></div> {t('status.cancelled', 'Cancelled')}
                                                                             </button>
@@ -756,7 +758,7 @@ const AppointmentManager = () => {
                                                         <ShieldCheck className="h-4 w-4" /> {t('appointment.verify_checkin', 'Verify & Complete')}
                                                     </button>
                                                 )}
-                                                {apt.status === 'confirmed' && (
+                                                {apt.status === 'confirmed' && apt.check_in_method !== 'user_signal' && (
                                                     <button 
                                                         onClick={() => {
                                                             if (window.confirm('Mark this user as No-Show? Funds will be settled accordingly.')) {
