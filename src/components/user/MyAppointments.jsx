@@ -271,42 +271,43 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                         )}
 
                         {filter === 'history' && (
-                            <div className="flex gap-2 w-full">
+                            <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
                                 {appt.status === 'completed' && (
                                     <>
                                         <button
-                                            onClick={() => generateInvoice(appt)}
-                                            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-all"
+                                            onClick={(e) => { e.stopPropagation(); generateInvoice(appt); }}
+                                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-all shadow-sm"
                                         >
-                                            <Download className="h-3.5 w-3.5" /> Receipt
+                                            <Download className="h-4 w-4" /> Receipt
                                         </button>
                                         {!appt.review_id && (
                                             <button
-                                                onClick={() => onSetReview(appt)}
-                                                className="flex-1 py-2.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-amber-100 transition-all"
+                                                onClick={(e) => { e.stopPropagation(); onSetReview(appt); }}
+                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-amber-100 transition-all shadow-sm"
                                             >
-                                                Rate Visit
+                                                <Star className="h-4 w-4" /> Rate Visit
                                             </button>
                                         )}
                                     </>
                                 )}
-                                {filter === 'history' && (appt.status === 'completed' || appt.status === 'no_show') && appt.dispute_status !== 'flagged' && appt.dispute_status !== 'resolved' && (
+                                {(appt.status === 'completed' || appt.status === 'no_show') && appt.dispute_status !== 'flagged' && appt.dispute_status !== 'resolved' && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); onSetDispute(appt); }}
-                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-rose-100 transition-all font-sans"
+                                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-rose-100 transition-all shadow-sm"
                                     >
-                                        <AlertCircle className="h-3.5 w-3.5" /> Report Issue
+                                        <AlertCircle className="h-4 w-4" /> Report Issue
                                     </button>
                                 )}
 
                                 {appt.dispute_status === 'flagged' && (
-                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-rose-200">
-                                        <ShieldCheck className="h-3.5 w-3.5" /> Issue Reported
+                                    <div className="flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-rose-200">
+                                        <ShieldCheck className="h-4 w-4" /> Issue Reported
                                     </div>
                                 )}
                                 <Link
                                     to="/organizations"
-                                    className="flex-1 flex items-center justify-center py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-indigo-100"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
                                 >
                                     Book Again
                                 </Link>
