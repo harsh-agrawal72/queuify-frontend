@@ -10,8 +10,6 @@ import { QRCodeSVG } from 'qrcode.react';
 import api from '../../services/api';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import { toast } from 'react-hot-toast';
-import OtpVerificationModal from './OtpVerificationModal';
-import { ShieldCheck } from 'lucide-react';
 
 const InfoTooltip = ({ text }) => (
     <div className="group relative inline-block">
@@ -191,7 +189,6 @@ const AdminLiveQueue = () => {
     const [availableServicesForManual, setAvailableServicesForManual] = useState([]);
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
     const [isLoadingServices, setIsLoadingServices] = useState(false);
-    const [otpModal, setOtpModal] = useState({ isOpen: false, appointment: null });
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
     const fetchQueue = useCallback(async (isBackground = false) => {
@@ -623,18 +620,18 @@ const AdminLiveQueue = () => {
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
                                                         onVerifyCheckin={(appt) => {
-                                                            const handleVerifyCheckin = (appt) => {
-                                                                // --- BYPASS OTP IF ARRIVED VIA QR ---
-                                                                if (appt.check_in_method === 'user_signal' || appt.check_in_method === 'user_delayed') {
-                                                                    const confirmComplete = window.confirm(`User has already verified arrival at clinic. Complete visit for ${appt.user_name} and release funds?`);
-                                                                    if (confirmComplete) {
-                                                                        updateStatus(appt.id, 'completed');
-                                                                    }
-                                                                    return;
+                                                            const isWalkIn = !appt.user_id;
+                                                            if (isWalkIn || appt.check_in_method === 'user_signal' || appt.check_in_method === 'user_delayed') {
+                                                                const confirmMsg = isWalkIn 
+                                                                    ? `Complete walk-in visit for ${appt.user_name}?`
+                                                                    : `User has verified arrival via QR. Complete visit for ${appt.user_name} and release funds?`;
+                                                                
+                                                                if (window.confirm(confirmMsg)) {
+                                                                    updateStatus(appt.id, 'completed');
                                                                 }
-                                                                setOtpModal({ isOpen: true, appointment: appt });
-                                                            };
-                                                            handleVerifyCheckin(appt);
+                                                            } else {
+                                                                toast.error("Online customers MUST scan the clinic QR code before completion.");
+                                                            }
                                                         }}
                                                     />
                                                 </div>
@@ -689,8 +686,15 @@ const AdminLiveQueue = () => {
                                 <div className="grid grid-cols-1 gap-4 pt-10">
                                     <button
                                         onClick={() => {
-                                            setOtpModal({ isOpen: true, appointment: transitioningQueue.currentAppt });
-                                            setTransitioningQueue(null);
+                                            const appt = transitioningQueue.currentAppt;
+                                            const isWalkIn = !appt.user_id;
+                                            if (isWalkIn || appt.check_in_method === 'user_signal' || appt.check_in_method === 'user_delayed') {
+                                                updateStatus(appt.id, 'completed');
+                                                setTransitioningQueue(null);
+                                            } else {
+                                                toast.error("Online customers MUST scan the clinic QR code first.");
+                                                setTransitioningQueue(null);
+                                            }
                                         }}
                                         className="w-full py-5 bg-emerald-50 text-emerald-700 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100 shadow-sm active:scale-95"
                                     >
@@ -880,15 +884,6 @@ const AdminLiveQueue = () => {
                 )}
             </AnimatePresence>
 
-            <OtpVerificationModal 
-                isOpen={otpModal.isOpen}
-                onClose={() => setOtpModal({ isOpen: false, appointment: null })}
-                appointment={otpModal.appointment}
-                onVerified={(id) => {
-                    setOtpModal({ isOpen: false, appointment: null });
-                    fetchQueue(true);
-                }}
-            />
             {/* 📱 Clinic Check-in QR Modal */}
             <AnimatePresence>
                 {isQrModalOpen && (

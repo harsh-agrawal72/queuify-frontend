@@ -31,7 +31,6 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminRescheduleModal from './AdminRescheduleModal';
-import OtpVerificationModal from './OtpVerificationModal';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { getSocket } from '../../services/socketService';
@@ -52,7 +51,6 @@ const AppointmentManager = () => {
     const [selectedResourceId, setSelectedResourceId] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
-    const [otpModal, setOtpModal] = useState({ isOpen: false, appointment: null });
     const [orgProfile, setOrgProfile] = useState(null);
 
     // Fetch organization profile for PDF branding
@@ -546,8 +544,18 @@ const AppointmentManager = () => {
                                                                     {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                                         <button 
                                                                             onClick={() => {
-                                                                                const isWalkin = !(apt.payment_status === 'paid' && parseFloat(apt.price) > 0);
-                                                                                setOtpModal({ isOpen: true, appointment: apt, isWalkin });
+                                                                                const isWalkIn = !apt.user_id;
+                                                                                if (isWalkIn || apt.check_in_method === 'user_signal' || apt.check_in_method === 'user_delayed') {
+                                                                                    const confirmMsg = isWalkIn 
+                                                                                        ? `Complete walk-in visit for ${apt.user_name}?`
+                                                                                        : `User has verified arrival via QR. Complete visit for ${apt.user_name} and release funds?`;
+                                                                                    
+                                                                                    if (window.confirm(confirmMsg)) {
+                                                                                        handleStatusUpdate(apt.id, 'completed');
+                                                                                    }
+                                                                                } else {
+                                                                                    toast.error("Online customers MUST scan the clinic QR code first.");
+                                                                                }
                                                                                 setActiveActionId(null);
                                                                             }} 
                                                                             className="w-full text-left px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg flex items-center gap-2 transition-colors font-bold"
@@ -568,7 +576,8 @@ const AppointmentManager = () => {
                                                                             <button onClick={() => handleStatusUpdate(apt.id, 'confirmed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
                                                                                 <div className="w-2 h-2 rounded-full bg-blue-500"></div> {t('status.confirmed', 'Confirmed')}
                                                                             </button>
-                                                                            {!(apt.payment_status === 'paid' && parseFloat(apt.price) > 0) && (
+                                                                            {/* Direct status update only visible for walk-ins */}
+                                                                            {(!apt.user_id) && (
                                                                                 <button onClick={() => handleStatusUpdate(apt.id, 'completed')} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg flex items-center gap-2 transition-colors">
                                                                                     <div className="w-2 h-2 rounded-full bg-emerald-500"></div> {t('status.completed', 'Completed')}
                                                                                 </button>
@@ -843,15 +852,6 @@ const AppointmentManager = () => {
                 userId={historyModal.userId}
                 userName={historyModal.userName}
                 onClose={() => setHistoryModal({ ...historyModal, isOpen: false })}
-            />
-            <OtpVerificationModal 
-                isOpen={otpModal.isOpen}
-                onClose={() => setOtpModal({ isOpen: false, appointment: null })}
-                appointment={otpModal.appointment}
-                org={orgProfile}
-                onVerified={(id) => {
-                    fetchAppointments(true);
-                }}
             />
         </div>
     );

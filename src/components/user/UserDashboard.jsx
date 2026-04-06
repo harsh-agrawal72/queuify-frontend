@@ -331,9 +331,9 @@ export default function UserDashboard() {
                                         <div className="relative z-10 flex flex-col bg-white rounded-3xl text-slate-900 shadow-2xl min-w-[180px] overflow-hidden border border-white">
                                             <div className="p-5 text-center space-y-4">
                                                 <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t('dashboard.your_token', 'Your Token')}</p><span className="text-4xl font-black tracking-tighter text-indigo-600 block">#{nextApt.queue_number || '1'}</span></div>
-                                                <div className="py-3 px-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 group-hover:bg-indigo-50 transition-colors">
-                                                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1">Check-in OTP</p>
-                                                    <p className="text-xl font-black text-indigo-600 tracking-[0.2em] font-mono">{nextApt.otp_code || '****'}</p>
+                                                <div className="py-3 px-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 flex flex-col items-center justify-center gap-1 group-hover:bg-indigo-50 transition-colors">
+                                                    <ShieldCheck className="h-5 w-5 text-indigo-400" />
+                                                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">QR Verification Ready</p>
                                                 </div>
                                             </div>
                                             <Link to="/appointments" className="w-full py-4 bg-indigo-600 text-white flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all font-black text-[10px] uppercase tracking-widest group/btn">

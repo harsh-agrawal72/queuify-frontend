@@ -85,7 +85,7 @@ const ScannerView = ({ onScanSuccess, onCancel }) => {
                  <div className="p-4 bg-indigo-50 rounded-2xl flex items-start gap-3">
                      <ShieldCheck className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
                      <p className="text-xs text-indigo-700 font-bold leading-relaxed">
-                         Scanning marks you as "Arrived." Once scanned, the admin can complete your visit without an OTP.
+                         Verification is MANDATORY. Scan the clinic QR code to mark your arrival. This allows the admin to complete your visit and finalize the payment.
                      </p>
                  </div>
                  <button 

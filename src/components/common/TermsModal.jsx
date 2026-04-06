@@ -29,7 +29,7 @@ const USER_TERMS = [
         icon: Lock,
         color: 'amber',
         title: "Escrow Payment Protection",
-        content: "Your payment is held securely in escrow and is NOT released to the business until the service is confirmed as 'Completed' via OTP verification. This protects you from paying for services not rendered."
+        content: "Your payment is held securely in escrow and is NOT released to the business until you verify your arrival via a mandatory QR scan at the clinic. This protects you from paying for services not rendered."
     },
     {
         icon: ShieldCheck,
@@ -40,8 +40,8 @@ const USER_TERMS = [
     {
         icon: Info,
         color: 'slate',
-        title: "OTP Verification Responsibility",
-        content: "You will receive a 4-digit OTP for your appointment. Share this OTP with the service provider at the time of service to confirm completion and release your payment. Do not share this OTP beforehand."
+        title: "Mandatory QR Verification",
+        content: "Upon arrival at the clinic, you must scan the official clinic QR code using the 'Scan to Arrive' button. This verification is required to mark your attendance and allow the session to be finalized."
     }
 ];
 
@@ -63,7 +63,7 @@ const ORG_TERMS = [
         icon: Wallet,
         color: 'emerald',
         title: "Payment Settlement & Wallet",
-        content: "Customer payments are held in escrow by Queuify. Funds are credited to your Wallet only after a service is marked as 'Completed' via OTP verification. Disputed payments will be held until resolved."
+        content: "Customer payments are held in escrow by Queuify. Funds are credited to your Available Balance only after the user verifies their arrival via QR scan and the session is marked as 'Completed'."
     },
     {
         icon: Banknote,
