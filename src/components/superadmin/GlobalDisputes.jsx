@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import { Loader2, AlertCircle, CheckCircle2, XCircle, Clock, Building2, User } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, XCircle, Clock, Building2, User, ShieldCheck } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import toast from 'react-hot-toast';
 

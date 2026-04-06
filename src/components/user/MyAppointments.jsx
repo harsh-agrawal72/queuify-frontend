@@ -601,6 +601,7 @@ export default function MyAppointments() {
             {reviewModalAppt && <ReviewModal appointment={reviewModalAppt} onClose={() => setReviewModalAppt(null)} onSuccess={() => { setReviewModalAppt(null); fetchAppointments(); }} />}
             {reschedulingAppt && <RescheduleModal appointment={reschedulingAppt} onClose={() => setReschedulingAppt(null)} onSuccess={() => { setReschedulingAppt(null); fetchAppointments(); }} />}
             {mapModalAppt && <MapModal isOpen={!!mapModalAppt} onClose={() => setMapModalAppt(null)} address={mapModalAppt?.org_address} orgName={mapModalAppt?.org_name} />}
+            {disputeModalAppt && <DisputeModal isOpen={!!disputeModalAppt} onClose={() => setDisputeModalAppt(null)} onSubmit={handleDispute} appointment={disputeModalAppt} />}
 
             {/* 📸 QR Scanner Modal */}
             <AnimatePresence>
