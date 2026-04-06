@@ -287,29 +287,61 @@ export default function MyAppointments() {
     }, [handleAutoArrive]);
 
     const startScanner = async () => {
+        // --- SECURE CONTEXT CHECK ---
+        if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+            toast.error("Camera access requires a secure (HTTPS) connection. Please use localhost or an SSL-enabled domain.");
+            return;
+        }
+
         setIsScannerOpen(true);
         setScannerLoading(true);
         
         setTimeout(async () => {
              try {
+                // Ensure any previous instance is cleaned up
+                if (html5QrCodeRef.current) {
+                    try { await html5QrCodeRef.current.clear(); } catch(e) {}
+                }
+
                 const html5QrCode = new Html5Qrcode("qr-reader");
                 html5QrCodeRef.current = html5QrCode;
                 
-                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                const config = { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                };
                 
-                await html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    config, 
-                    onScanSuccess
-                );
+                // Try to use the back camera (environment) first, fallback to any available camera
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "environment" }, 
+                        config, 
+                        onScanSuccess
+                    );
+                } catch (firstErr) {
+                    console.warn("Back camera failed, trying default camera...", firstErr);
+                    await html5QrCode.start(
+                        { facingMode: "user" }, // Fallback to front camera if back fails
+                        config, 
+                        onScanSuccess
+                    );
+                }
+                
                 setScannerLoading(false);
             } catch (err) {
                 console.error("Scanner start error:", err);
-                toast.error("Failed to start camera. Please ensure camera permissions are granted.");
+                let errorMsg = "Failed to start camera.";
+                
+                if (err.name === 'NotAllowedError') errorMsg = "Permission denied. Please allow camera access in your browser settings.";
+                else if (err.name === 'NotFoundError') errorMsg = "No camera found on this device.";
+                else if (err.name === 'NotReadableError') errorMsg = "Camera is already in use by another app.";
+                
+                toast.error(errorMsg);
                 setIsScannerOpen(false);
                 setScannerLoading(false);
             }
-        }, 300);
+        }, 400); // Slightly longer delay to ensure DOM is ready
     };
 
     const [filter, setFilter] = useState('upcoming');
