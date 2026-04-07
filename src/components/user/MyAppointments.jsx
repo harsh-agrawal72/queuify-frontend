@@ -202,6 +202,16 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                             </motion.div>
                         )}
                     </div>
+
+                    {/* QR Check-in Hint for upcoming appointments */}
+                    {filter === 'upcoming' && ['confirmed', 'pending', 'serving'].includes(appt.status) && (
+                        <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 w-fit">
+                            <QrCode className="h-3.5 w-3.5 text-indigo-500" />
+                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">
+                                {t('common.qr_checkin_hint', 'Scan QR at arrival to check-in')}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-4 min-w-[280px]">

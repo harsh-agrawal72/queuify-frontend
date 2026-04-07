@@ -737,6 +737,22 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             </p>
                         </div>
 
+                        {/* --- QR Check-in Instruction --- */}
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className="mb-8 p-5 bg-amber-50 border border-amber-100 rounded-3xl text-left flex gap-4 shadow-sm"
+                        >
+                            <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                                <QrCode className="h-6 w-6 text-amber-600" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-black text-amber-900 leading-tight mb-1">{t('common.qr_checkin_instruction', 'Wait! Scanning Mandatory')}</h4>
+                                <p className="text-[11px] text-amber-700/80 font-bold leading-relaxed">{t('common.qr_checkin_instruction_desc', 'Please scan the organization QR code at the desk upon arrival to verify your session.')}</p>
+                            </div>
+                        </motion.div>
+
                         <div className="space-y-3">
                             <button
                                 onClick={handleGoToAppointments}

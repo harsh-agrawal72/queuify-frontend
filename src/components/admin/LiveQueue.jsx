@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Clock, CheckCircle, SkipForward, Play,
     Activity, Calendar, RefreshCw, Volume2, User, UserPlus, ArrowRightCircle,
-    XCircle, X, Loader2, Info, AlertCircle, QrCode
+    XCircle, X, Loader2, Info, AlertCircle, QrCode, FileText, Save
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../../services/api';
@@ -50,7 +50,7 @@ const formatTime = (isoString) => {
 };
 
 // ─── Memoized Appointment Card ───
-const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, onUpdateStatus, onCallPatient, t, predictiveInsights, onVerifyCheckin }) => {
+const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, onUpdateStatus, onCallPatient, t, predictiveInsights, onVerifyCheckin, onEditNote }) => {
     const isPastDue = appt.is_past && !isCompleted && !isServing;
 
     return (
@@ -129,9 +129,23 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
                         {appt.token_number}
                     </span>
                 </div>
+
+                {appt.admin_remarks && (
+                    <div className={`mt-2 flex items-start gap-2 p-2 rounded-xl border leading-relaxed ${isServing ? 'bg-white/10 border-white/20 text-white/90' : 'bg-slate-50 border-slate-100 text-slate-600'} text-[10.5px] italic font-medium`}>
+                        <FileText className="h-3 w-3 mt-0.5 opacity-60 flex-shrink-0" />
+                        <span className="truncate max-w-[200px]">{appt.admin_remarks}</span>
+                    </div>
+                )}
             </div>
 
             <div className="flex gap-2">
+                <button
+                    onClick={() => onEditNote(appt)}
+                    className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all active:scale-95 border ${isServing ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50 shadow-sm'} ${!appt.admin_remarks && 'md:opacity-0 group-hover:opacity-100 focus:opacity-100'}`}
+                    title={t('common.edit_note', 'Edit Note')}
+                >
+                    <FileText className={`h-4 w-4 ${appt.admin_remarks ? 'fill-current opacity-40' : ''}`} />
+                </button>
                 {isServing ? (
                     <>
                         <button
@@ -216,6 +230,9 @@ const AdminLiveQueue = () => {
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
     const [isLoadingServices, setIsLoadingServices] = useState(false);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [noteEditingAppt, setNoteEditingAppt] = useState(null);
+    const [tempNote, setTempNote] = useState('');
+    const [isSavingNote, setIsSavingNote] = useState(false);
 
     const fetchQueue = useCallback(async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -300,19 +317,36 @@ const AdminLiveQueue = () => {
         fetchQueue(true);
     };
 
-    const updateStatus = useCallback(async (id, status, silent = false) => {
+    const updateStatus = useCallback(async (id, status, silent = false, admin_remarks = undefined) => {
         try {
-            await api.patch(`/admin/appointments/${id}`, { status });
-            if (!silent) toast.success(t('appointment.status_updated_generic', `Updated status to {{status}}`, { status: t(`status.${status}`, status.replace('_', ' ')) }));
+            await api.patch(`/admin/appointments/${id}`, { status, admin_remarks });
+            if (!silent) {
+                const statusLabel = status ? t(`status.${status}`, status.replace('_', ' ')) : '';
+                const msg = admin_remarks !== undefined ? t('common.note_saved', 'Note saved successfully!') : t('appointment.status_updated_generic', `Updated status to {{status}}`, { status: statusLabel });
+                toast.success(msg);
+            }
 
-            emitStatusChange(id, status);
-
-            if (!silent) fetchQueue(true);
+            if (status) emitStatusChange(id, status);
+            // If it's just a note update, we should still refresh to show the new note
+            fetchQueue(true);
         } catch (error) {
             if (!silent) toast.error(error.response?.data?.message || t('common.action_failed', "Action failed"));
             throw error;
         }
     }, [t, emitStatusChange, fetchQueue]);
+
+    const handleSaveNote = async () => {
+        if (!noteEditingAppt) return;
+        setIsSavingNote(true);
+        try {
+            await updateStatus(noteEditingAppt.id, noteEditingAppt.status, false, tempNote);
+            setNoteEditingAppt(null);
+        } catch (err) {
+            // Error handled in updateStatus
+        } finally {
+            setIsSavingNote(false);
+        }
+    };
 
     const callPatient = useCallback((token) => {
         toast.custom((toastObj) => (
@@ -645,6 +679,10 @@ const AdminLiveQueue = () => {
                                                         onCallPatient={callPatient}
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
+                                                        onEditNote={(appt) => {
+                                                            setNoteEditingAppt(appt);
+                                                            setTempNote(appt.admin_remarks || '');
+                                                        }}
                                                         onVerifyCheckin={(appt) => {
                                                             const isWalkIn = !appt.user_id;
                                                             if (isWalkIn || appt.check_in_method === 'user_signal' || appt.check_in_method === 'user_delayed') {
@@ -981,6 +1019,70 @@ const AdminLiveQueue = () => {
                                     className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all"
                                 >
                                     Close Dashboard
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* --- Note Modal --- */}
+            <AnimatePresence>
+                {noteEditingAppt && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                            onClick={() => setNoteEditingAppt(null)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative bg-white rounded-[2rem] p-8 shadow-2xl max-w-lg w-full border border-slate-100"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                                        <FileText className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black text-slate-900 leading-none mb-1">{t('common.internal_note', 'Internal Note')}</h3>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{noteEditingAppt.user_name}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setNoteEditingAppt(null)}
+                                    className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <textarea
+                                value={tempNote}
+                                onChange={(e) => setTempNote(e.target.value)}
+                                placeholder={t('common.note_placeholder', 'Add internal remarks about this patient...')}
+                                className="w-full h-40 p-5 bg-slate-50 rounded-3xl border-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-700 placeholder:text-slate-400 resize-none"
+                                autoFocus
+                            />
+
+                            <div className="flex gap-4 mt-6">
+                                <button
+                                    onClick={() => setNoteEditingAppt(null)}
+                                    className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                                >
+                                    {t('common.cancel', 'Cancel')}
+                                </button>
+                                <button
+                                    onClick={handleSaveNote}
+                                    disabled={isSavingNote}
+                                    className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {isSavingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                    {t('common.save_note', 'Save Note')}
                                 </button>
                             </div>
                         </motion.div>

@@ -188,7 +188,16 @@
     "no_description": "No description",
     "esc_to_close": "Press ESC to close",
     "complete": "Complete",
-    "resource": "Resource"
+    "resource": "Resource",
+    "notes": "Notes",
+    "add_note": "Add Note",
+    "edit_note": "Edit Note",
+    "internal_note": "Internal Note",
+    "save_note": "Save Note",
+    "note_placeholder": "Add internal remarks about this patient...",
+    "qr_checkin_instruction": "Wait! Scanning Mandatory Upon Arrival",
+    "qr_checkin_instruction_desc": "To verify your arrival and start your session, you MUST scan the organization's QR code at the reception desk.",
+    "qr_checkin_hint": "Remember to scan QR at the clinic desk."
   },
   "resource_mgmt": {
     "mgmt_title": "Resource Management",
