@@ -34,6 +34,7 @@ const UserPaymentsPage = lazy(() => import('./pages/UserPaymentsPage'));
 import ScrollToTop from './components/ScrollToTop';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import TermsGuard from './components/common/TermsGuard';
+import NotificationHandler from './components/common/NotificationHandler';
 
 // Premium Shimmer Loader for Suspense
 const PremiumLoader = () => (
@@ -59,6 +60,7 @@ function App() {
       <Router>
         <ScrollToTop />
         <AuthProvider>
+          <NotificationHandler />
           <div className="min-h-screen bg-gray-50 text-gray-900">
             <Suspense fallback={<PremiumLoader />}>
               <Routes>
