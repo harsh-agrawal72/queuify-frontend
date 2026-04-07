@@ -17,7 +17,8 @@ import {
     CalendarCheck,
     LayoutDashboard,
     ArrowRight,
-    RefreshCw
+    RefreshCw,
+    QrCode
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO, isValid } from 'date-fns';
