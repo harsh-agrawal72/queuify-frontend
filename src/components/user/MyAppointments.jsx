@@ -10,6 +10,7 @@ import {
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 import ReviewModal from './ReviewModal';
 import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';

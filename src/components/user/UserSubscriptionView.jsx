@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Check, Zap, Star, ShieldCheck, Crown, BellRing, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
+import { Check, X, Zap, Star, ShieldCheck, Crown, BellRing, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
