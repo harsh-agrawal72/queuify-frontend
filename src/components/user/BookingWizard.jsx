@@ -202,7 +202,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             const currentAppt = apptRef.current;
             if (!currentAppt) {
                 console.error('[Payment] No pending appointment in ref');
-                toast.error("Process timed out. Please check your appointments.");
+                toast.error(t('booking.wizard.errors.timeout', "Process timed out. Please check your appointments."));
                 return;
             }
 
@@ -219,7 +219,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 appointmentId: currentAppt.id
             });
             setStep(6); // Success screen
-            toast.success(t('booking.wizard.notify_me.success', "Payment Verified & Ticket Generated!"));
+            toast.success(t('booking.wizard.success.payment_verified', "Payment Verified & Ticket Generated!"));
         } catch (error) {
             console.error('[Payment] Verification failed:', error);
             toast.error(error.response?.data?.message || t('common.error', "Payment verification failed."));
@@ -246,7 +246,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
             if (!rzpKey) {
                 console.error('[Payment] Razorpay Key ID is missing!');
-                toast.error("Payment configuration missing. Please contact support.");
+                toast.error(t('booking.wizard.errors.config_missing', "Payment configuration missing. Please contact support."));
                 setLoadingCreation(false);
                 return;
             }
@@ -280,13 +280,13 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', function (response) {
-                toast.error("Payment failed: " + response.error.description);
+                toast.error(t('booking.wizard.errors.payment_failed', "Payment failed: ") + response.error.description);
                 setLoadingCreation(false);
             });
             rzp.open();
         } catch (error) {
             console.error('[Payment] Initiation failed:', error);
-            toast.error("Failed to start payment process.");
+            toast.error(t('booking.wizard.errors.init_failed', "Failed to start payment process."));
             setLoadingCreation(false);
         }
     };
@@ -331,7 +331,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 const proceed = window.confirm(t('booking.wizard.duplicate_warning', "You already have an active booking for this. Continue anyway?"));
                 if (proceed) handleBookingCreation(true);
             } else {
-                toast.error(error.response?.data?.message || t('common.error', "Booking failed"));
+                toast.error(error.response?.data?.message || t('booking.wizard.errors.booking_failed', "Booking failed"));
             }
         } finally {
             if (step !== 5) setLoadingCreation(false); // Only stop loading if not waiting for modal
@@ -516,7 +516,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                                         customerPhone: null
                                                     });
                                                     
-                                                    toast.success(t('booking.wizard.notify_me.success', "We'll notify you when it reaches your time!"));
+                                                    toast.success(t('booking.wizard.notify_me.request_success', "We'll notify you when it reaches your time!"));
                                                     setNotificationTime('');
                                                     onClose();
                                                 } catch (e) {
@@ -621,7 +621,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CreditCard className="h-8 w-8" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">{t('booking.wizard.payment.title', 'Secure Payment')}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t('booking.wizard.payment.heading', 'Secure Payment')}</h2>
                 <p className="text-sm text-gray-500 mt-1">{t('booking.wizard.payment.subtitle', 'Confirm your booking fee to join the queue.')}</p>
             </div>
 
@@ -733,7 +733,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                         const endStr = (end && isValid(end)) ? format(end, 'h:mm a') : '??';
                                         return `${startStr} - ${endStr}`;
                                     }
-                                    return selectedResource?.name || 'Central Queue';
+                                    return selectedResource?.name || t('booking.wizard.central_queue', 'Central Queue');
                                 })()}
                             </p>
                         </div>
@@ -869,7 +869,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         >
                             {step === 4 ? (
                                 <>
-                                    <span>{(selectedResource?.price || selectedService?.price || 0) > 0 ? t('booking.wizard.payment.title', "Continue to Payment") : t('booking.wizard.payment.join_now', "Join Queue Now")}</span>
+                                    <span>{(selectedResource?.price || selectedService?.price || 0) > 0 ? t('booking.wizard.payment.continue_btn', "Continue to Payment") : t('booking.wizard.payment.join_now', "Join Queue Now")}</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </>
                             ) : (

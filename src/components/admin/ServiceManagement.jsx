@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import {
     Plus,
     Edit2,
+    Trash2,
     Loader2,
     X,
     Save,
@@ -171,8 +172,16 @@ const ServiceManagement = () => {
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setServiceModal({ open: true, edit: true, data: service }); }}
                                             className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                            title={t('common.edit', 'Edit')}
                                         >
                                             <Edit2 className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteService(service.id); }}
+                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title={t('common.delete', 'Delete')}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
                                         </button>
                                         <div className={`p-2 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
                                             <ChevronDown className="h-4 w-4 text-gray-400" />

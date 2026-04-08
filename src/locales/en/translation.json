@@ -1109,9 +1109,68 @@
   },
   "booking": {
     "wizard": {
+      "title": "Get Your Ticket",
+      "step_of": "Step {{current}} of {{total}}",
+      "duplicate_warning": "You already have an active booking for this. Continue anyway?",
+      "select_service": "Select a Service",
+      "select_resource": "Select a Resource",
+      "available_for": "Available resources for {{name}}",
+      "select_time": "Select a Time Slot",
+      "fee": "Fee: ₹{{amount}}",
+      "no_slots": "No available slots",
+      "review_title": "Review Your Booking",
+      "total_fee": "Total Fee",
+      "steps": {
+        "service": "Service",
+        "resource": "Resource",
+        "time": "Time",
+        "review": "Review",
+        "payment": "Payment"
+      },
+      "prefs": {
+        "flexible_staff": "Flexible Staff",
+        "flexible_staff_desc": "Allow us to move you to another staff member if {{name}} becomes unavailable.",
+        "urgent": "Urgent Requirement (Today)",
+        "urgent_desc": "If this slot is cancelled, keep me on high-priority waitlist for same-day openings."
+      },
+      "notify_me": {
+        "title": "Not free at this time?",
+        "desired": "Desired Time",
+        "select": "Select Time...",
+        "button": "Notify Me",
+        "footer": "We'll send you an alert when the estimated time reaches your preference.",
+        "request_success": "We'll notify you when it reaches your time!"
+      },
       "payment": {
-        "refund_policy": "Refund Policy: Full refund if cancelled 3+ hours before. 85% refund if cancelled within 3 hours."
-      }
+        "heading": "Secure Payment",
+        "subtitle": "Confirm your booking fee to join the queue.",
+        "appointment_fee": "Appointment Fee",
+        "convenience_fee": "Convenience Fee",
+        "gst": "GST (18%)",
+        "total": "Total Amount",
+        "escrow_note": "Payments are held in escrow and released only after your appointment is verified or successfully completed.",
+        "refund_policy": "Refund Policy: Full refund if cancelled 3+ hours before. 85% refund if cancelled within 3 hours.",
+        "pay_button": "Pay ₹{{amount}} & Join Queue",
+        "continue_btn": "Continue to Payment",
+        "join_now": "Join Queue Now",
+        "powered_by": "Powered by Razorpay Escrow"
+      },
+      "success": {
+        "title": "You're in Queue!",
+        "subtitle": "Your ticket has been generated successfully.",
+        "queue_number": "Queue Number",
+        "view_appointments": "View My Appointments",
+        "book_another": "Book Another",
+        "payment_verified": "Payment Verified & Ticket Generated!"
+      },
+      "errors": {
+        "timeout": "Process timed out. Please check your appointments.",
+        "config_missing": "Payment configuration missing. Please contact support.",
+        "payment_failed": "Payment failed: ",
+        "init_failed": "Failed to start payment process.",
+        "booking_failed": "Booking failed"
+      },
+      "central_queue": "Central Queue"
     }
   },
   "analytics": {
