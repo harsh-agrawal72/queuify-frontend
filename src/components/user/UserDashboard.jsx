@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -15,7 +16,8 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import UserPayments from './UserPayments';
 import NotifyMeTracker from './NotifyMeTracker';
-import { LayoutDashboard, History, Bell } from 'lucide-react';
+import UserSubscriptionView from './UserSubscriptionView';
+import { LayoutDashboard, History, Bell, CreditCard } from 'lucide-react';
 
 // ─── Memoized Sub-components ───
 const Shimmer = memo(({ className }) => (
@@ -89,8 +91,10 @@ export default function UserDashboard() {
     const [loading, setLoading] = useState(true);
     const [recentAppointments, setRecentAppointments] = useState([]);
     const [allAppointments, setAllAppointments] = useState([]);
-    const [activeTab, setActiveTab] = useState('overview'); // 'overview' or 'payments'
+    const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'payments', 'notifications', 'plans'
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     const fetchData = async () => {
         setLoading(true);
@@ -110,8 +114,12 @@ export default function UserDashboard() {
     };
 
     useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && ['overview', 'payments', 'notifications', 'plans'].includes(tab)) {
+            setActiveTab(tab);
+        }
         fetchData();
-    }, []);
+    }, [searchParams]);
 
     // WebSocket Integration for real-time updates on dashboard
     const orgId = stats?.nextAppointment?.org_id;
@@ -217,6 +225,18 @@ export default function UserDashboard() {
                 >
                     <Bell className="h-4 w-4" />
                     <span>{t('dashboard.notify_tab', 'Notify Me')}</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('plans')}
+                    className={clsx(
+                        "flex items-center flex-shrink-0 gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
+                        activeTab === 'plans' 
+                            ? "bg-white text-indigo-600 shadow-sm ring-1 ring-black/5" 
+                            : "text-gray-400 hover:text-gray-600 hover:bg-white/50"
+                    )}
+                >
+                    <CreditCard className="h-4 w-4" />
+                    <span>{t('dashboard.plans_tab', 'Plans & Pricing')}</span>
                 </button>
             </div>
 
@@ -405,9 +425,13 @@ export default function UserDashboard() {
                 <div className="animate-in fade-in duration-500">
                     <UserPayments bookings={allAppointments} />
                 </div>
-            ) : (
+            ) : activeTab === 'notifications' ? (
                 <div className="animate-in fade-in duration-500">
                     <NotifyMeTracker />
+                </div>
+            ) : (
+                <div className="animate-in fade-in duration-500">
+                    <UserSubscriptionView />
                 </div>
             )}
         </div>
