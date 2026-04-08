@@ -15,43 +15,49 @@ const NotificationHandler = () => {
 
     const setupNotifications = async () => {
         try {
-            console.log('--- Notification Setup Started ---');
-            // 1. Request token from Firebase
+            console.log('--- [FCM] Notification Setup Started ---');
+            
+            // 1. Request Permission & Token
+            console.log('--- [FCM] Requesting token...');
             const token = await requestForToken();
             
             if (token) {
-                console.log('✅ FCM Token generated:', token);
+                console.log('✅ [FCM] Token generated successfully:', token);
+                
                 // 2. Save token to backend
                 try {
                     const response = await api.post('/notifications/push-token', { token });
-                    console.log('✅ Token saved to backend:', response.data);
-                    // toast.success('Notifications active!'); // Optional: confirm to user
+                    console.log('✅ [FCM] Token saved to backend:', response.data);
                 } catch (apiErr) {
-                    console.error('❌ Failed to save token to backend:', apiErr.response?.data || apiErr.message);
+                    console.error('❌ [FCM] Failed to save token to backend:', apiErr.response?.data || apiErr.message);
                 }
             } else {
-                console.warn('⚠️ No token received. Check notification permissions or VAPID key.');
+                console.warn('⚠️ [FCM] No token received. Check permissions (granted?) or VAPID key in firebase.js.');
+                const permission = Notification.permission;
+                console.log('Current Browser Notification Permission:', permission);
             }
 
-            // 3. Listen for foreground messages
-            onMessageListener()
-                .then((payload) => {
-                    console.log('🔔 Foreground message received:', payload);
-                    toast.success(
-                        <div className="flex flex-col gap-1">
-                            <span className="font-bold">{payload.notification.title}</span>
-                            <span className="text-xs">{payload.notification.body}</span>
-                        </div>,
-                        {
-                            duration: 6000,
-                            icon: '🔔',
-                            position: 'top-right'
-                        }
-                    );
-                })
-                .catch((err) => console.log('❌ Message listener error: ', err));
+            // 3. Listen for foreground messages (Callback based)
+            console.log('--- [FCM] Initializing foreground listener...');
+            onMessageListener((payload) => {
+                console.log('🔔 [FCM] Foreground message received:', payload);
+                const { title, body } = payload.notification;
+                
+                toast.success(
+                    <div className="flex flex-col gap-1">
+                        <span className="font-bold">{title}</span>
+                        <span className="text-xs">{body}</span>
+                    </div>,
+                    {
+                        duration: 6000,
+                        icon: '🔔',
+                        position: 'top-right'
+                    }
+                );
+            });
+            console.log('✅ [FCM] Foreground listener active.');
         } catch (error) {
-            console.error('❌ Error in NotificationHandler setup:', error);
+            console.error('❌ [FCM] Error in NotificationHandler setup:', error);
         }
     };
 

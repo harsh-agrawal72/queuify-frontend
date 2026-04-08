@@ -32,11 +32,9 @@ export const requestForToken = async () => {
   return null;
 };
 
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    onMessage(messaging, (payload) => {
-      resolve(payload);
-    });
+export const onMessageListener = (callback) =>
+  onMessage(messaging, (payload) => {
+    callback(payload);
   });
 
 export default app;
