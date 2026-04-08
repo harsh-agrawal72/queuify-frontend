@@ -89,6 +89,7 @@ const apiService = {
     markAllNotificationsAsRead: () => api.patch('/notifications/read-all'),
 
     // User Profile
+    getUserProfile: () => api.get('/user/profile'),
     updateUserProfile: (data) => api.patch('/user/profile', data),
 
     // Reviews

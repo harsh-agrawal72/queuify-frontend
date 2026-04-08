@@ -61,6 +61,19 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    const refreshUser = async () => {
+        try {
+            const response = await api.get('/user/profile');
+            const refreshedUser = response.data;
+            localStorage.setItem('user', JSON.stringify(refreshedUser));
+            setUser(refreshedUser);
+            return refreshedUser;
+        } catch (error) {
+            console.error('Failed to refresh user profile:', error);
+            throw error;
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -71,7 +84,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, updateUser, login, googleLogin, register, registerOrg, logout, loading }}>
+        <AuthContext.Provider value={{ user, updateUser, refreshUser, login, googleLogin, register, registerOrg, logout, loading }}>
             {!loading && children}
         </AuthContext.Provider>
     );
