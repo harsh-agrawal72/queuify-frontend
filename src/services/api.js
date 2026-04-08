@@ -120,6 +120,8 @@ const apiService = {
     // Membership Plans
     getPlans: (params) => api.get('/plans', { params }),
     assignUserPlan: (planId) => api.post('/plans/assign', { planId }),
+    createPlanPaymentOrder: (planId) => api.post('/payments/create-plan-order', { planId }),
+    verifyPlanPayment: (data) => api.post('/payments/verify-plan-payment', data),
 };
 
 export { api, apiService };

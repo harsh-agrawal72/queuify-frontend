@@ -5,6 +5,7 @@ import { Check, X, Zap, Star, ShieldCheck, Crown, BellRing, MessageSquare, Alert
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { format, parseISO } from 'date-fns';
 import clsx from 'clsx';
 
 const UserSubscriptionView = () => {
@@ -16,6 +17,18 @@ const UserSubscriptionView = () => {
 
     useEffect(() => {
         fetchPlans();
+        
+        // Load Razorpay Script
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+
+        return () => {
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
     }, []);
 
     const fetchPlans = async () => {
@@ -30,21 +43,91 @@ const UserSubscriptionView = () => {
         }
     };
 
-    const handleSwitchPlan = async (planId, planName) => {
+    const handleSwitchPlan = async (planId, planName, price) => {
         if (planName === 'Free' && !window.confirm('Are you sure you want to switch to the Free plan? Some features may be restricted.')) {
             return;
         }
 
         setProcessingId(planId);
+
+        // If it's a paid plan, we need to process payment first
+        if (parseFloat(price) > 0) {
+            try {
+                await initiatePlanPayment(planId, planName, price);
+            } catch (error) {
+                console.error('Payment initiation failed:', error);
+                toast.error('Failed to start payment process');
+                setProcessingId(null);
+            }
+            return;
+        }
+
+        // For free plans, direct assignment
         try {
             await apiService.assignUserPlan(planId);
             toast.success(`Successfully switched to ${planName} plan!`);
-            await refreshUser(); // Refresh auth context to get new plan info
+            await refreshUser();
         } catch (error) {
             console.error('Plan switch failed:', error);
             toast.error(error.response?.data?.message || 'Failed to switch plan');
         } finally {
             setProcessingId(null);
+        }
+    };
+
+    const initiatePlanPayment = async (planId, planName, price) => {
+        try {
+            const orderRes = await apiService.createPlanPaymentOrder(planId);
+            const { order } = orderRes.data;
+
+            const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+            if (!rzpKey) {
+                toast.error("Payment configuration missing. Please contact support.");
+                return;
+            }
+
+            const options = {
+                key: rzpKey,
+                amount: order.amount,
+                currency: order.currency,
+                name: "Queuify Membership",
+                description: `Subscription for ${planName} Plan`,
+                order_id: order.id,
+                handler: async (response) => {
+                    const loadingToast = toast.loading("Verifying payment...");
+                    try {
+                        await apiService.verifyPlanPayment({
+                            planId,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        toast.success(`Welcome to ${planName}!`, { id: loadingToast });
+                        await refreshUser();
+                    } catch (err) {
+                        toast.error(err.response?.data?.message || "Verification failed.", { id: loadingToast });
+                    } finally {
+                        setProcessingId(null);
+                    }
+                },
+                prefill: {
+                    name: user?.name || "",
+                    email: user?.email || "",
+                },
+                theme: { color: "#4F46E5" },
+                modal: {
+                    ondismiss: () => setProcessingId(null)
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                toast.error("Payment failed: " + response.error.description);
+                setProcessingId(null);
+            });
+            rzp.open();
+        } catch (error) {
+            throw error;
         }
     };
 
@@ -118,6 +201,21 @@ const UserSubscriptionView = () => {
                                     <span className="text-4xl font-black">₹{plan.price_monthly}</span>
                                     <span className={clsx("text-sm opacity-60 font-bold", isPremium ? "text-gray-300" : "text-gray-500")}>/month</span>
                                 </div>
+                                {isCurrent && (
+                                    <div className="absolute top-6 right-6">
+                                        <div className="flex flex-col items-end">
+                                            <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-emerald-200">
+                                                <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" />
+                                                Active
+                                            </span>
+                                            {user?.subscription_expiry && (
+                                                <span className="text-[9px] font-bold text-gray-400 mt-1.5 uppercase tracking-tighter">
+                                                    Expires: {format(parseISO(user.subscription_expiry), 'MMM dd, yyyy')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <ul className="flex-grow space-y-4 mb-8">
@@ -158,7 +256,7 @@ const UserSubscriptionView = () => {
                             </ul>
 
                             <button
-                                onClick={() => !isCurrent && handleSwitchPlan(plan.id, plan.name)}
+                                onClick={() => !isCurrent && handleSwitchPlan(plan.id, plan.name, plan.price_monthly)}
                                 disabled={isCurrent || processingId === plan.id}
                                 className={clsx(
                                     "w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2",
