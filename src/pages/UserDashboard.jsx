@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -20,6 +21,8 @@ import { Bell, CreditCard } from 'lucide-react';
 
 const UserDashboard = () => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate(); // For potential back-nav if needed, though useSearchParams is enough here
     const [organizations, setOrganizations] = useState([]);
     const [myBookings, setMyBookings] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -39,10 +42,15 @@ const UserDashboard = () => {
 
     // Fetch initial data
     useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && ['overview', 'bookings', 'payments', 'plans'].includes(tab)) {
+            setActiveTab(tab);
+        }
+        
         fetchOrganizations();
         fetchMyBookings();
         fetchNotifications();
-    }, []);
+    }, [searchParams]);
 
     // Refresh on socket update
     useEffect(() => {
