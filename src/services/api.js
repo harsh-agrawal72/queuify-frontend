@@ -115,6 +115,10 @@ const apiService = {
     // Payment Gateway
     createPaymentOrder: (appointmentId) => api.post('/payments/create-order', { appointmentId }),
     verifyPayment: (data) => api.post('/payments/verify-payment', data),
+
+    // Membership Plans
+    getPlans: (params) => api.get('/plans', { params }),
+    assignUserPlan: (planId) => api.post('/plans/assign', { planId }),
 };
 
 export { api, apiService };
