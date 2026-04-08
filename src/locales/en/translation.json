@@ -1170,6 +1170,7 @@
         "init_failed": "Failed to start payment process.",
         "booking_failed": "Booking failed"
       },
+      "expected_time_msg": "If you book now, your appointment is expected at **{{time}}**. If you want a slightly later time, you can wait or check back later.",
       "central_queue": "Central Queue"
     }
   },

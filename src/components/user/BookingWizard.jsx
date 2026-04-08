@@ -476,7 +476,9 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         <AlertCircle className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
                         <div className="space-y-3">
                             <p className="text-sm text-indigo-900 leading-relaxed font-medium">
-                                {selectedSlot.descriptive_message?.split('**').map((part, i) => 
+                                {t('booking.wizard.expected_time_msg', { 
+                                    time: format(parseISO(selectedSlot.estimated_next_time), 'h:mm a') 
+                                }).split('**').map((part, i) => 
                                     i % 2 === 1 ? <strong key={i} className="text-indigo-700 font-extrabold">{part}</strong> : part
                                 )}
                             </p>

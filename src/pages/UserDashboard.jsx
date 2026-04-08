@@ -12,10 +12,11 @@ import { LayoutDashboard, Calendar, History, Search, TrendingUp } from 'lucide-r
 import UserPayments from '../components/user/UserPayments';
 import MyBookings from '../components/MyBookings';
 import WaitlistTrackerCard from '../components/user/WaitlistTrackerCard';
+import UserSubscriptionView from '../components/user/UserSubscriptionView';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import BroadcastBanner from '../components/common/BroadcastBanner';
-import { Bell } from 'lucide-react';
+import { Bell, CreditCard } from 'lucide-react';
 
 const UserDashboard = () => {
     const { user } = useAuth();
@@ -211,7 +212,8 @@ const UserDashboard = () => {
                     {[
                         { id: 'overview', icon: LayoutDashboard, label: t('user_dashboard.tabs.overview', 'Overview') },
                         { id: 'bookings', icon: Calendar, label: t('user_dashboard.tabs.bookings', 'My Bookings') },
-                        { id: 'payments', icon: History, label: t('user_dashboard.tabs.payments', 'Payment History') }
+                        { id: 'payments', icon: History, label: t('user_dashboard.tabs.payments', 'Payment History') },
+                        { id: 'plans', icon: CreditCard, label: t('user_dashboard.tabs.plans', 'Plans & Pricing') }
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -347,6 +349,11 @@ const UserDashboard = () => {
             {/* Payment History Tab (Analytical) */}
             {activeTab === 'payments' && (
                 <UserPayments bookings={myBookings} />
+            )}
+
+            {/* Plans & Pricing Tab */}
+            {activeTab === 'plans' && (
+                <UserSubscriptionView />
             )}
 
 
