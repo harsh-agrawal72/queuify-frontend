@@ -26,9 +26,18 @@ import { calculatePaymentBreakdown } from '../../utils/paymentHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 // Removing mock RazorpayModal as we use real window.Razorpay
 
+import { useAuth } from '../../context/AuthContext';
+
 const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }) => {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { user } = useAuth();
+
+    // Plan Gating Logic
+    const planFeatures = user?.plan_features || { max_active_appointments: 2, priority: false };
+    const activeBookingCount = user?.active_bookings_count || 0;
+    const isLimitReached = activeBookingCount >= planFeatures.max_active_appointments;
+
     // If slot/resource provided, start at step 4 (Review) or 3 (Time/Slot)
     const getInitialStep = () => {
         if (initialSlot || initialResource) return 4;
@@ -70,15 +79,15 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
         const start = parseISO(slot.start_time);
         const end = parseISO(slot.end_time);
         const minTime = minTimeStr ? parseISO(minTimeStr) : null;
-        
+
         const options = [];
         let curr = new Date(start);
-        
+
         // Add intervals every 15 minutes
         while (curr <= end) {
             // Only add if it's after minTime (or no minTime provided)
             const isAfterMin = !minTime || curr > minTime;
-            
+
             if (isAfterMin) {
                 options.push({
                     value: format(curr, 'HH:mm'),
@@ -88,12 +97,12 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             }
             curr = new Date(curr.getTime() + 15 * 60000);
         }
-        
+
         // Ensure end time is included if not already and it's after minTime
         const lastVal = format(end, 'HH:mm');
         const isEndAfterMin = !minTime || end > minTime;
 
-        if (isEndAfterMin && (options.length === 0 || options[options.length-1].value !== lastVal)) {
+        if (isEndAfterMin && (options.length === 0 || options[options.length - 1].value !== lastVal)) {
             options.push({
                 value: lastVal,
                 label: format(end, 'h:mm a'),
@@ -212,7 +221,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature
             });
-            
+
             setBookingResult({
                 success: true,
                 queueNumber: currentAppt.queueNumber,
@@ -267,7 +276,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                     color: "#4F46E5",
                 },
                 modal: {
-                    ondismiss: function() {
+                    ondismiss: function () {
                         console.log('[Payment] Modal dismissed. Releasing seat...');
                         // Instant cleanup call (Fire and forget, we don't want to block UI)
                         apiService.cancelPendingPayment(appointment.id).catch(e => {
@@ -417,8 +426,8 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                             <p className="text-xs text-gray-500 mt-1 capitalize">{res.type}</p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                             <span className="text-sm font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg border border-green-100">₹{res.price || selectedService?.price || 0}</span>
-                             {selectedResource?.id === res.id && <CheckCircle2 className="h-5 w-5 text-indigo-600" />}
+                            <span className="text-sm font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg border border-green-100">₹{res.price || selectedService?.price || 0}</span>
+                            {selectedResource?.id === res.id && <CheckCircle2 className="h-5 w-5 text-indigo-600" />}
                         </div>
                     </div>
                 ))}
@@ -476,13 +485,13 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         <AlertCircle className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
                         <div className="space-y-3">
                             <p className="text-sm text-indigo-900 leading-relaxed font-medium">
-                                {t('booking.wizard.expected_time_msg', { 
-                                    time: format(parseISO(selectedSlot.estimated_next_time), 'h:mm a') 
-                                }).split('**').map((part, i) => 
+                                {t('booking.wizard.expected_time_msg', {
+                                    time: format(parseISO(selectedSlot.estimated_next_time), 'h:mm a')
+                                }).split('**').map((part, i) =>
                                     i % 2 === 1 ? <strong key={i} className="text-indigo-700 font-extrabold">{part}</strong> : part
                                 )}
                             </p>
-                            
+
                             <div className="pt-2 border-t border-indigo-100">
                                 <p className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider mb-2">{t('booking.wizard.notify_me.title', 'Not free at this time?')}</p>
                                 <div className="flex flex-col gap-3">
@@ -508,16 +517,16 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                                     const options = getTimeOptions(selectedSlot, selectedSlot.estimated_next_time);
                                                     const desiredOption = options.find(o => o.value === notificationTime);
                                                     const desiredDate = desiredOption ? desiredOption.date : null;
-                                                    
+
                                                     if (!desiredDate) return toast.error(t('common.error', "Invalid time selected"));
- 
+
                                                     await apiService.requestSlotNotification(selectedSlot.id, {
                                                         desiredTime: desiredDate.toISOString(),
                                                         serviceId: selectedService?.id || selectedSlot.service_id,
                                                         resourceId: selectedResource?.id || selectedSlot.resource_id,
                                                         customerPhone: null
                                                     });
-                                                    
+
                                                     toast.success(t('booking.wizard.notify_me.request_success', "We'll notify you when it reaches your time!"));
                                                     setNotificationTime('');
                                                     onClose();
@@ -530,7 +539,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                                             disabled={requestingNotification}
                                             className="w-full sm:w-auto h-[42px] px-6 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-md shadow-indigo-100 flex items-center justify-center"
                                         >
-                                            {requestingNotification ? <Loader2 className="h-4 w-4 animate-spin"/> : t('booking.wizard.notify_me.button', 'Notify Me')}
+                                            {requestingNotification ? <Loader2 className="h-4 w-4 animate-spin" /> : t('booking.wizard.notify_me.button', 'Notify Me')}
                                         </button>
                                     </div>
                                 </div>
@@ -567,7 +576,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         </div>
                     </div>
                 )}
-                
+
                 <div className="flex justify-between pt-1">
                     <span className="text-gray-500 text-sm font-medium">{t('booking.wizard.total_fee', 'Total Fee')}</span>
                     <span className="text-lg font-black text-green-600">
@@ -653,8 +662,8 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         <div className="flex justify-between items-center text-xs text-gray-500">
                             <span>{t('booking.wizard.payment.convenience_fee', 'Convenience Fee')}</span>
                             <span>
-                                ₹{pendingAppointment?.breakdown 
-                                    ? ((parseFloat(pendingAppointment.breakdown.platformFee) || 0) + (parseFloat(pendingAppointment.breakdown.transactionFee) || 0)).toFixed(2) 
+                                ₹{pendingAppointment?.breakdown
+                                    ? ((parseFloat(pendingAppointment.breakdown.platformFee) || 0) + (parseFloat(pendingAppointment.breakdown.transactionFee) || 0)).toFixed(2)
                                     : (previewBreakdown.platformFee + previewBreakdown.transactionFee).toFixed(2)}
                             </span>
                         </div>
@@ -741,7 +750,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         </div>
 
                         {/* --- QR Check-in Instruction --- */}
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.5 }}
@@ -807,7 +816,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         ].map((s, i) => {
                             if (service && i === 0) return null;
                             if (!showTimeStep && i === 2) return null;
-                            
+
                             // Hide payment step if price is 0
                             const price = selectedResource?.price || selectedService?.price || 0;
                             if (i === 4 && parseFloat(price) === 0) return null;
@@ -826,6 +835,24 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                    {isLimitReached && (
+                        <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex gap-3 items-start animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="text-sm font-black text-rose-900 leading-tight mb-1">Booking Limit Reached</h4>
+                                <p className="text-xs text-rose-700/80 font-bold leading-relaxed">
+                                    Your {user?.plan_name || 'Free'} plan allows only {planFeatures.max_active_appointments} active appointments. 
+                                    Please complete or cancel your existing bookings, or upgrade your plan.
+                                </p>
+                                <button 
+                                    onClick={() => navigate('/dashboard?tab=plans')}
+                                    className="mt-2 text-xs font-black text-rose-600 underline"
+                                >
+                                    View Plans & Upgrade
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     {loading && step < confirmationStep ? (
                         <div className="h-full flex flex-col items-center justify-center text-gray-400">
                             <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mb-4" />
@@ -863,6 +890,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                         <button
                             onClick={handleNext}
                             disabled={
+                                isLimitReached ||
                                 (step === 1 && !selectedService) ||
                                 (step === 2 && !selectedResource) ||
                                 (step === 3 && showTimeStep && (!selectedSlot || notificationTime))

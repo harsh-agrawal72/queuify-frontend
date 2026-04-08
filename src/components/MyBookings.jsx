@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { apiService } from '../services/api';
 import clsx from 'clsx';
-import { MapPin, AlertCircle, CheckCircle2, ShieldAlert, Download, Clock } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle2, ShieldAlert, Download, Clock, Crown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import receiptModal from './user/ReceiptModal'; // Adjust if case matters, usually components are capitalized
 import { toast } from 'react-hot-toast';
@@ -59,6 +59,12 @@ const MyBookings = ({ bookings, onCancel }) => {
                         <div className="flex-grow">
                             <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-bold text-lg text-gray-900">{booking.org_name || 'Organization'}</h4>
+                                {booking.is_priority && (
+                                    <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-black text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm">
+                                        <Crown className="h-3 w-3" />
+                                        VIP Priority
+                                    </div>
+                                )}
                                 <span className={clsx(
                                     "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border",
                                     booking.status === 'confirmed' && "bg-green-50 text-green-700 border-green-100",
@@ -68,14 +74,14 @@ const MyBookings = ({ bookings, onCancel }) => {
                                     booking.status === 'pending' && "bg-blue-50 text-blue-700 border-blue-100",
                                     booking.status === 'no_show' && "bg-orange-50 text-orange-700 border-orange-100"
                                 )}>
-                                    {booking.status === 'waitlisted_urgent' 
-                                        ? t('appointments.status.waitlisted_urgent', 'URGENT WAITLIST') 
-                                        : (booking.status === 'cancelled' && booking.cancelled_by === 'admin' 
-                                            ? t('appointments.status.cancelled_admin', 'CANCELLED BY ADMIN') 
+                                    {booking.status === 'waitlisted_urgent'
+                                        ? t('appointments.status.waitlisted_urgent', 'URGENT WAITLIST')
+                                        : (booking.status === 'cancelled' && booking.cancelled_by === 'admin'
+                                            ? t('appointments.status.cancelled_admin', 'CANCELLED BY ADMIN')
                                             : t(`appointments.status.${booking.status}`, booking.status.replace('_', ' ')))}
                                 </span>
                             </div>
-                            
+
                             <p className="text-xs text-gray-500 mb-3">{booking.service_name || 'General Service'}</p>
 
                             <div className="space-y-1.5 text-xs text-gray-600 mb-4">
@@ -92,8 +98,8 @@ const MyBookings = ({ bookings, onCancel }) => {
                                     </>
                                 ) : (
                                     <div className="bg-red-50 text-red-700 p-2 rounded-lg font-bold border border-red-100 mt-2">
-                                        {booking.status === 'waitlisted_urgent' 
-                                            ? t('appointments.messages.time_pending', "Time update pending: High-priority waitlist for today.") 
+                                        {booking.status === 'waitlisted_urgent'
+                                            ? t('appointments.messages.time_pending', "Time update pending: High-priority waitlist for today.")
                                             : t('appointments.messages.schedule_interrupted', "Schedule interrupted: Manual action required.")}
                                     </div>
                                 )}
@@ -117,16 +123,16 @@ const MyBookings = ({ bookings, onCancel }) => {
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <button 
+                                                        <button
                                                             disabled={loading === `arrive-${booking.id}`}
                                                             onClick={(e) => { e.stopPropagation(); handleArrived(booking.id); }}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                                         >
                                                             <MapPin className="h-3.5 w-3.5" /> {loading === `arrive-${booking.id}` ? 'Signaling Arrival...' : 'I am here'}
                                                         </button>
-                                                        
+
                                                         {booking.check_in_method !== 'user_delayed' && (
-                                                            <button 
+                                                            <button
                                                                 disabled={loading === `delay-${booking.id}`}
                                                                 onClick={(e) => { e.stopPropagation(); handleDelayed(booking.id); }}
                                                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
@@ -134,7 +140,7 @@ const MyBookings = ({ bookings, onCancel }) => {
                                                                 <Clock className="h-3.5 w-3.5" /> {loading === `delay-${booking.id}` ? 'Signaling Delay...' : 'I am on the way'}
                                                             </button>
                                                         )}
-                                                        
+
                                                         {booking.check_in_method === 'user_delayed' && (
                                                             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold border border-amber-100">
                                                                 <Clock className="h-3.5 w-3.5" /> Delayed / En Route
@@ -148,7 +154,7 @@ const MyBookings = ({ bookings, onCancel }) => {
                                 )}
 
                                 {booking.payment_status === 'paid' && booking.dispute_status === 'none' && (
-                                    <button 
+                                    <button
                                         disabled={loading === `dispute-${booking.id}`}
                                         onClick={(e) => { e.stopPropagation(); handleDispute(booking.id); }}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
@@ -192,10 +198,10 @@ const MyBookings = ({ bookings, onCancel }) => {
                 </div>
             ))}
 
-            <ReceiptModal 
-                isOpen={!!selectedReceipt} 
-                onClose={() => setSelectedReceipt(null)} 
-                appointment={selectedReceipt} 
+            <ReceiptModal
+                isOpen={!!selectedReceipt}
+                onClose={() => setSelectedReceipt(null)}
+                appointment={selectedReceipt}
             />
         </div>
     );

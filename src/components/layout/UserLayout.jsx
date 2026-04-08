@@ -160,6 +160,14 @@ export default function UserLayout() {
 
                     {/* User Profile Summary */}
                     <div className="p-4 border-t border-gray-100">
+                        <NavLink
+                            to="/dashboard?tab=plans"
+                            onClick={() => setSidebarOpen(false)}
+                            className="flex items-center gap-2 px-3 py-2 mb-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors group"
+                        >
+                            <CreditCard className="h-4 w-4 transition-transform group-hover:scale-110" />
+                            {t('navigation.manage_subscription', 'Manage Subscription')}
+                        </NavLink>
                         <div className="flex items-center gap-3 px-2 py-2 mb-2">
                             <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-base overflow-hidden border-2 border-indigo-50">
                                 {user?.profile_picture_url ? (
