@@ -144,14 +144,16 @@ const UserSubscriptionView = () => {
                                         <span className="text-sm font-bold italic text-indigo-400">VIP Queue Priority</span>
                                     </li>
                                 )}
-                                {features.refund_protection > 0 && (
-                                    <li className="flex items-center gap-3">
-                                        <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500">
-                                            <ShieldCheck className="h-4 w-4 stroke-[3px]" />
-                                        </div>
-                                        <span className="text-sm font-bold">{features.refund_protection}% Late Refund Protection</span>
-                                    </li>
-                                )}
+                                <li className="flex items-center gap-3">
+                                    <div className={clsx("p-1 rounded-full", (features.reschedule_limit || 0) > 0 ? "bg-emerald-500/20 text-emerald-500" : "bg-rose-500/20 text-rose-500")}>
+                                        { (features.reschedule_limit || 0) > 0 ? <Check className="h-4 w-4 stroke-[3px]" /> : <X className="h-4 w-4 stroke-[3px]" /> }
+                                    </div>
+                                    <span className="text-sm font-bold">
+                                        {features.reschedule_limit === 0 ? 'No Rescheduling' : 
+                                         features.reschedule_limit > 10 ? 'Unlimited Rescheduling' : 
+                                         `${features.reschedule_limit} Reschedule Allowed`}
+                                    </span>
+                                </li>
                             </ul>
 
                             <button
@@ -197,13 +199,7 @@ const UserSubscriptionView = () => {
                         <h5 className="font-black text-gray-900 mb-2">All notifications</h5>
                         <p className="text-xs text-gray-500 font-medium">Never miss a turn with multi-channel alerts (SMS, push).</p>
                     </div>
-                    <div className="flex flex-col items-center text-center">
-                        <div className="p-4 bg-white rounded-3xl text-purple-600 mb-4 shadow-sm">
-                            <ShieldCheck className="h-6 w-6" />
-                        </div>
-                        <h5 className="font-black text-gray-900 mb-2">Refund Shield</h5>
-                        <p className="text-xs text-gray-500 font-medium">Get 100% money back even if you cancel 5 mins before.</p>
-                    </div>
+
                     <div className="flex flex-col items-center text-center">
                         <div className="p-4 bg-white rounded-3xl text-rose-500 mb-4 shadow-sm">
                             <MessageSquare className="h-6 w-6" />

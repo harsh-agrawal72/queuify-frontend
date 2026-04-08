@@ -14,6 +14,7 @@ import ReviewModal from './ReviewModal';
 import RescheduleModal from './RescheduleModal';
 import MapModal from './MapModal';
 import DisputeModal from './DisputeModal';
+import { useAuth } from '../../context/AuthContext';
 import { generateInvoice } from '../../utils/pdfGenerator';
 
 const ScannerView = ({ onScanSuccess, onCancel }) => {
@@ -100,7 +101,11 @@ const ScannerView = ({ onScanSuccess, onCancel }) => {
     );
 };
 
-const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap, onDelayed, onSetDispute }) => {
+const AppointmentItem = memo(({ appt, idx, filter, t, user, onCancel, onRespond, onSetReschedule, onSetReview, onSetMap, onDelayed, onSetDispute }) => {
+    const planFeatures = user?.plan_features || {};
+    const rescheduleLimit = planFeatures.reschedule_limit !== undefined ? parseInt(planFeatures.reschedule_limit) : 0;
+    const canReschedule = (appt.reschedule_count || 0) < rescheduleLimit;
+
     const getStatusConfig = (status) => {
         switch (status) {
             case 'confirmed': return { color: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500', label: t('status.confirmed', 'Confirmed') };
@@ -265,6 +270,23 @@ const AppointmentItem = memo(({ appt, idx, filter, t, onCancel, onRespond, onSet
                                     }
                                     return null;
                                 })()}
+
+                                {rescheduleLimit > 0 && (
+                                    <button
+                                        onClick={() => onSetReschedule(appt)}
+                                        disabled={!canReschedule}
+                                        className={clsx(
+                                            "flex items-center gap-2 px-4 py-3 border-2 rounded-2xl transition-all active:scale-95 shadow-sm font-black text-[10px] uppercase tracking-widest",
+                                            canReschedule 
+                                                ? "bg-white border-indigo-100 text-indigo-600 hover:border-indigo-600" 
+                                                : "bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+                                        )}
+                                        title={canReschedule ? "Reschedule Appointment" : "Reschedule limit reached for this appointment"}
+                                    >
+                                        <RefreshCw className={clsx("h-4 w-4", canReschedule && "group-hover:rotate-180 transition-transform duration-700")} />
+                                        {canReschedule ? 'Reschedule' : 'Limit Reached'}
+                                    </button>
+                                )}
                             </>
                         )}
                     </div>
@@ -362,6 +384,7 @@ AppointmentItem.displayName = 'AppointmentItem';
 
 export default function MyAppointments() {
     const { t } = useTranslation();
+    const { user } = useAuth();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingAction, setLoadingAction] = useState(false);
@@ -590,6 +613,7 @@ export default function MyAppointments() {
                                 idx={idx}
                                 filter={filter}
                                 t={t}
+                                user={user}
                                 onCancel={handleCancel}
                                 onRespond={handleRespond}
                                 onSetReschedule={setReschedulingAppt}
