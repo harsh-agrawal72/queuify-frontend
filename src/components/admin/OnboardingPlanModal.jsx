@@ -13,6 +13,7 @@ import {
 import clsx from 'clsx';
 import { apiService } from '../../services/api';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 const PlanFeature = ({ text, isPremium }) => (
     <div className="flex items-start gap-3">
@@ -30,6 +31,7 @@ const PlanFeature = ({ text, isPremium }) => (
 );
 
 const OnboardingPlanModal = ({ isOpen, onComplete }) => {
+    const { user } = useAuth();
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
