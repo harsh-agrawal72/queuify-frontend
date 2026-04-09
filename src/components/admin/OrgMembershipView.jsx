@@ -10,8 +10,6 @@ import { apiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
-
-import { format } from 'date-fns';
 import { AnimatePresence } from 'framer-motion';
 
 const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
