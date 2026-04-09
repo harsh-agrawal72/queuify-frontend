@@ -12,10 +12,11 @@ console.log('API URL Configuration:', API_URL);
 
 const api = axios.create({
     baseURL: API_URL,
+    timeout: 15000, // 15 seconds timeout
     headers: {
         'Content-Type': 'application/json',
     },
-    withCredentials: true // Ensure cookies/sessions can be passed if needed
+    withCredentials: true 
 });
 
 api.interceptors.request.use(
