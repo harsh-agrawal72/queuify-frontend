@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-    Check, ArrowRight, Loader2, Shield 
+    Check, ArrowRight, Loader2, Shield, X
 } from 'lucide-react';
 import { apiService } from '../../services/api';
 import { toast } from 'react-hot-toast';
@@ -56,6 +56,13 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                         <Shield className="h-24 w-24" />
                     </div>
+                    {/* Close Button */}
+                    <button 
+                        onClick={onClose}
+                        className="absolute top-6 right-6 p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all z-20 text-white/50 hover:text-white"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
                     <div className="relative z-10">
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-2">Secure Checkout</p>
                         <h3 className="text-3xl font-black tracking-tight">{plan.name} Plan</h3>
@@ -79,29 +86,48 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
                     {/* Coupon Input */}
                     <div className="space-y-3">
                         <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Have a coupon code?</label>
-                        <div className="flex gap-2">
-                            <div className="relative flex-grow">
-                                <input 
-                                    type="text" 
-                                    value={couponCode}
-                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                    placeholder="ENTER CODE"
-                                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold uppercase tracking-widest focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                                />
-                                {couponData && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <Check className="h-5 w-5 text-emerald-500 stroke-[3px]" />
+                        {couponData ? (
+                            <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100 rounded-2xl group transition-all">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-emerald-500 rounded-lg">
+                                        <Check className="h-4 w-4 text-white stroke-[3px]" />
                                     </div>
-                                )}
+                                    <div>
+                                        <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Coupon Applied</p>
+                                        <p className="text-sm font-black text-emerald-900">{couponCode}</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        setCouponData(null);
+                                        setCouponCode('');
+                                    }}
+                                    className="p-2 hover:bg-emerald-100 rounded-xl transition-colors text-emerald-600"
+                                    title="Remove Coupon"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
                             </div>
-                            <button 
-                                onClick={handleApplyCoupon}
-                                disabled={isValidating || !couponCode}
-                                className="px-6 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black disabled:opacity-50 transition-all"
-                            >
-                                {isValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
-                            </button>
-                        </div>
+                        ) : (
+                            <div className="flex gap-2">
+                                <div className="relative flex-grow">
+                                    <input 
+                                        type="text" 
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        placeholder="ENTER CODE"
+                                        className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold uppercase tracking-widest focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                    />
+                                </div>
+                                <button 
+                                    onClick={handleApplyCoupon}
+                                    disabled={isValidating || !couponCode}
+                                    className="px-6 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black disabled:opacity-50 transition-all"
+                                >
+                                    {isValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+                                </button>
+                            </div>
+                        )}
                         {error && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">{error}</p>}
                         {couponData && (
                             <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">

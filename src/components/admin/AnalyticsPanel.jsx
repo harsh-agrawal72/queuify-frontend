@@ -988,7 +988,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ AI Predictive Insights ═══ */}
-            <div className="relative">
+            <div className={`relative ${isBasicAnalytics ? 'min-h-[300px] overflow-hidden' : ''}`}>
                 <PredictiveInsightsSection insights={predictiveInsights} />
                 {isBasicAnalytics && (
                     <PremiumOverlay 
@@ -1000,7 +1000,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ Charts Row 1: Trend + Status Pie ═══ */}
-            <div className="relative">
+            <div className={`relative ${isBasicAnalytics ? 'min-h-[400px] overflow-hidden' : ''}`}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Booking Trend — Area Chart */}
                     <motion.div
@@ -1096,7 +1096,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ Charts Row 2: Utilization Trend ═══ */}
-            <div className="relative">
+            <div className={`relative ${isBasicAnalytics ? 'min-h-[350px] overflow-hidden' : ''}`}>
                 <div className="grid grid-cols-1">
                     {/* Utilization Trend — Area Chart */}
                     <motion.div
@@ -1142,7 +1142,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ Peak Hours Heatmap ═══ */}
-            <div className="relative">
+            <div className={`relative ${isBasicAnalytics ? 'min-h-[400px] overflow-hidden' : ''}`}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
@@ -1204,7 +1204,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ Smart Insights ═══ */}
-            <div className="relative">
+            <div className={`relative ${isBasicAnalytics ? 'min-h-[300px] overflow-hidden' : ''}`}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
