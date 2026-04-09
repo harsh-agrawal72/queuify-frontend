@@ -162,10 +162,11 @@ const AdminLayout = () => {
         }
     }, [notification]);
 
-    const setupIncomplete = (user?.role === 'admin' || user?.role === 'staff') && !user?.org_is_setup_completed;
+    const isImpersonating = !!localStorage.getItem('superadminToken');
+    const setupIncomplete = !isImpersonating && (user?.role === 'admin' || user?.role === 'staff') && !user?.org_is_setup_completed;
     
     // Onboarding Popup Logic: Show if verified (active) but not yet onboarded
-    const showOnboarding = user?.role === 'admin' && user?.org_status === 'active' && !user?.org_is_onboarded;
+    const showOnboarding = !isImpersonating && user?.role === 'admin' && user?.org_status === 'active' && !user?.org_is_onboarded;
 
     const handleOnboardingComplete = async () => {
         await refreshUser();
