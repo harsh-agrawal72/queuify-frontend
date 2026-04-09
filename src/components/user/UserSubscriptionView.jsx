@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO } from 'date-fns';
 import clsx from 'clsx';
+import CheckoutModal from '../common/CheckoutModal';
 
 const UserSubscriptionView = () => {
     const { user, refreshUser } = useAuth();
@@ -14,10 +15,12 @@ const UserSubscriptionView = () => {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState(null);
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState(null);
 
     useEffect(() => {
         fetchPlans();
-        
+
         // Load Razorpay Script
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -44,68 +47,68 @@ const UserSubscriptionView = () => {
     };
 
     const handleSwitchPlan = async (planId, planName, price) => {
-        if (planName === 'Free' && !window.confirm(t('user_subscription.switch_free_confirm'))) {
+        const plan = plans.find(p => p.id === planId);
+        
+        // If it's a natively free plan (price is 0), just claim it directly
+        if (parseFloat(price) === 0) {
+            if (!window.confirm(t('user_subscription.switch_free_confirm'))) return;
+            handleActualPurchase(planId, planName, null, true);
             return;
         }
 
-        setProcessingId(planId);
-
-        if (parseFloat(price) > 0) {
-            try {
-                await initiatePlanPayment(planId, planName, price);
-            } catch (error) {
-                console.error('Payment initiation failed:', error);
-                toast.error(t('user_subscription.payment_init_failed'));
-                setProcessingId(null);
-            }
-            return;
-        }
-
-        // For free plans, direct assignment
-        try {
-            await apiService.assignUserPlan(planId);
-            toast.success(t('user_subscription.switch_success', { name: planName }));
-            await refreshUser();
-        } catch (error) {
-            console.error('Plan switch failed:', error);
-            toast.error(error.response?.data?.message || t('user_subscription.switch_failed'));
-        } finally {
-            setProcessingId(null);
-        }
+        setSelectedPlan(plan);
+        setIsCheckoutOpen(true);
     };
 
-    const initiatePlanPayment = async (planId, planName, price) => {
-        try {
-            const orderRes = await apiService.createPlanPaymentOrder(planId);
-            const { order } = orderRes.data;
+    const handleActualPurchase = async (planId, planName, couponCode, isFree) => {
+        setProcessingId(planId);
+        setIsCheckoutOpen(false);
+        const loadingToast = toast.loading(`${isFree ? 'activating' : 'Initiating upgrade to'} ${planName}...`);
 
-            const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-            if (!rzpKey) {
-                toast.error(t('user_subscription.config_missing'));
+        try {
+            if (isFree) {
+                // Handle direct activation for free or 100% discounted plans
+                await apiService.claimFreePlan(planId, couponCode);
+                toast.success(`Plan activated successfully!`, { id: loadingToast });
+                await refreshUser();
+                window.location.reload();
                 return;
             }
 
+            // 1. Create Order with Optional Coupon
+            const { data: orderData } = await apiService.createPlanPaymentOrder(planId, couponCode);
+            
+            // Handle if backend says it's free (backup check)
+            if (orderData.isFree) {
+                await apiService.claimFreePlan(planId, couponCode);
+                toast.success(`Plan activated successfully!`, { id: loadingToast });
+                await refreshUser();
+                window.location.reload();
+                return;
+            }
+
+            // 2. Open Razorpay Checkout using generated Order ID
             const options = {
-                key: rzpKey,
-                amount: order.amount,
-                currency: order.currency,
-                name: t('user_subscription.razorpay_name'),
-                description: t('user_subscription.razorpay_desc', { name: planName }),
-                order_id: order.id,
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: orderData.order.amount,
+                currency: orderData.order.currency,
+                name: "Queuify Premium",
+                description: `Upgrade to ${planName} Plan`,
+                order_id: orderData.order.id,
                 handler: async (response) => {
-                    const loadingToast = toast.loading(t('user_subscription.verifying_payment'));
                     try {
+                        toast.loading("Verifying payment...", { id: loadingToast });
                         await apiService.verifyPlanPayment({
                             planId,
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature
                         });
-                        toast.success(t('user_subscription.welcome_to_plan', { name: planName }), { id: loadingToast });
+                        toast.success(`Welcome to ${planName}!`, { id: loadingToast });
                         await refreshUser();
+                        window.location.reload();
                     } catch (err) {
-                        toast.error(err.response?.data?.message || t('user_subscription.verif_failed'), { id: loadingToast });
-                    } finally {
+                        toast.error(err.response?.data?.message || "Payment verification failed", { id: loadingToast });
                         setProcessingId(null);
                     }
                 },
@@ -121,14 +124,17 @@ const UserSubscriptionView = () => {
 
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', function (response) {
-                toast.error(t('user_subscription.payment_failed_with_desc', { desc: response.error.description }));
+                toast.error(`Payment failed: ${response.error.description}`, { id: loadingToast });
                 setProcessingId(null);
             });
             rzp.open();
         } catch (error) {
-            throw error;
+            console.error('Purchase failed:', error);
+            toast.error(error.response?.data?.message || 'Action failed', { id: loadingToast });
+            setProcessingId(null);
         }
     };
+
 
     if (loading) {
         return (
@@ -174,7 +180,7 @@ const UserSubscriptionView = () => {
                     const features = plan.features || {};
 
                     return (
-                        <div 
+                        <div
                             key={plan.id}
                             className={clsx(
                                 "relative flex flex-col p-8 rounded-[2.5rem] transition-all duration-500",
@@ -244,12 +250,12 @@ const UserSubscriptionView = () => {
                                 )}
                                 <li className="flex items-center gap-3">
                                     <div className={clsx("p-1 rounded-full", (features.reschedule_limit || 0) > 0 ? "bg-emerald-500/20 text-emerald-500" : "bg-rose-500/20 text-rose-500")}>
-                                        { (features.reschedule_limit || 0) > 0 ? <Check className="h-4 w-4 stroke-[3px]" /> : <X className="h-4 w-4 stroke-[3px]" /> }
+                                        {(features.reschedule_limit || 0) > 0 ? <Check className="h-4 w-4 stroke-[3px]" /> : <X className="h-4 w-4 stroke-[3px]" />}
                                     </div>
                                     <span className="text-sm font-bold">
-                                        {features.reschedule_limit === 0 ? t('user_subscription.no_reschedule') : 
-                                         features.reschedule_limit > 10 ? t('user_subscription.unlimited_reschedule') : 
-                                         t('user_subscription.reschedule_allowed', { count: features.reschedule_limit })}
+                                        {features.reschedule_limit === 0 ? t('user_subscription.no_reschedule') :
+                                            features.reschedule_limit > 10 ? t('user_subscription.unlimited_reschedule') :
+                                                t('user_subscription.reschedule_allowed', { count: features.reschedule_limit })}
                                     </span>
                                 </li>
                             </ul>
@@ -259,9 +265,9 @@ const UserSubscriptionView = () => {
                                 disabled={isCurrent || processingId === plan.id}
                                 className={clsx(
                                     "w-full py-4 rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2",
-                                    isCurrent ? "bg-emerald-500/10 text-emerald-500 cursor-default" : 
-                                    isPremium ? "bg-amber-400 text-black hover:bg-amber-300 active:scale-95" :
-                                    "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-lg shadow-indigo-100"
+                                    isCurrent ? "bg-emerald-500/10 text-emerald-500 cursor-default" :
+                                        isPremium ? "bg-amber-400 text-black hover:bg-amber-300 active:scale-95" :
+                                            "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-lg shadow-indigo-100"
                                 )}
                             >
                                 {processingId === plan.id ? (
@@ -360,9 +366,9 @@ const UserSubscriptionView = () => {
                                 <td className="p-6 font-bold text-gray-900">Reschedules</td>
                                 {plans.map(p => (
                                     <td key={p.id} className="p-6 text-center text-gray-500 font-bold">
-                                        {p.features?.reschedule_limit === 0 ? t('common.no') : 
-                                         p.features?.reschedule_limit > 10 ? t('user_subscription.unlimited') : 
-                                         p.features?.reschedule_limit}
+                                        {p.features?.reschedule_limit === 0 ? t('common.no') :
+                                            p.features?.reschedule_limit > 10 ? t('user_subscription.unlimited') :
+                                                p.features?.reschedule_limit}
                                     </td>
                                 ))}
                             </tr>
@@ -379,7 +385,7 @@ const UserSubscriptionView = () => {
                 </div>
                 <div className="space-y-4">
                     {[1, 2, 3, 4].map((i) => (
-                        <FAQItem 
+                        <FAQItem
                             key={i}
                             question={t(`user_subscription.faq_q${i}`)}
                             answer={t(`user_subscription.faq_a${i}`)}
@@ -407,6 +413,18 @@ const UserSubscriptionView = () => {
                     </div>
                 </div>
             </div>
+            <AnimatePresence>
+                {isCheckoutOpen && (
+                    <CheckoutModal
+                        isOpen={isCheckoutOpen}
+                        onClose={() => setIsCheckoutOpen(false)}
+                        plan={selectedPlan}
+                        onPay={handleActualPurchase}
+                        user={user}
+                        t={t}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -417,7 +435,7 @@ const FAQItem = ({ question, answer }) => {
 
     return (
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden transition-all duration-300">
-            <button 
+            <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between p-6 text-left"
             >

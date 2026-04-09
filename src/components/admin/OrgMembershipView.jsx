@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-    Check, ArrowRight, Loader2, Sparkles, Shield, Zap, Crown, Star, Leaf, 
+import {
+    Check, ArrowRight, Loader2, Sparkles, Shield, Zap, Crown, Star, Leaf,
     TrendingUp, Globe, LayoutDashboard, Clock, AlertCircle
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -11,150 +11,8 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { AnimatePresence } from 'framer-motion';
+import CheckoutModal from '../common/CheckoutModal';
 
-const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
-    const [couponCode, setCouponCode] = useState('');
-    const [isValidating, setIsValidating] = useState(false);
-    const [couponData, setCouponData] = useState(null);
-    const [error, setError] = useState('');
-
-    const basePrice = plan?.price_monthly || 0;
-    const discount = couponData ? couponData.discountAmount : 0;
-    const discountedBase = Math.max(0, basePrice - discount);
-    const gstAmount = parseFloat((discountedBase * 0.18).toFixed(2));
-    const totalPayable = parseFloat((discountedBase + gstAmount).toFixed(2));
-
-    const handleApplyCoupon = async () => {
-        if (!couponCode) return;
-        setIsValidating(true);
-        setError('');
-        try {
-            const res = await apiService.validateCoupon(couponCode, plan.id);
-            setCouponData(res.data);
-            toast.success("Coupon applied successfully!");
-        } catch (err) {
-            setError(err.response?.data?.message || "Invalid coupon code");
-            setCouponData(null);
-        } finally {
-            setIsValidating(false);
-        }
-    };
-
-    if (!isOpen || !plan) return null;
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            />
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
-            >
-                {/* Header */}
-                <div className="bg-slate-900 p-8 text-white relative">
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
-                        <Shield className="h-24 w-24" />
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-2">Secure Checkout</p>
-                        <h3 className="text-3xl font-black tracking-tight">{plan.name} Plan</h3>
-                        <p className="text-slate-400 text-sm font-medium mt-1">Review your subscription details</p>
-                    </div>
-                </div>
-
-                <div className="p-8 space-y-8">
-                    {/* Summary Row */}
-                    <div className="flex justify-between items-center text-slate-900">
-                        <div>
-                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Subscription Tier</p>
-                            <p className="text-lg font-black">{plan.name} Membership</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Base Price</p>
-                            <p className="text-lg font-black">₹{basePrice}</p>
-                        </div>
-                    </div>
-
-                    {/* Coupon Input */}
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Have a coupon code?</label>
-                        <div className="flex gap-2">
-                            <div className="relative flex-grow">
-                                <input 
-                                    type="text" 
-                                    value={couponCode}
-                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                    placeholder="ENTER CODE"
-                                    className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold uppercase tracking-widest focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                                />
-                                {couponData && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <Check className="h-5 w-5 text-emerald-500 stroke-[3px]" />
-                                    </div>
-                                )}
-                            </div>
-                            <button 
-                                onClick={handleApplyCoupon}
-                                disabled={isValidating || !couponCode}
-                                className="px-6 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black disabled:opacity-50 transition-all"
-                            >
-                                {isValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
-                            </button>
-                        </div>
-                        {error && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider">{error}</p>}
-                        {couponData && (
-                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
-                                Applied: {couponData.discountValue}{couponData.discountType === 'percentage' ? '%' : ' OFF'}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Price Breakdown */}
-                    <div className="bg-slate-50 rounded-[2rem] p-6 space-y-3">
-                        <div className="flex justify-between text-sm font-bold text-slate-500">
-                            <span>Subtotal</span>
-                            <span>₹{basePrice}</span>
-                        </div>
-                        {discount > 0 && (
-                            <div className="flex justify-between text-sm font-bold text-emerald-600">
-                                <span>Discount</span>
-                                <span>-₹{discount}</span>
-                            </div>
-                        )}
-                        <div className="flex justify-between text-sm font-bold text-slate-500">
-                            <span>GST (18%)</span>
-                            <span>+₹{gstAmount}</span>
-                        </div>
-                        <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
-                            <span className="text-lg font-black">Total Payable</span>
-                            <span className="text-2xl font-black text-indigo-600 tracking-tight">₹{totalPayable}</span>
-                        </div>
-                    </div>
-
-                    {/* Action */}
-                    <button 
-                        onClick={() => onPay(plan.id, plan.name, couponCode, totalPayable === 0)}
-                        className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:bg-slate-900 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
-                    >
-                        {totalPayable === 0 ? 'Claim Free Plan' : 'Proceed to Payment'}
-                        <ArrowRight className="h-4 w-4" />
-                    </button>
-                    
-                    <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest">
-                        Secure SSL Encryption • Instant Activation
-                    </p>
-                </div>
-            </motion.div>
-        </div>
-    );
-};
 
 const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) => {
     const isPremium = plan.name === 'Enterprise';
@@ -163,7 +21,7 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
 
     // Features can be a JSON string or object from DB
     const features = typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || {});
-    
+
     // Map DB features to readable strings for the cards
     const featureList = [
         t('setup.resources_count', { count: features.max_resources || 1 }),
@@ -192,8 +50,8 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
             whileHover={{ y: -10 }}
             className={clsx(
                 "relative flex flex-col p-8 rounded-[2.5rem] transition-all duration-500",
-                isPremium 
-                    ? "bg-slate-900 text-white shadow-2xl shadow-amber-200/20 scale-105 z-10" 
+                isPremium
+                    ? "bg-slate-900 text-white shadow-2xl shadow-amber-200/20 scale-105 z-10"
                     : "bg-white border border-gray-100 shadow-xl shadow-gray-100"
             )}
         >
@@ -243,11 +101,11 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
                 disabled={isCurrent || isProcessing}
                 className={clsx(
                     "w-full py-4 rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2",
-                    isCurrent 
-                        ? "bg-emerald-500/10 text-emerald-500 cursor-default" 
-                        : isPremium 
-                        ? "bg-amber-400 text-black hover:bg-white active:scale-95 shadow-lg shadow-amber-400/20" 
-                        : "bg-indigo-600 text-white hover:bg-black active:scale-95 shadow-lg shadow-indigo-100",
+                    isCurrent
+                        ? "bg-emerald-500/10 text-emerald-500 cursor-default"
+                        : isPremium
+                            ? "bg-amber-400 text-black hover:bg-white active:scale-95 shadow-lg shadow-amber-400/20"
+                            : "bg-indigo-600 text-white hover:bg-black active:scale-95 shadow-lg shadow-indigo-100",
                     isProcessing && "opacity-70 cursor-wait"
                 )}
             >
@@ -314,16 +172,16 @@ const OrgMembershipView = () => {
     const now = new Date();
     const daysRemaining = expiryDate ? Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24)) : null;
     const isExpired = daysRemaining !== null && daysRemaining <= 0;
-    
+
     const currentPlan = plans.find(p => p.id === user?.org_plan_id) || plans.find(p => p.name === 'Free');
     const currentPlanName = currentPlan?.name || 'Free';
     const planFeatures = typeof currentPlan?.features === 'string' ? JSON.parse(currentPlan.features) : (currentPlan?.features || {});
-    
+
     const isSubscribed = currentPlanName !== 'Free';
 
     const handleUpgradeClick = (planId, planName) => {
         const plan = plans.find(p => p.id === planId);
-        
+
         // If it's a natively free plan (price is 0), just claim it directly
         if (parseFloat(plan.price_monthly) === 0) {
             handleActualPurchase(planId, planName, null, true);
@@ -357,7 +215,7 @@ const OrgMembershipView = () => {
 
             // 1. Create Order with Optional Coupon
             const { data: orderData } = await apiService.createPlanPaymentOrder(planId, couponCode);
-            
+
             // Handle if backend says it's free (backup check)
             if (orderData.isFree) {
                 await apiService.claimFreePlan(planId, couponCode);
@@ -427,7 +285,7 @@ const OrgMembershipView = () => {
     return (
         <div className="min-h-screen pb-20 px-4 md:px-0">
             {/* Current Plan Status Dashboard */}
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-7xl mx-auto mb-12"
@@ -438,7 +296,7 @@ const OrgMembershipView = () => {
                         <div className="absolute top-0 right-0 p-12 opacity-10">
                             <Crown className="h-40 w-40" />
                         </div>
-                        
+
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-indigo-500 rounded-xl">
@@ -494,7 +352,7 @@ const OrgMembershipView = () => {
                                             "text-lg font-bold",
                                             daysRemaining <= 3 ? "text-red-400" : "text-emerald-400"
                                         )}>
-                                            {daysRemaining !== null 
+                                            {daysRemaining !== null
                                                 ? t('membership.days_remaining', { count: Math.max(0, daysRemaining) })
                                                 : 'Lifetime'
                                             }
@@ -511,7 +369,7 @@ const OrgMembershipView = () => {
                             <h3 className="text-xl font-black tracking-tight mb-8">
                                 {t('membership.usage_title')}
                             </h3>
-                            
+
                             <div className="space-y-8">
                                 {/* Resources Usage */}
                                 <div className="space-y-3">
@@ -524,7 +382,7 @@ const OrgMembershipView = () => {
                                         </span>
                                     </div>
                                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                                        <motion.div 
+                                        <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${Math.min(100, ((stats?.resourceCount || 0) / (planFeatures.max_resources || 1)) * 100)}%` }}
                                             className={clsx(
@@ -546,7 +404,7 @@ const OrgMembershipView = () => {
                                         </span>
                                     </div>
                                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                                        <motion.div 
+                                        <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${Math.min(100, ((stats?.adminCount || 0) / (planFeatures.max_admins || 1)) * 100)}%` }}
                                             className={clsx(
@@ -575,7 +433,7 @@ const OrgMembershipView = () => {
             <div className="max-w-7xl mx-auto mb-16 text-center">
                 <div className="flex flex-col items-center justify-center gap-8">
                     <div className="max-w-3xl">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6"
@@ -583,16 +441,16 @@ const OrgMembershipView = () => {
                             <TrendingUp className="h-3 w-3" />
                             {t('membership.scale_business')}
                         </motion.div>
-                        <motion.h1 
+                        <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
                             className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tighter leading-none mb-6"
                         >
-                            {t('membership.title')} <br/>
+                            {t('membership.title')} <br />
                             <span className="text-indigo-600 italic">{t('membership.title_italic')}</span>
                         </motion.h1>
-                        <motion.p 
+                        <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2 }}
@@ -607,10 +465,10 @@ const OrgMembershipView = () => {
             {/* Plans Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 max-w-7xl mx-auto">
                 {plans.map((plan) => (
-                    <PlanCard 
-                        key={plan.id} 
-                        plan={plan} 
-                        isCurrent={user?.org_plan_id === plan.id || (!user?.org_plan_id && plan.name === 'Free')} 
+                    <PlanCard
+                        key={plan.id}
+                        plan={plan}
+                        isCurrent={user?.org_plan_id === plan.id || (!user?.org_plan_id && plan.name === 'Free')}
                         isDowngrade={parseFloat(plan.price_monthly) < parseFloat(currentPlan?.price_monthly || 0)}
                         onUpgrade={handleUpgradeClick}
                         processingId={processingId}
@@ -621,7 +479,7 @@ const OrgMembershipView = () => {
 
             <AnimatePresence>
                 {isCheckoutOpen && (
-                    <CheckoutModal 
+                    <CheckoutModal
                         isOpen={isCheckoutOpen}
                         onClose={() => setIsCheckoutOpen(false)}
                         plan={selectedPlan}
@@ -634,7 +492,7 @@ const OrgMembershipView = () => {
 
 
             {/* Bottom Info Section */}
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 className="max-w-4xl mx-auto mt-20 p-10 bg-gradient-to-br from-indigo-50 to-white rounded-[3rem] border border-indigo-100 text-center"
@@ -646,7 +504,7 @@ const OrgMembershipView = () => {
                 <p className="text-gray-500 font-medium mb-8">
                     {t('membership.custom_setup_desc')}
                 </p>
-                <button 
+                <button
                     onClick={() => window.location.href = 'mailto:support@queuify.in?subject=Custom%20Setup%20Inquiry%20-%20Queuify%20Business'}
                     className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-extrabold text-sm uppercase tracking-widest hover:bg-indigo-600 transition-colors"
                 >

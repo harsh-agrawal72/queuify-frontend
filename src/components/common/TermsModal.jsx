@@ -163,12 +163,6 @@ const TermsModal = ({ isOpen, onClose, onAgree, role = 'org' }) => {
                                     <h2 className="text-2xl font-extrabold tracking-tight">{headerConfig.title}</h2>
                                 </div>
                             </div>
-                            <button
-                                onClick={onClose}
-                                className="p-2 hover:bg-white/20 rounded-full transition-colors text-white/70 hover:text-white"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
                         </div>
                         <p className="relative z-10 text-white/80 mt-3 font-medium text-sm">{headerConfig.subtitle}</p>
                     </div>
@@ -228,14 +222,8 @@ const TermsModal = ({ isOpen, onClose, onAgree, role = 'org' }) => {
                     {/* Footer */}
                     <div className="p-6 bg-gray-50/80 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
                         <button
-                            onClick={onClose}
-                            className="flex-1 px-6 py-3.5 bg-white border border-gray-200 text-gray-600 rounded-2xl font-bold hover:bg-gray-100 transition-all active:scale-95 shadow-sm text-sm"
-                        >
-                            Decline
-                        </button>
-                        <button
                             onClick={onAgree}
-                            className={`flex-[2] px-6 py-3.5 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 group text-sm ${isUser ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`}
+                            className={`w-full px-6 py-3.5 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-xl flex items-center justify-center gap-2 group text-sm ${isUser ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`}
                         >
                             I Understand & Accept All Terms
                             <CheckCircle2 className="h-5 w-5 group-hover:scale-110 transition-transform" />
