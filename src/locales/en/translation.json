@@ -79,7 +79,23 @@
     "all_notifications_title": "All Notifications",
     "all_notifications_desc": "Never miss a turn with multi-channel alerts (SMS, push).",
     "direct_chat_title": "Direct Chat",
-    "direct_chat_desc": "Premium users get a direct chat line to admin support."
+    "direct_chat_desc": "Premium users get a direct chat line to admin support.",
+    "faq_title": "Frequently Asked Questions",
+    "faq_q1": "How active bookings work?",
+    "faq_a1": "Active bookings are the number of appointments you can have confirmed at any single time across all organizations.",
+    "faq_q2": "Can I cancel anytime?",
+    "faq_a2": "Yes, you can switch back to the Free plan at any time from your settings. Your premium benefits will remain until the end of your current billing cycle.",
+    "faq_q3": "Is my payment secure?",
+    "faq_a3": "Absolutely. We use Razorpay, India's leading payment gateway, to ensure your transactions are encrypted and safe.",
+    "faq_q4": "What is VIP Priority?",
+    "faq_a4": "With VIP Priority, you are placed at the top of the 'Waiting' list in the Live Queue, meaning you get served faster than standard users.",
+    "trust_secure_payments": "100% Secure Payments",
+    "trust_cancel_anytime": "Cancel Anytime",
+    "trust_support": "Priority Support",
+    "comparison_title": "Compare Plans",
+    "feature_name": "Feature",
+    "pricing_footer_title": "Ready to save time?",
+    "pricing_footer_subtitle": "Join thousands of users who manage their appointments with precision."
   },
   "payments": {
     "subtitle": "Analyze your spending and track transaction history."
