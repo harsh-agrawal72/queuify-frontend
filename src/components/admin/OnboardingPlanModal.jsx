@@ -168,10 +168,10 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                             <Sparkles className="h-3 w-3" />
                             {t('onboarding_modal.org_verified')}
                         </motion.div>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tighter mb-4">
+                        <h2 className="text-4xl md:text-6xl font-[900] text-slate-900 tracking-tighter mb-4 leading-none">
                             {t('onboarding_modal.welcome_title')} <span className="text-indigo-600 italic">{t('onboarding_modal.welcome_italic')}</span>
                         </h2>
-                        <p className="text-slate-500 font-bold max-w-2xl mx-auto">
+                        <p className="text-slate-500 font-medium text-lg max-w-2xl mx-auto leading-relaxed">
                             {t('onboarding_modal.welcome_subtitle')}
                         </p>
                     </div>
@@ -226,8 +226,11 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                                 <PlanFeature isPremium={isPremium} text={t('setup.resources_count', { count: features.max_resources || 1 })} />
                                                 <PlanFeature isPremium={isPremium} text={t('setup.admins_count', { count: features.max_admins || 1 })} />
                                                 <PlanFeature isPremium={isPremium} text={features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics')} />
+                                                {features.has_basic_features && <PlanFeature isPremium={isPremium} text={t('setup.basic_features')} />}
                                                 {features.has_premium_features && <PlanFeature isPremium={isPremium} text={t('setup.premium_features')} />}
                                                 {features.has_customer_insight && <PlanFeature isPremium={isPremium} text={t('setup.customer_insight')} />}
+                                                {features.has_top_position && <PlanFeature isPremium={isPremium} text={t('setup.top_position')} />}
+                                                {features.has_one_on_one_support && <PlanFeature isPremium={isPremium} text={t('setup.one_on_one_support')} />}
                                                 <PlanFeature isPremium={isPremium} text={t('setup.availability_24_7')} />
                                             </div>
 

@@ -16,6 +16,8 @@
     "one_on_one_support": "1-on-1 Support",
     "premium_features": "Premium Features",
     "advance_analytics": "Advance Analytics",
+    "basic_analytics": "Basic Analytics",
+    "basic_features": "Basic Features",
     "availability_24_7": "24/7 Availability",
     "admins_count": "{{count}} Admin(s) Allowed",
     "resources_count": "{{count}} Resource(s) Allowed"
