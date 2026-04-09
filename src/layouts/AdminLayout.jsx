@@ -185,15 +185,59 @@ const AdminLayout = () => {
         }
     }, [setupIncomplete, location.pathname, navigate, t, user]);
 
+    const features = user?.plan_features || {};
+
     const menuItems = [
-        { path: '/admin/analytics', icon: BarChart3, label: t('navigation.analytics'), disabled: setupIncomplete },
-        { path: '/admin/services', icon: Briefcase, label: t('navigation.service_management'), disabled: setupIncomplete },
-        { path: '/admin/resources', icon: Users, label: t('navigation.resource_management', 'Resource Management'), disabled: setupIncomplete },
-        { path: '/admin/slots', icon: Clock, label: t('navigation.manage_slots'), disabled: setupIncomplete },
-        { path: '/admin/appointments', icon: Users, label: t('navigation.appointments'), disabled: setupIncomplete },
-        { path: '/admin/queue', icon: ListVideo, label: t('navigation.live_queue'), disabled: setupIncomplete },
-        { path: '/admin/inbox', icon: MessageCircle, label: t('navigation.support_inbox'), disabled: setupIncomplete },
-        { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews'), disabled: setupIncomplete },
+        { 
+            path: '/admin/analytics', 
+            icon: BarChart3, 
+            label: t('navigation.analytics'), 
+            disabled: setupIncomplete
+        },
+        { 
+            path: '/admin/services', 
+            icon: Briefcase, 
+            label: t('navigation.service_management'), 
+            disabled: setupIncomplete 
+        },
+        { 
+            path: '/admin/resources', 
+            icon: Users, 
+            label: t('navigation.resource_management', 'Resource Management'), 
+            disabled: setupIncomplete 
+        },
+        { 
+            path: '/admin/slots', 
+            icon: Clock, 
+            label: t('navigation.manage_slots'), 
+            disabled: setupIncomplete 
+        },
+        { 
+            path: '/admin/appointments', 
+            icon: Users, 
+            label: t('navigation.appointments'), 
+            disabled: setupIncomplete 
+        },
+        { 
+            path: '/admin/queue', 
+            icon: ListVideo, 
+            label: t('navigation.live_queue'), 
+            disabled: setupIncomplete 
+        },
+        { 
+            path: '/admin/inbox', 
+            icon: MessageCircle, 
+            label: t('navigation.support_inbox'), 
+            disabled: setupIncomplete,
+            isLocked: !features.has_one_on_one_support
+        },
+        { 
+            path: '/admin/reviews', 
+            icon: Star, 
+            label: t('navigation.patient_reviews'), 
+            disabled: setupIncomplete,
+            isLocked: !features.has_customer_insight
+        },
         { path: '/admin/about', icon: Building2, label: t('navigation.about_organization') },
         { path: '/admin/settings', icon: Settings, label: t('navigation.settings') },
         { path: '/admin/membership', icon: ShieldCheck, label: t('navigation.membership', 'Membership Plans') },
@@ -266,25 +310,43 @@ const AdminLayout = () => {
                             return (
                                 <Link
                                     key={item.path}
-                                    to={item.disabled ? '#' : item.path}
+                                    to={item.disabled || item.isLocked ? '#' : item.path}
                                     onClick={(e) => {
                                         if (item.disabled) {
                                             e.preventDefault();
                                             toast.error(t('setup.locked_feature', 'This feature is locked until setup is complete.'));
                                             return;
                                         }
+                                        if (item.isLocked) {
+                                            e.preventDefault();
+                                            toast.error(t('membership.upgrade_required', 'This feature requires a plan upgrade.'));
+                                            navigate('/admin/membership');
+                                            return;
+                                        }
                                         window.innerWidth <= 768 && setIsSidebarOpen(false);
                                     }}
                                     title={!isSidebarOpen ? item.label : ''}
-                                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${isActive
+                                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${isActive
                                         ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm'
-                                        : item.disabled 
-                                        ? 'opacity-40 cursor-not-allowed text-gray-400' 
+                                        : (item.disabled || item.isLocked) 
+                                        ? 'opacity-60 cursor-not-allowed text-gray-400' 
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                         }`}
                                 >
-                                    <item.icon className={`h-5 w-5 flex-shrink-0 transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
-                                    {isSidebarOpen && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="whitespace-nowrap">{item.label}</motion.span>}
+                                    <div className="relative">
+                                        <item.icon className={`h-5 w-5 flex-shrink-0 transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                        {item.isLocked && (
+                                            <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm">
+                                                <ShieldCheck className="w-2 h-2 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    {isSidebarOpen && (
+                                        <div className="flex items-center justify-between flex-1 min-w-0">
+                                            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="whitespace-nowrap truncate">{item.label}</motion.span>
+                                            {item.isLocked && <ShieldCheck className="w-3 h-3 text-amber-500 flex-shrink-0 ml-1" />}
+                                        </div>
+                                    )}
                                     {isSidebarOpen && isActive && (
                                         <motion.div layoutId="active-pill" className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-600" />
                                     )}
