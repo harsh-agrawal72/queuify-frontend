@@ -63,6 +63,76 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
         }
     };
 
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            if (window.Razorpay) {
+                resolve(true);
+                return;
+            }
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const handleUpgrade = async (planId, planName) => {
+        setSubmitting(true);
+        const loadingToast = toast.loading(`Initiating upgrade to ${planName}...`);
+
+        try {
+            const hasRazorpay = await loadRazorpay();
+            if (!hasRazorpay) {
+                toast.error("Razorpay SDK failed to load.", { id: loadingToast });
+                return;
+            }
+
+            const { data: orderData } = await apiService.createPlanPaymentOrder(planId);
+            
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: orderData.order.amount,
+                currency: orderData.order.currency,
+                name: "Queuify Business",
+                description: `Upgrade to ${planName} Plan`,
+                order_id: orderData.order.id,
+                handler: async (response) => {
+                    try {
+                        toast.loading("Verifying payment...", { id: loadingToast });
+                        await apiService.verifyPlanPayment({
+                            planId,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        
+                        // After payment, also mark as onboarded
+                        await apiService.markAsOnboarded();
+                        toast.success(`Welcome to ${planName}!`, { id: loadingToast });
+                        onComplete();
+                    } catch (err) {
+                        toast.error(err.response?.data?.message || "Verification failed.", { id: loadingToast });
+                    } finally {
+                        setSubmitting(false);
+                    }
+                },
+                prefill: {
+                    name: user?.name || "",
+                    email: user?.email || "",
+                },
+                theme: { color: "#4F46E5" },
+                modal: { ondismiss: () => setSubmitting(false) }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to initiate payment", { id: loadingToast });
+            setSubmitting(false);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -147,13 +217,27 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-4 flex-grow">
+                                            <div className="space-y-4 mb-8">
                                                 <PlanFeature isPremium={isPremium} text={`${features.resources || 0} Resources`} />
                                                 <PlanFeature isPremium={isPremium} text={`${features.staff || 0} Staff Accounts`} />
                                                 <PlanFeature isPremium={isPremium} text={`${features.max_daily_bookings || 0} Daily Limit`} />
                                                 {features.custom_branding && <PlanFeature isPremium={isPremium} text="Custom Branding" />}
                                                 {features.broadcast && <PlanFeature isPremium={isPremium} text="Broadcasting" />}
                                             </div>
+
+                                            <button
+                                                onClick={() => handleUpgrade(plan.id, plan.name)}
+                                                disabled={submitting}
+                                                className={clsx(
+                                                    "w-full py-4 mt-auto rounded-2xl font-black transition-all flex items-center justify-center gap-2 active:scale-95",
+                                                    isPremium 
+                                                        ? "bg-amber-400 text-black hover:bg-white" 
+                                                        : "bg-indigo-600 text-white hover:bg-black"
+                                                )}
+                                            >
+                                                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Upgrade Now'}
+                                                {!submitting && <ArrowRight className="h-4 w-4" />}
+                                            </button>
                                         </motion.div>
                                     );
                                 })}
@@ -166,7 +250,7 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                         <button
                             onClick={handleStartFree}
                             disabled={submitting}
-                            className="group relative px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-black transition-all active:scale-95 flex items-center gap-3 overflow-hidden shadow-2xl shadow-indigo-200"
+                            className="group relative px-12 py-5 bg-indigo-50 text-indigo-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all active:scale-95 flex items-center gap-3 overflow-hidden"
                         >
                             {submitting ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
