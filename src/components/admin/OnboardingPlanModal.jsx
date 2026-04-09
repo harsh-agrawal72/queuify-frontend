@@ -14,6 +14,7 @@ import clsx from 'clsx';
 import { apiService } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const PlanFeature = ({ text, isPremium }) => (
     <div className="flex items-start gap-3">
@@ -32,6 +33,7 @@ const PlanFeature = ({ text, isPremium }) => (
 
 const OnboardingPlanModal = ({ isOpen, onComplete }) => {
     const { user } = useAuth();
+    const { t } = useTranslation();
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -43,7 +45,7 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                     const res = await apiService.getPlans({ target_role: 'admin' });
                     setPlans(res.data);
                 } catch (err) {
-                    console.error("Failed to load plans", err);
+                    console.error(t('onboarding_modal.failed_load_plans'), err);
                 } finally {
                     setLoading(false);
                 }
@@ -57,9 +59,9 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
         try {
             await apiService.markAsOnboarded();
             onComplete();
-            toast.success("Welcome aboard! Your dashboard is now active.");
+            toast.success(t('onboarding_modal.welcome_aboard'));
         } catch (err) {
-            toast.error("Something went wrong. Please try again.");
+            toast.error(t('onboarding_modal.generic_error'));
         } finally {
             setSubmitting(false);
         }
@@ -81,12 +83,12 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
 
     const handleUpgrade = async (planId, planName) => {
         setSubmitting(true);
-        const loadingToast = toast.loading(`Initiating upgrade to ${planName}...`);
+        const loadingToast = toast.loading(t('onboarding_modal.initiating_upgrade', { name: planName }));
 
         try {
             const hasRazorpay = await loadRazorpay();
             if (!hasRazorpay) {
-                toast.error("Razorpay SDK failed to load.", { id: loadingToast });
+                toast.error(t('onboarding_modal.razorpay_failed'), { id: loadingToast });
                 return;
             }
 
@@ -97,11 +99,11 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                 amount: orderData.order.amount,
                 currency: orderData.order.currency,
                 name: "Queuify Business",
-                description: `Upgrade to ${planName} Plan`,
+                description: t('onboarding_modal.initiating_upgrade', { name: planName }),
                 order_id: orderData.order.id,
                 handler: async (response) => {
                     try {
-                        toast.loading("Verifying payment...", { id: loadingToast });
+                        toast.loading(t('onboarding_modal.verifying_payment'), { id: loadingToast });
                         await apiService.verifyPlanPayment({
                             planId,
                             razorpay_order_id: response.razorpay_order_id,
@@ -111,10 +113,10 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                         
                         // After payment, also mark as onboarded
                         await apiService.markAsOnboarded();
-                        toast.success(`Welcome to ${planName}!`, { id: loadingToast });
+                        toast.success(t('onboarding_modal.welcome_to_plan', { name: planName }), { id: loadingToast });
                         onComplete();
                     } catch (err) {
-                        toast.error(err.response?.data?.message || "Verification failed.", { id: loadingToast });
+                        toast.error(err.response?.data?.message || t('onboarding_modal.verif_failed'), { id: loadingToast });
                     } finally {
                         setSubmitting(false);
                     }
@@ -130,7 +132,7 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
             const rzp = new window.Razorpay(options);
             rzp.open();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to initiate payment", { id: loadingToast });
+            toast.error(error.response?.data?.message || t('onboarding_modal.payment_failed'), { id: loadingToast });
             setSubmitting(false);
         }
     };
@@ -163,14 +165,13 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest mb-6 shadow-lg shadow-indigo-200"
                         >
                             <Sparkles className="h-3 w-3" />
-                            Organization Verified
+                            {t('onboarding_modal.org_verified')}
                         </motion.div>
-                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-4">
-                            Welcome to the <span className="text-indigo-600 italic">Future of Queueing.</span>
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tighter mb-4">
+                            {t('onboarding_modal.welcome_title')} <span className="text-indigo-600 italic">{t('onboarding_modal.welcome_italic')}</span>
                         </h2>
                         <p className="text-slate-500 font-bold max-w-2xl mx-auto">
-                            Congratulations! Your organization has been verified by our team. 
-                            Choose a plan and start managing your workspace with precision.
+                            {t('onboarding_modal.welcome_subtitle')}
                         </p>
                     </div>
 
@@ -179,7 +180,7 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-20">
                                 <Loader2 className="h-10 w-10 text-indigo-600 animate-spin mb-4" />
-                                <p className="text-xs font-black uppercase tracking-widest text-slate-400 italic">Fetching Business Tiers...</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-slate-400 italic">{t('onboarding_modal.fetching_tiers')}</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -208,14 +209,14 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                                      isStandard ? <Star className="h-6 w-6 text-indigo-600" /> : 
                                                      <Zap className="h-6 w-6 text-slate-400" />}
                                                 </div>
-                                                <h3 className="text-xl font-black">{plan.name}</h3>
-                                                <p className={clsx("text-[10px] font-bold uppercase tracking-wider", isPremium ? "text-white/40" : "text-slate-400")}>Business Tier</p>
+                                                <h3 className="text-xl font-extrabold tracking-tight">{plan.name}</h3>
+                                                <p className={clsx("text-[10px] font-bold uppercase tracking-widest", isPremium ? "text-white/40" : "text-slate-400")}>{t('onboarding_modal.business_tier')}</p>
                                             </div>
 
                                             <div className="mb-6">
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-3xl font-black italic">₹{plan.price_monthly}</span>
-                                                    <span className="text-xs font-bold opacity-40">/mo</span>
+                                                    <span className="text-3xl font-extrabold italic tracking-tighter text-indigo-600">₹{plan.price_monthly}</span>
+                                                    <span className={clsx("text-xs font-bold opacity-40", isPremium ? "text-white" : "text-slate-900")}>{t('onboarding_modal.per_month')}</span>
                                                 </div>
                                             </div>
 
@@ -231,13 +232,13 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                                 onClick={() => handleUpgrade(plan.id, plan.name)}
                                                 disabled={submitting}
                                                 className={clsx(
-                                                    "w-full py-4 mt-auto rounded-2xl font-black transition-all flex items-center justify-center gap-2 active:scale-95",
+                                                    "w-full py-4 mt-auto rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2 active:scale-95",
                                                     isPremium 
                                                         ? "bg-amber-400 text-black hover:bg-white" 
                                                         : "bg-indigo-600 text-white hover:bg-black"
                                                 )}
                                             >
-                                                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Upgrade Now'}
+                                                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('onboarding_modal.upgrade_now')}
                                                 {!submitting && <ArrowRight className="h-4 w-4" />}
                                             </button>
                                         </motion.div>
@@ -252,19 +253,19 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                         <button
                             onClick={handleStartFree}
                             disabled={submitting}
-                            className="group relative px-12 py-5 bg-indigo-50 text-indigo-700 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all active:scale-95 flex items-center gap-3 overflow-hidden"
+                            className="group relative px-12 py-5 bg-indigo-50 text-indigo-700 rounded-2xl font-extrabold text-sm uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all active:scale-95 flex items-center gap-3 overflow-hidden"
                         >
                             {submitting ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
                                 <>
-                                    Start Exploring for Free
+                                    {t('onboarding_modal.start_exploring')}
                                     <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                                 </>
                             )}
                         </button>
                         <p className="text-[10px] text-slate-400 font-bold italic">
-                            You can upgrade or change your plan anytime from your dashboard settings.
+                            {t('onboarding_modal.upgrade_hint')}
                         </p>
                     </div>
                 </motion.div>
