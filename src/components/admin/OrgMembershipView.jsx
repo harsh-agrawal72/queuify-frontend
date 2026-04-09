@@ -124,6 +124,9 @@ const OrgMembershipView = () => {
     const { user, refreshUser } = useAuth();
     const [stats, setStats] = useState(null);
     const [statsLoading, setStatsLoading] = useState(true);
+    const [plans, setPlans] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [processingId, setProcessingId] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -336,16 +339,16 @@ const OrgMembershipView = () => {
                                             {t('membership.resources_used')}
                                         </p>
                                         <span className="text-sm font-black">
-                                            {stats.resourceCount} / {planFeatures.max_resources || 1}
+                                            {stats?.resourceCount || 0} / {planFeatures.max_resources || 1}
                                         </span>
                                     </div>
                                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                                         <motion.div 
                                             initial={{ width: 0 }}
-                                            animate={{ width: `${Math.min(100, (stats.resourceCount / (planFeatures.max_resources || 1)) * 100)}%` }}
+                                            animate={{ width: `${Math.min(100, ((stats?.resourceCount || 0) / (planFeatures.max_resources || 1)) * 100)}%` }}
                                             className={clsx(
                                                 "h-full rounded-full transition-all duration-1000",
-                                                stats.resourceCount >= planFeatures.max_resources ? "bg-red-500" : "bg-indigo-600"
+                                                (stats?.resourceCount || 0) >= (planFeatures.max_resources || 1) ? "bg-red-500" : "bg-indigo-600"
                                             )}
                                         />
                                     </div>
@@ -358,16 +361,16 @@ const OrgMembershipView = () => {
                                             {t('membership.admins_used')}
                                         </p>
                                         <span className="text-sm font-black">
-                                            {stats.adminCount} / {planFeatures.max_admins || 1}
+                                            {stats?.adminCount || 0} / {planFeatures.max_admins || 1}
                                         </span>
                                     </div>
                                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                                         <motion.div 
                                             initial={{ width: 0 }}
-                                            animate={{ width: `${Math.min(100, (stats.adminCount / (planFeatures.max_admins || 1)) * 100)}%` }}
+                                            animate={{ width: `${Math.min(100, ((stats?.adminCount || 0) / (planFeatures.max_admins || 1)) * 100)}%` }}
                                             className={clsx(
                                                 "h-full rounded-full transition-all duration-1000",
-                                                stats.adminCount >= planFeatures.max_admins ? "bg-red-500" : "bg-indigo-600"
+                                                (stats?.adminCount || 0) >= (planFeatures.max_admins || 1) ? "bg-red-500" : "bg-indigo-600"
                                             )}
                                         />
                                     </div>
