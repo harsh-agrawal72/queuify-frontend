@@ -109,9 +109,9 @@ const PlanCard = ({ plan, isCurrent, onUpgrade, processingId, t }) => {
                 {isProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                 ) : isCurrent ? (
-                    'Active Plan'
+                    t('user_subscription.current_plan', 'Current Plan')
                 ) : (
-                    'Upgrade Now'
+                    t('user_subscription.upgrade_now', 'Upgrade Now')
                 )}
                 {!isCurrent && !isProcessing && <ArrowRight className="h-4 w-4" />}
             </button>
@@ -451,7 +451,10 @@ const OrgMembershipView = () => {
                 <p className="text-gray-500 font-medium mb-8">
                     {t('membership.custom_setup_desc')}
                 </p>
-                <button className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-extrabold text-sm uppercase tracking-widest hover:bg-indigo-600 transition-colors">
+                <button 
+                    onClick={() => window.location.href = 'mailto:support@queuify.in?subject=Custom%20Setup%20Inquiry%20-%20Queuify%20Business'}
+                    className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-extrabold text-sm uppercase tracking-widest hover:bg-indigo-600 transition-colors"
+                >
                     {t('membership.contact_sales')}
                 </button>
             </motion.div>
