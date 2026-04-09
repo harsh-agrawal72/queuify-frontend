@@ -328,6 +328,7 @@ const PredictiveInsightsSection = ({ insights }) => {
 // ═══════════════════════════════════════
 const AnalyticsPanel = () => {
     const { t } = useTranslation();
+    const { user, navigate } = useAuth();
     const [stats, setStats] = useState(null);
     const [predictiveInsights, setPredictiveInsights] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -336,7 +337,8 @@ const AnalyticsPanel = () => {
     const [resources, setResources] = useState([]);
     const [wallet, setWallet] = useState(null);
     const [orgDetails, setOrgDetails] = useState(null);
-    const [planFeatures, setPlanFeatures] = useState({});
+    const isBasicAnalytics = !user || user?.plan_features?.analytics !== 'advanced';
+    const [planFeatures, setPlanFeatures] = useState(user?.plan_features || { analytics: 'basic' });
 
     // Filters
     const [preset, setPreset] = useState('7d');
