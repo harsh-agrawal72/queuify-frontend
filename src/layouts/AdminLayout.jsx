@@ -38,7 +38,7 @@ import BroadcastBanner from '../components/common/BroadcastBanner';
 import OnboardingPlanModal from '../components/admin/OnboardingPlanModal';
 
 const AdminLayout = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, refreshUser } = useAuth();
     const { queueData } = useQueueSocket(user?.org_id);
     const { notification, broadcast } = useUserSocket(user?.id);
     const { t } = useTranslation();
