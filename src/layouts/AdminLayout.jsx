@@ -186,6 +186,7 @@ const AdminLayout = () => {
         { path: '/admin/reviews', icon: Star, label: t('navigation.patient_reviews'), disabled: setupIncomplete },
         { path: '/admin/about', icon: Building2, label: t('navigation.about_organization') },
         { path: '/admin/settings', icon: Settings, label: t('navigation.settings') },
+        { path: '/admin/membership', icon: ShieldCheck, label: t('navigation.membership', 'Membership Plans') },
         { path: '/admin/wallet', icon: Wallet, label: t('navigation.wallet'), disabled: setupIncomplete },
     ];
 

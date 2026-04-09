@@ -1,0 +1,251 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { 
+    Check, 
+    X, 
+    Zap, 
+    Star, 
+    ShieldCheck, 
+    Crown, 
+    Users, 
+    Briefcase, 
+    ArrowRight,
+    TrendingUp,
+    Shield,
+    Globe,
+    LayoutDashboard
+} from 'lucide-react';
+import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
+
+const PlanCard = ({ plan, isCurrent }) => {
+    const { t } = useTranslation();
+    const isPremium = plan.name === 'Enterprise';
+    const isStandard = plan.name === 'Professional';
+
+    const getIcon = () => {
+        if (isPremium) return <Crown className="h-8 w-8 text-amber-500" />;
+        if (isStandard) return <Star className="h-8 w-8 text-indigo-500" />;
+        return <Zap className="h-8 w-8 text-gray-500" />;
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -10 }}
+            className={clsx(
+                "relative flex flex-col p-8 rounded-[2.5rem] transition-all duration-500",
+                isPremium 
+                    ? "bg-slate-900 text-white shadow-2xl shadow-amber-200/20 scale-105 z-10" 
+                    : "bg-white border border-gray-100 shadow-xl shadow-gray-100"
+            )}
+        >
+            {isPremium && (
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-black shadow-xl">
+                    Most Advanced
+                </div>
+            )}
+
+            <div className="mb-8">
+                <div className={clsx(
+                    "w-16 h-16 rounded-3xl flex items-center justify-center mb-6",
+                    isPremium ? "bg-amber-400/10" : isStandard ? "bg-indigo-50" : "bg-gray-50"
+                )}>
+                    {getIcon()}
+                </div>
+                <h3 className="text-2xl font-black tracking-tight mb-2">{plan.name}</h3>
+                <p className={clsx("text-sm font-medium", isPremium ? "text-gray-400" : "text-gray-500")}>
+                    {plan.description}
+                </p>
+            </div>
+
+            <div className="mb-8">
+                <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black italic">₹{plan.price}</span>
+                    <span className={clsx("text-sm font-bold opacity-60", isPremium ? "text-gray-400" : "text-gray-500")}>/month</span>
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-40 italic">billed monthly</p>
+            </div>
+
+            <div className="flex-grow space-y-4 mb-8">
+                {plan.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-4">
+                        <div className={clsx(
+                            "mt-1 p-0.5 rounded-full",
+                            isPremium ? "bg-amber-400/20 text-amber-400" : "bg-emerald-100 text-emerald-600"
+                        )}>
+                            <Check className="h-3 w-3 stroke-[3px]" />
+                        </div>
+                        <span className="text-sm font-bold leading-tight">{feature}</span>
+                    </div>
+                ))}
+                {plan.unavailable?.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-4 opacity-30">
+                        <div className="mt-1 p-0.5 rounded-full bg-gray-100 text-gray-400">
+                            <X className="h-3 w-3 stroke-[3px]" />
+                        </div>
+                        <span className="text-sm font-bold leading-tight line-through">{feature}</span>
+                    </div>
+                ))}
+            </div>
+
+            <button
+                disabled={isCurrent}
+                className={clsx(
+                    "w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2",
+                    isCurrent 
+                        ? "bg-emerald-500/10 text-emerald-500 cursor-default" 
+                        : isPremium 
+                        ? "bg-amber-400 text-black hover:bg-white active:scale-95 shadow-lg shadow-amber-400/20" 
+                        : "bg-indigo-600 text-white hover:bg-black active:scale-95 shadow-lg shadow-indigo-100"
+                )}
+            >
+                {isCurrent ? 'Current Plan' : 'Coming Soon'}
+                {!isCurrent && <ArrowRight className="h-4 w-4" />}
+            </button>
+        </motion.div>
+    );
+};
+
+const OrgMembershipView = () => {
+    const { t } = useTranslation();
+
+    const plans = [
+        {
+            name: 'Starter',
+            price: '999',
+            description: 'Perfect for single counter shops or small clinics.',
+            features: [
+                '1 Resource (Counter/Doctor)',
+                '2 Staff Member Accounts',
+                '20 Daily Appointments',
+                'Basic Daily Analytics',
+                'Queuify Subdomain',
+                'Basic Email Support'
+            ],
+            unavailable: [
+                'User Broadcasting',
+                'Custom Branding',
+                'Advanced AI Reports'
+            ]
+        },
+        {
+            name: 'Professional',
+            price: '2,499',
+            description: 'The preferred choice for growing medical facilities.',
+            features: [
+                'Up to 5 Resources',
+                '10 Staff Member Accounts',
+                '100 Daily Appointments',
+                'Detailed Historical Analytics',
+                'User Broadcasting Access',
+                'Custom Branding (Logo & Colors)',
+                'Priority Email Support'
+            ],
+            unavailable: [
+                'Multi-Branch Support',
+                'Dedicated Account Manager'
+            ]
+        },
+        {
+            name: 'Enterprise',
+            price: '5,000+',
+            description: 'Complete solution for hospitals and healthcare chains.',
+            features: [
+                'Unlimited Resources & Staff',
+                'Unlimited Daily Appointments',
+                'Lowest 1.5% Commission Rate',
+                'Multi-Branch Management',
+                'AI Capacity Planner',
+                'Advanced CRM Integration',
+                'WhatsApp API Access',
+                'Dedicated Account Manager'
+            ]
+        }
+    ];
+
+    return (
+        <div className="min-h-screen pb-20 px-4 md:px-0">
+            {/* Header Hero Area */}
+            <div className="max-w-7xl mx-auto mb-16">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+                    <div className="flex-1 text-center md:text-left">
+                        <motion.div 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-black uppercase tracking-widest mb-6"
+                        >
+                            <TrendingUp className="h-3 w-3" />
+                            Scale Your Business
+                        </motion.div>
+                        <motion.h1 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none mb-6"
+                        >
+                            Choose the plan that's <br/>
+                            <span className="text-indigo-600 italic">right for you.</span>
+                        </motion.h1>
+                        <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-gray-500 text-lg font-medium max-w-xl"
+                        >
+                            Manage your queues, staff, and appointments with military precision. 
+                            Our plans are designed to help you scale smoothly.
+                        </motion.p>
+                    </div>
+
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex-shrink-0 grid grid-cols-2 gap-4 w-full md:w-[400px]"
+                    >
+                        <div className="p-6 bg-white rounded-[2rem] shadow-xl shadow-indigo-50 border border-indigo-50">
+                            <Shield className="h-10 w-10 text-indigo-600 mb-4" />
+                            <h4 className="font-black text-sm">Secure Data</h4>
+                            <p className="text-[10px] text-gray-400 font-bold mt-1">Enterprise grade encryption</p>
+                        </div>
+                        <div className="p-6 bg-indigo-600 rounded-[2rem] shadow-xl shadow-indigo-200 text-white">
+                            <Globe className="h-10 w-10 text-white/50 mb-4" />
+                            <h4 className="font-black text-sm">Cloud Scale</h4>
+                            <p className="text-[10px] text-white/50 font-bold mt-1">99.9% Sla Uptime</p>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* Plans Grid */}
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+                {plans.map((plan, idx) => (
+                    <PlanCard key={idx} plan={plan} isCurrent={idx === 0} />
+                ))}
+            </div>
+
+            {/* Bottom Info Section */}
+            <motion.div 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                className="max-w-4xl mx-auto mt-20 p-10 bg-gradient-to-br from-indigo-50 to-white rounded-[3rem] border border-indigo-100 text-center"
+            >
+                <div className="inline-flex p-3 bg-white rounded-2xl shadow-sm mb-6">
+                    <LayoutDashboard className="h-6 w-6 text-indigo-600" />
+                </div>
+                <h3 className="text-3xl font-black tracking-tight mb-4">Need a Custom Setup?</h3>
+                <p className="text-gray-500 font-medium mb-8">
+                    If you manage more than 20 branches or have complex integration requirements, 
+                    our team can build a custom solution for your specific workflow.
+                </p>
+                <button className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-colors">
+                    Contact Sales Team
+                </button>
+            </motion.div>
+        </div>
+    );
+};
+
+export default OrgMembershipView;
