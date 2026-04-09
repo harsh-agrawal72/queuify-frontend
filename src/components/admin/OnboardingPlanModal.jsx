@@ -8,7 +8,8 @@ import {
     ArrowRight,
     Loader2,
     Sparkles,
-    ShieldCheck
+    ShieldCheck,
+    Leaf
 } from 'lucide-react';
 import clsx from 'clsx';
 import { apiService } from '../../services/api';

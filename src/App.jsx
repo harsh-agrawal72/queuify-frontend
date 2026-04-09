@@ -35,6 +35,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import TermsGuard from './components/common/TermsGuard';
 import NotificationHandler from './components/common/NotificationHandler';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Premium Shimmer Loader for Suspense
 const PremiumLoader = () => (
@@ -60,7 +61,8 @@ function App() {
       <Router>
         <ScrollToTop />
         <AuthProvider>
-          <NotificationHandler />
+          <ErrorBoundary>
+            <NotificationHandler />
           <div className="min-h-screen bg-gray-50 text-gray-900">
             <Suspense fallback={<PremiumLoader />}>
               <Routes>
@@ -116,6 +118,7 @@ function App() {
             </Suspense>
             <Toaster position="top-right" />
           </div>
+          </ErrorBoundary>
         </AuthProvider>
       </Router>
     </GoogleOAuthProvider>
