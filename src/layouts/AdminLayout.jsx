@@ -35,7 +35,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
 import BroadcastBanner from '../components/common/BroadcastBanner';
-import OnboardingPlanModal from '../components/admin/OnboardingPlanModal';
+// Removed OnboardingPlanModal
 
 const AdminLayout = () => {
     const { user, logout, refreshUser } = useAuth();
@@ -165,8 +165,8 @@ const AdminLayout = () => {
     const isImpersonating = !!localStorage.getItem('superadminToken');
     const setupIncomplete = !isImpersonating && (user?.role === 'admin' || user?.role === 'staff') && !user?.org_is_setup_completed;
     
-    // Onboarding Popup Logic: Show if verified (active) but not yet onboarded
-    const showOnboarding = !isImpersonating && user?.role === 'admin' && user?.org_status === 'active' && !user?.org_is_onboarded;
+    // Onboarding Popup Logic: Disabled as per request
+    const showOnboarding = false;
 
     const handleOnboardingComplete = async () => {
         await refreshUser();
@@ -487,11 +487,7 @@ const AdminLayout = () => {
 
             <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
 
-            {/* Premium Onboarding Modal */}
-            <OnboardingPlanModal 
-                isOpen={showOnboarding} 
-                onComplete={handleOnboardingComplete} 
-            />
+            {/* Premium Onboarding Modal Removed */}
 
             {/* Impersonation Banner */}
             {localStorage.getItem('superadminToken') && (
