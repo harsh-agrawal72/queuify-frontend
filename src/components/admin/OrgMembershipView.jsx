@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
     Check, 
@@ -13,15 +13,33 @@ import {
     TrendingUp,
     Shield,
     Globe,
-    LayoutDashboard
+    LayoutDashboard,
+    Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
+import { apiService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
-const PlanCard = ({ plan, isCurrent }) => {
-    const { t } = useTranslation();
+const PlanCard = ({ plan, isCurrent, onUpgrade, processingId }) => {
     const isPremium = plan.name === 'Enterprise';
     const isStandard = plan.name === 'Professional';
+    const isProcessing = processingId === plan.id;
+
+    // Features can be a JSON string or object from DB
+    const featuresData = typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || {});
+    
+    // Map DB features to readable strings for the cards
+    const featureList = [
+        `${featuresData.resources || 0} Resource(s)`,
+        `${featuresData.staff || 0} Staff Member(s)`,
+        `${featuresData.max_daily_bookings || 0} Daily Appointments`,
+        featuresData.custom_branding ? 'Custom Branding' : null,
+        featuresData.broadcast ? 'Broadcast Access' : null,
+        featuresData.multi_branch ? 'Multi-Branch Support' : null,
+        `${plan.commission_rate}% Platform Commission`
+    ].filter(Boolean);
 
     const getIcon = () => {
         if (isPremium) return <Crown className="h-8 w-8 text-amber-500" />;
@@ -57,20 +75,20 @@ const PlanCard = ({ plan, isCurrent }) => {
                 </div>
                 <h3 className="text-2xl font-black tracking-tight mb-2">{plan.name}</h3>
                 <p className={clsx("text-sm font-medium", isPremium ? "text-gray-400" : "text-gray-500")}>
-                    {plan.description}
+                    {plan.target_role === 'admin' ? 'Business Membership' : 'Personal Membership'}
                 </p>
             </div>
 
             <div className="mb-8">
                 <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black italic">₹{plan.price}</span>
+                    <span className="text-4xl font-black italic">₹{plan.price_monthly}</span>
                     <span className={clsx("text-sm font-bold opacity-60", isPremium ? "text-gray-400" : "text-gray-500")}>/month</span>
                 </div>
                 <p className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-40 italic">billed monthly</p>
             </div>
 
             <div className="flex-grow space-y-4 mb-8">
-                {plan.features.map((feature, idx) => (
+                {featureList.map((feature, idx) => (
                     <div key={idx} className="flex items-start gap-4">
                         <div className={clsx(
                             "mt-1 p-0.5 rounded-full",
@@ -81,29 +99,29 @@ const PlanCard = ({ plan, isCurrent }) => {
                         <span className="text-sm font-bold leading-tight">{feature}</span>
                     </div>
                 ))}
-                {plan.unavailable?.map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-4 opacity-30">
-                        <div className="mt-1 p-0.5 rounded-full bg-gray-100 text-gray-400">
-                            <X className="h-3 w-3 stroke-[3px]" />
-                        </div>
-                        <span className="text-sm font-bold leading-tight line-through">{feature}</span>
-                    </div>
-                ))}
             </div>
 
             <button
-                disabled={isCurrent}
+                onClick={() => !isCurrent && onUpgrade(plan.id, plan.name)}
+                disabled={isCurrent || isProcessing}
                 className={clsx(
                     "w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2",
                     isCurrent 
                         ? "bg-emerald-500/10 text-emerald-500 cursor-default" 
                         : isPremium 
                         ? "bg-amber-400 text-black hover:bg-white active:scale-95 shadow-lg shadow-amber-400/20" 
-                        : "bg-indigo-600 text-white hover:bg-black active:scale-95 shadow-lg shadow-indigo-100"
+                        : "bg-indigo-600 text-white hover:bg-black active:scale-95 shadow-lg shadow-indigo-100",
+                    isProcessing && "opacity-70 cursor-wait"
                 )}
             >
-                {isCurrent ? 'Current Plan' : 'Coming Soon'}
-                {!isCurrent && <ArrowRight className="h-4 w-4" />}
+                {isProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isCurrent ? (
+                    'Active Plan'
+                ) : (
+                    'Upgrade Now'
+                )}
+                {!isCurrent && !isProcessing && <ArrowRight className="h-4 w-4" />}
             </button>
         </motion.div>
     );
@@ -111,60 +129,108 @@ const PlanCard = ({ plan, isCurrent }) => {
 
 const OrgMembershipView = () => {
     const { t } = useTranslation();
+    const { user, refreshUser } = useAuth();
+    const [plans, setPlans] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [processingId, setProcessingId] = useState(null);
 
-    const plans = [
-        {
-            name: 'Starter',
-            price: '999',
-            description: 'Perfect for single counter shops or small clinics.',
-            features: [
-                '1 Resource (Counter/Doctor)',
-                '2 Staff Member Accounts',
-                '20 Daily Appointments',
-                'Basic Daily Analytics',
-                'Queuify Subdomain',
-                'Basic Email Support'
-            ],
-            unavailable: [
-                'User Broadcasting',
-                'Custom Branding',
-                'Advanced AI Reports'
-            ]
-        },
-        {
-            name: 'Professional',
-            price: '2,499',
-            description: 'The preferred choice for growing medical facilities.',
-            features: [
-                'Up to 5 Resources',
-                '10 Staff Member Accounts',
-                '100 Daily Appointments',
-                'Detailed Historical Analytics',
-                'User Broadcasting Access',
-                'Custom Branding (Logo & Colors)',
-                'Priority Email Support'
-            ],
-            unavailable: [
-                'Multi-Branch Support',
-                'Dedicated Account Manager'
-            ]
-        },
-        {
-            name: 'Enterprise',
-            price: '5,000+',
-            description: 'Complete solution for hospitals and healthcare chains.',
-            features: [
-                'Unlimited Resources & Staff',
-                'Unlimited Daily Appointments',
-                'Lowest 1.5% Commission Rate',
-                'Multi-Branch Management',
-                'AI Capacity Planner',
-                'Advanced CRM Integration',
-                'WhatsApp API Access',
-                'Dedicated Account Manager'
-            ]
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const res = await apiService.getPlans({ target_role: 'admin' });
+                setPlans(res.data);
+            } catch (err) {
+                toast.error("Failed to load plans");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    const loadRazorpay = () => {
+        return new Promise((resolve) => {
+            if (window.Razorpay) {
+                resolve(true);
+                return;
+            }
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
+    const handleUpgrade = async (planId, planName) => {
+        setProcessingId(planId);
+        const loadingToast = toast.loading(`Initiating upgrade to ${planName}...`);
+
+        try {
+            const hasRazorpay = await loadRazorpay();
+            if (!hasRazorpay) {
+                toast.error("Razorpay SDK failed to load. Check your internet connection.", { id: loadingToast });
+                return;
+            }
+
+            // 1. Create Order
+            const { data: orderData } = await apiService.createPlanPaymentOrder(planId);
+            
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: orderData.order.amount,
+                currency: orderData.order.currency,
+                name: "Queuify Business",
+                description: `Upgrade to ${planName} Plan`,
+                order_id: orderData.order.id,
+                handler: async (response) => {
+                    try {
+                        toast.loading("Verifying payment...", { id: loadingToast });
+                        await apiService.verifyPlanPayment({
+                            planId,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        toast.success(`Organization upgraded to ${planName}!`, { id: loadingToast });
+                        await refreshUser();
+                    } catch (err) {
+                        toast.error(err.response?.data?.message || "Verification failed.", { id: loadingToast });
+                    } finally {
+                        setProcessingId(null);
+                    }
+                },
+                prefill: {
+                    name: user?.name || "",
+                    email: user?.email || "",
+                },
+                theme: { color: "#4F46E5" },
+                modal: {
+                    ondismiss: () => setProcessingId(null)
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                toast.error("Payment failed: " + response.error.description);
+                setProcessingId(null);
+            });
+            rzp.open();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Something went wrong", { id: loadingToast });
+            setProcessingId(null);
         }
-    ];
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-[400px] flex flex-col items-center justify-center">
+                <Loader2 className="h-12 w-12 text-indigo-600 animate-spin mb-4" />
+                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Fetching Business Tiers...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen pb-20 px-4 md:px-0">
@@ -221,8 +287,14 @@ const OrgMembershipView = () => {
 
             {/* Plans Grid */}
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-                {plans.map((plan, idx) => (
-                    <PlanCard key={idx} plan={plan} isCurrent={idx === 0} />
+                {plans.map((plan) => (
+                    <PlanCard 
+                        key={plan.id} 
+                        plan={plan} 
+                        isCurrent={user?.org_plan_id === plan.id} 
+                        onUpgrade={handleUpgrade}
+                        processingId={processingId}
+                    />
                 ))}
             </div>
 
