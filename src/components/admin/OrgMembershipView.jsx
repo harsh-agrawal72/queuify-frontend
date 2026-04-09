@@ -61,7 +61,7 @@ const PlanCard = ({ plan, isCurrent, onUpgrade, processingId }) => {
             )}
         >
             {isPremium && (
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-black shadow-xl">
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-black shadow-xl">
                     Most Advanced
                 </div>
             )}
@@ -73,7 +73,7 @@ const PlanCard = ({ plan, isCurrent, onUpgrade, processingId }) => {
                 )}>
                     {getIcon()}
                 </div>
-                <h3 className="text-2xl font-black tracking-tight mb-2">{plan.name}</h3>
+                <h3 className="text-2xl font-extrabold tracking-tight mb-2">{plan.name}</h3>
                 <p className={clsx("text-sm font-medium", isPremium ? "text-gray-400" : "text-gray-500")}>
                     {plan.target_role === 'admin' ? 'Business Membership' : 'Personal Membership'}
                 </p>
@@ -81,10 +81,10 @@ const PlanCard = ({ plan, isCurrent, onUpgrade, processingId }) => {
 
             <div className="mb-8">
                 <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black italic">₹{plan.price_monthly}</span>
+                    <span className="text-4xl font-extrabold italic">₹{plan.price_monthly}</span>
                     <span className={clsx("text-sm font-bold opacity-60", isPremium ? "text-gray-400" : "text-gray-500")}>/month</span>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-40 italic">billed monthly</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mt-2 opacity-40 italic">billed monthly</p>
             </div>
 
             <div className="flex-grow space-y-4 mb-8">
@@ -105,7 +105,7 @@ const PlanCard = ({ plan, isCurrent, onUpgrade, processingId }) => {
                 onClick={() => !isCurrent && onUpgrade(plan.id, plan.name)}
                 disabled={isCurrent || isProcessing}
                 className={clsx(
-                    "w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2",
+                    "w-full py-4 rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2",
                     isCurrent 
                         ? "bg-emerald-500/10 text-emerald-500 cursor-default" 
                         : isPremium 
@@ -241,7 +241,7 @@ const OrgMembershipView = () => {
                         <motion.div 
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-black uppercase tracking-widest mb-6"
+                            className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-widest mb-6"
                         >
                             <TrendingUp className="h-3 w-3" />
                             Scale Your Business
@@ -250,7 +250,7 @@ const OrgMembershipView = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none mb-6"
+                            className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tighter leading-none mb-6"
                         >
                             Choose the plan that's <br/>
                             <span className="text-indigo-600 italic">right for you.</span>
@@ -273,12 +273,12 @@ const OrgMembershipView = () => {
                     >
                         <div className="p-6 bg-white rounded-[2rem] shadow-xl shadow-indigo-50 border border-indigo-50">
                             <Shield className="h-10 w-10 text-indigo-600 mb-4" />
-                            <h4 className="font-black text-sm">Secure Data</h4>
+                            <h4 className="font-bold text-sm">Secure Data</h4>
                             <p className="text-[10px] text-gray-400 font-bold mt-1">Enterprise grade encryption</p>
                         </div>
                         <div className="p-6 bg-indigo-600 rounded-[2rem] shadow-xl shadow-indigo-200 text-white">
                             <Globe className="h-10 w-10 text-white/50 mb-4" />
-                            <h4 className="font-black text-sm">Cloud Scale</h4>
+                            <h4 className="font-bold text-sm">Cloud Scale</h4>
                             <p className="text-[10px] text-white/50 font-bold mt-1">99.9% Sla Uptime</p>
                         </div>
                     </motion.div>
@@ -307,12 +307,12 @@ const OrgMembershipView = () => {
                 <div className="inline-flex p-3 bg-white rounded-2xl shadow-sm mb-6">
                     <LayoutDashboard className="h-6 w-6 text-indigo-600" />
                 </div>
-                <h3 className="text-3xl font-black tracking-tight mb-4">Need a Custom Setup?</h3>
+                <h3 className="text-3xl font-extrabold tracking-tight mb-4">Need a Custom Setup?</h3>
                 <p className="text-gray-500 font-medium mb-8">
                     If you manage more than 20 branches or have complex integration requirements, 
                     our team can build a custom solution for your specific workflow.
                 </p>
-                <button className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-colors">
+                <button className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-extrabold text-sm uppercase tracking-widest hover:bg-indigo-600 transition-colors">
                     Contact Sales Team
                 </button>
             </motion.div>

@@ -37,26 +37,25 @@ const UserSubscriptionView = () => {
             setPlans(response.data);
         } catch (error) {
             console.error('Failed to fetch plans:', error);
-            toast.error('Failed to load membership plans');
+            toast.error(t('user_subscription.load_failed'));
         } finally {
             setLoading(false);
         }
     };
 
     const handleSwitchPlan = async (planId, planName, price) => {
-        if (planName === 'Free' && !window.confirm('Are you sure you want to switch to the Free plan? Some features may be restricted.')) {
+        if (planName === 'Free' && !window.confirm(t('user_subscription.switch_free_confirm'))) {
             return;
         }
 
         setProcessingId(planId);
 
-        // If it's a paid plan, we need to process payment first
         if (parseFloat(price) > 0) {
             try {
                 await initiatePlanPayment(planId, planName, price);
             } catch (error) {
                 console.error('Payment initiation failed:', error);
-                toast.error('Failed to start payment process');
+                toast.error(t('user_subscription.payment_init_failed'));
                 setProcessingId(null);
             }
             return;
@@ -65,11 +64,11 @@ const UserSubscriptionView = () => {
         // For free plans, direct assignment
         try {
             await apiService.assignUserPlan(planId);
-            toast.success(`Successfully switched to ${planName} plan!`);
+            toast.success(t('user_subscription.switch_success', { name: planName }));
             await refreshUser();
         } catch (error) {
             console.error('Plan switch failed:', error);
-            toast.error(error.response?.data?.message || 'Failed to switch plan');
+            toast.error(error.response?.data?.message || t('user_subscription.switch_failed'));
         } finally {
             setProcessingId(null);
         }
@@ -82,7 +81,7 @@ const UserSubscriptionView = () => {
 
             const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
             if (!rzpKey) {
-                toast.error("Payment configuration missing. Please contact support.");
+                toast.error(t('user_subscription.config_missing'));
                 return;
             }
 
@@ -90,11 +89,11 @@ const UserSubscriptionView = () => {
                 key: rzpKey,
                 amount: order.amount,
                 currency: order.currency,
-                name: "Queuify Membership",
-                description: `Subscription for ${planName} Plan`,
+                name: t('user_subscription.razorpay_name'),
+                description: t('user_subscription.razorpay_desc', { name: planName }),
                 order_id: order.id,
                 handler: async (response) => {
-                    const loadingToast = toast.loading("Verifying payment...");
+                    const loadingToast = toast.loading(t('user_subscription.verifying_payment'));
                     try {
                         await apiService.verifyPlanPayment({
                             planId,
@@ -102,10 +101,10 @@ const UserSubscriptionView = () => {
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature
                         });
-                        toast.success(`Welcome to ${planName}!`, { id: loadingToast });
+                        toast.success(t('user_subscription.welcome_to_plan', { name: planName }), { id: loadingToast });
                         await refreshUser();
                     } catch (err) {
-                        toast.error(err.response?.data?.message || "Verification failed.", { id: loadingToast });
+                        toast.error(err.response?.data?.message || t('user_subscription.verif_failed'), { id: loadingToast });
                     } finally {
                         setProcessingId(null);
                     }
@@ -122,7 +121,7 @@ const UserSubscriptionView = () => {
 
             const rzp = new window.Razorpay(options);
             rzp.on('payment.failed', function (response) {
-                toast.error("Payment failed: " + response.error.description);
+                toast.error(t('user_subscription.payment_failed_with_desc', { desc: response.error.description }));
                 setProcessingId(null);
             });
             rzp.open();
@@ -135,7 +134,7 @@ const UserSubscriptionView = () => {
         return (
             <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="h-12 w-12 text-indigo-600 animate-spin mb-4" />
-                <p className="text-gray-500 font-medium">Loading exclusive plans...</p>
+                <p className="text-gray-500 font-medium">{t('user_subscription.loading_plans')}</p>
             </div>
         );
     }
@@ -159,11 +158,11 @@ const UserSubscriptionView = () => {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="text-center mb-12">
-                <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
-                    Upgrade Your Experience
+                <h2 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                    {t('user_subscription.title')}
                 </h2>
                 <p className="text-gray-500 max-w-2xl mx-auto font-medium">
-                    Choose a membership level that fits your needs. Get priority access, enhanced notifications, and more booking flexibility.
+                    {t('user_subscription.subtitle')}
                 </p>
             </div>
 
@@ -184,8 +183,8 @@ const UserSubscriptionView = () => {
                             )}
                         >
                             {isPremium && (
-                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-black text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-lg">
-                                    Best Value
+                                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-black text-[10px] font-bold uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-lg">
+                                    {t('user_subscription.best_value')}
                                 </div>
                             )}
 
@@ -196,21 +195,21 @@ const UserSubscriptionView = () => {
                                 )}>
                                     {getPlanIcon(plan.name)}
                                 </div>
-                                <h3 className="text-2xl font-black mb-1">{plan.name}</h3>
+                                <h3 className="text-2xl font-extrabold mb-1">{plan.name}</h3>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-black">₹{plan.price_monthly}</span>
-                                    <span className={clsx("text-sm opacity-60 font-bold", isPremium ? "text-gray-300" : "text-gray-500")}>/month</span>
+                                    <span className="text-4xl font-extrabold">₹{plan.price_monthly}</span>
+                                    <span className={clsx("text-sm opacity-60 font-bold", isPremium ? "text-gray-300" : "text-gray-500")}>{t('user_subscription.per_month')}</span>
                                 </div>
                                 {isCurrent && (
                                     <div className="absolute top-6 right-6">
                                         <div className="flex flex-col items-end">
-                                            <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-emerald-200">
+                                            <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-emerald-200">
                                                 <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" />
-                                                Active
+                                                {t('user_subscription.active')}
                                             </span>
                                             {user?.subscription_expiry && (
                                                 <span className="text-[9px] font-bold text-gray-400 mt-1.5 uppercase tracking-tighter">
-                                                    Expires: {format(parseISO(user.subscription_expiry), 'MMM dd, yyyy')}
+                                                    {t('user_subscription.expires', { date: format(parseISO(user.subscription_expiry), 'MMM dd, yyyy') })}
                                                 </span>
                                             )}
                                         </div>
@@ -224,7 +223,7 @@ const UserSubscriptionView = () => {
                                         <Check className="h-4 w-4 stroke-[3px]" />
                                     </div>
                                     <span className="text-sm font-bold">
-                                        {features.max_active_appointments > 100 ? 'Unlimited' : features.max_active_appointments} Active Bookings
+                                        {features.max_active_appointments > 100 ? t('user_subscription.unlimited') : features.max_active_appointments} {t('user_subscription.active_bookings')}
                                     </span>
                                 </li>
                                 <li className="flex items-center gap-3">
@@ -232,7 +231,7 @@ const UserSubscriptionView = () => {
                                         <Check className="h-4 w-4 stroke-[3px]" />
                                     </div>
                                     <span className="text-sm font-bold capitalize">
-                                        {features.notifications?.join(' & ')} Notifications
+                                        {features.notifications?.join(' & ')} {t('user_subscription.notifications')}
                                     </span>
                                 </li>
                                 {features.priority && (
@@ -240,7 +239,7 @@ const UserSubscriptionView = () => {
                                         <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500">
                                             <ShieldCheck className="h-4 w-4 stroke-[3px]" />
                                         </div>
-                                        <span className="text-sm font-bold italic text-indigo-400">VIP Queue Priority</span>
+                                        <span className="text-sm font-bold italic text-indigo-400">{t('user_subscription.vip_priority')}</span>
                                     </li>
                                 )}
                                 <li className="flex items-center gap-3">
@@ -248,9 +247,9 @@ const UserSubscriptionView = () => {
                                         { (features.reschedule_limit || 0) > 0 ? <Check className="h-4 w-4 stroke-[3px]" /> : <X className="h-4 w-4 stroke-[3px]" /> }
                                     </div>
                                     <span className="text-sm font-bold">
-                                        {features.reschedule_limit === 0 ? 'No Rescheduling' : 
-                                         features.reschedule_limit > 10 ? 'Unlimited Rescheduling' : 
-                                         `${features.reschedule_limit} Reschedule Allowed`}
+                                        {features.reschedule_limit === 0 ? t('user_subscription.no_reschedule') : 
+                                         features.reschedule_limit > 10 ? t('user_subscription.unlimited_reschedule') : 
+                                         t('user_subscription.reschedule_allowed', { count: features.reschedule_limit })}
                                     </span>
                                 </li>
                             </ul>
@@ -259,7 +258,7 @@ const UserSubscriptionView = () => {
                                 onClick={() => !isCurrent && handleSwitchPlan(plan.id, plan.name, plan.price_monthly)}
                                 disabled={isCurrent || processingId === plan.id}
                                 className={clsx(
-                                    "w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2",
+                                    "w-full py-4 rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2",
                                     isCurrent ? "bg-emerald-500/10 text-emerald-500 cursor-default" : 
                                     isPremium ? "bg-amber-400 text-black hover:bg-amber-300 active:scale-95" :
                                     "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-lg shadow-indigo-100"
@@ -269,10 +268,10 @@ const UserSubscriptionView = () => {
                                     <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : isCurrent ? (
                                     <>
-                                        <Check className="h-5 w-5" /> Current Plan
+                                        <Check className="h-5 w-5" /> {t('user_subscription.current_plan')}
                                     </>
                                 ) : (
-                                    plan.name === 'Free' ? 'Downgrade' : 'Upgrade Now'
+                                    plan.name === 'Free' ? t('user_subscription.downgrade') : t('user_subscription.upgrade_now')
                                 )}
                             </button>
                         </div>
@@ -282,29 +281,29 @@ const UserSubscriptionView = () => {
 
             {/* Feature Comparison Section */}
             <div className="bg-gray-50 rounded-[3rem] p-10 border border-gray-100">
-                <h4 className="text-xl font-black mb-8 text-center text-gray-900 uppercase tracking-widest opacity-40">Why Go Global?</h4>
+                <h4 className="text-xl font-extrabold mb-8 text-center text-gray-900 uppercase tracking-widest opacity-40">{t('user_subscription.why_global')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <div className="flex flex-col items-center text-center">
                         <div className="p-4 bg-white rounded-3xl text-indigo-600 mb-4 shadow-sm">
                             <Crown className="h-6 w-6" />
                         </div>
-                        <h5 className="font-black text-gray-900 mb-2">Priority Tokens</h5>
-                        <p className="text-xs text-gray-500 font-medium">Get placed ahead of the queue with our VIP token system.</p>
+                        <h5 className="font-extrabold text-gray-900 mb-2">{t('user_subscription.priority_tokens_title')}</h5>
+                        <p className="text-xs text-gray-500 font-medium">{t('user_subscription.priority_tokens_desc')}</p>
                     </div>
                     <div className="flex flex-col items-center text-center">
                         <div className="p-4 bg-white rounded-3xl text-amber-500 mb-4 shadow-sm">
                             <BellRing className="h-6 w-6" />
                         </div>
-                        <h5 className="font-black text-gray-900 mb-2">All notifications</h5>
-                        <p className="text-xs text-gray-500 font-medium">Never miss a turn with multi-channel alerts (SMS, push).</p>
+                        <h5 className="font-extrabold text-gray-900 mb-2">{t('user_subscription.all_notifications_title')}</h5>
+                        <p className="text-xs text-gray-500 font-medium">{t('user_subscription.all_notifications_desc')}</p>
                     </div>
 
                     <div className="flex flex-col items-center text-center">
                         <div className="p-4 bg-white rounded-3xl text-rose-500 mb-4 shadow-sm">
                             <MessageSquare className="h-6 w-6" />
                         </div>
-                        <h5 className="font-black text-gray-900 mb-2">Direct Chat</h5>
-                        <p className="text-xs text-gray-500 font-medium">Premium users get a direct chat line to admin support.</p>
+                        <h5 className="font-extrabold text-gray-900 mb-2">{t('user_subscription.direct_chat_title')}</h5>
+                        <p className="text-xs text-gray-500 font-medium">{t('user_subscription.direct_chat_desc')}</p>
                     </div>
                 </div>
             </div>
