@@ -219,8 +219,7 @@ const OrganizationAbout = () => {
                 const checklist = [
                     { label: t('setup.check_basic', 'Description & Keywords'), done: profile.description && profile.keywords },
                     { label: t('setup.check_contact', 'Phone & Address'), done: profile.contact_phone && profile.address && profile.city },
-                    { label: t('setup.check_documents', 'Identity (PAN & Aadhar)'), done: profile.images?.some(img => img.image_type === 'pan_card') && profile.images?.some(img => img.image_type === 'aadhar_card') },
-                    { label: t('setup.check_logo', 'Organization Logo'), done: profile.images?.some(img => img.image_type === 'logo') }
+                    { label: t('setup.check_documents', 'Identity (PAN & Aadhar)'), done: profile.images?.some(img => img.image_type === 'pan_card') && profile.images?.some(img => img.image_type === 'aadhar_card') }
                 ];
                 const isAllDone = checklist.every(item => item.done);
 
@@ -685,14 +684,13 @@ const OrganizationAbout = () => {
                                 </div>
                             </div>
 
-                             {/* Logo Upload */}
-                            <div className="relative">
+                             <div className="relative">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     {t('admin.about.logo_label', 'Organization Logo')}
-                                    {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase ml-2 tracking-widest">{t('common.optional', 'Optional')}</span>
                                 </label>
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-16 h-16 rounded-xl bg-gray-50 border-2 border-dashed flex items-center justify-center overflow-hidden flex-shrink-0 transition-colors ${isImageMissing('logo') ? 'border-rose-300' : 'border-gray-200'}`}>
+                                    <div className={`w-16 h-16 rounded-xl bg-gray-50 border-2 border-dashed flex items-center justify-center overflow-hidden flex-shrink-0 transition-colors border-gray-200`}>
                                         {profile.images?.find(img => img.image_type === 'logo') ? (
                                             <img
                                                 src={profile.images.find(img => img.image_type === 'logo').image_url}
@@ -700,7 +698,7 @@ const OrganizationAbout = () => {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <Building2 className={`h-6 w-6 ${isImageMissing('logo') ? 'text-rose-300' : 'text-gray-300'}`} />
+                                            <Building2 className={`h-6 w-6 text-gray-300`} />
                                         )}
                                     </div>
                                     <label className={`cursor-pointer bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!hasCustomBranding ? 'opacity-50 grayscale' : 'hover:bg-gray-50'}`}>
