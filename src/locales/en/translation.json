@@ -1448,5 +1448,22 @@
     "room": "Room",
     "equipment": "Equipment",
     "counter": "Counter"
+  },
+  "membership": {
+    "scale_business": "Scale Your Business",
+    "title": "Choose the plan that's",
+    "title_italic": "right for you.",
+    "subtitle": "Manage your queues, staff, and appointments with military precision. Our plans are designed to help you scale smoothly.",
+    "custom_setup_title": "Need a Custom Setup?",
+    "custom_setup_desc": "If you manage more than 20 branches or have complex integration requirements, our team can build a custom solution for your specific workflow.",
+    "contact_sales": "Contact Sales Team",
+    "active_plan": "Active Plan",
+    "days_remaining": "{{count}} Days Left",
+    "usage_title": "Plan Usage",
+    "resources_used": "Resources Used",
+    "admins_used": "Admins Used",
+    "valid_until": "Valid Until",
+    "status": "Status",
+    "manage_subscription": "Manage Subscription"
   }
 }

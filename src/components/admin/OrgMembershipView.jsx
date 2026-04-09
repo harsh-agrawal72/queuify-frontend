@@ -122,22 +122,26 @@ const PlanCard = ({ plan, isCurrent, onUpgrade, processingId, t }) => {
 const OrgMembershipView = () => {
     const { t } = useTranslation();
     const { user, refreshUser } = useAuth();
-    const [plans, setPlans] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [processingId, setProcessingId] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchPlans = async () => {
+        const fetchData = async () => {
             try {
-                const res = await apiService.getPlans({ target_role: 'admin' });
-                setPlans(res.data);
+                const [plansRes, statsRes] = await Promise.all([
+                    apiService.getPlans({ target_role: 'admin' }),
+                    apiService.getMembershipStats()
+                ]);
+                setPlans(plansRes.data);
+                setStats(statsRes.data);
             } catch (err) {
-                toast.error("Failed to load plans");
+                toast.error("Failed to load membership data");
             } finally {
                 setLoading(false);
+                setStatsLoading(false);
             }
         };
-        fetchPlans();
+        fetchData();
     }, []);
 
     const loadRazorpay = () => {
@@ -155,8 +159,15 @@ const OrgMembershipView = () => {
     };
 
     const expiryDate = user?.subscription_expiry ? new Date(user.subscription_expiry) : null;
-    const isSubscribed = user?.org_plan_id && user?.org_plan_id !== plans.find(p => p.name === 'Free')?.id;
-    const currentPlanName = plans.find(p => p.id === user?.org_plan_id)?.name || 'Free';
+    const now = new Date();
+    const daysRemaining = expiryDate ? Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24)) : null;
+    const isExpired = daysRemaining !== null && daysRemaining <= 0;
+    
+    const currentPlan = plans.find(p => p.id === user?.org_plan_id) || plans.find(p => p.name === 'Free');
+    const currentPlanName = currentPlan?.name || 'Free';
+    const planFeatures = typeof currentPlan?.features === 'string' ? JSON.parse(currentPlan.features) : (currentPlan?.features || {});
+    
+    const isSubscribed = currentPlanName !== 'Free';
 
     const handleUpgrade = async (planId, planName) => {
         setProcessingId(planId);
@@ -191,6 +202,7 @@ const OrgMembershipView = () => {
                         });
                         toast.success(`Organization upgraded to ${planName}!`, { id: loadingToast });
                         await refreshUser();
+                        window.location.reload(); // Refresh stats
                     } catch (err) {
                         toast.error(err.response?.data?.message || "Verification failed.", { id: loadingToast });
                     } finally {
@@ -219,7 +231,7 @@ const OrgMembershipView = () => {
         }
     };
 
-    if (loading) {
+    if (loading || statsLoading) {
         return (
             <div className="min-h-[400px] flex flex-col items-center justify-center">
                 <Loader2 className="h-12 w-12 text-indigo-600 animate-spin mb-4" />
@@ -230,91 +242,181 @@ const OrgMembershipView = () => {
 
     return (
         <div className="min-h-screen pb-20 px-4 md:px-0">
-            {/* Current Plan Status Banner */}
-            {isSubscribed && (
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="max-w-7xl mx-auto mb-8"
-                >
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-100 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-4 text-center md:text-left">
-                            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
-                                <Sparkles className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">You are on the {currentPlanName} Plan</h2>
-                                <p className="text-indigo-100 text-sm font-medium">Your subscription is active and protecting your organization.</p>
-                            </div>
+            {/* Current Plan Status Dashboard */}
+            <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="max-w-7xl mx-auto mb-12"
+            >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Main Status Banner */}
+                    <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-100">
+                        <div className="absolute top-0 right-0 p-12 opacity-10">
+                            <Crown className="h-40 w-40" />
                         </div>
-                        <div className="flex items-center gap-6 bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-sm border border-white/10">
-                            <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-indigo-200" />
-                                <div className="text-left">
-                                    <p className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Valid Until</p>
-                                    <p className="text-sm font-bold">{expiryDate ? format(expiryDate, 'MMMM dd, yyyy') : 'N/A'}</p>
+                        
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2 bg-indigo-500 rounded-xl">
+                                    <Sparkles className="h-5 w-5 text-white" />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">
+                                    {t('membership.active_plan')}
+                                </span>
+                            </div>
+
+                            <div className="flex flex-col md:flex-row items-baseline gap-4 mb-4">
+                                <h2 className="text-5xl font-black tracking-tighter">{currentPlanName}</h2>
+                                {isSubscribed && (
+                                    <span className={clsx(
+                                        "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest",
+                                        isExpired ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
+                                    )}>
+                                        {isExpired ? 'Expired' : 'Active'}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/10">
+                                    <div className="p-3 bg-indigo-500/20 rounded-2xl">
+                                        <Clock className="h-6 w-6 text-indigo-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">
+                                            {t('membership.valid_until')}
+                                        </p>
+                                        <p className="text-lg font-bold">
+                                            {expiryDate ? format(expiryDate, 'MMM dd, yyyy') : 'No Expiry'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/10">
+                                    <div className={clsx(
+                                        "p-3 rounded-2xl",
+                                        daysRemaining <= 3 ? "bg-red-500/20" : "bg-emerald-500/20"
+                                    )}>
+                                        <Zap className={clsx(
+                                            "h-6 w-6",
+                                            daysRemaining <= 3 ? "text-red-400" : "text-emerald-400"
+                                        )} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">
+                                            {t('membership.status')}
+                                        </p>
+                                        <p className={clsx(
+                                            "text-lg font-bold",
+                                            daysRemaining <= 3 ? "text-red-400" : "text-emerald-400"
+                                        )}>
+                                            {daysRemaining !== null 
+                                                ? t('membership.days_remaining', { count: Math.max(0, daysRemaining) })
+                                                : 'Lifetime'
+                                            }
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="h-8 w-px bg-white/20" />
-                            <div className="text-left">
-                                <p className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Status</p>
-                                <p className="text-sm font-bold flex items-center gap-1.5 text-emerald-300">
-                                    <Check className="h-4 w-4" /> Active
+                        </div>
+                    </div>
+
+                    {/* Usage Stats Section */}
+                    <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-xl shadow-gray-100 flex flex-col justify-between">
+                        <div>
+                            <h3 className="text-xl font-black tracking-tight mb-8">
+                                {t('membership.usage_title')}
+                            </h3>
+                            
+                            <div className="space-y-8">
+                                {/* Resources Usage */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-end">
+                                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                                            {t('membership.resources_used')}
+                                        </p>
+                                        <span className="text-sm font-black">
+                                            {stats.resourceCount} / {planFeatures.max_resources || 1}
+                                        </span>
+                                    </div>
+                                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${Math.min(100, (stats.resourceCount / (planFeatures.max_resources || 1)) * 100)}%` }}
+                                            className={clsx(
+                                                "h-full rounded-full transition-all duration-1000",
+                                                stats.resourceCount >= planFeatures.max_resources ? "bg-red-500" : "bg-indigo-600"
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Admins Usage */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-end">
+                                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                                            {t('membership.admins_used')}
+                                        </p>
+                                        <span className="text-sm font-black">
+                                            {stats.adminCount} / {planFeatures.max_admins || 1}
+                                        </span>
+                                    </div>
+                                    <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${Math.min(100, (stats.adminCount / (planFeatures.max_admins || 1)) * 100)}%` }}
+                                            className={clsx(
+                                                "h-full rounded-full transition-all duration-1000",
+                                                stats.adminCount >= planFeatures.max_admins ? "bg-red-500" : "bg-indigo-600"
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 pt-8 border-t border-gray-50">
+                            <div className="flex items-center gap-3 text-gray-400">
+                                <AlertCircle className="h-4 w-4" />
+                                <p className="text-[10px] font-bold uppercase tracking-wider">
+                                    Limits refresh upon plan upgrade
                                 </p>
                             </div>
                         </div>
                     </div>
-                </motion.div>
-            )}
+                </div>
+            </motion.div>
 
             {/* Header Hero Area */}
-            <div className="max-w-7xl mx-auto mb-16">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-                    <div className="flex-1 text-center md:text-left">
+            <div className="max-w-7xl mx-auto mb-16 text-center">
+                <div className="flex flex-col items-center justify-center gap-8">
+                    <div className="max-w-3xl">
                         <motion.div 
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-widest mb-6"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6"
                         >
                             <TrendingUp className="h-3 w-3" />
-                            Scale Your Business
+                            {t('membership.scale_business')}
                         </motion.div>
                         <motion.h1 
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tighter leading-none mb-6"
+                            className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tighter leading-none mb-6"
                         >
-                            Choose the plan that's <br/>
-                            <span className="text-indigo-600 italic">right for you.</span>
+                            {t('membership.title')} <br/>
+                            <span className="text-indigo-600 italic">{t('membership.title_italic')}</span>
                         </motion.h1>
                         <motion.p 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="text-gray-500 text-lg font-medium max-w-xl"
+                            className="text-gray-500 text-base font-medium max-w-2xl mx-auto"
                         >
-                            Manage your queues, staff, and appointments with military precision. 
-                            Our plans are designed to help you scale smoothly.
+                            {t('membership.subtitle')}
                         </motion.p>
                     </div>
-
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex-shrink-0 grid grid-cols-2 gap-4 w-full md:w-[400px]"
-                    >
-                        <div className="p-6 bg-white rounded-[2rem] shadow-xl shadow-indigo-50 border border-indigo-50">
-                            <Shield className="h-10 w-10 text-indigo-600 mb-4" />
-                            <h4 className="font-bold text-sm">Secure Data</h4>
-                            <p className="text-[10px] text-gray-400 font-bold mt-1">Enterprise grade encryption</p>
-                        </div>
-                        <div className="p-6 bg-indigo-600 rounded-[2rem] shadow-xl shadow-indigo-200 text-white">
-                            <Globe className="h-10 w-10 text-white/50 mb-4" />
-                            <h4 className="font-bold text-sm">Cloud Scale</h4>
-                            <p className="text-[10px] text-white/50 font-bold mt-1">99.9% Sla Uptime</p>
-                        </div>
-                    </motion.div>
                 </div>
             </div>
 
@@ -342,13 +444,12 @@ const OrgMembershipView = () => {
                 <div className="inline-flex p-3 bg-white rounded-2xl shadow-sm mb-6">
                     <LayoutDashboard className="h-6 w-6 text-indigo-600" />
                 </div>
-                <h3 className="text-3xl font-extrabold tracking-tight mb-4">Need a Custom Setup?</h3>
+                <h3 className="text-3xl font-extrabold tracking-tight mb-4">{t('membership.custom_setup_title')}</h3>
                 <p className="text-gray-500 font-medium mb-8">
-                    If you manage more than 20 branches or have complex integration requirements, 
-                    our team can build a custom solution for your specific workflow.
+                    {t('membership.custom_setup_desc')}
                 </p>
                 <button className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-extrabold text-sm uppercase tracking-widest hover:bg-indigo-600 transition-colors">
-                    Contact Sales Team
+                    {t('membership.contact_sales')}
                 </button>
             </motion.div>
         </div>

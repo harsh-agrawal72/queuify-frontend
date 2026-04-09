@@ -124,6 +124,7 @@ const apiService = {
     createPlanPaymentOrder: (planId) => api.post('/payments/create-plan-order', { planId }),
     verifyPlanPayment: (data) => api.post('/payments/verify-plan-payment', data),
     markAsOnboarded: () => api.post('/admin/onboard'),
+    getMembershipStats: () => api.get('/admin/membership-stats'),
 };
 
 export { api, apiService };
