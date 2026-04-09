@@ -10,7 +10,15 @@
     "check_basic": "Description & Keywords",
     "check_contact": "Phone & Address",
     "check_documents": "Identity (PAN & Aadhar)",
-    "check_logo": "Organization Logo"
+    "check_logo": "Organization Logo",
+    "customer_insight": "Customer Insight",
+    "top_position": "Top Position Search",
+    "one_on_one_support": "1-on-1 Support",
+    "premium_features": "Premium Features",
+    "advance_analytics": "Advance Analytics",
+    "availability_24_7": "24/7 Availability",
+    "admins_count": "{{count}} Admin(s) Allowed",
+    "resources_count": "{{count}} Resource(s) Allowed"
   },
   "onboarding_modal": {
     "org_verified": "Organization Verified",
@@ -175,6 +183,8 @@
     "back_to_services": "← Back to services",
     "change": "Change",
     "all_services": "All Services",
+    "current_plan": "Current Plan",
+    "get_started": "Get Started",
     "document": "document",
     "image": "image",
     "sending": "Sending...",
@@ -630,7 +640,15 @@
       "service_distribution": "Service Distribution",
       "daily_trend": "Daily Trend",
       "peak_hours_heatmap": "Peak Hours Heatmap",
-      "smart_insights": "Smart Insights"
+      "smart_insights": "Smart Insights",
+      "unlock_premium": "Unlock Advanced Analytics",
+      "upgrade_desc": "Get predictive insights, traffic forecasts, and resource efficiency rankings by upgrading to Professional or Enterprise.",
+      "customer_insight": "Customer Intelligence Insights",
+      "loyalty_index": "Loyalty Index",
+      "retention_rate": "Retention Rate",
+      "churn_risk": "Churn Risk",
+      "peak_cohort": "Peak Cohort",
+      "enterprise_exclusive": "Enterprise Exclusive"
     },
     "services": {
       "title": "Service Management",

@@ -22,7 +22,8 @@ import {
     QrCode,
     Download,
     Printer,
-    ExternalLink
+    ExternalLink,
+    Lock
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
@@ -433,7 +434,14 @@ const SettingsPanel = () => {
                         </div>
 
                         {/* Invite Form */}
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 relative overflow-hidden">
+                            {admins.length >= (user?.plan_features?.max_admins || 1) && (
+                                <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center p-4">
+                                    <div className="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer hover:bg-indigo-600 transition-colors" onClick={() => navigate('/admin/membership')}>
+                                        <Lock className="h-4 w-4" /> {t('admin.settings.admins.limit_reached', 'Max Admins Limit Reached ({{limit}}). Upgrade to add more.', { limit: user?.plan_features?.max_admins || 1 })}
+                                    </div>
+                                </div>
+                            )}
                             <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                                 <UserPlus className="h-4 w-4 text-indigo-500" /> {t('admin.settings.admins.invite_new', 'Invite New Admin')}
                             </h3>
@@ -455,7 +463,7 @@ const SettingsPanel = () => {
                                 <button
                                     type="button"
                                     onClick={handleInviteAdmin}
-                                    disabled={inviting || !inviteEmail || !inviteName}
+                                    disabled={inviting || !inviteEmail || !inviteName || admins.length >= (user?.plan_features?.max_admins || 1)}
                                     className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                                 >
                                     {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('admin.settings.admins.send_invite', 'Send Invite')}

@@ -24,14 +24,20 @@ import {
     ShieldOff,
     FileText,
     Download,
-    X
+    X,
+    Lock
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const OrganizationAbout = () => {
     const { t } = useTranslation();
     const { user, updateUser } = useAuth();
+    const navigate = useNavigate();
+    
+    const planFeatures = user?.plan_features || {};
+    const hasCustomBranding = planFeatures.has_custom_branding === true;
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -679,8 +685,8 @@ const OrganizationAbout = () => {
                                 </div>
                             </div>
 
-                            {/* Logo Upload */}
-                            <div>
+                             {/* Logo Upload */}
+                            <div className="relative">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     {t('admin.about.logo_label', 'Organization Logo')}
                                     {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
@@ -697,20 +703,28 @@ const OrganizationAbout = () => {
                                             <Building2 className={`h-6 w-6 ${isImageMissing('logo') ? 'text-rose-300' : 'text-gray-300'}`} />
                                         )}
                                     </div>
-                                    <label className="cursor-pointer bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                                    <label className={`cursor-pointer bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!hasCustomBranding ? 'opacity-50 grayscale' : 'hover:bg-gray-50'}`}>
                                         {profile.images?.find(img => img.image_type === 'logo') ? t('common.change', 'Change') : t('common.upload', 'Upload')}
                                         <input
                                             type="file"
                                             className="hidden"
                                             accept="image/*"
+                                            disabled={!hasCustomBranding}
                                             onChange={(e) => handleImageUpload(e, 'logo')}
                                         />
                                     </label>
                                 </div>
+                                {!hasCustomBranding && (
+                                    <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl pointer-events-none group">
+                                        <div className="pointer-events-auto bg-gray-900 text-white px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-2 shadow-lg scale-90 group-hover:scale-100 transition-transform cursor-pointer" onClick={() => navigate('/admin/membership')}>
+                                            <Lock className="h-3 w-3" /> {t('common.upgrade_to_unlock', 'Premium Feature')}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Cover Image Upload */}
-                            <div>
+                            <div className="relative">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.about.cover_label', 'Cover Image')}</label>
                                 <div className="relative group rounded-xl overflow-hidden aspect-video bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
                                     {profile.images?.find(img => img.image_type === 'cover') ? (
@@ -721,30 +735,37 @@ const OrganizationAbout = () => {
                                                 className="w-full h-full object-cover shadow-inner"
                                             />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                <label className="cursor-pointer bg-white text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                                                <label className={`cursor-pointer bg-white text-gray-900 p-2 rounded-lg transition-colors ${!hasCustomBranding ? 'hidden' : 'hover:bg-gray-100'}`}>
                                                     <ImageIcon className="h-4 w-4" />
-                                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'cover')} />
+                                                    <input type="file" className="hidden" accept="image/*" disabled={!hasCustomBranding} onChange={(e) => handleImageUpload(e, 'cover')} />
                                                 </label>
                                                 <button
                                                     onClick={() => handleDeleteImage(profile.images.find(img => img.image_type === 'cover').id)}
-                                                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors"
+                                                    className={`bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors ${!hasCustomBranding ? 'hidden' : ''}`}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </>
                                     ) : (
-                                        <label className="cursor-pointer flex flex-col items-center">
+                                        <label className={`flex flex-col items-center ${!hasCustomBranding ? 'opacity-30' : 'cursor-pointer'}`}>
                                             <Plus className="h-8 w-8 text-gray-300 mb-2" />
                                             <span className="text-xs text-gray-500">{t('admin.about.add_cover', 'Add Cover Image')}</span>
-                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'cover')} />
+                                            <input type="file" className="hidden" accept="image/*" disabled={!hasCustomBranding} onChange={(e) => handleImageUpload(e, 'cover')} />
                                         </label>
                                     )}
                                 </div>
+                                {!hasCustomBranding && (
+                                    <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl pointer-events-none">
+                                        <div className="pointer-events-auto bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer hover:bg-indigo-600 transition-colors" onClick={() => navigate('/admin/membership')}>
+                                            <Lock className="h-4 w-4" /> {t('common.upgrade_to_unlock', 'Upgrade to Professional to unlock Branding')}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Gallery Management */}
-                            <div className="space-y-3">
+                            <div className="space-y-3 relative">
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-sm font-medium text-gray-700">{t('admin.about.gallery_label', 'Photo Gallery')}</label>
                                     <span className="text-xs text-gray-500">{profile.images?.filter(i => i.image_type === 'gallery').length || 0}/10</span>
@@ -756,7 +777,7 @@ const OrganizationAbout = () => {
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDeleteImage(img.id); }}
-                                                    className="bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-lg"
+                                                    className={`bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-lg ${!hasCustomBranding ? 'hidden' : ''}`}
                                                     title="Delete Image"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -765,12 +786,19 @@ const OrganizationAbout = () => {
                                         </div>
                                     ))}
                                     {(profile.images?.filter(i => i.image_type === 'gallery').length || 0) < 10 && (
-                                        <label className="cursor-pointer border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center aspect-square hover:bg-gray-50 hover:border-indigo-300 transition-all group">
+                                        <label className={`border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center aspect-square transition-all group ${!hasCustomBranding ? 'opacity-30' : 'cursor-pointer hover:bg-gray-50 hover:border-indigo-300'}`}>
                                             <Plus className="h-6 w-6 text-gray-300 group-hover:text-indigo-400" />
-                                            <input type="file" className="hidden" accept="image/*" multiple onChange={(e) => handleImageUpload(e, 'gallery')} />
+                                            <input type="file" className="hidden" accept="image/*" multiple disabled={!hasCustomBranding} onChange={(e) => handleImageUpload(e, 'gallery')} />
                                         </label>
                                     )}
                                 </div>
+                                {!hasCustomBranding && (
+                                    <div className="absolute inset-x-0 bottom-0 top-8 z-10 bg-white/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl pointer-events-none">
+                                        <div className="pointer-events-auto bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer hover:bg-indigo-600 transition-colors" onClick={() => navigate('/admin/membership')}>
+                                            <Lock className="h-4 w-4" /> {t('common.upgrade_to_unlock', 'Premium Gallery')}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -10,7 +10,15 @@
     "check_basic": "विवरण और कीवर्ड",
     "check_contact": "फोन और पता",
     "check_documents": "पहचान (पैन और आधार)",
-    "check_logo": "संगठन का लोगो"
+    "check_logo": "संगठन का लोगो",
+    "customer_insight": "ग्राहक अंतर्दृष्टि",
+    "top_position": "शीर्ष स्थिति खोज",
+    "one_onone_support": "एक-से-एक सहायता",
+    "premium_features": "प्रीमियम सुविधाएँ",
+    "advance_analytics": "उन्नत विश्लेषण",
+    "availability_24_7": "24/7 उपलब्धता",
+    "admins_count": "{{count}} एडमिन की अनुमति",
+    "resources_count": "{{count}} संसाधन (Resources) की अनुमति"
   },
   "onboarding_modal": {
     "org_verified": "संस्था सत्यापित",
@@ -173,6 +181,8 @@
     "back_to_services": "← सेवाओं पर वापस जाएँ",
     "change": "बदलें",
     "all_services": "सभी सेवाएँ",
+    "current_plan": "वर्तमान योजना",
+    "get_started": "शुरू करें",
     "document": "दस्तावेज़",
     "image": "छवि",
     "sending": "भेजा जा रहा है...",
@@ -636,7 +646,15 @@
       "service_distribution": "सेवा वितरण",
       "daily_trend": "दैनिक रुझान",
       "peak_hours_heatmap": "पीक आवर्स हीटमैप",
-      "smart_insights": "स्मार्ट अंतर्दृष्टि"
+      "smart_insights": "स्मार्ट अंतर्दृष्टि",
+      "unlock_premium": "उन्नत विश्लेषण अनलॉक करें",
+      "upgrade_desc": "प्रोफेशनल या एंटरप्राइज में अपग्रेड करके पूर्वानुमानित अंतर्दृष्टि, ट्रैफ़िक पूर्वानुमान और संसाधन दक्षता रैंकिंग प्राप्त करें।",
+      "customer_insight": "ग्राहक खुफिया अंतर्दृष्टि",
+      "loyalty_index": "वफादारी सूचकांक",
+      "retention_rate": "रिटेंशन दर",
+      "churn_risk": "मंथन जोखिम",
+      "peak_cohort": "पीक कोहोर्ट",
+      "enterprise_exclusive": "एंटरप्राइज एक्सक्लूसिव"
     },
     "services": {
       "title": "सेवा प्रबंधन",

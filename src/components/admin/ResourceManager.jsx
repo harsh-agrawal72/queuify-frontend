@@ -10,15 +10,23 @@ import {
     Users,
     Monitor,
     Info,
-    IndianRupee
+    IndianRupee,
+    Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import InfoTooltip from '../common/InfoTooltip';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const ResourceManager = () => {
     const { t } = useTranslation();
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [resources, setResources] = useState([]);
+    
+    const maxResources = user?.plan_features?.max_resources || 1;
+    const isLimitReached = resources.length >= maxResources;
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -165,10 +173,18 @@ const ResourceManager = () => {
                     <p className="text-sm text-gray-500 mt-1">{t('resource_mgmt.mgmt_subtitle', 'Manage independent resources and their service-specific pricing.')}</p>
                 </div>
                 <button 
-                    onClick={openCreateModal} 
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
+                    onClick={() => isLimitReached ? navigate('/admin/membership') : openCreateModal()} 
+                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all shadow-lg font-medium ${
+                        isLimitReached 
+                        ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-200' 
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
+                    }`}
                 >
-                    <Plus className="h-4 w-4" /> {t('resource_mgmt.add_resource', 'Add Resource')}
+                    {isLimitReached ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                    {isLimitReached 
+                        ? t('resource_mgmt.limit_reached_btn', 'Limit Reached ({{limit}}). Upgrade Now', { limit: maxResources }) 
+                        : t('resource_mgmt.add_resource', 'Add Resource')
+                    }
                 </button>
             </div>
 

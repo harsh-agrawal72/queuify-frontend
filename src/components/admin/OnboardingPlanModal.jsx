@@ -183,7 +183,7 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                 <p className="text-xs font-black uppercase tracking-widest text-slate-400 italic">{t('onboarding_modal.fetching_tiers')}</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
                                 {plans.map((plan) => {
                                     const features = typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || {});
                                     const isPremium = plan.name === 'Enterprise';
@@ -207,7 +207,8 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                                 )}>
                                                     {isPremium ? <Crown className="h-6 w-6 text-amber-400" /> : 
                                                      isStandard ? <Star className="h-6 w-6 text-indigo-600" /> : 
-                                                     <Zap className="h-6 w-6 text-slate-400" />}
+                                                     plan.name === 'Starter' ? <Zap className="h-6 w-6 text-slate-400" /> :
+                                                     <Leaf className="h-6 w-6 text-emerald-500" />}
                                                 </div>
                                                 <h3 className="text-xl font-extrabold tracking-tight">{plan.name}</h3>
                                                 <p className={clsx("text-[10px] font-bold uppercase tracking-widest", isPremium ? "text-white/40" : "text-slate-400")}>{t('onboarding_modal.business_tier')}</p>
@@ -221,11 +222,12 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                             </div>
 
                                             <div className="space-y-4 mb-8">
-                                                <PlanFeature isPremium={isPremium} text={`${features.resources || 0} Resources`} />
-                                                <PlanFeature isPremium={isPremium} text={`${features.staff || 0} Staff Accounts`} />
-                                                <PlanFeature isPremium={isPremium} text={`${features.max_daily_bookings || 0} Daily Limit`} />
-                                                {features.custom_branding && <PlanFeature isPremium={isPremium} text="Custom Branding" />}
-                                                {features.broadcast && <PlanFeature isPremium={isPremium} text="Broadcasting" />}
+                                                <PlanFeature isPremium={isPremium} text={t('setup.resources_count', { count: features.max_resources || 1 })} />
+                                                <PlanFeature isPremium={isPremium} text={t('setup.admins_count', { count: features.max_admins || 1 })} />
+                                                <PlanFeature isPremium={isPremium} text={features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics')} />
+                                                {features.has_premium_features && <PlanFeature isPremium={isPremium} text={t('setup.premium_features')} />}
+                                                {features.has_customer_insight && <PlanFeature isPremium={isPremium} text={t('setup.customer_insight')} />}
+                                                <PlanFeature isPremium={isPremium} text={t('setup.availability_24_7')} />
                                             </div>
 
                                             <button
@@ -238,7 +240,7 @@ const OnboardingPlanModal = ({ isOpen, onComplete }) => {
                                                         : "bg-indigo-600 text-white hover:bg-black"
                                                 )}
                                             >
-                                                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('onboarding_modal.upgrade_now')}
+                                                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (plan.price_monthly === 0 ? t('common.current_plan', 'Get Started') : t('onboarding_modal.upgrade_now'))}
                                                 {!submitting && <ArrowRight className="h-4 w-4" />}
                                             </button>
                                         </motion.div>

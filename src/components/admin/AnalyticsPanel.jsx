@@ -29,6 +29,30 @@ import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import ExcelJS from 'exceljs';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+// ─── Premium Overlay ───
+const PremiumOverlay = ({ title, message, navigate }) => (
+    <div className="absolute inset-0 z-[20] flex items-center justify-center p-6 text-center">
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-md"></div>
+        <div className="relative space-y-4 max-w-sm animate-in fade-in zoom-in duration-300">
+            <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                <Lock className="h-6 w-6 text-indigo-600" />
+            </div>
+            <div>
+                <h4 className="font-bold text-gray-900">{title}</h4>
+                <p className="text-sm text-gray-500 mt-1">{message}</p>
+            </div>
+            <button
+                onClick={() => navigate('/admin/membership')}
+                className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
+            >
+                Upgrade to Unlock
+            </button>
+        </div>
+    </div>
+);
 // ─── Global Constants ───
 const COLORS = {
     primary: '#4f46e5',
@@ -311,6 +335,8 @@ const AnalyticsPanel = () => {
     const [services, setServices] = useState([]);
     const [resources, setResources] = useState([]);
     const [wallet, setWallet] = useState(null);
+    const [orgDetails, setOrgDetails] = useState(null);
+    const [planFeatures, setPlanFeatures] = useState({});
 
     // Filters
     const [preset, setPreset] = useState('7d');
@@ -397,7 +423,23 @@ const AnalyticsPanel = () => {
 
     useEffect(() => { 
         fetchAnalytics();
-        fetchPredictiveInsights();
+        
+        const fetchOrg = async () => {
+            try {
+                const res = await api.get('/admin/org');
+                setOrgDetails(res.data);
+                const features = typeof res.data.plan_features === 'string' ? JSON.parse(res.data.plan_features) : (res.data.plan_features || {});
+                setPlanFeatures(features);
+                
+                // Only fetch predictive if advanced analytics enabled
+                if (features.analytics === 'advanced' || features.analytics === 'enterprise') {
+                    fetchPredictiveInsights();
+                }
+            } catch (err) {
+                console.error('Org details fetch failed', err);
+            }
+        };
+        fetchOrg();
         
         // Fetch Wallet Balance
         const fetchWallet = async () => {
@@ -677,9 +719,6 @@ const AnalyticsPanel = () => {
     }
 
     // ─── Heatmap ───
-    // const heatmapData = stats.peakHoursHeatmap || []; // Handled inside return for simplicity or move to useMemo
-
-    // ─── Heatmap ───
     const heatmapData = stats.peakHoursHeatmap || [];
     const maxHeatVal = Math.max(...heatmapData.map(h => h.count), 1);
 
@@ -711,6 +750,82 @@ const AnalyticsPanel = () => {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Premium Section Gating */}
+            {(planFeatures.analytics === 'advanced' || planFeatures.analytics === 'enterprise') ? (
+                <PredictiveInsightsSection insights={predictiveInsights} />
+            ) : (
+                <div className="bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8 mb-8 flex flex-col items-center text-center gap-4">
+                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                        <Lock className="h-8 w-8 text-indigo-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-black text-slate-900">{t('analytics.unlock_premium', 'Unlock Advanced Analytics')}</h3>
+                        <p className="text-sm text-slate-500 max-w-md mx-auto mt-2">
+                            {t('analytics.upgrade_desc', 'Get predictive insights, traffic forecasts, and resource efficiency rankings by upgrading to Professional or Enterprise.')}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => window.location.href = '#/membership'}
+                        className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-black transition-all active:scale-95 flex items-center gap-2"
+                    >
+                        <Zap className="h-4 w-4" />
+                        {t('common.upgrade_now', 'Upgrade Now')}
+                    </button>
+                </div>
+            )}
+
+            {/* Customer Insight - Enterprise Exclusive Section */}
+            {planFeatures.has_customer_insight && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden group mb-8"
+                >
+                    <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 transition-transform duration-1000 group-hover:rotate-45">
+                        <Users className="w-64 h-64" />
+                    </div>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="px-4 py-1.5 bg-amber-400 text-black text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-amber-400/20">
+                                {t('membership.enterprise_exclusive', 'Enterprise Exclusive')}
+                            </span>
+                            <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
+                        </div>
+                        <h2 className="text-3xl font-black mb-4">{t('analytics.customer_insight', 'Customer Intelligence Insights')}</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                                <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.loyalty_index', 'Loyalty Index')}</p>
+                                <p className="text-2xl font-black">8.4 / 10</p>
+                                <div className="mt-4 h-1 bg-white/10 rounded-full">
+                                    <div className="h-full w-[84%] bg-amber-400 rounded-full" />
+                                </div>
+                            </div>
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                                <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.retention_rate', 'Retention Rate')}</p>
+                                <p className="text-2xl font-black">68%</p>
+                                <div className="mt-4 h-1 bg-white/10 rounded-full">
+                                    <div className="h-full w-[68%] bg-emerald-400 rounded-full" />
+                                </div>
+                            </div>
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                                <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.churn_risk', 'Churn Risk')}</p>
+                                <p className="text-2xl font-black">{t('common.low', 'Low')}</p>
+                                <div className="mt-4 flex gap-1">
+                                    {[1, 2, 3, 4, 5].map(i => <div key={i} className={`h-1 flex-1 rounded-full ${i <= 1 ? 'bg-emerald-400' : 'bg-white/10'}`} />)}
+                                </div>
+                            </div>
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                                <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.peak_cohort', 'Peak Cohort')}</p>
+                                <p className="text-2xl font-black">25-34 Yrs</p>
+                                <div className="mt-4 flex items-center gap-1 text-[10px] text-amber-400 font-bold">
+                                    <TrendingUp className="h-3 w-3" /> +12% growth
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
 
             {/* ═══ Header ═══ */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -871,201 +986,244 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ AI Predictive Insights ═══ */}
-            <PredictiveInsightsSection insights={predictiveInsights} />
+            <div className="relative">
+                <PredictiveInsightsSection insights={predictiveInsights} />
+                {isBasicAnalytics && (
+                    <PremiumOverlay 
+                        title="AI Predictive Insights" 
+                        message="Get AI-powered traffic predictions and capacity alerts to stay ahead of the rush." 
+                        navigate={navigate} 
+                    />
+                )}
+            </div>
 
             {/* ═══ Charts Row 1: Trend + Status Pie ═══ */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                {/* Booking Trend — Area Chart */}
-                <motion.div
-                    ref={trendChartRef}
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                    className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-                >
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-indigo-500" /> {t('analytics.booking_trend', 'Booking Trend')}
-                        </h3>
-                    </div>
-                    {stats.dailyBookings?.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={280}>
-                            <AreaChart data={stats.dailyBookings} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                <defs>
-                                    <linearGradient id="bookingGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => v.slice(5)} />
-                                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} allowDecimals={false} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Area type="monotone" dataKey="count" stroke={COLORS.primary} strokeWidth={2.5} fill="url(#bookingGrad)" dot={{ r: 3, fill: COLORS.primary }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="h-[280px] flex items-center justify-center text-gray-400">
-                            <p>{t('analytics.no_booking_data', 'No booking data for this period')}</p>
+            <div className="relative">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* Booking Trend — Area Chart */}
+                    <motion.div
+                        ref={trendChartRef}
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                        className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                    >
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <TrendingUp className="h-5 w-5 text-indigo-500" /> {t('analytics.booking_trend', 'Booking Trend')}
+                            </h3>
                         </div>
-                    )}
-                </motion.div>
-
-                {/* Status Distribution — Donut Chart */}
-                <motion.div
-                    ref={statusPieRef}
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-                >
-                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
-                        <PieIcon className="h-5 w-5 text-purple-500" /> {t('analytics.status_distribution', 'Status Distribution')}
-                    </h3>
-                    {stats.statusDistribution?.length > 0 ? (
-                        <div className="flex flex-col items-center">
-                            <ResponsiveContainer width="100%" height={200}>
-                                <PieChart>
-                                    <Pie
-                                        data={stats.statusDistribution}
-                                        cx="50%" cy="50%"
-                                        innerRadius={55} outerRadius={80}
-                                        paddingAngle={4}
-                                        dataKey="value"
-                                    >
-                                        {stats.statusDistribution.map((s, i) => (
-                                            <Cell key={i} fill={s.color} stroke="none" />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip content={({ active, payload }) => {
-                                        if (!active || !payload?.length) return null;
-                                        return (
-                                            <div style={customTooltipStyle}>
-                                                <p className="font-semibold">{t(payload[0].name)}: {payload[0].value}</p>
-                                            </div>
-                                        );
-                                    }} />
-                                </PieChart>
+                        {stats.dailyBookings?.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={280}>
+                                <AreaChart data={stats.dailyBookings} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                    <defs>
+                                        <linearGradient id="bookingGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => v.slice(5)} />
+                                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} allowDecimals={false} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Area type="monotone" dataKey="count" stroke={COLORS.primary} strokeWidth={2.5} fill="url(#bookingGrad)" dot={{ r: 3, fill: COLORS.primary }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                                </AreaChart>
                             </ResponsiveContainer>
-                            <div className="flex flex-wrap justify-center gap-3 mt-2">
-                                {stats.statusDistribution.map((s, i) => (
-                                    <div key={i} className="flex items-center gap-1.5 text-xs">
-                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                                        <span className="text-gray-600">{t(s.name)} ({s.value})</span>
-                                    </div>
-                                ))}
+                        ) : (
+                            <div className="h-[280px] flex items-center justify-center text-gray-400">
+                                <p>{t('analytics.no_booking_data', 'No booking data for this period')}</p>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="h-[200px] flex items-center justify-center text-gray-400">
-                            <p>{t('analytics.no_status_data', 'No status data')}</p>
-                        </div>
-                    )}
-                </motion.div>
+                        )}
+                    </motion.div>
+
+                    {/* Status Distribution — Donut Chart */}
+                    <motion.div
+                        ref={statusPieRef}
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                    >
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
+                            <PieIcon className="h-5 w-5 text-purple-500" /> {t('analytics.status_distribution', 'Status Distribution')}
+                        </h3>
+                        {stats.statusDistribution?.length > 0 ? (
+                            <div className="flex flex-col items-center">
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <PieChart>
+                                        <Pie
+                                            data={stats.statusDistribution}
+                                            cx="50%" cy="50%"
+                                            innerRadius={55} outerRadius={80}
+                                            paddingAngle={4}
+                                            dataKey="value"
+                                        >
+                                            {stats.statusDistribution.map((s, i) => (
+                                                <Cell key={i} fill={s.color} stroke="none" />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip content={({ active, payload }) => {
+                                            if (!active || !payload?.length) return null;
+                                            return (
+                                                <div style={customTooltipStyle}>
+                                                    <p className="font-semibold">{t(payload[0].name)}: {payload[0].value}</p>
+                                                </div>
+                                            );
+                                        }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="flex flex-wrap justify-center gap-3 mt-2">
+                                    {stats.statusDistribution.map((s, i) => (
+                                        <div key={i} className="flex items-center gap-1.5 text-xs">
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                                            <span className="text-gray-600">{t(s.name)} ({s.value})</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="h-[200px] flex items-center justify-center text-gray-400">
+                                <p>{t('analytics.no_status_data', 'No status data')}</p>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+                {isBasicAnalytics && (
+                    <PremiumOverlay 
+                        title="Advanced Traffic Analytics" 
+                        message="Visualize booking trends and status breakdowns to understand your business performance." 
+                        navigate={navigate} 
+                    />
+                )}
             </div>
 
             {/* ═══ Charts Row 2: Utilization Trend ═══ */}
-
-            {/* ═══ Charts Row 2: Bookings by Service ═══ */}
-            <div className="grid grid-cols-1">
-                {/* Utilization Trend — Area Chart */}
-                <motion.div
-                    ref={utilizationChartRef}
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-                >
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            <Activity className="h-5 w-5 text-blue-500" /> {t('analytics.utilization_trend', 'Slot Utilization Trend (%)')}
-                        </h3>
-                    </div>
-                    {stats.dailyBookings?.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={280}>
-                            <AreaChart data={stats.dailyBookings} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                <defs>
-                                    <linearGradient id="utilGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => v.slice(5)} />
-                                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} domain={[0, 100]} tickFormatter={v => `${v}%`} />
-                                <Tooltip content={<CustomTooltip suffix="%" />} />
-                                <Area type="monotone" dataKey="utilization" stroke="#3b82f6" strokeWidth={2.5} fill="url(#utilGrad)" dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="h-[280px] flex items-center justify-center text-gray-400">
-                            <p>{t('analytics.no_utilization_data', 'No utilization data')}</p>
+            <div className="relative">
+                <div className="grid grid-cols-1">
+                    {/* Utilization Trend — Area Chart */}
+                    <motion.div
+                        ref={utilizationChartRef}
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                    >
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <Activity className="h-5 w-5 text-blue-500" /> {t('analytics.utilization_trend', 'Slot Utilization Trend (%)')}
+                            </h3>
                         </div>
-                    )}
-                </motion.div>
+                        {stats.dailyBookings?.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={280}>
+                                <AreaChart data={stats.dailyBookings} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                    <defs>
+                                        <linearGradient id="utilGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => v.slice(5)} />
+                                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} domain={[0, 100]} tickFormatter={v => `${v}%`} />
+                                    <Tooltip content={<CustomTooltip suffix="%" />} />
+                                    <Area type="monotone" dataKey="utilization" stroke="#3b82f6" strokeWidth={2.5} fill="url(#utilGrad)" dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-[280px] flex items-center justify-center text-gray-400">
+                                <p>{t('analytics.no_utilization_data', 'No utilization data')}</p>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+                {isBasicAnalytics && (
+                    <PremiumOverlay 
+                        title="Resource Utilization Data" 
+                        message="Monitor how well your resources and slots are being utilized to maximize capacity." 
+                        navigate={navigate} 
+                    />
+                )}
             </div>
 
             {/* ═══ Peak Hours Heatmap ═══ */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-            >
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
-                    <Zap className="h-5 w-5 text-amber-500" /> 
-                    {t('analytics.peak_hours_heatmap', 'Peak Hours Heatmap')}
-                    <InfoTooltip text={t('tooltip.peak_hours_heatmap', "Visual distribution of bookings across days and hours. Darker areas indicate higher demand, helping you optimize staffing.")} />
-                </h3>
-                <div className="overflow-x-auto">
-                    <div className="min-w-[600px]">
-                        {/* Hour headers */}
-                        <div className="grid gap-1" style={{ gridTemplateColumns: `60px repeat(${HOURS.length}, 1fr)` }}>
-                            <div />
-                            {HOURS.map(h => (
-                                <div key={h} className="text-center text-xs text-gray-400 font-medium py-1">
-                                    {h}:00
+            <div className="relative">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                >
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
+                        <Zap className="h-5 w-5 text-amber-500" /> 
+                        {t('analytics.peak_hours_heatmap', 'Peak Hours Heatmap')}
+                        <InfoTooltip text={t('tooltip.peak_hours_heatmap', "Visual distribution of bookings across days and hours. Darker areas indicate higher demand, helping you optimize staffing.")} />
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[600px]">
+                            {/* Hour headers */}
+                            <div className="grid gap-1" style={{ gridTemplateColumns: `60px repeat(${HOURS.length}, 1fr)` }}>
+                                <div />
+                                {HOURS.map(h => (
+                                    <div key={h} className="text-center text-xs text-gray-400 font-medium py-1">
+                                        {h}:00
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Day rows */}
+                            {DAY_NAMES.map((day, dayIdx) => (
+                                <div key={dayIdx} className="grid gap-1 mt-1" style={{ gridTemplateColumns: `60px repeat(${HOURS.length}, 1fr)` }}>
+                                    <div className="text-xs text-gray-500 font-medium flex items-center">{day}</div>
+                                    {HOURS.map(hour => {
+                                        const count = getHeatCount(dayIdx, hour);
+                                        return (
+                                            <div
+                                                key={hour}
+                                                className={`${getHeatColor(count)} rounded-md h-8 flex items-center justify-center text-xs font-semibold transition-all hover:scale-110 cursor-default`}
+                                                title={`${day} ${hour}:00 — ${count} bookings`}
+                                            >
+                                                {count > 0 ? count : ''}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ))}
-                        </div>
-                        {/* Day rows */}
-                        {DAY_NAMES.map((day, dayIdx) => (
-                            <div key={dayIdx} className="grid gap-1 mt-1" style={{ gridTemplateColumns: `60px repeat(${HOURS.length}, 1fr)` }}>
-                                <div className="text-xs text-gray-500 font-medium flex items-center">{day}</div>
-                                {HOURS.map(hour => {
-                                    const count = getHeatCount(dayIdx, hour);
-                                    return (
-                                        <div
-                                            key={hour}
-                                            className={`${getHeatColor(count)} rounded-md h-8 flex items-center justify-center text-xs font-semibold transition-all hover:scale-110 cursor-default`}
-                                            title={`${day} ${hour}:00 — ${count} bookings`}
-                                        >
-                                            {count > 0 ? count : ''}
-                                        </div>
-                                    );
-                                })}
+                            {/* Legend */}
+                            <div className="flex items-center gap-2 mt-4 justify-end">
+                                <span className="text-xs text-gray-400">{t('common.less', 'Less')}</span>
+                                <div className="w-5 h-5 rounded bg-gray-50 border border-gray-100" />
+                                <div className="w-5 h-5 rounded bg-indigo-100" />
+                                <div className="w-5 h-5 rounded bg-indigo-200" />
+                                <div className="w-5 h-5 rounded bg-indigo-400" />
+                                <div className="w-5 h-5 rounded bg-indigo-600" />
+                                <span className="text-xs text-gray-400">{t('common.more', 'More')}</span>
                             </div>
-                        ))}
-                        {/* Legend */}
-                        <div className="flex items-center gap-2 mt-4 justify-end">
-                            <span className="text-xs text-gray-400">{t('common.less', 'Less')}</span>
-                            <div className="w-5 h-5 rounded bg-gray-50 border border-gray-100" />
-                            <div className="w-5 h-5 rounded bg-indigo-100" />
-                            <div className="w-5 h-5 rounded bg-indigo-200" />
-                            <div className="w-5 h-5 rounded bg-indigo-400" />
-                            <div className="w-5 h-5 rounded bg-indigo-600" />
-                            <span className="text-xs text-gray-400">{t('common.more', 'More')}</span>
                         </div>
                     </div>
-                </div>
-            </motion.div>
+                </motion.div>
+                {isBasicAnalytics && (
+                    <PremiumOverlay 
+                        title="Peak Demand Heatmap" 
+                        message="Identify your busiest hours and optimize staff allocation to reduce wait times." 
+                        navigate={navigate} 
+                    />
+                )}
+            </div>
 
             {/* ═══ Smart Insights ═══ */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-            >
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-5">
-                    <Lightbulb className="h-5 w-5 text-yellow-500" /> {t('analytics.smart_insights', 'Smart Insights')}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {stats.insights?.map((insight, i) => (
-                        <InsightCard key={i} insight={insight} />
-                    ))}
-                </div>
-            </motion.div>
+            <div className="relative">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                >
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-5">
+                        <Lightbulb className="h-5 w-5 text-yellow-500" /> {t('analytics.smart_insights', 'Smart Insights')}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {stats.insights?.map((insight, i) => (
+                            <InsightCard key={i} insight={insight} />
+                        ))}
+                    </div>
+                </motion.div>
+                {isBasicAnalytics && (
+                    <PremiumOverlay 
+                        title="Actionable Smart Insights" 
+                        message="Get data-driven suggestions to improve service efficiency and increase revenue." 
+                        navigate={navigate} 
+                    />
+                )}
+            </div>
         </div >
     );
 };

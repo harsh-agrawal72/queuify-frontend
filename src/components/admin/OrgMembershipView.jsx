@@ -1,50 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-    Check, 
-    X, 
-    Zap, 
-    Star, 
-    ShieldCheck, 
-    Crown, 
-    Users, 
-    Briefcase, 
-    ArrowRight,
-    TrendingUp,
-    Shield,
-    Globe,
-    LayoutDashboard,
-    Loader2
+    Check, ArrowRight, Loader2, Sparkles, Shield, Zap, Crown, Star, Leaf, 
+    TrendingUp, Globe, LayoutDashboard, Clock, AlertCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { apiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
+import { format } from 'date-fns';
 
-const PlanCard = ({ plan, isCurrent, onUpgrade, processingId }) => {
+const PlanCard = ({ plan, isCurrent, onUpgrade, processingId, t }) => {
     const isPremium = plan.name === 'Enterprise';
     const isStandard = plan.name === 'Professional';
     const isProcessing = processingId === plan.id;
 
     // Features can be a JSON string or object from DB
-    const featuresData = typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || {});
+    const features = typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || {});
     
     // Map DB features to readable strings for the cards
     const featureList = [
-        `${featuresData.resources || 0} Resource(s)`,
-        `${featuresData.staff || 0} Staff Member(s)`,
-        `${featuresData.max_daily_bookings || 0} Daily Appointments`,
-        featuresData.custom_branding ? 'Custom Branding' : null,
-        featuresData.broadcast ? 'Broadcast Access' : null,
-        featuresData.multi_branch ? 'Multi-Branch Support' : null,
-        `${plan.commission_rate}% Platform Commission`
+        t('setup.resources_count', { count: features.max_resources || 1 }),
+        t('setup.admins_count', { count: features.max_admins || 1 }),
+        features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics'),
+        features.has_premium_features ? t('setup.premium_features') : null,
+        features.has_customer_insight ? t('setup.customer_insight') : null,
+        t('setup.availability_24_7')
     ].filter(Boolean);
 
     const getIcon = () => {
-        if (isPremium) return <Crown className="h-8 w-8 text-amber-500" />;
-        if (isStandard) return <Star className="h-8 w-8 text-indigo-500" />;
-        return <Zap className="h-8 w-8 text-gray-500" />;
+        if (plan.name === 'Enterprise') return <Crown className="h-8 w-8 text-amber-500" />;
+        if (plan.name === 'Professional') return <Star className="h-8 w-8 text-indigo-500" />;
+        if (plan.name === 'Starter') return <Zap className="h-8 w-8 text-slate-400" />;
+        return <Leaf className="h-8 w-8 text-emerald-500" />;
     };
 
     return (
@@ -81,8 +70,8 @@ const PlanCard = ({ plan, isCurrent, onUpgrade, processingId }) => {
 
             <div className="mb-8">
                 <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold italic">₹{plan.price_monthly}</span>
-                    <span className={clsx("text-sm font-bold opacity-60", isPremium ? "text-gray-400" : "text-gray-500")}>/month</span>
+                    <span className="text-4xl font-extrabold italic">{plan.price_monthly > 0 ? `₹${plan.price_monthly}` : 'Free'}</span>
+                    {plan.price_monthly > 0 && <span className={clsx("text-sm font-bold opacity-60", isPremium ? "text-gray-400" : "text-gray-500")}>/month</span>}
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-widest mt-2 opacity-40 italic">billed monthly</p>
             </div>
@@ -162,6 +151,10 @@ const OrgMembershipView = () => {
         });
     };
 
+    const expiryDate = user?.subscription_expiry ? new Date(user.subscription_expiry) : null;
+    const isSubscribed = user?.org_plan_id && user?.org_plan_id !== plans.find(p => p.name === 'Free')?.id;
+    const currentPlanName = plans.find(p => p.id === user?.org_plan_id)?.name || 'Free';
+
     const handleUpgrade = async (planId, planName) => {
         setProcessingId(planId);
         const loadingToast = toast.loading(`Initiating upgrade to ${planName}...`);
@@ -234,6 +227,43 @@ const OrgMembershipView = () => {
 
     return (
         <div className="min-h-screen pb-20 px-4 md:px-0">
+            {/* Current Plan Status Banner */}
+            {isSubscribed && (
+                <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-7xl mx-auto mb-8"
+                >
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-4 text-center md:text-left">
+                            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                                <Sparkles className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">You are on the {currentPlanName} Plan</h2>
+                                <p className="text-indigo-100 text-sm font-medium">Your subscription is active and protecting your organization.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-6 bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-sm border border-white/10">
+                            <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-indigo-200" />
+                                <div className="text-left">
+                                    <p className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Valid Until</p>
+                                    <p className="text-sm font-bold">{expiryDate ? format(expiryDate, 'MMMM dd, yyyy') : 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div className="h-8 w-px bg-white/20" />
+                            <div className="text-left">
+                                <p className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Status</p>
+                                <p className="text-sm font-bold flex items-center gap-1.5 text-emerald-300">
+                                    <Check className="h-4 w-4" /> Active
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
             {/* Header Hero Area */}
             <div className="max-w-7xl mx-auto mb-16">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-12">
@@ -286,7 +316,7 @@ const OrgMembershipView = () => {
             </div>
 
             {/* Plans Grid */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 max-w-7xl mx-auto">
                 {plans.map((plan) => (
                     <PlanCard 
                         key={plan.id} 
@@ -294,9 +324,11 @@ const OrgMembershipView = () => {
                         isCurrent={user?.org_plan_id === plan.id} 
                         onUpgrade={handleUpgrade}
                         processingId={processingId}
+                        t={t}
                     />
                 ))}
             </div>
+
 
             {/* Bottom Info Section */}
             <motion.div 
