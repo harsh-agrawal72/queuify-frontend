@@ -24,6 +24,7 @@ import {
     Clock,
     ChevronDown,
     User,
+    ShieldCheck,
     ShieldOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
