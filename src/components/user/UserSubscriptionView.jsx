@@ -128,6 +128,9 @@ const UserSubscriptionView = () => {
                 setProcessingId(null);
             });
             rzp.open();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Checkout failed.", { id: loadingToast });
+            setProcessingId(null);
         }
     };
 
