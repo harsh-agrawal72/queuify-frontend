@@ -215,7 +215,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 return;
             }
 
-            await apiService.verifyPayment({
+            const verifyRes = await apiService.verifyPayment({
                 appointmentId: currentAppt.id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -224,7 +224,7 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
             setBookingResult({
                 success: true,
-                queueNumber: currentAppt.queueNumber,
+                queueNumber: verifyRes.data?.queue_number || currentAppt.queueNumber,
                 appointmentId: currentAppt.id
             });
             setStep(6); // Success screen
