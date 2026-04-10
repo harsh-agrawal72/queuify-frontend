@@ -60,7 +60,7 @@ const UserSubscriptionView = () => {
         setIsCheckoutOpen(true);
     };
 
-    const handleActualPurchase = async (planId, planName, couponCode, isFree) => {
+    const handleActualPurchase = async (planId, planName, couponCode, isFree, duration = 1) => {
         setProcessingId(planId);
         setIsCheckoutOpen(false);
         const loadingToast = toast.loading(`${isFree ? 'activating' : 'Initiating upgrade to'} ${planName}...`);
@@ -68,7 +68,7 @@ const UserSubscriptionView = () => {
         try {
             if (isFree) {
                 // Handle direct activation for free or 100% discounted plans
-                await apiService.claimFreePlan(planId, couponCode);
+                await apiService.claimFreePlan(planId, couponCode, duration);
                 toast.success(`Plan activated successfully!`, { id: loadingToast });
                 await refreshUser();
                 window.location.reload();
@@ -76,11 +76,11 @@ const UserSubscriptionView = () => {
             }
 
             // 1. Create Order with Optional Coupon
-            const { data: orderData } = await apiService.createPlanPaymentOrder(planId, couponCode);
+            const { data: orderData } = await apiService.createPlanPaymentOrder(planId, couponCode, duration);
             
             // Handle if backend says it's free (backup check)
             if (orderData.isFree) {
-                await apiService.claimFreePlan(planId, couponCode);
+                await apiService.claimFreePlan(planId, couponCode, duration);
                 toast.success(`Plan activated successfully!`, { id: loadingToast });
                 await refreshUser();
                 window.location.reload();
@@ -102,7 +102,8 @@ const UserSubscriptionView = () => {
                             planId,
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
+                            razorpay_signature: response.razorpay_signature,
+                            duration
                         });
                         toast.success(`Welcome to ${planName}!`, { id: loadingToast });
                         await refreshUser();
