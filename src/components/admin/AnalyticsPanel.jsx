@@ -337,8 +337,11 @@ const AnalyticsPanel = () => {
     const [resources, setResources] = useState([]);
     const [wallet, setWallet] = useState(null);
     const [orgDetails, setOrgDetails] = useState(null);
-    const isBasicAnalytics = !user || user?.plan_features?.analytics !== 'advanced';
-    const [planFeatures, setPlanFeatures] = useState(user?.plan_features || { analytics: 'basic' });
+    const [planFeatures, setPlanFeatures] = useState(user?.plan_features || { analytics: 'locked' });
+    const analyticsLevel = planFeatures?.analytics || 'locked';
+    const isLocked = analyticsLevel === 'locked';
+    const isBasic = analyticsLevel === 'basic';
+    const isAdvanced = analyticsLevel === 'advanced' || analyticsLevel === 'enterprise';
 
     // Filters
     const [preset, setPreset] = useState('7d');
@@ -753,8 +756,7 @@ const AnalyticsPanel = () => {
                 )}
             </AnimatePresence>
 
-            {/* Premium Section Gating */}
-            {(planFeatures.analytics === 'advanced' || planFeatures.analytics === 'enterprise') ? (
+            {isAdvanced ? (
                 <PredictiveInsightsSection insights={predictiveInsights} />
             ) : (
                 <div className="bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8 mb-8 flex flex-col items-center text-center gap-4">
@@ -762,13 +764,15 @@ const AnalyticsPanel = () => {
                         <Lock className="h-8 w-8 text-indigo-400" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-black text-slate-900">{t('analytics.unlock_premium', 'Unlock Advanced Analytics')}</h3>
+                        <h3 className="text-xl font-black text-slate-900">{isLocked ? t('analytics.locked_title', 'Analytics Locked') : t('analytics.unlock_advanced', 'Unlock Advanced Analytics')}</h3>
                         <p className="text-sm text-slate-500 max-w-md mx-auto mt-2">
-                            {t('analytics.upgrade_desc', 'Get predictive insights, traffic forecasts, and resource efficiency rankings by upgrading to Professional or Enterprise.')}
+                            {isLocked 
+                                ? t('analytics.locked_desc', 'Analytics are available on Professional and Enterprise plans. Start tracking your business growth today!')
+                                : t('analytics.upgrade_desc', 'Get predictive insights, traffic forecasts, and resource efficiency rankings by upgrading to Enterprise.')}
                         </p>
                     </div>
                     <button 
-                        onClick={() => window.location.href = '#/membership'}
+                        onClick={() => navigate('/admin/membership')}
                         className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-black transition-all active:scale-95 flex items-center gap-2"
                     >
                         <Zap className="h-4 w-4" />
@@ -937,70 +941,78 @@ const AnalyticsPanel = () => {
             </AnimatePresence>
 
             {/* ═══ KPI Cards ═══ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {kpiCards.map((card, idx) => (
-                    <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all group overflow-hidden relative"
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`${card.lightBg} ${card.lightText} p-3 rounded-xl`}>
-                                <card.icon className="h-5 w-5" />
-                            </div>
-                            <GrowthBadge value={card.growth} suffix={card.suffix || '%'} />
-                        </div>
-                        
-                        <div>
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{card.title}</p>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-baseline gap-1">
-                                    <p className="text-3xl font-bold text-gray-900 tracking-tight">{card.value}</p>
-                                    {card.suffix && <span className="text-xs font-bold text-gray-400 uppercase">{card.suffix}</span>}
+            <div className={`relative ${isLocked ? 'min-h-[200px] overflow-hidden' : ''}`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {kpiCards.map((card, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all group overflow-hidden relative"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <div className={`${card.lightBg} ${card.lightText} p-3 rounded-xl`}>
+                                    <card.icon className="h-5 w-5" />
                                 </div>
-                                
-                                {card.title === t('dashboard.available_balance', 'Available Balance') && parseFloat(wallet?.available_balance) > 0 && (
-                                    <button
-                                        onClick={async () => {
-                                            if (window.confirm(t('wallet.withdraw_confirm', 'Withdraw ₹{{amount}} to your linked bank account?', { amount: wallet.available_balance }))) {
-                                                try {
-                                                    await api.post('/payments/withdraw', { amount: wallet.available_balance });
-                                                    toast.success(t('wallet.withdraw_success', 'Withdrawal request processed successfully!'));
-                                                    window.location.reload();
-                                                } catch (err) {
-                                                    toast.error(err.response?.data?.message || t('wallet.withdraw_failed', 'Withdrawal failed'));
-                                                }
-                                            }
-                                        }}
-                                        className="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full hover:bg-green-700 transition-colors shadow-sm"
-                                    >
-                                        {t('common.withdraw', 'Withdraw')}
-                                    </button>
-                                )}
+                                <GrowthBadge value={card.growth} suffix={card.suffix || '%'} />
                             </div>
-                        </div>
-                    </motion.div>
-                ))}
+                            
+                            <div>
+                                <div className="flex items-center gap-1.5 mb-1">
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{card.title}</p>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-baseline gap-1">
+                                        <p className="text-3xl font-bold text-gray-900 tracking-tight">{card.value}</p>
+                                        {card.suffix && <span className="text-xs font-bold text-gray-400 uppercase">{card.suffix}</span>}
+                                    </div>
+                                    
+                                    {card.title === t('dashboard.available_balance', 'Available Balance') && parseFloat(wallet?.available_balance) > 0 && (
+                                        <button
+                                            onClick={async () => {
+                                                if (window.confirm(t('wallet.withdraw_confirm', 'Withdraw ₹{{amount}} to your linked bank account?', { amount: wallet.available_balance }))) {
+                                                    try {
+                                                        await api.post('/payments/withdraw', { amount: wallet.available_balance });
+                                                        toast.success(t('wallet.withdraw_success', 'Withdrawal request processed successfully!'));
+                                                        window.location.reload();
+                                                    } catch (err) {
+                                                        toast.error(err.response?.data?.message || t('wallet.withdraw_failed', 'Withdrawal failed'));
+                                                    }
+                                                }
+                                            }}
+                                            className="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full hover:bg-green-700 transition-colors shadow-sm"
+                                        >
+                                            {t('common.withdraw', 'Withdraw')}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+                {isLocked && (
+                    <PremiumOverlay 
+                        title={t('analytics.kpi_locked', 'Performance Metrics Key')} 
+                        message="Unlock real-time tracking of revenue, bookings, and resource utilization on Professional plans." 
+                        navigate={navigate} 
+                    />
+                )}
             </div>
 
-            {/* ═══ AI Predictive Insights ═══ */}
-            <div className={`relative ${isBasicAnalytics ? 'min-h-[300px] overflow-hidden' : ''}`}>
+            <div className={`relative ${!isAdvanced ? 'min-h-[300px] overflow-hidden' : ''}`}>
                 <PredictiveInsightsSection insights={predictiveInsights} />
-                {isBasicAnalytics && (
+                {!isAdvanced && !isLocked && (
                     <PremiumOverlay 
                         title="AI Predictive Insights" 
-                        message="Get AI-powered traffic predictions and capacity alerts to stay ahead of the rush." 
+                        message="Get AI-powered traffic predictions and capacity alerts to stay ahead of the rush. Available on Enterprise." 
                         navigate={navigate} 
                     />
                 )}
             </div>
 
             {/* ═══ Charts Row 1: Trend + Status Pie ═══ */}
-            <div className={`relative ${isBasicAnalytics ? 'min-h-[400px] overflow-hidden' : ''}`}>
+            <div className={`relative ${isLocked ? 'min-h-[400px] overflow-hidden' : ''}`}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Booking Trend — Area Chart */}
                     <motion.div
@@ -1086,7 +1098,7 @@ const AnalyticsPanel = () => {
                         )}
                     </motion.div>
                 </div>
-                {isBasicAnalytics && (
+                {isLocked && (
                     <PremiumOverlay 
                         title="Advanced Traffic Analytics" 
                         message="Visualize booking trends and status breakdowns to understand your business performance." 
@@ -1096,7 +1108,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ Charts Row 2: Utilization Trend ═══ */}
-            <div className={`relative ${isBasicAnalytics ? 'min-h-[350px] overflow-hidden' : ''}`}>
+            <div className={`relative ${!isAdvanced ? 'min-h-[350px] overflow-hidden' : ''}`}>
                 <div className="grid grid-cols-1">
                     {/* Utilization Trend — Area Chart */}
                     <motion.div
@@ -1118,11 +1130,11 @@ const AnalyticsPanel = () => {
                                             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <cartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                     <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => v.slice(5)} />
                                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} domain={[0, 100]} tickFormatter={v => `${v}%`} />
                                     <Tooltip content={<CustomTooltip suffix="%" />} />
-                                    <Area type="monotone" dataKey="utilization" stroke="#3b82f6" strokeWidth={2.5} fill="url(#utilGrad)" dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                                    <Area type="monotone" dataKey="utilization" stroke="#3b82f6" strokeWidth={2.5} fill="url(#utilGrad)" dot={{ r: 3, fill: "#3b82f6" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         ) : (
@@ -1132,17 +1144,17 @@ const AnalyticsPanel = () => {
                         )}
                     </motion.div>
                 </div>
-                {isBasicAnalytics && (
+                {!isAdvanced && !isLocked && (
                     <PremiumOverlay 
                         title="Resource Utilization Data" 
-                        message="Monitor how well your resources and slots are being utilized to maximize capacity." 
+                        message="Monitor how well your resources and slots are being utilized. Available on Enterprise." 
                         navigate={navigate} 
                     />
                 )}
             </div>
 
             {/* ═══ Peak Hours Heatmap ═══ */}
-            <div className={`relative ${isBasicAnalytics ? 'min-h-[400px] overflow-hidden' : ''}`}>
+            <div className={`relative ${!isAdvanced ? 'min-h-[400px] overflow-hidden' : ''}`}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
@@ -1194,17 +1206,16 @@ const AnalyticsPanel = () => {
                         </div>
                     </div>
                 </motion.div>
-                {isBasicAnalytics && (
+                {!isAdvanced && !isLocked && (
                     <PremiumOverlay 
                         title="Peak Demand Heatmap" 
-                        message="Identify your busiest hours and optimize staff allocation to reduce wait times." 
+                        message="Identify your busiest hours and optimize staff allocation to reduce wait times. Available on Enterprise." 
                         navigate={navigate} 
                     />
                 )}
             </div>
 
-            {/* ═══ Smart Insights ═══ */}
-            <div className={`relative ${isBasicAnalytics ? 'min-h-[300px] overflow-hidden' : ''}`}>
+            <div className={`relative ${!isAdvanced ? 'min-h-[300px] overflow-hidden' : ''}`}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
@@ -1218,10 +1229,10 @@ const AnalyticsPanel = () => {
                         ))}
                     </div>
                 </motion.div>
-                {isBasicAnalytics && (
+                {!isAdvanced && !isLocked && (
                     <PremiumOverlay 
                         title="Actionable Smart Insights" 
-                        message="Get data-driven suggestions to improve service efficiency and increase revenue." 
+                        message="Get data-driven suggestions to improve service efficiency and increase revenue. Available on Enterprise." 
                         navigate={navigate} 
                     />
                 )}

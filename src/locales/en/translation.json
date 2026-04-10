@@ -20,7 +20,11 @@
     "basic_features": "Basic Features",
     "availability_24_7": "24/7 Availability",
     "admins_count": "{{count}} Admin(s) Allowed",
-    "resources_count": "{{count}} Resource(s) Allowed"
+    "resources_count": "{{count}} Resource(s) Allowed",
+    "slot_copy": "Bulk Slot Copying",
+    "patient_history": "Visit History & Reports",
+    "gallery_upload": "Photo Gallery",
+    "custom_branding": "Logo & Cover Branding"
   },
   "onboarding_modal": {
     "org_verified": "Organization Verified",

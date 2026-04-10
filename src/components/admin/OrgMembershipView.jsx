@@ -26,8 +26,11 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
     const featureList = [
         t('setup.resources_count', { count: features.max_resources || 1 }),
         t('setup.admins_count', { count: features.max_admins || 1 }),
-        features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics'),
-        features.has_basic_features ? t('setup.basic_features') : null,
+        features.analytics !== 'locked' ? (features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics')) : null,
+        features.has_custom_branding ? t('setup.custom_branding') : null,
+        features.has_slot_copy ? t('setup.slot_copy') : null,
+        features.has_patient_history ? t('setup.patient_history') : null,
+        features.has_gallery_upload ? t('setup.gallery_upload') : null,
         features.has_premium_features ? t('setup.premium_features') : null,
         features.has_customer_insight ? t('setup.customer_insight') : null,
         features.has_top_position ? t('setup.top_position') : null,

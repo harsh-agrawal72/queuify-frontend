@@ -228,15 +228,13 @@ const AdminLayout = () => {
             path: '/admin/inbox', 
             icon: MessageCircle, 
             label: t('navigation.support_inbox'), 
-            disabled: setupIncomplete,
-            isLocked: !features.has_one_on_one_support
+            disabled: setupIncomplete
         },
         { 
             path: '/admin/reviews', 
             icon: Star, 
             label: t('navigation.patient_reviews'), 
-            disabled: setupIncomplete,
-            isLocked: !features.has_customer_insight
+            disabled: setupIncomplete
         },
         { path: '/admin/about', icon: Building2, label: t('navigation.about_organization') },
         { path: '/admin/settings', icon: Settings, label: t('navigation.settings') },

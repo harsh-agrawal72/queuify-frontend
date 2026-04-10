@@ -22,13 +22,13 @@ import { Megaphone, Wallet, ShieldAlert } from 'lucide-react';
 
 
 const SuperadminDashboard = () => {
+    const { user, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        logout();
         navigate('/login');
     };
 

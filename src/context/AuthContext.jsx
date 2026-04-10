@@ -13,6 +13,15 @@ export const AuthProvider = ({ children }) => {
         if (storedUser && token) {
             try {
                 setUser(JSON.parse(storedUser));
+                // Wait for background refresh to at least finish (or timeout) to ensure correct state
+                api.get('/user/profile')
+                    .then(res => {
+                        localStorage.setItem('user', JSON.stringify(res.data));
+                        setUser(res.data);
+                    })
+                    .catch(err => console.warn('Background profile refresh failed:', err.message))
+                    .finally(() => setLoading(false));
+                return; // Prevent immediate setLoading(false)
             } catch (e) {
                 console.error('Failed to parse user from local storage:', e);
                 localStorage.removeItem('user');

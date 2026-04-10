@@ -62,7 +62,7 @@ const PlanManager = () => {
                 features: activeTab === 'admin' ? {
                     max_resources: 1,
                     max_admins: 1,
-                    analytics: 'basic'
+                    analytics: 'locked'
                 } : {
                     max_active_appointments: 2,
                     notifications: ['email'],
@@ -313,7 +313,7 @@ const PlanManager = () => {
                                             type="button"
                                             onClick={() => {
                                                 const base = formData.target_role === 'admin' 
-                                                    ? { max_resources: 5, max_admins: 2, analytics: 'advanced' }
+                                                    ? { max_resources: 5, max_admins: 2, analytics: 'basic' }
                                                     : { max_active_appointments: 5, notifications: ['email', 'push'], priority: true };
                                                 setFormData({ ...formData, features: base });
                                             }}

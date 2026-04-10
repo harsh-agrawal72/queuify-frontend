@@ -775,7 +775,7 @@ const OrganizationAbout = () => {
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDeleteImage(img.id); }}
-                                                    className={`bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-lg ${!hasCustomBranding ? 'hidden' : ''}`}
+                                                    className={`bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors shadow-lg ${!planFeatures.has_gallery_upload ? 'hidden' : ''}`}
                                                     title="Delete Image"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -784,16 +784,16 @@ const OrganizationAbout = () => {
                                         </div>
                                     ))}
                                     {(profile.images?.filter(i => i.image_type === 'gallery').length || 0) < 10 && (
-                                        <label className={`border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center aspect-square transition-all group ${!hasCustomBranding ? 'opacity-30' : 'cursor-pointer hover:bg-gray-50 hover:border-indigo-300'}`}>
+                                        <label className={`border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center aspect-square transition-all group ${!planFeatures.has_gallery_upload ? 'opacity-30' : 'cursor-pointer hover:bg-gray-50 hover:border-indigo-300'}`}>
                                             <Plus className="h-6 w-6 text-gray-300 group-hover:text-indigo-400" />
-                                            <input type="file" className="hidden" accept="image/*" multiple disabled={!hasCustomBranding} onChange={(e) => handleImageUpload(e, 'gallery')} />
+                                            <input type="file" className="hidden" accept="image/*" multiple disabled={!planFeatures.has_gallery_upload} onChange={(e) => handleImageUpload(e, 'gallery')} />
                                         </label>
                                     )}
                                 </div>
-                                {!hasCustomBranding && (
+                                {!planFeatures.has_gallery_upload && (
                                     <div className="absolute inset-x-0 bottom-0 top-8 z-10 bg-white/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl pointer-events-none">
                                         <div className="pointer-events-auto bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer hover:bg-indigo-600 transition-colors" onClick={() => navigate('/admin/membership')}>
-                                            <Lock className="h-4 w-4" /> {t('common.upgrade_to_unlock', 'Premium Gallery')}
+                                            <Lock className="h-4 w-4" /> {t('common.upgrade_to_unlock', 'Upgrade to Professional to unlock Photo Gallery')}
                                         </div>
                                     </div>
                                 )}

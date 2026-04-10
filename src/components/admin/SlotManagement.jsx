@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import {
     Plus,
     Trash2,
@@ -24,6 +25,8 @@ import { useTranslation } from 'react-i18next';
 
 const SlotManagement = () => {
     const { t } = useTranslation();
+    const { user } = useAuth();
+    const planFeatures = user?.plan_features || {};
 
     // ─── Data ───
     const [services, setServices] = useState([]);
@@ -348,8 +351,19 @@ const SlotManagement = () => {
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
                     <button
-                        onClick={() => setIsCopyModalOpen(true)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all shadow-sm font-medium"
+                        onClick={() => {
+                            if (!planFeatures.has_slot_copy) {
+                                toast.error(t('membership.upgrade_required', 'This feature requires a plan upgrade.'));
+                                return;
+                            }
+                            setIsCopyModalOpen(true);
+                        }}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all shadow-sm font-medium border ${
+                            !planFeatures.has_slot_copy 
+                            ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed' 
+                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                        }`}
+                        title={!planFeatures.has_slot_copy ? t('membership.premium_feature', 'Premium Feature') : ''}
                     >
                         <Copy className="h-4 w-4" /> {t('admin.slots.copy_day', 'Copy Schedule')}
                     </button>
