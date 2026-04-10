@@ -17,32 +17,49 @@ import CheckoutModal from '../common/CheckoutModal';
 const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) => {
     const isPremium = plan.name === 'Enterprise';
     const isStandard = plan.name === 'Professional';
+    const isStarter = plan.name === 'Starter';
+    const isFree = plan.name === 'Free';
     const isProcessing = processingId === plan.id;
 
     // Features can be a JSON string or object from DB
     const features = typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || {});
 
     // Map DB features to readable strings for the cards
+    // We reorder them to show the most important "Plan Sellers" at the top
     const featureList = [
-        t('setup.resources_count', { count: features.max_resources || 1 }),
-        t('setup.admins_count', { count: features.max_admins || 1 }),
-        features.analytics !== 'locked' ? (features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics')) : null,
-        features.has_custom_branding ? t('setup.custom_branding') : null,
-        features.has_slot_copy ? t('setup.slot_copy') : null,
-        features.has_patient_history ? t('setup.patient_history') : null,
-        features.has_gallery_upload ? t('setup.gallery_upload') : null,
-        features.has_premium_features ? t('setup.premium_features') : null,
-        features.has_customer_insight ? t('setup.customer_insight') : null,
-        features.has_top_position ? t('setup.top_position') : null,
-        features.has_one_on_one_support ? t('setup.one_on_one_support') : null,
-        t('setup.availability_24_7')
+        // 1. Core Capacity
+        { text: t('setup.resources_count', { count: features.max_resources || 1 }), isMain: true },
+        { text: t('setup.admins_count', { count: features.max_admins || 1 }), isMain: true },
+        
+        // 2. The Big Features (Show if true)
+        features.has_custom_branding ? { text: t('setup.custom_branding'), isMain: !isFree } : null,
+        features.has_patient_history ? { text: t('setup.patient_history'), isHighlight: true } : null,
+        features.has_gallery_upload ? { text: t('setup.gallery_upload'), isHighlight: true } : null,
+        
+        // 3. Operational Features
+        features.has_slot_copy ? { text: t('setup.slot_copy') } : null,
+        features.analytics !== 'locked' ? { text: features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics') } : null,
+        
+        // 4. Premium Perks
+        features.has_premium_features ? { text: t('setup.premium_features') } : null,
+        features.has_customer_insight ? { text: t('setup.customer_insight') } : null,
+        features.has_top_position ? { text: t('setup.top_position') } : null,
+        features.has_one_on_one_support ? { text: t('setup.one_on_one_support') } : null,
+        { text: t('setup.availability_24_7') }
     ].filter(Boolean);
 
     const getIcon = () => {
-        if (plan.name === 'Enterprise') return <Crown className="h-8 w-8 text-amber-500" />;
-        if (plan.name === 'Professional') return <Star className="h-8 w-8 text-indigo-500" />;
-        if (plan.name === 'Starter') return <Zap className="h-8 w-8 text-slate-400" />;
+        if (isPremium) return <Crown className="h-8 w-8 text-amber-500" />;
+        if (isStandard) return <Star className="h-8 w-8 text-indigo-500" />;
+        if (isStarter) return <Zap className="h-8 w-8 text-slate-400" />;
         return <Leaf className="h-8 w-8 text-emerald-500" />;
+    };
+
+    const getCardStyles = () => {
+        if (isPremium) return "bg-slate-900 text-white shadow-2xl shadow-amber-200/20 scale-105 z-10 border-2 border-amber-400/50";
+        if (isStandard) return "bg-white border-2 border-indigo-600 shadow-2xl shadow-indigo-100 z-0";
+        if (isStarter) return "bg-white border border-slate-200 shadow-xl shadow-slate-50";
+        return "bg-gray-50/50 border border-dashed border-gray-200 opacity-90";
     };
 
     return (
@@ -53,27 +70,31 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
             whileHover={{ y: -10 }}
             className={clsx(
                 "relative flex flex-col p-8 rounded-[2.5rem] transition-all duration-500",
-                isPremium
-                    ? "bg-slate-900 text-white shadow-2xl shadow-amber-200/20 scale-105 z-10"
-                    : "bg-white border border-gray-100 shadow-xl shadow-gray-100"
+                getCardStyles()
             )}
         >
             {isPremium && (
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-black shadow-xl">
-                    Most Advanced
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-black shadow-xl whitespace-nowrap">
+                    Best for Large Teams
+                </div>
+            )}
+
+            {isStandard && (
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-indigo-600 px-6 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-white shadow-xl whitespace-nowrap">
+                    Most Popular
                 </div>
             )}
 
             <div className="mb-8">
                 <div className={clsx(
                     "w-16 h-16 rounded-3xl flex items-center justify-center mb-6",
-                    isPremium ? "bg-amber-400/10" : isStandard ? "bg-indigo-50" : "bg-gray-50"
+                    isPremium ? "bg-amber-400/10" : isStandard ? "bg-indigo-50" : isStarter ? "bg-slate-50" : "bg-emerald-50"
                 )}>
                     {getIcon()}
                 </div>
                 <h3 className="text-2xl font-extrabold tracking-tight mb-2">{plan.name}</h3>
                 <p className={clsx("text-sm font-medium", isPremium ? "text-gray-400" : "text-gray-500")}>
-                    {plan.target_role === 'admin' ? 'Business Membership' : 'Personal Membership'}
+                    {plan.target_role === 'admin' ? t('membership.business_tier', 'Business Tier') : t('membership.personal_tier', 'Personal Membership')}
                 </p>
             </div>
 
@@ -90,11 +111,17 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
                     <div key={idx} className="flex items-start gap-4">
                         <div className={clsx(
                             "mt-1 p-0.5 rounded-full",
-                            isPremium ? "bg-amber-400/20 text-amber-400" : "bg-emerald-100 text-emerald-600"
+                            isPremium ? "bg-amber-400/20 text-amber-400" : feature.isHighlight ? "bg-indigo-100 text-indigo-600" : "bg-emerald-100 text-emerald-600"
                         )}>
                             <Check className="h-3 w-3 stroke-[3px]" />
                         </div>
-                        <span className="text-sm font-bold leading-tight">{feature}</span>
+                        <span className={clsx(
+                            "text-sm font-bold leading-tight",
+                            feature.isMain ? "text-gray-900" : isPremium ? "text-gray-100" : "text-gray-600",
+                            feature.isHighlight && "text-indigo-600 font-extrabold"
+                        )}>
+                            {feature.text}
+                        </span>
                     </div>
                 ))}
             </div>
@@ -108,14 +135,16 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
                         ? "bg-emerald-500/10 text-emerald-500 cursor-default"
                         : isPremium
                             ? "bg-amber-400 text-black hover:bg-white active:scale-95 shadow-lg shadow-amber-400/20"
-                            : "bg-indigo-600 text-white hover:bg-black active:scale-95 shadow-lg shadow-indigo-100",
+                            : isStandard
+                                ? "bg-indigo-600 text-white hover:bg-black active:scale-95 shadow-lg shadow-indigo-100"
+                                : "bg-slate-900 text-white hover:bg-indigo-600 active:scale-95 shadow-lg",
                     isProcessing && "opacity-70 cursor-wait"
                 )}
             >
                 {isProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                 ) : isCurrent ? (
-                    t('user_subscription.current_plan', 'Current Plan')
+                    <span className="flex items-center gap-2"><Check className="h-4 w-4" /> {t('user_subscription.current_plan', 'Current Plan')}</span>
                 ) : isDowngrade ? (
                     'Downgrade'
                 ) : (

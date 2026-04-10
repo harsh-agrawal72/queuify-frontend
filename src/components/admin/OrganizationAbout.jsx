@@ -756,7 +756,7 @@ const OrganizationAbout = () => {
                                 {!hasCustomBranding && (
                                     <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl pointer-events-none">
                                         <div className="pointer-events-auto bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xl cursor-pointer hover:bg-indigo-600 transition-colors" onClick={() => navigate('/admin/membership')}>
-                                            <Lock className="h-4 w-4" /> {t('common.upgrade_to_unlock', 'Upgrade to Professional to unlock Branding')}
+                                            <Lock className="h-4 w-4" /> {t('common.upgrade_to_unlock', 'Upgrade to unlock Branding')}
                                         </div>
                                     </div>
                                 )}
