@@ -341,7 +341,8 @@ const AnalyticsPanel = () => {
     const analyticsLevel = planFeatures?.analytics || 'locked';
     const isLocked = analyticsLevel === 'locked';
     const isBasic = analyticsLevel === 'basic';
-    const isAdvanced = analyticsLevel === 'advanced' || analyticsLevel === 'enterprise';
+    const isStandardPlus = ['standard', 'premium'].includes(analyticsLevel);
+    const isPremium = analyticsLevel === 'premium';
 
     // Filters
     const [preset, setPreset] = useState('7d');
@@ -436,8 +437,8 @@ const AnalyticsPanel = () => {
                 const features = typeof res.data.plan_features === 'string' ? JSON.parse(res.data.plan_features) : (res.data.plan_features || {});
                 setPlanFeatures(features);
                 
-                // Only fetch predictive if advanced analytics enabled
-                if (features.analytics === 'advanced' || features.analytics === 'enterprise') {
+                // Only fetch predictive if premium analytics enabled
+                if (features.analytics === 'premium') {
                     fetchPredictiveInsights();
                 }
             } catch (err) {
@@ -756,19 +757,17 @@ const AnalyticsPanel = () => {
                 )}
             </AnimatePresence>
 
-            {isAdvanced ? (
+            {isPremium ? (
                 <PredictiveInsightsSection insights={predictiveInsights} />
-            ) : (
+            ) : isBasic ? (
                 <div className="bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8 mb-8 flex flex-col items-center text-center gap-4">
                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                         <Lock className="h-8 w-8 text-indigo-400" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-black text-slate-900">{isLocked ? t('analytics.locked_title', 'Analytics Locked') : t('analytics.unlock_advanced', 'Unlock Advanced Analytics')}</h3>
+                        <h3 className="text-xl font-black text-slate-900">{t('analytics.unlock_advanced', 'Unlock Advanced Analytics')}</h3>
                         <p className="text-sm text-slate-500 max-w-md mx-auto mt-2">
-                            {isLocked 
-                                ? t('analytics.locked_desc', 'Analytics are available on Professional and Enterprise plans. Start tracking your business growth today!')
-                                : t('analytics.upgrade_desc', 'Get predictive insights, traffic forecasts, and resource efficiency rankings by upgrading to Enterprise.')}
+                            {t('analytics.upgrade_desc', 'Get predictive insights, traffic forecasts, and resource efficiency rankings by upgrading to Enterprise.')}
                         </p>
                     </div>
                     <button 
@@ -779,7 +778,7 @@ const AnalyticsPanel = () => {
                         {t('common.upgrade_now', 'Upgrade Now')}
                     </button>
                 </div>
-            )}
+            ) : null}
 
             {/* Customer Insight - Enterprise Exclusive Section */}
             {planFeatures.has_customer_insight && (
@@ -874,9 +873,11 @@ const AnalyticsPanel = () => {
                         {(serviceId || resourceId) && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
                     </button>
 
-                    <button onClick={downloadExcel} className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 text-gray-600 text-sm font-medium transition shadow-sm">
-                        <Download className="h-4 w-4" /> {t('common.export', 'Export')}
-                    </button>
+                    {planFeatures.has_report_download && (
+                        <button onClick={downloadExcel} className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-2 rounded-xl hover:bg-gray-50 text-gray-600 text-sm font-medium transition shadow-sm">
+                            <Download className="h-4 w-4" /> {t('common.export', 'Export')}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -940,7 +941,6 @@ const AnalyticsPanel = () => {
                 )}
             </AnimatePresence>
 
-            {/* ═══ KPI Cards ═══ */}
             <div className={`relative ${isLocked ? 'min-h-[200px] overflow-hidden' : ''}`}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {kpiCards.map((card, idx) => (
@@ -993,22 +993,15 @@ const AnalyticsPanel = () => {
                 </div>
                 {isLocked && (
                     <PremiumOverlay 
-                        title={t('analytics.kpi_locked', 'Performance Metrics Key')} 
-                        message="Unlock real-time tracking of revenue, bookings, and resource utilization on Professional plans." 
+                        title={t('analytics.locked_title', 'Analytics Locked')} 
+                        message="Unlock real-time tracking of revenue, bookings, and resource utilization on Starter and Professional plans." 
                         navigate={navigate} 
                     />
                 )}
             </div>
 
-            <div className={`relative ${!isAdvanced ? 'min-h-[300px] overflow-hidden' : ''}`}>
-                <PredictiveInsightsSection insights={predictiveInsights} />
-                {!isAdvanced && !isLocked && (
-                    <PremiumOverlay 
-                        title="AI Predictive Insights" 
-                        message="Get AI-powered traffic predictions and capacity alerts to stay ahead of the rush. Available on Enterprise." 
-                        navigate={navigate} 
-                    />
-                )}
+            <div>
+                {isPremium && <PredictiveInsightsSection insights={predictiveInsights} />}
             </div>
 
             {/* ═══ Charts Row 1: Trend + Status Pie ═══ */}
@@ -1100,8 +1093,8 @@ const AnalyticsPanel = () => {
                 </div>
                 {isLocked && (
                     <PremiumOverlay 
-                        title="Advanced Traffic Analytics" 
-                        message="Visualize booking trends and status breakdowns to understand your business performance." 
+                        title={t('analytics.traffic_locked', 'Traffic Data Locked')} 
+                        message="Visualize booking trends and status breakdowns on Starter and Professional plans." 
                         navigate={navigate} 
                     />
                 )}
@@ -1130,7 +1123,7 @@ const AnalyticsPanel = () => {
                                             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <cartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                     <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => v.slice(5)} />
                                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} domain={[0, 100]} tickFormatter={v => `${v}%`} />
                                     <Tooltip content={<CustomTooltip suffix="%" />} />
@@ -1144,17 +1137,17 @@ const AnalyticsPanel = () => {
                         )}
                     </motion.div>
                 </div>
-                {!isAdvanced && !isLocked && (
+                {!isStandardPlus && (
                     <PremiumOverlay 
                         title="Resource Utilization Data" 
-                        message="Monitor how well your resources and slots are being utilized. Available on Enterprise." 
+                        message="Monitor how well your resources and slots are being utilized. Available on Professional." 
                         navigate={navigate} 
                     />
                 )}
             </div>
 
             {/* ═══ Peak Hours Heatmap ═══ */}
-            <div className={`relative ${!isAdvanced ? 'min-h-[400px] overflow-hidden' : ''}`}>
+            <div className={`relative ${!isStandardPlus ? 'min-h-[400px] overflow-hidden' : ''}`}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
@@ -1206,16 +1199,16 @@ const AnalyticsPanel = () => {
                         </div>
                     </div>
                 </motion.div>
-                {!isAdvanced && !isLocked && (
+                {!isStandardPlus && (
                     <PremiumOverlay 
                         title="Peak Demand Heatmap" 
-                        message="Identify your busiest hours and optimize staff allocation to reduce wait times. Available on Enterprise." 
+                        message="Identify your busiest hours and optimize staff allocation to reduce wait times. Available on Professional." 
                         navigate={navigate} 
                     />
                 )}
             </div>
 
-            <div className={`relative ${!isAdvanced ? 'min-h-[300px] overflow-hidden' : ''}`}>
+            <div className={`relative ${!isPremium ? 'min-h-[300px] overflow-hidden' : ''}`}>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
@@ -1229,7 +1222,7 @@ const AnalyticsPanel = () => {
                         ))}
                     </div>
                 </motion.div>
-                {!isAdvanced && !isLocked && (
+                {!isPremium && (
                     <PremiumOverlay 
                         title="Actionable Smart Insights" 
                         message="Get data-driven suggestions to improve service efficiency and increase revenue. Available on Enterprise." 

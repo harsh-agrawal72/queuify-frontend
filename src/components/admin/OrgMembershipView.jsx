@@ -38,7 +38,7 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
         
         // 3. Operational Features
         features.has_slot_copy ? { text: t('setup.slot_copy') } : null,
-        features.analytics !== 'locked' ? { text: features.analytics === 'advanced' ? t('setup.advance_analytics') : t('setup.basic_analytics') } : null,
+        features.analytics !== 'locked' ? { text: (features.analytics === 'standard' || features.analytics === 'premium') ? t('setup.advance_analytics', 'Advance Analytics') : t('setup.basic_analytics') } : null,
         
         // 4. Premium Perks
         features.has_premium_features ? { text: t('setup.premium_features') } : null,
@@ -117,8 +117,8 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
                         </div>
                         <span className={clsx(
                             "text-sm font-bold leading-tight",
-                            feature.isMain ? "text-gray-900" : isPremium ? "text-gray-100" : "text-gray-600",
-                            feature.isHighlight && "text-indigo-600 font-extrabold"
+                            isPremium ? "text-white" : feature.isMain ? "text-gray-900" : "text-gray-600",
+                            feature.isHighlight && "text-indigo-600 font-extrabold text-xs"
                         )}>
                             {feature.text}
                         </span>
@@ -224,7 +224,7 @@ const OrgMembershipView = () => {
         setIsCheckoutOpen(true);
     };
 
-    const handleActualPurchase = async (planId, planName, couponCode, isFree) => {
+    const handleActualPurchase = async (planId, planName, couponCode, isFree, duration = 1) => {
         setProcessingId(planId);
         setIsCheckoutOpen(false); // Close checkout before payment trigger
         const loadingToast = toast.loading(`${isFree ? 'Claiming' : 'Initiating upgrade to'} ${planName}...`);
@@ -232,7 +232,7 @@ const OrgMembershipView = () => {
         try {
             if (isFree) {
                 // 100% Discount logic
-                await apiService.claimFreePlan(planId, couponCode);
+                await apiService.claimFreePlan(planId, couponCode, duration);
                 toast.success(`Plan activated successfully!`, { id: loadingToast });
                 await refreshUser();
                 window.location.reload();
@@ -245,12 +245,12 @@ const OrgMembershipView = () => {
                 return;
             }
 
-            // 1. Create Order with Optional Coupon
-            const { data: orderData } = await apiService.createPlanPaymentOrder(planId, couponCode);
+            // 1. Create Order with Optional Coupon & Duration
+            const { data: orderData } = await apiService.createPlanPaymentOrder(planId, couponCode, duration);
 
             // Handle if backend says it's free (backup check)
             if (orderData.isFree) {
-                await apiService.claimFreePlan(planId, couponCode);
+                await apiService.claimFreePlan(planId, couponCode, duration);
                 toast.success(`Plan activated successfully!`, { id: loadingToast });
                 await refreshUser();
                 window.location.reload();
@@ -272,7 +272,8 @@ const OrgMembershipView = () => {
                             planId,
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
+                            razorpay_signature: response.razorpay_signature,
+                            duration // Pass duration for backend verification fallback
                         });
                         toast.success(`Organization upgraded to ${planName}!`, { id: loadingToast });
                         await refreshUser();

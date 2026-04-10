@@ -121,10 +121,10 @@ const apiService = {
     // Membership Plans
     getPlans: (params) => api.get('/plans', { params }),
     assignUserPlan: (planId) => api.post('/plans/assign', { planId }),
-    createPlanPaymentOrder: (planId, couponCode) => api.post('/payments/create-plan-order', { planId, couponCode }),
+    createPlanPaymentOrder: (planId, couponCode, duration = 1) => api.post('/payments/create-plan-order', { planId, couponCode, duration }),
     verifyPlanPayment: (data) => api.post('/payments/verify-plan-payment', data),
-    validateCoupon: (code, planId) => api.post('/payments/validate-coupon', { code, planId }),
-    claimFreePlan: (planId, couponCode) => api.post('/payments/claim-free-plan', { planId, couponCode }),
+    validateCoupon: (code, planId, duration = 1) => api.post('/payments/validate-coupon', { code, planId, duration }),
+    claimFreePlan: (planId, couponCode, duration = 1) => api.post('/payments/claim-free-plan', { planId, couponCode, duration }),
     markAsOnboarded: () => api.post('/admin/onboard'),
     getMembershipStats: () => api.get('/admin/membership-stats'),
 };

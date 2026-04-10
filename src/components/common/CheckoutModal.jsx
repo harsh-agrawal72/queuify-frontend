@@ -11,10 +11,23 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
     const [isValidating, setIsValidating] = useState(false);
     const [couponData, setCouponData] = useState(null);
     const [error, setError] = useState('');
+    const [duration, setDuration] = useState(1);
 
-    const basePrice = plan?.price_monthly || 0;
-    const discount = couponData ? couponData.discountAmount : 0;
-    const discountedBase = Math.max(0, basePrice - discount);
+    const DURATIONS = [
+        { label: '1 Month', months: 1, discount: 0 },
+        { label: '3 Months', months: 3, discount: 0.05 },
+        { label: '6 Months', months: 6, discount: 0.10 },
+        { label: '1 Year', months: 12, discount: 0.20 },
+    ];
+
+    const pricePerMonth = plan?.price_monthly || 0;
+    const currentDuration = DURATIONS.find(d => d.months === duration);
+    const baseAggregate = pricePerMonth * duration;
+    const multiMonthDiscount = parseFloat((baseAggregate * (currentDuration?.discount || 0)).toFixed(2));
+    const discountedSubtotal = baseAggregate - multiMonthDiscount;
+    
+    const couponDiscount = couponData ? couponData.discountAmount : 0;
+    const discountedBase = Math.max(0, discountedSubtotal - couponDiscount);
     const gstAmount = parseFloat((discountedBase * 0.18).toFixed(2));
     const totalPayable = parseFloat((discountedBase + gstAmount).toFixed(2));
 
@@ -23,7 +36,8 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
         setIsValidating(true);
         setError('');
         try {
-            const res = await apiService.validateCoupon(couponCode, plan.id);
+            // Validate coupon against the discounted subtotal
+            const res = await apiService.validateCoupon(couponCode, plan.id, duration);
             setCouponData(res.data);
             toast.success("Coupon applied successfully!");
         } catch (err) {
@@ -78,8 +92,43 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
                             <p className="text-lg font-black">{plan.name} Membership</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Base Price</p>
-                            <p className="text-lg font-black">₹{basePrice}</p>
+                            <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Price / Month</p>
+                            <p className="text-lg font-black">₹{pricePerMonth}</p>
+                        </div>
+                    </div>
+
+                    {/* Duration Selection */}
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Select Duration</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {DURATIONS.map((d) => (
+                                <button
+                                    key={d.months}
+                                    onClick={() => {
+                                        setDuration(d.months);
+                                        setCouponData(null); // Reset coupon when duration changes
+                                        setCouponCode('');
+                                    }}
+                                    className={clsx(
+                                        "relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1",
+                                        duration === d.months 
+                                            ? "border-indigo-600 bg-indigo-50" 
+                                            : "border-slate-100 bg-slate-50 hover:border-slate-200"
+                                    )}
+                                >
+                                    <span className="text-xs font-black">{d.label}</span>
+                                    {d.discount > 0 && (
+                                        <span className="text-[8px] font-bold uppercase text-emerald-600">
+                                            Save {(d.discount * 100)}%
+                                        </span>
+                                    )}
+                                    {duration === d.months && (
+                                        <div className="absolute -top-2 -right-2 bg-indigo-600 rounded-full p-1 shadow-sm">
+                                            <Check className="h-2 w-2 text-white stroke-[4px]" />
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -139,13 +188,19 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
                     {/* Price Breakdown */}
                     <div className="bg-slate-50 rounded-[2rem] p-6 space-y-3">
                         <div className="flex justify-between text-sm font-bold text-slate-500">
-                            <span>Subtotal</span>
-                            <span>₹{basePrice}</span>
+                            <span>Base Subtotal ({duration} {duration === 1 ? 'Month' : 'Months'})</span>
+                            <span>₹{baseAggregate}</span>
                         </div>
-                        {discount > 0 && (
+                        {multiMonthDiscount > 0 && (
                             <div className="flex justify-between text-sm font-bold text-emerald-600">
-                                <span>Discount</span>
-                                <span>-₹{discount}</span>
+                                <span>Multi-Month Savings</span>
+                                <span>-₹{multiMonthDiscount}</span>
+                            </div>
+                        )}
+                        {couponDiscount > 0 && (
+                            <div className="flex justify-between text-sm font-bold text-emerald-600">
+                                <span>Coupon Discount</span>
+                                <span>-₹{couponDiscount}</span>
                             </div>
                         )}
                         <div className="flex justify-between text-sm font-bold text-slate-500">
@@ -160,7 +215,7 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
 
                     {/* Action */}
                     <button 
-                        onClick={() => onPay(plan.id, plan.name, couponCode, totalPayable === 0)}
+                        onClick={() => onPay(plan.id, plan.name, couponCode, totalPayable === 0, duration)}
                         className="w-full py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:bg-slate-900 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
                         {totalPayable === 0 ? 'Claim Free Plan' : 'Proceed to Payment'}
