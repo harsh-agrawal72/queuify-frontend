@@ -10,21 +10,30 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         const token = localStorage.getItem('token');
+        
         if (storedUser && token) {
             try {
                 setUser(JSON.parse(storedUser));
-                // Wait for background refresh to at least finish (or timeout) to ensure correct state
+                
+                // Robust initialization: the api interceptor will handle actual retries
                 api.get('/user/profile')
                     .then(res => {
                         localStorage.setItem('user', JSON.stringify(res.data));
                         setUser(res.data);
                     })
-                    .catch(err => console.warn('Background profile refresh failed:', err.message))
-                    .finally(() => setLoading(false));
-                return; // Prevent immediate setLoading(false)
+                    .catch(err => {
+                        console.warn('Initial profile refresh failed:', err.message);
+                        // If it failed with 401, interceptor already handled it
+                        // For other errors, we stay with the stored user for now
+                    })
+                    .finally(() => {
+                        setLoading(false);
+                    });
+                return;
             } catch (e) {
                 console.error('Failed to parse user from local storage:', e);
                 localStorage.removeItem('user');
+                localStorage.removeItem('token');
             }
         }
         setLoading(false);

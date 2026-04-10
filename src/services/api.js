@@ -12,7 +12,7 @@ console.log('API URL Configuration:', API_URL);
 
 const api = axios.create({
     baseURL: API_URL,
-    timeout: 30000, // 30 seconds timeout
+    timeout: 60000, // 60 seconds timeout (increased for Render cold starts)
     headers: {
         'Content-Type': 'application/json',
     },
@@ -32,12 +32,44 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response && error.response.status === 401) {
+    async (error) => {
+        const { config, response } = error;
+        
+        // 1. Handle 401 Unauthorized (Auth expiration)
+        if (response && response.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/login';
+            // Use replace instead of href to prevent loop on back button
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
+            return Promise.reject(error);
         }
+
+        // 2. Handle Transient Errors with Retry (Timeout, Network, or 502/503/504)
+        // Only retry if it hasn't been retried already
+        if (!config || config._retry) {
+            return Promise.reject(error);
+        }
+
+        const isNetworkError = !response && error.code !== 'ERR_CANCELED';
+        const isTimeout = error.code === 'ECONNABORTED';
+        const isRetryableStatus = response && [502, 503, 504].includes(response.status);
+
+        if (isNetworkError || isTimeout || isRetryableStatus) {
+            config._retryCount = (config._retryCount || 0) + 1;
+            
+            if (config._retryCount <= 2) { // Max 2 retries
+                console.warn(`Transient API error (${error.code || response?.status}). Retrying attempt ${config._retryCount}...`);
+                
+                // Exponential backoff: 2s, 4s
+                const delay = 2000 * config._retryCount;
+                await new Promise(resolve => setTimeout(resolve, delay));
+                
+                return api(config);
+            }
+        }
+
         return Promise.reject(error);
     }
 );

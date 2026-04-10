@@ -87,17 +87,10 @@ RecentAppointmentItem.displayName = 'RecentAppointmentItem';
 
 export default function UserDashboard() {
     const { t } = useTranslation();
-    const [stats, setStats] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [recentAppointments, setRecentAppointments] = useState([]);
-    const [allAppointments, setAllAppointments] = useState([]);
-    const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'payments', 'notifications', 'plans'
-    const { user } = useAuth();
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-
+    const [error, setError] = useState(null);
     const fetchData = async () => {
         setLoading(true);
+        setError(null);
         try {
             const [statsRes, appointmentsRes] = await Promise.all([
                 api.get('/user/stats'),
@@ -107,7 +100,8 @@ export default function UserDashboard() {
             setAllAppointments(appointmentsRes.data);
             setRecentAppointments(appointmentsRes.data.slice(0, 5));
         } catch (err) {
-            console.error(err);
+            console.error('Failed to fetch dashboard data:', err);
+            setError(t('dashboard.fetch_error', 'Could not load dashboard data. The server might be warming up.'));
         } finally {
             setLoading(false);
         }
@@ -243,6 +237,27 @@ export default function UserDashboard() {
             {/* Tab Content */}
             {activeTab === 'overview' ? (
                 <div className="space-y-8 animate-in fade-in duration-500">
+                    {/* Error State */}
+                    {error && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: -10 }} 
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-amber-50 border border-amber-100 rounded-2xl p-6 flex flex-col items-center gap-4 text-center shadow-sm"
+                        >
+                            <Activity className="h-10 w-10 text-amber-500 animate-pulse" />
+                            <div>
+                                <h3 className="text-lg font-bold text-amber-900">{error}</h3>
+                                <p className="text-sm text-amber-600 mt-1">{t('dashboard.try_again_hint', 'This usually happens if the server is waking up. Please wait 10-15 seconds.')}</p>
+                            </div>
+                            <button 
+                                onClick={fetchData} 
+                                className="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-amber-700 transition-all active:scale-95 shadow-lg shadow-amber-200"
+                            >
+                                {t('common.retry', 'Retry Now')}
+                            </button>
+                        </motion.div>
+                    )}
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <StatCard
