@@ -252,6 +252,19 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 }));
             }
 
+            // ── MOCK ORDER DETECTION ──
+            // When Razorpay API is unavailable (test mode fallback), the backend
+            // returns an order_mock_ ID. In that case we auto-complete the payment.
+            if (order.id && order.id.startsWith('order_mock_')) {
+                console.warn('[Payment] Mock order detected. Auto-completing in test mode.');
+                await handlePaymentComplete({
+                    razorpay_order_id: order.id,
+                    razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 10)}`,
+                    razorpay_signature: 'mock_signature'
+                });
+                return;
+            }
+
             const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
             if (!rzpKey) {
                 console.error('[Payment] Razorpay Key ID is missing!');
