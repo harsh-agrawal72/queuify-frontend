@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import clsx from 'clsx';
 import { 
     Check, ArrowRight, Loader2, Shield, X
 } from 'lucide-react';

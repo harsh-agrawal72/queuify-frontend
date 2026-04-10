@@ -1101,7 +1101,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ Charts Row 2: Utilization Trend ═══ */}
-            <div className={`relative ${!isAdvanced ? 'min-h-[350px] overflow-hidden' : ''}`}>
+            <div className={`relative ${!isStandardPlus ? 'min-h-[350px] overflow-hidden' : ''}`}>
                 <div className="grid grid-cols-1">
                     {/* Utilization Trend — Area Chart */}
                     <motion.div
