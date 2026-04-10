@@ -337,9 +337,9 @@ const AnalyticsPanel = () => {
     const [resources, setResources] = useState([]);
     const [wallet, setWallet] = useState(null);
     const [orgDetails, setOrgDetails] = useState(null);
-    const [planFeatures, setPlanFeatures] = useState(user?.plan_features || { analytics: 'locked' });
-    const analyticsLevel = planFeatures?.analytics || 'locked';
-    const isLocked = analyticsLevel === 'locked';
+    const [planFeatures, setPlanFeatures] = useState(user?.plan_features || { analytics: 'basic' });
+    const analyticsLevel = planFeatures?.analytics || 'basic';
+    const isLocked = analyticsLevel === 'locked'; // Legacy / Safety
     const isBasic = analyticsLevel === 'basic';
     const isStandardPlus = ['standard', 'premium'].includes(analyticsLevel);
     const isPremium = analyticsLevel === 'premium';
@@ -941,7 +941,7 @@ const AnalyticsPanel = () => {
                 )}
             </AnimatePresence>
 
-            <div className={`relative ${isLocked ? 'min-h-[200px] overflow-hidden' : ''}`}>
+            <div className="relative">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {kpiCards.map((card, idx) => (
                         <motion.div
@@ -991,13 +991,6 @@ const AnalyticsPanel = () => {
                         </motion.div>
                     ))}
                 </div>
-                {isLocked && (
-                    <PremiumOverlay 
-                        title={t('analytics.locked_title', 'Analytics Locked')} 
-                        message="Unlock real-time tracking of revenue, bookings, and resource utilization on Starter and Professional plans." 
-                        navigate={navigate} 
-                    />
-                )}
             </div>
 
             <div>
@@ -1005,7 +998,7 @@ const AnalyticsPanel = () => {
             </div>
 
             {/* ═══ Charts Row 1: Trend + Status Pie ═══ */}
-            <div className={`relative ${isLocked ? 'min-h-[400px] overflow-hidden' : ''}`}>
+            <div className="relative">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Booking Trend — Area Chart */}
                     <motion.div
@@ -1091,13 +1084,6 @@ const AnalyticsPanel = () => {
                         )}
                     </motion.div>
                 </div>
-                {isLocked && (
-                    <PremiumOverlay 
-                        title={t('analytics.traffic_locked', 'Traffic Data Locked')} 
-                        message="Visualize booking trends and status breakdowns on Starter and Professional plans." 
-                        navigate={navigate} 
-                    />
-                )}
             </div>
 
             {/* ═══ Charts Row 2: Utilization Trend ═══ */}
