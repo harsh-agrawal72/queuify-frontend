@@ -125,6 +125,7 @@ const apiService = {
     verifyPlanPayment: (data) => api.post('/payments/verify-plan-payment', data),
     validateCoupon: (code, planId, duration = 1) => api.post('/payments/validate-coupon', { code, planId, duration }),
     claimFreePlan: (planId, couponCode, duration = 1) => api.post('/payments/claim-free-plan', { planId, couponCode, duration }),
+    claimRestoration: (planId) => api.post('/payments/claim-restoration', { planId }),
     markAsOnboarded: () => api.post('/admin/onboard'),
     getMembershipStats: () => api.get('/admin/membership-stats'),
 };

@@ -14,7 +14,12 @@ import { AnimatePresence } from 'framer-motion';
 import CheckoutModal from '../common/CheckoutModal';
 
 
-const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) => {
+const PlanCard = ({ plan, isCurrent, user, isDowngrade, onUpgrade, onRestore, processingId, t }) => {
+    const canRestore = !isCurrent && 
+                      user?.last_paid_plan_id === plan.id && 
+                      user?.last_paid_plan_expiry && 
+                      new Date(user.last_paid_plan_expiry) > new Date();
+
     const isPremium = plan.name === 'Enterprise';
     const isStandard = plan.name === 'Professional';
     const isStarter = plan.name === 'Starter';
@@ -127,9 +132,14 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
             </div>
 
             <button
-                onClick={() => !isCurrent && onUpgrade(plan.id, plan.name)}
-                disabled={isCurrent || isProcessing}
-                className={clsx(
+                onClick={() => {
+                    if (isCurrent) return;
+                    if (canRestore) {
+                        onRestore(plan.id, plan.name);
+                    } else {
+                        onUpgrade(plan.id, plan.name);
+                    }
+                }}
                     "w-full py-4 rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2",
                     isCurrent
                         ? "bg-emerald-500/10 text-emerald-500 cursor-default"
@@ -145,6 +155,8 @@ const PlanCard = ({ plan, isCurrent, isDowngrade, onUpgrade, processingId, t }) 
                     <Loader2 className="h-4 w-4 animate-spin" />
                 ) : isCurrent ? (
                     <span className="flex items-center gap-2"><Check className="h-4 w-4" /> {t('user_subscription.current_plan', 'Current Plan')}</span>
+                ) : canRestore ? (
+                    'Switch Back (Free)'
                 ) : isDowngrade ? (
                     'Downgrade'
                 ) : (
@@ -300,8 +312,20 @@ const OrgMembershipView = () => {
                 setProcessingId(null);
             });
             rzp.open();
+        }
+    };
+
+    const handleRestoreSubscription = async (planId, planName) => {
+        setProcessingId(planId);
+        const loadingToast = toast.loading(`Restoring your ${planName} subscription...`);
+        try {
+            await apiService.claimRestoration(planId);
+            toast.success(`${planName} restored successfully!`, { id: loadingToast });
+            await refreshUser();
+            window.location.reload();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Something went wrong", { id: loadingToast });
+            toast.error(error.response?.data?.message || "Restoration failed", { id: loadingToast });
+        } finally {
             setProcessingId(null);
         }
     };
@@ -502,8 +526,10 @@ const OrgMembershipView = () => {
                         key={plan.id}
                         plan={plan}
                         isCurrent={user?.org_plan_id === plan.id || (!user?.org_plan_id && plan.name === 'Free')}
+                        user={user}
                         isDowngrade={parseFloat(plan.price_monthly) < parseFloat(currentPlan?.price_monthly || 0)}
                         onUpgrade={handleUpgradeClick}
+                        onRestore={handleRestoreSubscription}
                         processingId={processingId}
                         t={t}
                     />

@@ -128,9 +128,20 @@ const UserSubscriptionView = () => {
                 setProcessingId(null);
             });
             rzp.open();
+        }
+    };
+
+    const handleRestoreSubscription = async (planId, planName) => {
+        setProcessingId(planId);
+        const loadingToast = toast.loading(`Restoring your ${planName} subscription...`);
+        try {
+            await apiService.claimRestoration(planId);
+            toast.success(`${planName} restored successfully!`, { id: loadingToast });
+            await refreshUser();
+            window.location.reload();
         } catch (error) {
-            console.error('Purchase failed:', error);
-            toast.error(error.response?.data?.message || 'Action failed', { id: loadingToast });
+            toast.error(error.response?.data?.message || "Restoration failed", { id: loadingToast });
+        } finally {
             setProcessingId(null);
         }
     };
@@ -175,6 +186,11 @@ const UserSubscriptionView = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                 {plans.map((plan) => {
                     const isCurrent = user?.plan_id === plan.id;
+                    const canRestore = !isCurrent && 
+                                      user?.last_paid_plan_id === plan.id && 
+                                      user?.last_paid_plan_expiry && 
+                                      new Date(user.last_paid_plan_expiry) > new Date();
+                    
                     const isPremium = plan.name.toLowerCase() === 'premium';
                     const isStandard = plan.name.toLowerCase() === 'standard';
                     const features = plan.features || {};
@@ -261,7 +277,14 @@ const UserSubscriptionView = () => {
                             </ul>
 
                             <button
-                                onClick={() => !isCurrent && handleSwitchPlan(plan.id, plan.name, plan.price_monthly)}
+                                onClick={() => {
+                                    if (isCurrent) return;
+                                    if (canRestore) {
+                                        handleRestoreSubscription(plan.id, plan.name);
+                                    } else {
+                                        handleSwitchPlan(plan.id, plan.name, plan.price_monthly);
+                                    }
+                                }}
                                 disabled={isCurrent || processingId === plan.id}
                                 className={clsx(
                                     "w-full py-4 rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2",
@@ -276,6 +299,8 @@ const UserSubscriptionView = () => {
                                     <>
                                         <Check className="h-5 w-5" /> {t('user_subscription.current_plan')}
                                     </>
+                                ) : canRestore ? (
+                                    'Switch Back (Free)'
                                 ) : (
                                     plan.name === 'Free' ? t('user_subscription.downgrade') : t('user_subscription.upgrade_now')
                                 )}

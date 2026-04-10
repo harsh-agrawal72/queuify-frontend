@@ -279,8 +279,12 @@ const SlotManagement = () => {
             let diffMins = (end - start) / 60000;
             if (diffMins < 0) diffMins += 24 * 60; // Handle overnight slots
 
-            const capacity = Math.floor(diffMins / resourcePerformance.avg_service_time);
-            return capacity > 0 ? capacity : 1;
+            // Factor in concurrent capacity: (Duration / Avg Time) * Capacity
+            const concurrent_capacity = resourcePerformance.concurrent_capacity || selectedModalResource?.concurrent_capacity || 1;
+            const sessions = Math.floor(diffMins / resourcePerformance.avg_service_time);
+            const totalCapacity = (sessions > 0 ? sessions : 1) * concurrent_capacity;
+            
+            return totalCapacity;
         } catch (e) {
             return 1;
         }
@@ -578,7 +582,11 @@ const SlotManagement = () => {
                                         {filteredModalResources.map(r => (
                                             <button
                                                 key={r.id}
-                                                onClick={() => { setSelectedModalResource(r); setModalStep(2); }}
+                                                onClick={() => { 
+                                                    setSelectedModalResource(r); 
+                                                    setSlotCapacity(r.concurrent_capacity || 1);
+                                                    setModalStep(2); 
+                                                }}
                                                 className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedModalResource?.id === r.id ? 'border-indigo-600 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200'}`}
                                             >
                                                 <div className="flex items-center gap-3">
