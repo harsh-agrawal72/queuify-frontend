@@ -140,6 +140,7 @@ const PlanCard = ({ plan, isCurrent, user, isDowngrade, onUpgrade, onRestore, pr
                         onUpgrade(plan.id, plan.name);
                     }
                 }}
+                className={clsx(
                     "w-full py-4 rounded-2xl font-extrabold transition-all flex items-center justify-center gap-2",
                     isCurrent
                         ? "bg-emerald-500/10 text-emerald-500 cursor-default"
