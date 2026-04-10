@@ -87,7 +87,16 @@ RecentAppointmentItem.displayName = 'RecentAppointmentItem';
 
 export default function UserDashboard() {
     const { t } = useTranslation();
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [recentAppointments, setRecentAppointments] = useState([]);
+    const [allAppointments, setAllAppointments] = useState([]);
+    const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'payments', 'notifications', 'plans'
+    const { user } = useAuth();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [error, setError] = useState(null);
+
     const fetchData = async () => {
         setLoading(true);
         setError(null);
