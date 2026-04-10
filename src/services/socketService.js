@@ -9,9 +9,10 @@ export const getSocket = () => {
     if (!socketInstance) {
         console.log('Initializing global socket connection to:', SOCKET_URL);
         socketInstance = io(SOCKET_URL, {
-            transports: ['websocket', 'polling'], // Faster connection on Render
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
+            transports: ['websocket', 'polling'], 
+            reconnectionAttempts: 50, // High number to survive cold starts
+            reconnectionDelay: 2000, 
+            timeout: 20000,
         });
 
         socketInstance.on('connect', () => {
