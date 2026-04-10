@@ -227,8 +227,34 @@ const QuickStartGuide = ({ type = 'Other', onDismiss }) => {
 };
 
 // ─── AI Intelligence Pulse ───
-const PredictiveInsightsSection = ({ insights }) => {
+const PredictiveInsightsSection = ({ insights, loading = false }) => {
     const { t } = useTranslation();
+    
+    // Pulse loading skeleton for AI sections
+    if (loading || (!insights && !loading)) {
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 mt-6 animate-pulse">
+                <div className="md:col-span-2 bg-slate-50 rounded-[2rem] p-8 border border-slate-100 h-[320px]">
+                    <div className="h-4 w-48 bg-slate-200 rounded-full mb-8"></div>
+                    <div className="space-y-6">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="flex justify-between items-center">
+                                <div className="space-y-2"><div className="h-3 w-32 bg-slate-200 rounded-full"></div><div className="h-2 w-20 bg-slate-100 rounded-full"></div></div>
+                                <div className="h-3 w-16 bg-slate-200 rounded-full"></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="bg-slate-800 rounded-[2rem] p-8 h-[320px]">
+                    <div className="h-4 w-32 bg-white/10 rounded-full mb-8"></div>
+                    <div className="space-y-4">
+                        {[1, 2, 3].map(i => <div key={i} className="h-10 w-full bg-white/5 rounded-xl"></div>)}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
     if (!insights) return null;
 
     return (
@@ -757,9 +783,7 @@ const AnalyticsPanel = () => {
                 )}
             </AnimatePresence>
 
-            {isPremium ? (
-                <PredictiveInsightsSection insights={predictiveInsights} />
-            ) : isBasic ? (
+            {isBasic && (
                 <div className="bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8 mb-8 flex flex-col items-center text-center gap-4">
                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                         <Lock className="h-8 w-8 text-indigo-400" />
@@ -778,7 +802,7 @@ const AnalyticsPanel = () => {
                         {t('common.upgrade_now', 'Upgrade Now')}
                     </button>
                 </div>
-            ) : null}
+            )}
 
             {/* Customer Insight - Enterprise Exclusive Section */}
             {planFeatures.has_customer_insight && (
@@ -993,11 +1017,6 @@ const AnalyticsPanel = () => {
                 </div>
             </div>
 
-            <div>
-                {isPremium && <PredictiveInsightsSection insights={predictiveInsights} />}
-            </div>
-
-            {/* ═══ Charts Row 1: Trend + Status Pie ═══ */}
             <div className="relative">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Booking Trend — Area Chart */}
@@ -1131,6 +1150,11 @@ const AnalyticsPanel = () => {
                     />
                 )}
             </div>
+            
+            {/* ═══ AI Predictive Section (Above Heatmap) ═══ */}
+            {isPremium && (
+                <PredictiveInsightsSection insights={predictiveInsights} loading={loading} />
+            )}
 
             {/* ═══ Peak Hours Heatmap ═══ */}
             <div className={`relative ${!isStandardPlus ? 'min-h-[400px] overflow-hidden' : ''}`}>
@@ -1203,9 +1227,15 @@ const AnalyticsPanel = () => {
                         <Lightbulb className="h-5 w-5 text-yellow-500" /> {t('analytics.smart_insights', 'Smart Insights')}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {stats.insights?.map((insight, i) => (
-                            <InsightCard key={i} insight={insight} />
-                        ))}
+                        {stats.insights?.length > 0 ? (
+                            stats.insights.map((insight, i) => (
+                                <InsightCard key={i} insight={insight} />
+                            ))
+                        ) : (
+                            <div className="col-span-full py-10 text-center text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                                {t('analytics.collecting_insights', 'Collecting enough data for smart insights...')}
+                            </div>
+                        )}
                     </div>
                 </motion.div>
                 {!isPremium && (
