@@ -61,7 +61,7 @@ const PlanCard = ({ plan, isCurrent, user, isDowngrade, onUpgrade, onRestore, pr
     };
 
     const getCardStyles = () => {
-        if (isPremium) return "bg-slate-900 text-white shadow-2xl shadow-amber-200/20 scale-105 z-10 border-2 border-amber-400/50";
+        if (isPremium) return "bg-slate-900 text-white shadow-2xl shadow-amber-200/20 lg:scale-105 z-10 border-2 border-amber-400/50";
         if (isStandard) return "bg-white border-2 border-indigo-600 shadow-2xl shadow-indigo-100 z-0";
         if (isStarter) return "bg-white border border-slate-200 shadow-xl shadow-slate-50";
         return "bg-gray-50/50 border border-dashed border-gray-200 opacity-90";
@@ -72,9 +72,9 @@ const PlanCard = ({ plan, isCurrent, user, isDowngrade, onUpgrade, onRestore, pr
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            whileHover={{ y: -10 }}
+            whileHover={{ y: -5 }}
             className={clsx(
-                "relative flex flex-col p-8 rounded-[2.5rem] transition-all duration-500",
+                "relative flex flex-col p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] transition-all duration-500",
                 getCardStyles()
             )}
         >
@@ -353,26 +353,26 @@ const OrgMembershipView = () => {
             >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Status Banner */}
-                    <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-100">
-                        <div className="absolute top-0 right-0 p-12 opacity-10">
-                            <Crown className="h-40 w-40" />
+                    <div className="lg:col-span-2 bg-slate-900 rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-100">
+                        <div className="absolute top-0 right-0 p-8 sm:p-12 opacity-10">
+                            <Crown className="h-32 w-32 sm:h-40 sm:w-40" />
                         </div>
 
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-indigo-500 rounded-xl">
-                                    <Sparkles className="h-5 w-5 text-white" />
+                                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                                 </div>
                                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">
                                     {t('membership.active_plan')}
                                 </span>
                             </div>
 
-                            <div className="flex flex-col md:flex-row items-baseline gap-4 mb-4">
-                                <h2 className="text-5xl font-black tracking-tighter">{currentPlanName}</h2>
+                            <div className="flex flex-col sm:flex-row items-baseline gap-3 sm:gap-4 mb-4">
+                                <h2 className="text-4xl sm:text-5xl font-black tracking-tighter">{currentPlanName}</h2>
                                 {isSubscribed && (
                                     <span className={clsx(
-                                        "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest",
+                                        "px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest",
                                         isExpired ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
                                     )}>
                                         {isExpired ? 'Expired' : 'Active'}
@@ -381,15 +381,15 @@ const OrgMembershipView = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/10">
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl sm:rounded-3xl border border-white/10">
                                     <div className="p-3 bg-indigo-500/20 rounded-2xl">
-                                        <Clock className="h-6 w-6 text-indigo-400" />
+                                        <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-400" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">
                                             {t('membership.valid_until')}
                                         </p>
-                                        <p className="text-lg font-bold">
+                                        <p className="text-base sm:text-lg font-bold">
                                             {expiryDate ? format(expiryDate, 'MMM dd, yyyy') : 'No Expiry'}
                                         </p>
                                     </div>

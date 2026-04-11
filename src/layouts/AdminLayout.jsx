@@ -508,7 +508,7 @@ const AdminLayout = () => {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 p-3 md:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
+                <main className="flex-1 px-3 py-6 md:p-8 w-full min-w-0 max-w-full overflow-x-hidden">
                     {setupIncomplete && (
                         <div className="mb-6 bg-amber-50 border border-amber-100 p-5 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden group">
                            {/* BG Decoration */}

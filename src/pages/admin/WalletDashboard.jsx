@@ -218,14 +218,14 @@ const WalletDashboard = () => {
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-12">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4 sm:px-0">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('admin.wallet.title', 'Financial Hub')}</h1>
-                    <p className="text-gray-500 mt-1">{t('admin.wallet.subtitle', 'Manage your earnings, escrow funds, and payouts.')}</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">{t('admin.wallet.title', 'Financial Hub')}</h1>
+                    <p className="text-sm text-gray-500 mt-1">{t('admin.wallet.subtitle', 'Manage your earnings, escrow funds, and payouts.')}</p>
                 </div>
                 <button 
                     onClick={() => setIsPayoutModalOpen(true)}
-                    className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-6 py-3.5 sm:py-3 rounded-2xl sm:rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 text-sm"
                 >
                     <ArrowUpRight className="h-5 w-5" />
                     {t('admin.wallet.request_payout', 'Request Payout')}
@@ -233,7 +233,7 @@ const WalletDashboard = () => {
             </div>
 
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-4 sm:px-0">
                 <StatCard 
                     title={t('admin.wallet.total_revenue', 'Total Revenue')} 
                     amount={wallet?.total_earned || 0} 
@@ -261,7 +261,7 @@ const WalletDashboard = () => {
             </div>
 
             {/* Layout Split */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-0">
                 {/* Transaction History */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -285,26 +285,26 @@ const WalletDashboard = () => {
                         </div>
 
                         {/* Filters Row */}
-                        <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-50 flex flex-wrap gap-4 items-center">
-                            <div className="relative group min-w-[200px]">
+                        <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-50 grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 sm:gap-4 items-center">
+                            <div className="relative group col-span-1 sm:col-span-2 lg:flex-1 lg:min-w-[200px]">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                                 <input 
                                     type="text"
                                     placeholder={t('common.search', 'Search transactions...')}
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    className="pl-9 pr-4 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-full transition-all h-10 bg-white"
+                                    className="pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none w-full transition-all h-11 sm:h-10 bg-white"
                                 />
                             </div>
 
                             {/* Date Filter */}
-                            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 h-10 shadow-sm transition-all focus-within:ring-2 focus-within:ring-indigo-100">
+                            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 h-11 sm:h-10 shadow-sm transition-all focus-within:ring-2 focus-within:ring-indigo-100 col-span-1 sm:col-span-2">
                                 <Calendar className="h-4 w-4 text-gray-400" />
                                 <input 
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="text-xs font-semibold outline-none bg-transparent cursor-pointer text-gray-700"
+                                    className="text-xs font-bold outline-none bg-transparent cursor-pointer text-gray-700 flex-1"
                                     placeholder={t('common.start_date', 'Start Date')}
                                 />
                                 <span className="text-gray-300 font-bold px-1">/</span>
@@ -312,23 +312,14 @@ const WalletDashboard = () => {
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="text-xs font-semibold outline-none bg-transparent cursor-pointer text-gray-700"
+                                    className="text-xs font-bold outline-none bg-transparent cursor-pointer text-gray-700 flex-1"
                                     placeholder={t('common.end_date', 'End Date')}
                                 />
-                                {(startDate || endDate) && (
-                                    <button 
-                                        onClick={() => { setStartDate(''); setEndDate(''); }}
-                                        className="ml-2 p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-rose-500 transition-colors"
-                                        title={t('common.clear_filters', 'Clear Filters')}
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                )}
                             </div>
                             <select 
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value)}
-                                className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
+                                className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-11 sm:h-10"
                             >
                                 <option value="">{t('common.all_types', 'All Types')}</option>
                                 <option value="credit">{t('common.credits', 'Credits')}</option>
@@ -338,7 +329,7 @@ const WalletDashboard = () => {
                             <select 
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-10"
+                                className="px-3 py-2 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none bg-white cursor-pointer h-11 sm:h-10"
                             >
                                 <option value="">{t('common.all_status', 'All Status')}</option>
                                 <option value="pending">{t('status.pending', 'Pending')}</option>

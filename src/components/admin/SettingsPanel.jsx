@@ -253,7 +253,7 @@ const SettingsPanel = () => {
                             </h2>
                             <p className="text-sm text-gray-500">{t('admin.settings.hours.subtitle', "Manage your operating timings.")}</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-8 max-w-lg">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 max-w-lg">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">{t('admin.settings.hours.open', 'Open Time')}</label>
                                 <input
@@ -261,7 +261,7 @@ const SettingsPanel = () => {
                                     name="openTime"
                                     value={formData.openTime}
                                     onChange={handleChange}
-                                    className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all"
+                                    className="w-full p-2.5 sm:p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -336,7 +336,7 @@ const SettingsPanel = () => {
                             <p className="text-sm text-gray-500">{t('admin.payout_settings.subtitle', 'Securely store your account details for faster withdrawals.')}</p>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 flex justify-between">
                                     {t('admin.payout_settings.ifsc', 'IFSC Code')}
@@ -445,26 +445,26 @@ const SettingsPanel = () => {
                             <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                                 <UserPlus className="h-4 w-4 text-indigo-500" /> {t('admin.settings.admins.invite_new', 'Invite New Admin')}
                             </h3>
-                            <div className="flex flex-col md:flex-row gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <input
                                     type="text"
                                     placeholder={t('admin.settings.admins.name_placeholder', 'Name (e.g. John Doe)')}
                                     value={inviteName}
                                     onChange={(e) => setInviteName(e.target.value)}
-                                    className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none"
+                                    className="flex-1 p-2.5 sm:p-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                                 />
                                 <input
                                     type="email"
                                     placeholder={t('admin.settings.admins.email_placeholder', 'Email Address')}
                                     value={inviteEmail}
                                     onChange={(e) => setInviteEmail(e.target.value)}
-                                    className="flex-1 p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none"
+                                    className="flex-1 p-2.5 sm:p-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                                 />
                                 <button
                                     type="button"
                                     onClick={handleInviteAdmin}
                                     disabled={inviting || !inviteEmail || !inviteName || admins.length >= (user?.plan_features?.max_admins || 1)}
-                                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                                    className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                                 >
                                     {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('admin.settings.admins.send_invite', 'Send Invite')}
                                 </button>

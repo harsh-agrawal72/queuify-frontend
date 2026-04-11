@@ -195,7 +195,7 @@ const QuickStartGuide = ({ type = 'Other', onDismiss }) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95, height: 0 }}
-            className="bg-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200 relative overflow-hidden mb-8"
+            className="bg-indigo-600 rounded-2xl md:rounded-3xl p-5 md:p-8 text-white shadow-xl shadow-indigo-200 relative overflow-hidden mb-8"
         >
             <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                 <Zap className="w-48 h-48" />
@@ -258,9 +258,9 @@ const PredictiveInsightsSection = ({ insights, loading = false }) => {
     if (!insights) return null;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10 mt-6">
             {/* Efficiency Rankings */}
-            <div className="md:col-span-2 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
+            <div className="lg:col-span-2 bg-white rounded-2xl md:rounded-[2rem] p-5 md:p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 uppercase tracking-tight">
@@ -271,7 +271,7 @@ const PredictiveInsightsSection = ({ insights, loading = false }) => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-6">
                     {insights.resourceEfficiency?.slice(0, 6).map((r, i) => (
                         <div key={i} className="group/item">
                             <div className="flex items-center justify-between mb-2">
@@ -306,7 +306,7 @@ const PredictiveInsightsSection = ({ insights, loading = false }) => {
             </div>
 
             {/* AI Traffic Hotspots */}
-            <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+            <div className="bg-slate-900 rounded-2xl md:rounded-[2rem] p-5 md:p-8 text-white shadow-xl shadow-slate-200/40 relative overflow-hidden group">
                  <div className="absolute top-0 right-0 p-6 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-700">
                     <TrendingUpIcon className="w-32 h-32" />
                 </div>
@@ -809,7 +809,7 @@ const AnalyticsPanel = () => {
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden group mb-8"
+                    className="bg-slate-900 rounded-2xl md:rounded-[3rem] p-6 md:p-10 text-white relative overflow-hidden group mb-8"
                 >
                     <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 transition-transform duration-1000 group-hover:rotate-45">
                         <Users className="w-64 h-64" />
@@ -822,8 +822,8 @@ const AnalyticsPanel = () => {
                             <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black mb-4">{t('analytics.customer_insight', 'Customer Intelligence Insights')}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
-                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-10">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.loyalty_index', 'Loyalty Index')}</p>
                                 <p className="text-2xl font-black">{stats.loyaltyIndex || 0} / 10</p>
                                 <div className="mt-4 h-1 bg-white/10 rounded-full">
@@ -833,7 +833,7 @@ const AnalyticsPanel = () => {
                                     />
                                 </div>
                             </div>
-                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.retention_rate', 'Retention Rate')}</p>
                                 <p className="text-2xl font-black">{stats.retentionRate || 0}%</p>
                                 <div className="mt-4 h-1 bg-white/10 rounded-full">
@@ -843,7 +843,7 @@ const AnalyticsPanel = () => {
                                     />
                                 </div>
                             </div>
-                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.churn_risk', 'Churn Risk')}</p>
                                 <p className="text-2xl font-black">{t(`common.${(stats.churnRisk || 'Low').toLowerCase()}`, stats.churnRisk || 'Low')}</p>
                                 <div className="mt-4 flex gap-1">
@@ -855,7 +855,7 @@ const AnalyticsPanel = () => {
                                     })}
                                 </div>
                             </div>
-                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.peak_cohort', 'Peak Cohort')}</p>
                                 <p className="text-2xl font-black">{stats.peakCohort || 'All Ages'}</p>
                                 <div className="mt-4 flex items-center gap-1 text-[10px] text-amber-400 font-bold uppercase tracking-widest">
@@ -977,14 +977,14 @@ const AnalyticsPanel = () => {
             </AnimatePresence>
 
             <div className="relative">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                     {kpiCards.map((card, idx) => (
                         <motion.div
                             key={idx}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
-                            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 transition-all group overflow-hidden relative"
+                            className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100 transition-all group overflow-hidden relative"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className={`${card.lightBg} ${card.lightText} p-3 rounded-xl`}>

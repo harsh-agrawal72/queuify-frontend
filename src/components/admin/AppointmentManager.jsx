@@ -329,8 +329,8 @@ const AppointmentManager = () => {
                     <p className="text-gray-500 mt-2">{t('appointment.mgmt_subtitle', 'Manage bookings, track status, and handle payments.')}</p>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-1 shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 w-full lg:w-auto">
+                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-1 shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all h-11 lg:h-auto">
                         <Calendar className="h-4 w-4 text-gray-400" />
                         <input
                             type="date"
@@ -387,7 +387,6 @@ const AppointmentManager = () => {
                         </div>
                     </div>
 
-                    {(search || statusFilter || selectedResourceId || selectedDate) && (
                         <button
                             onClick={() => {
                                 setSearch('');
@@ -395,9 +394,9 @@ const AppointmentManager = () => {
                                 setSelectedResourceId('');
                                 setSelectedDate('');
                             }}
-                            className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all"
+                            className="px-4 py-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all border border-indigo-100 sm:col-span-2 lg:col-span-1 h-11 lg:h-auto"
                         >
-                            {t('common.clear', 'Clear')}
+                            {t('common.clear', 'Clear Filters')}
                         </button>
                     )}
                 </div>
@@ -651,7 +650,7 @@ const AppointmentManager = () => {
                 </div>
 
                 {/* Mobile view cards */}
-                <div className="md:hidden flex-grow px-4 py-6 space-y-4">
+                <div className="md:hidden flex-grow px-3 py-5 space-y-4 bg-gray-50/30">
                     {loading ? (
                         [...Array(3)].map((_, i) => (
                             <div key={i} className="bg-gray-50/50 rounded-2xl p-4 animate-pulse border border-gray-100">

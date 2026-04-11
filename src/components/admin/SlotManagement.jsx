@@ -347,29 +347,21 @@ const SlotManagement = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 tracking-tight">
                         {t('navigation.manage_slots', 'Manage Slots')}
                         <InfoTooltip text={t('admin.slots.resource_centric_hint', 'Slots are now linked to a Resource (Doctor/Staff). A single slot will be bookable across all services assigned to that resource.')} />
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">{t('admin.slots.mgmt_subtitle', 'Create and manage time slots for your resources.')}</p>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
+
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     <button
-                        onClick={() => {
-                            if (!planFeatures.has_slot_copy) {
-                                toast.error(t('membership.upgrade_required', 'This feature requires a plan upgrade.'));
-                                return;
-                            }
-                            setIsCopyModalOpen(true);
-                        }}
-                        className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all shadow-sm font-medium border ${
-                            !planFeatures.has_slot_copy 
-                            ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed' 
-                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                        }`}
-                        title={!planFeatures.has_slot_copy ? t('membership.premium_feature', 'Premium Feature') : ''}
+                        onClick={() => setIsCopyModalOpen(true)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-bold hover:bg-gray-50 transition-all"
                     >
-                        <Copy className="h-4 w-4" /> {t('admin.slots.copy_day', 'Copy Schedule')}
+                        <Copy className="h-4 w-4" />
+                        <span className="hidden sm:inline">{t('admin.slots.bulk_copy', 'Bulk Copy')}</span>
+                        <span className="sm:hidden">{t('common.copy', 'Copy')}</span>
                     </button>
                     <button
                         onClick={openModal}
@@ -401,7 +393,7 @@ const SlotManagement = () => {
                         </button>
                     )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('common.service', 'Provider of Service')}</label>
                         <select

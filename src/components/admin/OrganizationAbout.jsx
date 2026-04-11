@@ -259,7 +259,7 @@ const OrganizationAbout = () => {
                             </div>
 
                             {!isAllDone && (
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {checklist.map((item, idx) => (
                                         <div key={idx} className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
                                             item.done ? "bg-white border-emerald-100 text-emerald-700" : "bg-indigo-100/50 border-indigo-200 text-indigo-400"
@@ -276,7 +276,7 @@ const OrganizationAbout = () => {
             })()}
 
             {/* Header & Verification Status */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-800 text-white">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-800 text-white">
                 <div>
                     <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
                         {t('admin.about.title', 'Organization Profile')}
@@ -353,7 +353,7 @@ const OrganizationAbout = () => {
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.about.established', 'Established Year')}</label>
                                     <input
@@ -390,7 +390,7 @@ const OrganizationAbout = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <div className="flex items-center justify-between mb-1">
                                         <label className="block text-sm font-medium text-gray-700">Contact Email</label>
@@ -447,8 +447,8 @@ const OrganizationAbout = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="col-span-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         {t('common.city', 'City')}
                                         {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
@@ -461,7 +461,7 @@ const OrganizationAbout = () => {
                                         className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${isFieldMissing('city') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                     />
                                 </div>
-                                <div className="col-span-1">
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         {t('common.state', 'State')}
                                         {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
@@ -474,7 +474,7 @@ const OrganizationAbout = () => {
                                         className={`w-full px-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${isFieldMissing('state') ? 'border-rose-300 bg-rose-50/50' : 'border-gray-200'}`}
                                     />
                                 </div>
-                                <div className="col-span-1">
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         {t('common.pincode', 'Pincode')}
                                         {isSetupIncomplete && <span className="text-rose-500 ml-1">*</span>}
@@ -593,7 +593,7 @@ const OrganizationAbout = () => {
                 {/* Right Side: Media & Actions */}
                 <div className="space-y-8">
                     {/* Media Management */}
-                    <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
+                    <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:sticky lg:top-24">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                                 <ImageIcon className="h-5 w-5" />

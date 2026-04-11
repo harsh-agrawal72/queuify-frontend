@@ -121,7 +121,7 @@ const ServiceManagement = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {t('navigation.service_management', 'Service Management')}
                         <InfoTooltip align="start" text={t('service.mgmt_tooltip', 'Services are the categories of what you offer. Resources (like doctors) are managed in their own tab and then linked to these services.')} />
                     </h1>
@@ -155,7 +155,7 @@ const ServiceManagement = () => {
                             <div key={service.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all">
                                 {/* Service Header */}
                                 <div
-                                    className={`flex items-center justify-between p-5 cursor-pointer hover:bg-gray-50 transition-colors ${isExpanded ? 'border-b border-gray-100 bg-gray-50/50' : ''}`}
+                                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-5 cursor-pointer hover:bg-gray-50 transition-colors gap-4 ${isExpanded ? 'border-b border-gray-100 bg-gray-50/50' : ''}`}
                                     onClick={() => toggleService(service.id)}
                                 >
                                     <div className="flex items-center gap-4">
@@ -168,7 +168,7 @@ const ServiceManagement = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-1 sm:gap-2">
+                                    <div className="flex items-center justify-end gap-1 sm:gap-2 ml-auto sm:ml-0">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setServiceModal({ open: true, edit: true, data: service }); }}
                                             className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -191,7 +191,7 @@ const ServiceManagement = () => {
 
                                 {/* Resources Panel (expanded) */}
                                 {isExpanded && (
-                                    <div className="p-5 bg-gray-50/30">
+                                    <div className="p-4 md:p-5 bg-gray-50/30">
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2">
                                                 <Users className="h-4 w-4" /> {t('service.resources', 'Linked Resources')}

@@ -166,7 +166,7 @@ const ResourceManager = () => {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {t('navigation.resource_management', 'Resource Management')}
                         <InfoTooltip text={t('resource_mgmt.mgmt_tooltip', 'Resources are doctors, staff, rooms, or equipment. Create them here and link them to multiple services with specific fees.')} />
                     </h1>
@@ -193,8 +193,8 @@ const ResourceManager = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {resources.map(resource => (
-                        <div key={resource.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group relative">
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div key={resource.id} className="bg-white p-4 md:p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group relative">
+                            <div className="absolute top-4 right-4 flex gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button onClick={() => openEditModal(resource)} className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100">
                                     <Edit2 className="h-4 w-4" />
                                 </button>
@@ -209,7 +209,7 @@ const ResourceManager = () => {
                                 </span>
                             </div>
 
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-3 md:gap-4">
                                 <div className={`p-3 rounded-xl ${resource.type === 'staff' ? 'bg-purple-100 text-purple-600' : 'bg-orange-100 text-orange-600'}`}>
                                     {resource.type === 'staff' ? <Users className="h-6 w-6" /> : <Monitor className="h-6 w-6" />}
                                 </div>

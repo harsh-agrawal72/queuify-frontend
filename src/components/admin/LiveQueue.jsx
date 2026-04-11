@@ -57,14 +57,14 @@ const AppointmentCard = memo(({ appt, i, queue, isNext, isServing, isCompleted, 
         <motion.div
             layout
             className={`
-                p-5 rounded-[1.5rem] border transition-all duration-300 flex items-center gap-5 group
+                p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] border transition-all duration-300 flex items-center gap-3 sm:gap-5 group
                 ${isServing ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02] z-10' :
                     isPastDue ? 'bg-amber-50 border-amber-200 shadow-sm ring-1 ring-amber-100' :
                         isNext ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' :
                             isCompleted ? 'bg-slate-50/50 opacity-60 border-slate-100' : 'bg-white border-slate-100 hover:border-indigo-100 hover:shadow-sm'}
             `}
         >
-            <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm transition-all duration-300 ${isServing ? 'bg-white/20 scale-110' : 'bg-white border border-slate-100 text-slate-400 group-hover:border-indigo-200 group-hover:text-indigo-500'}`}>
+            <div className={`h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-sm sm:text-xl shadow-sm transition-all duration-300 ${isServing ? 'bg-white/20 scale-110' : 'bg-white border border-slate-100 text-slate-400 group-hover:border-indigo-200 group-hover:text-indigo-500'}`}>
                 {appt.queue_number}
             </div>
 
@@ -467,8 +467,9 @@ const AdminLiveQueue = () => {
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-slate-100 pb-8 px-1">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-4">
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-4">
                         <div className="relative flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -481,68 +482,77 @@ const AdminLiveQueue = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 bg-white p-2 pl-4 rounded-2xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-3 bg-white p-2 pl-4 rounded-2xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all flex-1 sm:flex-none h-[48px]">
                         <Calendar className="h-4 w-4 text-slate-400" />
                         <input
                             type="date"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0 pr-4"
+                            className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0 pr-4 w-full"
                         />
                     </div>
 
                     <button
                         onClick={handleRefresh}
-                        className={`p-3 bg-white border border-slate-200 rounded-2xl shadow-sm hover:bg-slate-50 transition-all text-slate-500 group ${refreshing ? 'cursor-not-allowed' : 'active:scale-95'}`}
                         disabled={refreshing}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 h-[48px] bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-all group shadow-sm active:scale-95"
                     >
                         <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin text-indigo-600' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
                     </button>
 
                     <button
                         onClick={() => setIsQrModalOpen(true)}
-                        className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 h-[48px] bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
                     >
                         <QrCode className="h-4 w-4 text-indigo-400" />
-                        Clinic QR
+                        <span className="hidden sm:inline">Clinic QR</span>
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2.5 bg-orange-50 rounded-xl group-hover:scale-110 transition-transform">
-                            <Users className="h-5 w-5 text-orange-600" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                        <div className="p-2 sm:p-2.5 bg-orange-50 rounded-xl group-hover:scale-110 transition-transform w-fit">
+                            <Users className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.waiting_now', 'In Queue')}</p>
-                            <p className="text-2xl font-black text-slate-900 leading-none">{totalPending}</p>
+                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.waiting_now', 'In Queue')}</p>
+                            <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{totalPending}</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2.5 bg-indigo-50 rounded-xl group-hover:scale-110 transition-transform">
-                            <Activity className="h-5 w-5 text-indigo-600" />
+                <div className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                        <div className="p-2 sm:p-2.5 bg-indigo-50 rounded-xl group-hover:scale-110 transition-transform w-fit">
+                            <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.currently_serving', 'Now Serving')}</p>
-                            <p className="text-2xl font-black text-slate-900 leading-none">{totalServing}</p>
+                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('queue.currently_serving', 'Now Serving')}</p>
+                            <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{totalServing}</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow hidden md:block group">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2.5 bg-emerald-50 rounded-xl group-hover:scale-110 transition-transform">
-                            <Activity className="h-5 w-5 text-emerald-600" />
+                <div className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                        <div className="p-2 sm:p-2.5 bg-emerald-50 rounded-xl group-hover:scale-110 transition-transform w-fit">
+                            <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Working Queues</p>
-                            <p className="text-2xl font-black text-slate-900 leading-none">
-                                {queues.length}
-                            </p>
+                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Working Queues</p>
+                            <p className="text-xl sm:text-2xl font-black text-slate-900 leading-none">{queues.length}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow group hidden sm:block md:hidden lg:block">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                        <div className="p-2 sm:p-2.5 bg-slate-50 rounded-xl group-hover:scale-110 transition-transform w-fit">
+                            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
+                        </div>
+                        <div>
+                            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Live Status</p>
+                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-tighter">Connected</p>
                         </div>
                     </div>
                 </div>
