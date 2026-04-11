@@ -398,7 +398,7 @@ const AppointmentManager = () => {
                     >
                         {t('common.clear', 'Clear Filters')}
                     </button>
-                    ){'}'}
+                    {/* ){'}'} */}
                 </div>
             </div>
 
@@ -540,8 +540,8 @@ const AppointmentManager = () => {
                                                                                 setActiveActionId(null);
                                                                             }}
                                                                             className={`w-full text-left px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-colors ${!user?.plan_features?.has_patient_history
-                                                                                    ? 'text-gray-400 bg-gray-50/50 cursor-not-allowed'
-                                                                                    : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                                                                ? 'text-gray-400 bg-gray-50/50 cursor-not-allowed'
+                                                                                : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
                                                                                 }`}
                                                                         >
                                                                             <History className="h-4 w-4 text-indigo-500" /> {t('appointment.view_history', 'View Visit History')}
@@ -761,8 +761,8 @@ const AppointmentManager = () => {
                                                             setActiveActionId(null);
                                                         }}
                                                         className={`w-full py-2.5 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border ${!user?.plan_features?.has_patient_history
-                                                                ? 'text-gray-400 bg-gray-50 border-gray-100 cursor-not-allowed'
-                                                                : 'text-indigo-700 bg-indigo-100/50 border border-indigo-200 hover:bg-indigo-200'
+                                                            ? 'text-gray-400 bg-gray-50 border-gray-100 cursor-not-allowed'
+                                                            : 'text-indigo-700 bg-indigo-100/50 border border-indigo-200 hover:bg-indigo-200'
                                                             }`}
                                                     >
                                                         <History className="h-4 w-4" /> {t('appointment.view_history', 'Visit History')}
