@@ -819,7 +819,7 @@ const AdminLiveQueue = () => {
                             initial={{ opacity: 0, scale: 0.9, y: 30 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                            className="relative bg-white rounded-[2.5rem] p-10 shadow-2xl max-w-md w-full overflow-hidden border border-slate-100"
+                            className="relative bg-white rounded-[2.5rem] p-6 md:p-10 shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-100"
                         >
                             <div className="flex justify-between items-center mb-8">
                                 <div>
@@ -833,13 +833,13 @@ const AdminLiveQueue = () => {
                                 </button>
                             </div>
 
-                            <div className="bg-slate-50 p-6 rounded-3xl mb-8 border border-slate-100">
+                            <div className="bg-slate-50 p-6 rounded-3xl mb-6 border border-slate-100">
                                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5">{t('queue.target_queue', 'Target Stream')}</p>
                                 <p className="text-lg font-black text-indigo-600 leading-none">{activeQueueForManual?.resource_name || activeQueueForManual?.name}</p>
                                 <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">{activeQueueForManual?.name}</p>
                             </div>
 
-                            <form onSubmit={submitManualEntry} className="space-y-6">
+                            <form onSubmit={submitManualEntry} className="space-y-4">
                                 <div className="space-y-2">
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.professional', 'Professional')}</label>
                                     <select
@@ -952,7 +952,7 @@ const AdminLiveQueue = () => {
                                     />
                                 </div>
 
-                                <div className="pt-6">
+                                <div className="pt-4">
                                     <button
                                         type="submit"
                                         className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 active:scale-95"

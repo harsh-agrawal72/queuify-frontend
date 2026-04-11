@@ -64,10 +64,10 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
+                className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[95vh] custom-scrollbar"
             >
                 {/* Header */}
-                <div className="bg-slate-900 p-8 text-white relative">
+                <div className="bg-slate-900 p-6 md:p-8 text-white relative">
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                         <Shield className="h-24 w-24" />
                     </div>
@@ -85,7 +85,7 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
                     </div>
                 </div>
 
-                <div className="p-8 space-y-8">
+                <div className="p-6 md:p-8 space-y-6">
                     {/* Summary Row */}
                     <div className="flex justify-between items-center text-slate-900">
                         <div>
@@ -187,7 +187,7 @@ const CheckoutModal = ({ isOpen, onClose, plan, onPay, user, t }) => {
                     </div>
 
                     {/* Price Breakdown */}
-                    <div className="bg-slate-50 rounded-[2rem] p-6 space-y-3">
+                    <div className="bg-slate-50 rounded-[2rem] p-5 space-y-2.5">
                         <div className="flex justify-between text-sm font-bold text-slate-500">
                             <span>Base Subtotal ({duration} {duration === 1 ? 'Month' : 'Months'})</span>
                             <span>₹{baseAggregate}</span>
