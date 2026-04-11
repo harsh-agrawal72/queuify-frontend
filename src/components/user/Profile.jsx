@@ -79,17 +79,17 @@ export default function Profile() {
             const { data } = await api.post('/user/profile/image', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            
+
             // The backend returns { id, url }. The url is relative like /v1/user/profile/image/ID
             // We use the absolute API base URL for the prefix
             const baseUrl = api.defaults.baseURL.replace(/\/v1$/, ''); // Get base without version
             const finalUrl = data.url.startsWith('/') ? `${baseUrl}${data.url}` : data.url;
-            
+
             setProfilePictureUrl(finalUrl);
-            
+
             // Also update the user in context immediately for the navbar/sidebar
             updateUser({ ...user, profile_picture_url: finalUrl });
-            
+
             toast.success(t('user.profile.success.upload'));
         } catch (err) {
             console.error(err);
@@ -298,115 +298,115 @@ export default function Profile() {
                                 </div>
                             </div>
 
-                             {/* Phone Field */}
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                 <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.phone_number')}</label>
-                                     <div className="relative">
-                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                         <input
-                                             type="tel"
-                                             value={phone}
-                                             onChange={e => setPhone(e.target.value)}
-                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder={t('user.profile.phone_placeholder')}
-                                         />
-                                     </div>
-                                 </div>
-                             </div>
+                            {/* Phone Field */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.phone_number')}</label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="tel"
+                                            value={phone}
+                                            onChange={e => setPhone(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                            placeholder={t('user.profile.phone_placeholder')}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-                             {/* DOB & Gender Grid */}
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                 <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.date_of_birth')}</label>
-                                     <div className="relative">
-                                         <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                         <input
-                                             type="date"
-                                             value={dob}
-                                             onChange={e => setDob(e.target.value)}
-                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                         />
-                                     </div>
-                                 </div>
-                                 <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.gender')}</label>
-                                     <div className="relative">
-                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                         <select
-                                             value={gender}
-                                             onChange={e => setGender(e.target.value)}
-                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white appearance-none"
-                                         >
-                                             <option value="">{t('user.profile.select_gender')}</option>
-                                             <option value="Male">{t('common.male', 'Male')}</option>
-                                             <option value="Female">{t('common.female', 'Female')}</option>
-                                             <option value="Other">{t('common.other', 'Other')}</option>
-                                         </select>
-                                     </div>
-                                 </div>
-                             </div>
+                            {/* DOB & Gender Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.date_of_birth')}</label>
+                                    <div className="relative">
+                                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="date"
+                                            value={dob}
+                                            onChange={e => setDob(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.gender')}</label>
+                                    <div className="relative">
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <select
+                                            value={gender}
+                                            onChange={e => setGender(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white appearance-none"
+                                        >
+                                            <option value="">{t('user.profile.select_gender')}</option>
+                                            <option value="Male">{t('common.male', 'Male')}</option>
+                                            <option value="Female">{t('common.female', 'Female')}</option>
+                                            <option value="Other">{t('common.other', 'Other')}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                             {/* Address Field */}
-                             <div>
-                                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.address')}</label>
-                                 <div className="relative">
-                                     <MapPin className="absolute left-4 top-3 h-4 w-4 text-gray-400" />
-                                     <textarea
-                                         value={address}
-                                         onChange={e => setAddress(e.target.value)}
-                                         rows="2"
-                                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white resize-none"
-                                         placeholder={t('user.profile.address_placeholder')}
-                                     ></textarea>
-                                 </div>
-                             </div>
+                            {/* Address Field */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.address')}</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-4 top-3 h-4 w-4 text-gray-400" />
+                                    <textarea
+                                        value={address}
+                                        onChange={e => setAddress(e.target.value)}
+                                        rows="2"
+                                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white resize-none"
+                                        placeholder={t('user.profile.address_placeholder')}
+                                    ></textarea>
+                                </div>
+                            </div>
 
-                             {/* City, State, Pincode Grid */}
-                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                 <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.city')}</label>
-                                     <div className="relative">
-                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                         <input
-                                             type="text"
-                                             value={city}
-                                             onChange={e => setCity(e.target.value)}
-                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder={t('user.profile.city_placeholder')}
-                                         />
-                                     </div>
-                                 </div>
-                                 <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.state')}</label>
-                                     <div className="relative">
-                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                         <input
-                                             type="text"
-                                             value={state}
-                                             onChange={e => setState(e.target.value)}
-                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder={t('user.profile.state_placeholder')}
-                                         />
-                                     </div>
-                                 </div>
-                                 <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.pincode')}</label>
-                                     <div className="relative">
-                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                         <input
-                                             type="text"
-                                             value={pincode}
-                                             onChange={e => setPincode(e.target.value)}
-                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
-                                             placeholder={t('user.profile.pincode_placeholder')}
-                                         />
-                                     </div>
-                                 </div>
-                             </div>
-                             
+                            {/* City, State, Pincode Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.city')}</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={city}
+                                            onChange={e => setCity(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                            placeholder={t('user.profile.city_placeholder')}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.state')}</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={state}
+                                            onChange={e => setState(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                            placeholder={t('user.profile.state_placeholder')}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.pincode')}</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={pincode}
+                                            onChange={e => setPincode(e.target.value)}
+                                            className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                            placeholder={t('user.profile.pincode_placeholder')}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-                         </div>
+
+                        </div>
 
                         {/* Save Button */}
                         <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-end">
