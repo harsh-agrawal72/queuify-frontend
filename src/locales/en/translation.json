@@ -289,7 +289,10 @@
     "note_placeholder": "Add internal remarks about this patient...",
     "qr_checkin_instruction": "Wait! Scanning Mandatory Upon Arrival",
     "qr_checkin_instruction_desc": "To verify your arrival and start your session, you MUST scan the organization's QR code at the reception desk.",
-    "qr_checkin_hint": "Remember to scan QR at the clinic desk."
+    "qr_checkin_hint": "Remember to scan QR at the clinic desk.",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other"
   },
   "resource_mgmt": {
     "mgmt_title": "Resource Management",
@@ -1048,6 +1051,9 @@
       "profile_photo": "Profile Photo",
       "change_photo": "Change Profile Photo",
       "upload_photo": "Upload Profile Photo",
+      "date_of_birth": "Date of Birth",
+      "gender": "Gender",
+      "select_gender": "Select Gender",
       "address": "Residential Address",
       "address_placeholder": "Enter your full address",
       "city": "City",
