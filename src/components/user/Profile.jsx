@@ -19,6 +19,8 @@ export default function Profile() {
     const [state, setState] = useState(user?.state || '');
     const [pincode, setPincode] = useState(user?.pincode || '');
     const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profile_picture_url || '');
+    const [dob, setDob] = useState(user?.dob ? format(parseISO(user.dob), 'yyyy-MM-dd') : '');
+    const [gender, setGender] = useState(user?.gender || '');
     const [emailNotifications, setEmailNotifications] = useState(user?.email_notification_enabled ?? true);
     const [notificationAlerts, setNotificationAlerts] = useState(user?.notification_enabled ?? true);
     const [loading, setLoading] = useState(false);
@@ -108,6 +110,8 @@ export default function Profile() {
                 city,
                 state,
                 pincode,
+                dob: dob || null,
+                gender: gender || null,
                 profile_picture_url: profilePictureUrl,
                 email_notification_enabled: emailNotifications,
                 notification_enabled: notificationAlerts
@@ -120,6 +124,8 @@ export default function Profile() {
                 city,
                 state,
                 pincode,
+                dob: dob || null,
+                gender: gender || null,
                 profile_picture_url: profilePictureUrl,
                 email_notification_enabled: emailNotifications,
                 notification_enabled: notificationAlerts
@@ -307,16 +313,38 @@ export default function Profile() {
                                          />
                                      </div>
                                  </div>
+                                  </div>
+                             </div>
+
+                             {/* DOB & Gender Grid */}
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                  <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.profile_photo')}</label>
-                                     <button
-                                         type="button"
-                                         onClick={handleImageClick}
-                                         className="w-full flex items-center gap-3 px-4 py-3 border border-dashed border-gray-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all text-gray-500 text-sm font-medium"
-                                     >
-                                         <Camera className="h-4 w-4 text-indigo-500" />
-                                         {profilePictureUrl ? t('user.profile.change_photo') : t('user.profile.upload_photo')}
-                                     </button>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.date_of_birth')}</label>
+                                     <div className="relative">
+                                         <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                         <input
+                                             type="date"
+                                             value={dob}
+                                             onChange={e => setDob(e.target.value)}
+                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white"
+                                         />
+                                     </div>
+                                 </div>
+                                 <div>
+                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('user.profile.gender')}</label>
+                                     <div className="relative">
+                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                         <select
+                                             value={gender}
+                                             onChange={e => setGender(e.target.value)}
+                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none text-sm transition-all bg-gray-50 focus:bg-white appearance-none"
+                                         >
+                                             <option value="">{t('user.profile.select_gender')}</option>
+                                             <option value="Male">{t('common.male', 'Male')}</option>
+                                             <option value="Female">{t('common.female', 'Female')}</option>
+                                             <option value="Other">{t('common.other', 'Other')}</option>
+                                         </select>
+                                     </div>
                                  </div>
                              </div>
 

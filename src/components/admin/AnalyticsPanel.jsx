@@ -825,30 +825,41 @@ const AnalyticsPanel = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.loyalty_index', 'Loyalty Index')}</p>
-                                <p className="text-2xl font-black">8.4 / 10</p>
+                                <p className="text-2xl font-black">{stats.loyaltyIndex || 0} / 10</p>
                                 <div className="mt-4 h-1 bg-white/10 rounded-full">
-                                    <div className="h-full w-[84%] bg-amber-400 rounded-full" />
+                                    <div 
+                                        className="h-full bg-amber-400 rounded-full transition-all duration-1000" 
+                                        style={{ width: `${(stats.loyaltyIndex || 0) * 10}%` }}
+                                    />
                                 </div>
                             </div>
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.retention_rate', 'Retention Rate')}</p>
-                                <p className="text-2xl font-black">68%</p>
+                                <p className="text-2xl font-black">{stats.retentionRate || 0}%</p>
                                 <div className="mt-4 h-1 bg-white/10 rounded-full">
-                                    <div className="h-full w-[68%] bg-emerald-400 rounded-full" />
+                                    <div 
+                                        className="h-full bg-emerald-400 rounded-full transition-all duration-1000" 
+                                        style={{ width: `${stats.retentionRate || 0}%` }}
+                                    />
                                 </div>
                             </div>
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.churn_risk', 'Churn Risk')}</p>
-                                <p className="text-2xl font-black">{t('common.low', 'Low')}</p>
+                                <p className="text-2xl font-black">{t(`common.${(stats.churnRisk || 'Low').toLowerCase()}`, stats.churnRisk || 'Low')}</p>
                                 <div className="mt-4 flex gap-1">
-                                    {[1, 2, 3, 4, 5].map(i => <div key={i} className={`h-1 flex-1 rounded-full ${i <= 1 ? 'bg-emerald-400' : 'bg-white/10'}`} />)}
+                                    {[1, 2, 3, 4, 5].map(i => {
+                                        const risk = (stats.churnRisk || 'Low').toLowerCase();
+                                        const filled = risk === 'high' ? 5 : (risk === 'medium' ? 3 : 1);
+                                        const color = risk === 'high' ? 'bg-red-500' : (risk === 'medium' ? 'bg-amber-400' : 'bg-emerald-400');
+                                        return <div key={i} className={`h-1 flex-1 rounded-full ${i <= filled ? color : 'bg-white/10'}`} />;
+                                    })}
                                 </div>
                             </div>
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-wider mb-2">{t('analytics.peak_cohort', 'Peak Cohort')}</p>
-                                <p className="text-2xl font-black">25-34 Yrs</p>
-                                <div className="mt-4 flex items-center gap-1 text-[10px] text-amber-400 font-bold">
-                                    <TrendingUp className="h-3 w-3" /> +12% growth
+                                <p className="text-2xl font-black">{stats.peakCohort || 'All Ages'}</p>
+                                <div className="mt-4 flex items-center gap-1 text-[10px] text-amber-400 font-bold uppercase tracking-widest">
+                                    <Users className="h-3 w-3" /> {t('analytics.target_segment', 'Demographic Focus')}
                                 </div>
                             </div>
                         </div>
