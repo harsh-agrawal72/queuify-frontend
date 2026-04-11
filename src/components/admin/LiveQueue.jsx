@@ -466,7 +466,6 @@ const AdminLiveQueue = () => {
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-20">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-2">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-slate-100 pb-8 px-1">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-4">

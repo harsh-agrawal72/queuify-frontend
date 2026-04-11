@@ -387,18 +387,18 @@ const AppointmentManager = () => {
                         </div>
                     </div>
 
-                        <button
-                            onClick={() => {
-                                setSearch('');
-                                setStatusFilter('');
-                                setSelectedResourceId('');
-                                setSelectedDate('');
-                            }}
-                            className="px-4 py-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all border border-indigo-100 sm:col-span-2 lg:col-span-1 h-11 lg:h-auto"
-                        >
-                            {t('common.clear', 'Clear Filters')}
-                        </button>
-                    )}
+                    <button
+                        onClick={() => {
+                            setSearch('');
+                            setStatusFilter('');
+                            setSelectedResourceId('');
+                            setSelectedDate('');
+                        }}
+                        className="px-4 py-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all border border-indigo-100 sm:col-span-2 lg:col-span-1 h-11 lg:h-auto"
+                    >
+                        {t('common.clear', 'Clear Filters')}
+                    </button>
+                    ){'}'}
                 </div>
             </div>
 
@@ -539,11 +539,10 @@ const AppointmentManager = () => {
                                                                                 setHistoryModal({ isOpen: true, userId: apt.user_id, userName: apt.user_name });
                                                                                 setActiveActionId(null);
                                                                             }}
-                                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-colors ${
-                                                                                !user?.plan_features?.has_patient_history 
-                                                                                ? 'text-gray-400 bg-gray-50/50 cursor-not-allowed' 
-                                                                                : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
-                                                                            }`}
+                                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-colors ${!user?.plan_features?.has_patient_history
+                                                                                    ? 'text-gray-400 bg-gray-50/50 cursor-not-allowed'
+                                                                                    : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                                                                }`}
                                                                         >
                                                                             <History className="h-4 w-4 text-indigo-500" /> {t('appointment.view_history', 'View Visit History')}
                                                                         </button>
@@ -682,8 +681,8 @@ const AppointmentManager = () => {
                                                 <p className="font-bold text-gray-900 leading-tight">{apt.user_name || t('common.guest_user', 'Guest User')}</p>
                                                 {apt.completed_count > 0 && (
                                                     <Award className={`h-3 w-3 ${apt.completed_count >= 10 ? "text-cyan-500" :
-                                                            apt.completed_count >= 5 ? "text-amber-500" :
-                                                                apt.completed_count >= 3 ? "text-slate-400" : "text-orange-500"
+                                                        apt.completed_count >= 5 ? "text-amber-500" :
+                                                            apt.completed_count >= 3 ? "text-slate-400" : "text-orange-500"
                                                         }`} />
                                                 )}
                                             </div>
@@ -761,11 +760,10 @@ const AppointmentManager = () => {
                                                             setHistoryModal({ isOpen: true, userId: apt.user_id, userName: apt.user_name });
                                                             setActiveActionId(null);
                                                         }}
-                                                        className={`w-full py-2.5 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border ${
-                                                            !user?.plan_features?.has_patient_history
-                                                            ? 'text-gray-400 bg-gray-50 border-gray-100 cursor-not-allowed'
-                                                            : 'text-indigo-700 bg-indigo-100/50 border border-indigo-200 hover:bg-indigo-200'
-                                                        }`}
+                                                        className={`w-full py-2.5 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border ${!user?.plan_features?.has_patient_history
+                                                                ? 'text-gray-400 bg-gray-50 border-gray-100 cursor-not-allowed'
+                                                                : 'text-indigo-700 bg-indigo-100/50 border border-indigo-200 hover:bg-indigo-200'
+                                                            }`}
                                                     >
                                                         <History className="h-4 w-4" /> {t('appointment.view_history', 'Visit History')}
                                                     </button>
