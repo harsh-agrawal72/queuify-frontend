@@ -313,7 +313,6 @@ export default function Profile() {
                                          />
                                      </div>
                                  </div>
-                                  </div>
                              </div>
 
                              {/* DOB & Gender Grid */}
