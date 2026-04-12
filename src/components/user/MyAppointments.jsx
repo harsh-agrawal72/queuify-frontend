@@ -411,18 +411,37 @@ export default function MyAppointments() {
 
     const handleAutoArrive = useCallback(async (orgId) => {
         setLoadingAction(true);
-        // Sort appointments by start_time ASC to ensure chronological order
-        const sortedAppts = [...appointments].sort((a, b) => {
-            const timeA = a.start_time ? new Date(a.start_time).getTime() : 0;
-            const timeB = b.start_time ? new Date(b.start_time).getTime() : 0;
-            return timeA - timeB;
-        });
 
-        const relevantAppt = sortedAppts.find(a => 
-            a.org_id === orgId && 
+        const todayStr = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD" in local time
+
+        // Get all active appointments for this org
+        const orgAppts = appointments.filter(a =>
+            a.org_id === orgId &&
             ['confirmed', 'pending', 'serving'].includes(a.status) &&
             a.check_in_method !== 'user_signal'
         );
+
+        // 1. Prefer TODAY's appointment (slot date matches today)
+        // If multiple today → pick the one with lowest queue number (earliest in line)
+        const todayAppts = orgAppts
+            .filter(a => {
+                if (!a.start_time) return false;
+                const slotDate = new Date(a.start_time).toLocaleDateString('en-CA');
+                return slotDate === todayStr;
+            })
+            .sort((a, b) => (a.queue_number || 9999) - (b.queue_number || 9999));
+
+        let relevantAppt = todayAppts[0] || null;
+
+        // 2. Fallback: If no slot today, pick the chronologically nearest upcoming one
+        if (!relevantAppt) {
+            const sorted = [...orgAppts].sort((a, b) => {
+                const timeA = a.start_time ? new Date(a.start_time).getTime() : 0;
+                const timeB = b.start_time ? new Date(b.start_time).getTime() : 0;
+                return timeA - timeB;
+            });
+            relevantAppt = sorted[0]; // closest upcoming
+        }
 
         if (!relevantAppt) {
             toast.error("No active appointment found for this clinic.");

@@ -59,6 +59,16 @@ const MyAppointments = () => {
         }
     };
 
+    // Returns false if slot starts within the next 1 hour (cancellation window closed)
+    const canCancelAppointment = (appt) => {
+        if (!appt.start_time) return true; // No slot info — allow by default
+        const slotStart = new Date(appt.start_time);
+        const now = new Date();
+        const diffMs = slotStart - now;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        return diffHours > 1; // Can cancel only if more than 1 hour remains
+    };
+
     const StatusBadge = ({ status }) => {
         const styles = {
             confirmed: 'bg-green-50 text-green-700 border-green-100',
@@ -158,13 +168,20 @@ const MyAppointments = () => {
                                                         Receipt
                                                     </button>
                                                 )}
-                                                <button
-                                                    onClick={() => handleCancel(appt.id)}
-                                                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2"
-                                                >
-                                                    <XCircle className="h-4 w-4" />
-                                                    Cancel Booking
-                                                </button>
+                                                {canCancelAppointment(appt) ? (
+                                                    <button
+                                                        onClick={() => handleCancel(appt.id)}
+                                                        className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2"
+                                                    >
+                                                        <XCircle className="h-4 w-4" />
+                                                        Cancel Booking
+                                                    </button>
+                                                ) : (
+                                                    <div className="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-50 rounded-lg flex items-center gap-2 cursor-not-allowed" title="Cancellation is not allowed within 1 hour of the slot start time">
+                                                        <XCircle className="h-4 w-4" />
+                                                        Cannot Cancel
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                         {appt.status === 'completed' && (
