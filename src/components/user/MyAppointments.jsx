@@ -123,6 +123,11 @@ const AppointmentItem = memo(({ appt, idx, filter, t, user, onCancel, onRespond,
     const startDate = appt.start_time ? parseISO(appt.start_time) : (appt.preferred_date ? parseISO(appt.preferred_date) : null);
     const isDateValid = startDate && isValid(startDate);
     const isPendingReassignment = appt.status === 'pending' && !appt.slot_id;
+    
+    // Time calculations for cancellation
+    const now = new Date();
+    const diffMins = startDate ? (startDate - now) / (1000 * 60) : Infinity;
+    const isCancellable = diffMins > 60;
 
     return (
         <motion.div
@@ -295,8 +300,13 @@ const AppointmentItem = memo(({ appt, idx, filter, t, user, onCancel, onRespond,
                     <div className="flex items-center justify-between gap-4 mt-auto pt-4 border-t border-gray-50">
                         {filter === 'upcoming' && appt.status !== 'cancelled' && (
                             <button
-                                onClick={() => onCancel(appt.id)}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all"
+                                onClick={() => isCancellable ? onCancel(appt.id) : null}
+                                disabled={!isCancellable}
+                                className={clsx(
+                                    "flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all",
+                                    isCancellable ? "bg-rose-50 text-rose-600 hover:bg-rose-100" : "bg-gray-50 text-gray-400 cursor-not-allowed opacity-60"
+                                )}
+                                title={isCancellable ? "Cancel Appointment" : "Cannot cancel within 1 hour of start time"}
                             >
                                 <XCircle className="h-3.5 w-3.5" />
                                 Cancel Appointment
