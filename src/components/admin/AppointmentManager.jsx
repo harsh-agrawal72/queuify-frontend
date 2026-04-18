@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useQueueSocket } from '../../hooks/useQueueSocket';
 import {
@@ -51,6 +52,7 @@ const AppointmentManager = () => {
     const [selectedResourceId, setSelectedResourceId] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
+    const [searchParams, setSearchParams] = useSearchParams();
     const [orgProfile, setOrgProfile] = useState(null);
 
     // Fetch organization profile for PDF branding
@@ -145,10 +147,31 @@ const AppointmentManager = () => {
         }
     }, [queueData, fetchAppointments]);
 
-    // Fetch resources only on mount
     useEffect(() => {
         fetchResources();
     }, []);
+
+    useEffect(() => {
+        const modal = searchParams.get('modal');
+        const apptId = searchParams.get('apptId');
+        const userId = searchParams.get('userId');
+        const userName = searchParams.get('userName');
+
+        // Reschedule Modal
+        if (modal === 'reschedule' && apptId && appointments.length > 0) {
+            const apt = appointments.find(a => String(a.id) === String(apptId));
+            setReschedulingAppt(apt || null);
+        } else {
+            setReschedulingAppt(null);
+        }
+
+        // History Modal
+        if (modal === 'history' && userId) {
+            setHistoryModal({ isOpen: true, userId, userName: userName || '' });
+        } else {
+            setHistoryModal({ isOpen: false, userId: null, userName: '' });
+        }
+    }, [searchParams, appointments]);
 
     // Reset to page 1 ONLY if we are not already on page 1 when filters change
     useEffect(() => {
@@ -742,7 +765,12 @@ const AppointmentManager = () => {
                                                 {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                                                     <button
                                                         onClick={() => {
-                                                            setReschedulingAppt(apt);
+                                                            setSearchParams(prev => {
+                                                                const next = new URLSearchParams(prev);
+                                                                next.set('modal', 'reschedule');
+                                                                next.set('apptId', apt.id);
+                                                                return next;
+                                                            });
                                                             setActiveActionId(null);
                                                         }}
                                                         className="w-full py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
@@ -757,7 +785,13 @@ const AppointmentManager = () => {
                                                                 toast.error(t('membership.upgrade_required', 'This feature requires a Professional or Enterprise plan upgrade.'));
                                                                 return;
                                                             }
-                                                            setHistoryModal({ isOpen: true, userId: apt.user_id, userName: apt.user_name });
+                                                            setSearchParams(prev => {
+                                                                const next = new URLSearchParams(prev);
+                                                                next.set('modal', 'history');
+                                                                next.set('userId', apt.user_id);
+                                                                next.set('userName', apt.user_name);
+                                                                return next;
+                                                            });
                                                             setActiveActionId(null);
                                                         }}
                                                         className={`w-full py-2.5 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border ${!user?.plan_features?.has_patient_history
@@ -850,7 +884,12 @@ const AppointmentManager = () => {
                 {reschedulingAppt && (
                     <AdminRescheduleModal
                         appointment={reschedulingAppt}
-                        onClose={() => setReschedulingAppt(null)}
+                        onClose={() => setSearchParams(prev => {
+                            const next = new URLSearchParams(prev);
+                            next.delete('modal');
+                            next.delete('apptId');
+                            return next;
+                        })}
                         onSuccess={() => {
                             setReschedulingAppt(null);
                             fetchAppointments();
@@ -863,7 +902,13 @@ const AppointmentManager = () => {
                 isOpen={historyModal.isOpen}
                 userId={historyModal.userId}
                 userName={historyModal.userName}
-                onClose={() => setHistoryModal({ ...historyModal, isOpen: false })}
+                onClose={() => setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('userId');
+                    next.delete('userName');
+                    return next;
+                })}
             />
         </div>
     );

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { apiService } from '../../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
     Calendar,
@@ -30,6 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }) => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { t } = useTranslation();
     const { user } = useAuth();
 
@@ -183,6 +184,31 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
         fetchSlots();
     }, [selectedResource, orgId]);
 
+    // Sync URL step to local state
+    useEffect(() => {
+        const stepParam = searchParams.get('step');
+        if (stepParam) {
+            const s = parseInt(stepParam);
+            if (!isNaN(s) && s >= 1 && s <= 6) {
+                setStep(s);
+            }
+        }
+    }, [searchParams]);
+
+    // Cleanup selections when going back
+    useEffect(() => {
+        if (step === 1) {
+            setSelectedService(null);
+            setSelectedResource(null);
+            setSelectedSlot(null);
+        } else if (step === 2) {
+            setSelectedResource(null);
+            setSelectedSlot(null);
+        } else if (step === 3) {
+            setSelectedSlot(null);
+        }
+    }, [step]);
+
     const handleNext = () => {
         // If we are on Review (Step 4) and price is 0, skip Payment (Step 5)
         const currentPrice = selectedResource?.price || selectedService?.price || 0;
@@ -190,16 +216,27 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
             handleBookingCreation();
             return;
         }
-        setStep(prev => prev + 1);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('step', step + 1);
+            return next;
+        });
     };
     const handleBack = () => {
         if (service && step === 2) {
             onClose();
             return;
         }
-        setStep(prev => prev - 1);
-        if (step === 2) { setSelectedResource(null); setSelectedSlot(null); }
-        if (step === 3) { setSelectedSlot(null); }
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (step > 1) {
+                next.set('step', step - 1);
+            } else {
+                next.delete('step');
+                next.delete('bookingServiceId');
+            }
+            return next;
+        });
     };
 
     // ──────────────────────────────────────────────
@@ -227,7 +264,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                 queueNumber: verifyRes.data?.queue_number || currentAppt.queueNumber,
                 appointmentId: currentAppt.id
             });
-            setStep(6); // Success screen
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.set('step', 6);
+                return next;
+            }); // Success screen
             toast.success(t('booking.wizard.success.payment_verified', "Payment Verified & Ticket Generated!"));
         } catch (error) {
             console.error('[Payment] Verification failed:', error);
@@ -344,7 +385,11 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
                     queueNumber: res.data.queueNumber,
                     appointmentId: res.data.appointmentId
                 });
-                setStep(6);
+                setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.set('step', 6);
+                    return next;
+                });
                 toast.success(t('booking.wizard.success.title', "Joined Queue Successfully!"));
             }
         } catch (error) {
@@ -369,10 +414,18 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
         setPendingAppointment(null);
         apptRef.current = null;
         if (service) {
-            setStep(2);
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.set('step', 2);
+                return next;
+            });
             setSelectedResource(null);
         } else {
-            setStep(1);
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.set('step', 1);
+                return next;
+            });
             setSelectedService(null);
             setSelectedResource(null);
         }

@@ -93,7 +93,7 @@ export default function UserDashboard() {
     const [allAppointments, setAllAppointments] = useState([]);
     const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'payments', 'notifications', 'plans'
     const { user } = useAuth();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const [error, setError] = useState(null);
 
@@ -194,7 +194,7 @@ export default function UserDashboard() {
             {/* Tabbed Navigation - Dedicated Row for Visibility */}
             <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-2xl border border-gray-200 w-full md:w-fit overflow-x-auto scrollbar-hide backdrop-blur-sm">
                 <button
-                    onClick={() => setActiveTab('overview')}
+                    onClick={() => setSearchParams({ tab: 'overview' })}
                     className={clsx(
                         "flex items-center flex-shrink-0 gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
                         activeTab === 'overview' 
@@ -206,7 +206,7 @@ export default function UserDashboard() {
                     <span>{t('dashboard.overview_tab', 'Overview')}</span>
                 </button>
                 <button
-                    onClick={() => setActiveTab('payments')}
+                    onClick={() => setSearchParams({ tab: 'payments' })}
                     className={clsx(
                         "flex items-center flex-shrink-0 gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
                         activeTab === 'payments' 
@@ -218,7 +218,7 @@ export default function UserDashboard() {
                     <span>{t('dashboard.payments_tab', 'Payment History')}</span>
                 </button>
                 <button
-                    onClick={() => setActiveTab('notifications')}
+                    onClick={() => setSearchParams({ tab: 'notifications' })}
                     className={clsx(
                         "flex items-center flex-shrink-0 gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
                         activeTab === 'notifications' 
@@ -230,7 +230,7 @@ export default function UserDashboard() {
                     <span>{t('dashboard.notify_tab', 'Notify Me')}</span>
                 </button>
                 <button
-                    onClick={() => setActiveTab('plans')}
+                    onClick={() => setSearchParams({ tab: 'plans' })}
                     className={clsx(
                         "flex items-center flex-shrink-0 gap-2 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl transition-all duration-300",
                         activeTab === 'plans' 

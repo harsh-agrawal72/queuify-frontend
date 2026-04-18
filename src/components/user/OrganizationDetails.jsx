@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, apiService } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,6 +28,7 @@ export default function OrganizationDetails() {
     const [reviewsData, setReviewsData] = useState(null);
     const [pastAppointments, setPastAppointments] = useState([]);
     const [reviewModalAppt, setReviewModalAppt] = useState(null);
+    const [searchParams, setSearchParams] = useSearchParams();
 
 
 
@@ -66,6 +67,34 @@ export default function OrganizationDetails() {
 
         fetchAllDetails();
     }, [slug]);
+
+    useEffect(() => {
+        const bookingServiceId = searchParams.get('bookingServiceId');
+        const isLightbox = searchParams.get('lightbox') === 'true';
+        const imgUrl = searchParams.get('imgUrl');
+        const modal = searchParams.get('modal');
+        const apptId = searchParams.get('apptId');
+
+        if (bookingServiceId && services.length > 0) {
+            const service = services.find(s => String(s.id) === String(bookingServiceId));
+            setSelectedService(service || null);
+        } else {
+            setSelectedService(null);
+        }
+
+        if (isLightbox && imgUrl) {
+            setSelectedImage(imgUrl);
+        } else {
+            setSelectedImage(null);
+        }
+
+        if (modal === 'review' && apptId && pastAppointments.length > 0) {
+            const appt = pastAppointments.find(a => String(a.id) === String(apptId));
+            setReviewModalAppt(appt || null);
+        } else {
+            setReviewModalAppt(null);
+        }
+    }, [searchParams, services, pastAppointments]);
 
     if (loading) {
         return (
@@ -235,7 +264,12 @@ export default function OrganizationDetails() {
                                     <motion.div
                                         key={img.id}
                                         whileHover={{ scale: 1.02, y: -4 }}
-                                        onClick={() => setSelectedImage(img.image_url)}
+                                        onClick={() => setSearchParams(prev => {
+                                            const next = new URLSearchParams(prev);
+                                            next.set('lightbox', 'true');
+                                            next.set('imgUrl', img.image_url);
+                                            return next;
+                                        })}
                                         className="relative group rounded-2xl overflow-hidden aspect-square shadow-sm border border-gray-100 cursor-pointer bg-gray-50 flex items-center justify-center p-4 transition-all hover:shadow-xl"
                                     >
                                         <img src={img.image_url} alt="Gallery" className="w-full h-full object-contain" />
@@ -260,13 +294,23 @@ export default function OrganizationDetails() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                onClick={() => setSelectedImage(null)}
+                                onClick={() => setSearchParams(prev => {
+                                    const next = new URLSearchParams(prev);
+                                    next.delete('lightbox');
+                                    next.delete('imgUrl');
+                                    return next;
+                                })}
                                 className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-12 cursor-zoom-out"
                             >
                                 <motion.button
                                     initial={{ scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    onClick={() => setSelectedImage(null)}
+                                    onClick={() => setSearchParams(prev => {
+                                    const next = new URLSearchParams(prev);
+                                    next.delete('lightbox');
+                                    next.delete('imgUrl');
+                                    return next;
+                                })}
                                     className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-50 feedback-ring"
                                 >
                                     <X className="h-6 w-6" />
@@ -307,7 +351,11 @@ export default function OrganizationDetails() {
                                         initial={{ opacity: 0, y: 15 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.1 }}
-                                        onClick={() => setSelectedService(service)}
+                                        onClick={() => setSearchParams(prev => {
+                                            const next = new URLSearchParams(prev);
+                                            next.set('bookingServiceId', service.id);
+                                            return next;
+                                        })}
                                         className="text-left bg-white p-5 sm:p-6 rounded-2xl border-2 border-gray-100 hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-900/5 transition-all flex flex-col sm:flex-row sm:items-center justify-between group gap-4"
                                     >
                                         <div className="flex-1">
@@ -383,7 +431,12 @@ export default function OrganizationDetails() {
                                         <div className="mt-auto pt-4 border-t border-gray-100">
                                             {!appt.review_id ? (
                                                 <button
-                                                    onClick={() => setReviewModalAppt(appt)}
+                                                    onClick={() => setSearchParams(prev => {
+                                                    const next = new URLSearchParams(prev);
+                                                    next.set('modal', 'review');
+                                                    next.set('apptId', appt.id);
+                                                    return next;
+                                                })}
                                                     className="w-full flex justify-center items-center gap-2 bg-yellow-50 text-yellow-700 py-2 rounded-xl text-sm font-bold hover:bg-yellow-100 transition border border-yellow-200"
                                                 >
                                                     <Star className="h-4 w-4" /> Rate Experience
@@ -405,7 +458,12 @@ export default function OrganizationDetails() {
                         <BookingWizard
                             orgId={org.id}
                             service={selectedService}
-                            onClose={() => setSelectedService(null)}
+                            onClose={() => setSearchParams(prev => {
+                                const next = new URLSearchParams(prev);
+                                next.delete('bookingServiceId');
+                                next.delete('step');
+                                return next;
+                            })}
                         />
                     )}
 
@@ -413,9 +471,19 @@ export default function OrganizationDetails() {
                     {reviewModalAppt && (
                         <ReviewModal
                             appointment={reviewModalAppt}
-                            onClose={() => setReviewModalAppt(null)}
+                            onClose={() => setSearchParams(prev => {
+                                const next = new URLSearchParams(prev);
+                                next.delete('modal');
+                                next.delete('apptId');
+                                return next;
+                            })}
                             onSuccess={() => {
-                                setReviewModalAppt(null);
+                                setSearchParams(prev => {
+                                    const next = new URLSearchParams(prev);
+                                    next.delete('modal');
+                                    next.delete('apptId');
+                                    return next;
+                                });
                                 // A quick refresh by replacing the state instead of full data reload for instant feedback
                                 setPastAppointments(prev => prev.map(a =>
                                     a.id === reviewModalAppt.id ? { ...a, review_id: 'new', review_rating: 5 } : a

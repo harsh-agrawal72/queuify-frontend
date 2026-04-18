@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import {
     Plus,
@@ -38,6 +38,7 @@ const ServiceManagement = () => {
 
     // Modals
     const [serviceModal, setServiceModal] = useState({ open: false, edit: false, data: null });
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // ─── Fetch Services ───
     const fetchServices = useCallback(async () => {
@@ -66,6 +67,23 @@ const ServiceManagement = () => {
             setLoadingResources(prev => ({ ...prev, [serviceId]: false }));
         }
     };
+
+    useEffect(() => {
+        const modal = searchParams.get('modal');
+        const isEdit = searchParams.get('edit') === 'true';
+        const serviceId = searchParams.get('serviceId');
+
+        if (modal === 'service' && services.length > 0) {
+            if (isEdit && serviceId) {
+                const service = services.find(s => String(s.id) === String(serviceId));
+                setServiceModal({ open: true, edit: true, data: service || null });
+            } else {
+                setServiceModal({ open: true, edit: false, data: null });
+            }
+        } else {
+            setServiceModal({ open: false, edit: false, data: null });
+        }
+    }, [searchParams, services]);
 
     // ─── Toggle Service Expand ───
     const toggleService = (serviceId) => {
@@ -98,7 +116,13 @@ const ServiceManagement = () => {
                 });
                 toast.success(t('service.created', "Service created"));
             }
-            setServiceModal({ open: false, edit: false, data: null });
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.delete('modal');
+                next.delete('edit');
+                next.delete('serviceId');
+                return next;
+            });
             fetchServices();
         } catch (error) {
             toast.error(error.response?.data?.message || t('common.operation_failed', "Operation failed"));
@@ -128,7 +152,12 @@ const ServiceManagement = () => {
                     <p className="text-sm text-gray-500 mt-1">{t('service.mgmt_subtitle', 'Create and manage the types of services your organization provides.')}</p>
                 </div>
                 <button
-                    onClick={() => setServiceModal({ open: true, edit: false, data: null })}
+                    onClick={() => setSearchParams(prev => {
+                        const next = new URLSearchParams(prev);
+                        next.set('modal', 'service');
+                        next.set('edit', 'false');
+                        return next;
+                    })}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-medium"
                 >
                     <Plus className="h-4 w-4" /> {t('service.create_service', 'Create Service')}
@@ -170,7 +199,16 @@ const ServiceManagement = () => {
 
                                     <div className="flex items-center justify-end gap-1 sm:gap-2 ml-auto sm:ml-0">
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); setServiceModal({ open: true, edit: true, data: service }); }}
+                                            onClick={(e) => { 
+                                                e.stopPropagation(); 
+                                                setSearchParams(prev => {
+                                                    const next = new URLSearchParams(prev);
+                                                    next.set('modal', 'service');
+                                                    next.set('edit', 'true');
+                                                    next.set('serviceId', service.id);
+                                                    return next;
+                                                });
+                                            }}
                                             className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                             title={t('common.edit', 'Edit')}
                                         >
@@ -245,7 +283,13 @@ const ServiceManagement = () => {
             <FormModal
                 open={serviceModal.open}
                 title={serviceModal.edit ? t('admin.services.edit', 'Edit Service') : t('admin.services.create', 'New Service')}
-                onClose={() => setServiceModal({ open: false, edit: false, data: null })}
+                onClose={() => setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('edit');
+                    next.delete('serviceId');
+                    return next;
+                })}
                 onSubmit={handleServiceSubmit}
                 fields={[
                     { name: 'name', label: t('admin.services.service_name', 'Service Name'), type: 'text', required: true },

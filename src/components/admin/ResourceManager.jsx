@@ -17,7 +17,7 @@ import toast from 'react-hot-toast';
 import InfoTooltip from '../common/InfoTooltip';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const ResourceManager = () => {
     const { t } = useTranslation();
@@ -32,6 +32,7 @@ const ResourceManager = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [currentId, setCurrentId] = useState(null);
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -69,33 +70,62 @@ const ResourceManager = () => {
         fetchServices();
     }, []);
 
+    useEffect(() => {
+        const modal = searchParams.get('modal');
+        const isEdit = searchParams.get('edit') === 'true';
+        const resourceId = searchParams.get('resourceId');
+
+        if (modal === 'resource' && resources.length > 0) {
+            if (isEdit && resourceId) {
+                const res = resources.find(r => String(r.id) === String(resourceId));
+                if (res) {
+                    setIsEditMode(true);
+                    setCurrentId(res.id);
+                    setFormData({
+                        name: res.name,
+                        type: res.type,
+                        description: res.description || '',
+                        concurrent_capacity: res.concurrent_capacity || 1,
+                        is_active: res.is_active !== false,
+                        serviceIds: res.service_mappings || []
+                    });
+                }
+                setIsModalOpen(true);
+            } else {
+                setIsEditMode(false);
+                setFormData({
+                    name: '',
+                    type: 'staff',
+                    description: '',
+                    concurrent_capacity: 1,
+                    is_active: true,
+                    serviceIds: []
+                });
+                setIsModalOpen(true);
+            }
+        } else {
+            setIsModalOpen(false);
+            setIsEditMode(false);
+        }
+    }, [searchParams, resources, services]);
+
     const openCreateModal = () => {
-        setIsEditMode(false);
-        setFormData({
-            name: '',
-            type: 'staff',
-            description: '',
-            concurrent_capacity: 1,
-            is_active: true,
-            serviceIds: []
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('modal', 'resource');
+            next.set('edit', 'false');
+            return next;
         });
-        setIsModalOpen(true);
     };
 
     const openEditModal = (res) => {
-        setIsEditMode(true);
-        setCurrentId(res.id);
-        
-        // Backend now returns service_mappings (array of {id, price})
-        setFormData({
-            name: res.name,
-            type: res.type,
-            description: res.description || '',
-            concurrent_capacity: res.concurrent_capacity || 1,
-            is_active: res.is_active !== false,
-            serviceIds: res.service_mappings || []
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('modal', 'resource');
+            next.set('edit', 'true');
+            next.set('resourceId', res.id);
+            return next;
         });
-        setIsModalOpen(true);
     };
 
     const handleServiceToggle = (serviceId) => {
@@ -142,7 +172,13 @@ const ResourceManager = () => {
                 await api.post('/resources', formData);
                 toast.success(t('resource_mgmt.create_success', 'Resource created'));
             }
-            setIsModalOpen(false);
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.delete('modal');
+                next.delete('edit');
+                next.delete('resourceId');
+                return next;
+            });
             fetchResources();
         } catch (error) {
             console.error(error);
@@ -252,7 +288,13 @@ const ResourceManager = () => {
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                             <h2 className="font-semibold text-gray-900">{isEditMode ? t('resource_mgmt.edit_resource', 'Edit Resource') : t('resource_mgmt.new_resource', 'New Resource')}</h2>
-                            <button onClick={() => setIsModalOpen(false)}><X className="h-5 w-5 text-gray-400" /></button>
+                            <button onClick={() => setSearchParams(prev => {
+                                const next = new URLSearchParams(prev);
+                                next.delete('modal');
+                                next.delete('edit');
+                                next.delete('resourceId');
+                                return next;
+                            })}><X className="h-5 w-5 text-gray-400" /></button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
                             <div className="space-y-4">

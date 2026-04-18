@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, apiService } from '../../services/api';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO, isPast, isValid } from 'date-fns';
 import {
     Calendar, Clock, MapPin, XCircle, Search, Ticket, User,
@@ -399,12 +399,15 @@ export default function MyAppointments() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingAction, setLoadingAction] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const html5QrCodeRef = useRef(null);
 
     const stopScanner = useCallback(async () => {
-        setIsScannerOpen(false);
-    }, []);
+        const params = Object.fromEntries(searchParams);
+        delete params.modal;
+        setSearchParams(params);
+    }, [searchParams, setSearchParams]);
 
     const fetchAppointments = useCallback(async () => {
         setLoading(true);
@@ -488,7 +491,11 @@ export default function MyAppointments() {
             toast.error("Camera access requires a secure (HTTPS) connection.");
             return;
         }
-        setIsScannerOpen(true);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('modal', 'scanner');
+            return next;
+        });
     };
 
     const [filter, setFilter] = useState('upcoming');
@@ -496,6 +503,33 @@ export default function MyAppointments() {
     const [reschedulingAppt, setReschedulingAppt] = useState(null);
     const [mapModalAppt, setMapModalAppt] = useState(null);
     const [disputeModalAppt, setDisputeModalAppt] = useState(null);
+
+    useEffect(() => {
+        const filterParam = searchParams.get('filter');
+        if (filterParam && ['upcoming', 'history', 'cancelled'].includes(filterParam)) {
+            setFilter(filterParam);
+        }
+
+        const modal = searchParams.get('modal');
+        const apptId = searchParams.get('apptId');
+
+        setIsScannerOpen(modal === 'scanner');
+        
+        if (!modal || (modal !== 'scanner' && !apptId)) {
+            setReviewModalAppt(null);
+            setReschedulingAppt(null);
+            setMapModalAppt(null);
+            setDisputeModalAppt(null);
+        } else if (apptId && appointments.length > 0) {
+            const appt = appointments.find(a => String(a.id) === String(apptId));
+            if (appt) {
+                if (modal === 'review') setReviewModalAppt(appt);
+                else if (modal === 'reschedule') setReschedulingAppt(appt);
+                else if (modal === 'map') setMapModalAppt(appt);
+                else if (modal === 'dispute') setDisputeModalAppt(appt);
+            }
+        }
+    }, [searchParams, appointments]);
 
     useEffect(() => {
         fetchAppointments();
@@ -615,7 +649,11 @@ export default function MyAppointments() {
                 {tabs.map(tab => (
                     <button
                         key={tab.key}
-                        onClick={() => setFilter(tab.key)}
+                        onClick={() => setSearchParams(prev => {
+                            const next = new URLSearchParams(prev);
+                            next.set('filter', tab.key);
+                            return next;
+                        })}
                         className={`p-4 rounded-2xl border transition-all text-left ${filter === tab.key ? 'bg-white border-indigo-200 shadow-lg shadow-indigo-100 ring-2 ring-indigo-100' : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'}`}
                     >
                         <div className="flex items-center justify-between mb-2">
@@ -646,10 +684,30 @@ export default function MyAppointments() {
                                 user={user}
                                 onCancel={handleCancel}
                                 onRespond={handleRespond}
-                                onSetReschedule={setReschedulingAppt}
-                                onSetReview={setReviewModalAppt}
-                                onSetMap={setMapModalAppt}
-                                onSetDispute={setDisputeModalAppt}
+                                onSetReschedule={(appt) => setSearchParams(prev => {
+                                    const next = new URLSearchParams(prev);
+                                    next.set('modal', 'reschedule');
+                                    next.set('apptId', appt.id);
+                                    return next;
+                                })}
+                                onSetReview={(appt) => setSearchParams(prev => {
+                                    const next = new URLSearchParams(prev);
+                                    next.set('modal', 'review');
+                                    next.set('apptId', appt.id);
+                                    return next;
+                                })}
+                                onSetMap={(appt) => setSearchParams(prev => {
+                                    const next = new URLSearchParams(prev);
+                                    next.set('modal', 'map');
+                                    next.set('apptId', appt.id);
+                                    return next;
+                                })}
+                                onSetDispute={(appt) => setSearchParams(prev => {
+                                    const next = new URLSearchParams(prev);
+                                    next.set('modal', 'dispute');
+                                    next.set('apptId', appt.id);
+                                    return next;
+                                })}
                                 onDelayed={handleDelayed}
                             />
                         ))}
@@ -663,10 +721,54 @@ export default function MyAppointments() {
                 </div>
             )}
 
-            {reviewModalAppt && <ReviewModal appointment={reviewModalAppt} onClose={() => setReviewModalAppt(null)} onSuccess={() => { setReviewModalAppt(null); fetchAppointments(); }} />}
-            {reschedulingAppt && <RescheduleModal appointment={reschedulingAppt} onClose={() => setReschedulingAppt(null)} onSuccess={() => { setReschedulingAppt(null); fetchAppointments(); }} />}
-            {mapModalAppt && <MapModal isOpen={!!mapModalAppt} onClose={() => setMapModalAppt(null)} address={mapModalAppt?.org_address} orgName={mapModalAppt?.org_name} />}
-            {disputeModalAppt && <DisputeModal isOpen={!!disputeModalAppt} onClose={() => setDisputeModalAppt(null)} onSubmit={handleDispute} appointment={disputeModalAppt} />}
+            {reviewModalAppt && <ReviewModal appointment={reviewModalAppt} onClose={() => {
+                setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('apptId');
+                    return next;
+                });
+            }} onSuccess={() => { 
+                setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('apptId');
+                    return next;
+                });
+                fetchAppointments(); 
+            }} />}
+            {reschedulingAppt && <RescheduleModal appointment={reschedulingAppt} onClose={() => {
+                setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('apptId');
+                    return next;
+                });
+            }} onSuccess={() => { 
+                setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('apptId');
+                    return next;
+                });
+                fetchAppointments(); 
+            }} />}
+            {mapModalAppt && <MapModal isOpen={!!mapModalAppt} onClose={() => {
+                setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('apptId');
+                    return next;
+                });
+            }} address={mapModalAppt?.org_address} orgName={mapModalAppt?.org_name} />}
+            {disputeModalAppt && <DisputeModal isOpen={!!disputeModalAppt} onClose={() => {
+                setSearchParams(prev => {
+                    const next = new URLSearchParams(prev);
+                    next.delete('modal');
+                    next.delete('apptId');
+                    return next;
+                });
+            }} onSubmit={handleDispute} appointment={disputeModalAppt} />}
 
             {/* 📸 QR Scanner Modal */}
             <AnimatePresence>

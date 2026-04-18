@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Clock, CheckCircle, SkipForward, Play,
@@ -233,6 +234,7 @@ const AdminLiveQueue = () => {
     const [noteEditingAppt, setNoteEditingAppt] = useState(null);
     const [tempNote, setTempNote] = useState('');
     const [isSavingNote, setIsSavingNote] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const fetchQueue = useCallback(async (isBackground = false) => {
         if (!isBackground) setLoading(true);
@@ -302,6 +304,60 @@ const AdminLiveQueue = () => {
         fetchQueue();
         fetchPredictiveInsights();
     }, [selectedDate]);
+
+    useEffect(() => {
+        const modal = searchParams.get('modal');
+        const apptId = searchParams.get('apptId');
+        const resourceId = searchParams.get('resourceId');
+
+        // QR Modal
+        setIsQrModalOpen(modal === 'qr');
+
+        // Manual Entry Modal
+        if (modal === 'walkin') {
+            const queue = queues.find(q => String(q.resource_id) === String(resourceId));
+            setActiveQueueForManual(queue || null);
+            setIsManualModalOpen(true);
+        } else {
+            setIsManualModalOpen(false);
+        }
+
+        // Transition Modal
+        if (modal === 'transition' && apptId && queues.length > 0) {
+            let found = null;
+            for (const q of queues) {
+                const current = q.appointments.find(a => String(a.id) === String(apptId));
+                if (current) {
+                    const next = q.appointments.find(a => (a.status === 'confirmed' || a.status === 'pending') && a.id !== current.id);
+                    found = { queueId: q.id, currentAppt: current, nextAppt: next };
+                    break;
+                }
+            }
+            setTransitioningQueue(found);
+        } else {
+            setTransitioningQueue(null);
+        }
+
+        // Note Modal
+        if (modal === 'note' && apptId && queues.length > 0) {
+            let found = null;
+            for (const q of queues) {
+                const appt = q.appointments.find(a => String(a.id) === String(apptId));
+                if (appt) {
+                    found = appt;
+                    break;
+                }
+            }
+            if (found) {
+                setNoteEditingAppt(found);
+                setTempNote(found.admin_remarks || '');
+            } else {
+                setNoteEditingAppt(null);
+            }
+        } else {
+            setNoteEditingAppt(null);
+        }
+    }, [searchParams, queues]);
 
     const user = JSON.parse(localStorage.getItem('user'));
     const { queueData, emitStatusChange } = useQueueSocket(user?.org_id);
@@ -376,10 +432,11 @@ const AdminLiveQueue = () => {
         }
 
         if (currentlyServing) {
-            setTransitioningQueue({
-                queueId: queue?.id,
-                currentAppt: currentlyServing,
-                nextAppt: nextInLine
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.set('modal', 'transition');
+                next.set('apptId', currentlyServing.id);
+                return next;
             });
         } else {
             await updateStatus(nextInLine.id, 'serving');
@@ -398,7 +455,12 @@ const AdminLiveQueue = () => {
             callPatient(nextAppt.token_number || '---');
 
             toast.success(t('queue.advanced_success', `Queue advanced! Ticket #{{token}} is now serving.`, { token: nextAppt.token_number || '---' }), { id: loadingToast });
-            setTransitioningQueue(null);
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.delete('modal');
+                next.delete('apptId');
+                return next;
+            });
             fetchQueue(true);
         } catch (error) {
             toast.error(t('queue.transition_failed', "Transition failed"), { id: loadingToast });
@@ -433,7 +495,12 @@ const AdminLiveQueue = () => {
             fetchSlotsForResource(queue.resource_id);
             fetchServicesForResource(queue.resource_id);
         }
-        setIsManualModalOpen(true);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('modal', 'walkin');
+            next.set('resourceId', queue?.resource_id);
+            return next;
+        });
     };
 
     const submitManualEntry = async (e) => {
@@ -454,7 +521,12 @@ const AdminLiveQueue = () => {
                 status: 'confirmed'
             });
             toast.success(t('queue.walkin_added', "Walk-in added!"), { id: loadingToast });
-            setIsManualModalOpen(false);
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.delete('modal');
+                next.delete('resourceId');
+                return next;
+            });
             fetchQueue(true);
         } catch (error) {
             toast.error(error.response?.data?.message || t('queue.walkin_failed', "Failed to add walk-in"), { id: loadingToast });
@@ -501,7 +573,11 @@ const AdminLiveQueue = () => {
                     </button>
 
                     <button
-                        onClick={() => setIsQrModalOpen(true)}
+                        onClick={() => setSearchParams(prev => {
+                            const next = new URLSearchParams(prev);
+                            next.set('modal', 'qr');
+                            return next;
+                        })}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 h-[48px] bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
                     >
                         <QrCode className="h-4 w-4 text-indigo-400" />
@@ -689,8 +765,12 @@ const AdminLiveQueue = () => {
                                                         t={t}
                                                         predictiveInsights={predictiveInsights}
                                                         onEditNote={(appt) => {
-                                                            setNoteEditingAppt(appt);
-                                                            setTempNote(appt.admin_remarks || '');
+                                                            setSearchParams(prev => {
+                                                                const next = new URLSearchParams(prev);
+                                                                next.set('modal', 'note');
+                                                                next.set('apptId', appt.id);
+                                                                return next;
+                                                            });
                                                         }}
                                                         onVerifyCheckin={(appt) => {
                                                             const isWalkIn = !appt.user_id;
@@ -736,7 +816,12 @@ const AdminLiveQueue = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
-                            onClick={() => setTransitioningQueue(null)}
+                            onClick={() => setSearchParams(prev => {
+                                const next = new URLSearchParams(prev);
+                                next.delete('modal');
+                                next.delete('apptId');
+                                return next;
+                            })}
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 30 }}
