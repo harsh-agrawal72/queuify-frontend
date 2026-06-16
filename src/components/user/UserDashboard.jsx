@@ -101,13 +101,12 @@ export default function UserDashboard() {
         setLoading(true);
         setError(null);
         try {
-            const [statsRes, appointmentsRes] = await Promise.all([
-                api.get('/user/stats'),
-                api.get('/appointments/my')
-            ]);
+            const statsRes = await api.get('/user/stats');
             setStats(statsRes.data);
-            setAllAppointments(appointmentsRes.data);
-            setRecentAppointments(appointmentsRes.data.slice(0, 5));
+            // Use recentCompleted from stats instead of a separate /appointments/my call
+            const recent = statsRes.data?.recentCompleted || [];
+            setRecentAppointments(recent);
+            setAllAppointments(recent);
         } catch (err) {
             console.error('Failed to fetch dashboard data:', err);
             setError(t('dashboard.fetch_error', 'Could not load dashboard data. The server might be warming up.'));
@@ -116,12 +115,17 @@ export default function UserDashboard() {
         }
     };
 
+    // Run once on mount — tab changes do NOT re-fetch data
+    useEffect(() => {
+        fetchData();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Sync active tab from URL params without re-fetching
     useEffect(() => {
         const tab = searchParams.get('tab');
         if (tab && ['overview', 'payments', 'notifications', 'plans'].includes(tab)) {
             setActiveTab(tab);
         }
-        fetchData();
     }, [searchParams]);
 
     // WebSocket Integration for real-time updates on dashboard
@@ -129,11 +133,11 @@ export default function UserDashboard() {
     const { queueData } = useQueueSocket(orgId);
 
     useEffect(() => {
-        if (queueData) {
-            // Re-fetch everything on socket update to keep dashboard fresh
+        // Only re-fetch if there is an active next appointment to track
+        if (queueData && stats?.nextAppointment) {
             fetchData();
         }
-    }, [queueData]);
+    }, [queueData]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
     const nextApt = stats?.nextAppointment;

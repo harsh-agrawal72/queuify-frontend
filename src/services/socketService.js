@@ -7,20 +7,16 @@ let socketInstance = null;
 
 export const getSocket = () => {
     if (!socketInstance) {
-        console.log('Initializing global socket connection to:', SOCKET_URL);
         socketInstance = io(SOCKET_URL, {
-            transports: ['websocket', 'polling'], 
-            reconnectionAttempts: 50, // High number to survive cold starts
-            reconnectionDelay: 2000, 
+            transports: ['websocket'], // Skip polling — websocket-first for lower latency
+            reconnectionAttempts: 50,
+            reconnectionDelay: 1000,  // Reduced from 2s to 1s
             timeout: 20000,
-        });
-
-        socketInstance.on('connect', () => {
-            console.log('Global socket connected:', socketInstance.id);
+            upgrade: false,           // Don't upgrade (we're already on WS)
         });
 
         socketInstance.on('connect_error', (error) => {
-            console.error('Socket connection error:', error.message);
+            console.warn('Socket connection error:', error.message);
         });
     }
     return socketInstance;

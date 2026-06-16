@@ -8,16 +8,18 @@ if (API_URL && !API_URL.endsWith('/v1')) {
     API_URL = `${API_URL.replace(/\/$/, '')}/v1`;
 }
 
-console.log('API URL Configuration:', API_URL);
-
 const api = axios.create({
     baseURL: API_URL,
-    timeout: 15000, // 15s — fail fast so retry kicks in sooner (keep-alive prevents cold starts)
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
     },
     withCredentials: true 
 });
+
+// In-flight GET request deduplication — prevents duplicate network calls
+// If two components request the same URL simultaneously, only one HTTP call fires
+const inFlightRequests = new Map();
 
 api.interceptors.request.use(
     (config) => {
@@ -25,15 +27,39 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Deduplicate concurrent GET requests to the same URL
+        if (config.method === 'get') {
+            const key = config.url + JSON.stringify(config.params || {});
+            if (inFlightRequests.has(key)) {
+                // Return a special cancel token that resolves with the existing promise
+                config._dedupeKey = key;
+                config._dedupePromise = inFlightRequests.get(key);
+            } else {
+                config._dedupeKey = key;
+            }
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
 );
 
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Clean up deduplication tracking on success
+        if (response.config._dedupeKey) {
+            inFlightRequests.delete(response.config._dedupeKey);
+        }
+        return response;
+    },
     async (error) => {
         const { config, response } = error;
+
+        // Clean up deduplication on error
+        if (config?._dedupeKey) {
+            inFlightRequests.delete(config._dedupeKey);
+        }
         
         // 1. Handle 401 Unauthorized (Auth expiration)
         if (response && response.status === 401) {
@@ -52,19 +78,15 @@ api.interceptors.response.use(
 
         const isNetworkError = !response && error.code !== 'ERR_CANCELED';
         const isTimeout = error.code === 'ECONNABORTED';
-        // 502/503/504 = gateway issues, 500 on first attempt may be Render waking up
         const isRetryableStatus = response && [500, 502, 503, 504].includes(response.status);
 
         if (isNetworkError || isTimeout || isRetryableStatus) {
             config._retryCount = (config._retryCount || 0) + 1;
             
-            if (config._retryCount <= 2) { // Max 2 retries
+            if (config._retryCount <= 2) {
                 console.warn(`[API] Transient error (${error.code || response?.status}). Retrying attempt ${config._retryCount}...`);
-                
-                // Fast backoff: 1s, 2s
                 const delay = 1000 * config._retryCount;
                 await new Promise(resolve => setTimeout(resolve, delay));
-                
                 return api(config);
             }
         }

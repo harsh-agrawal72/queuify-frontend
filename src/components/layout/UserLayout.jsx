@@ -55,7 +55,7 @@ export default function UserLayout() {
         if (!user) return;
 
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000); // Check every 30s
+        const interval = setInterval(fetchNotifications, 60000); // Check every 60s (WS handles real-time)
         return () => clearInterval(interval);
     }, [user]);
 
