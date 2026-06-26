@@ -208,7 +208,7 @@ export default function SupportInbox() {
 
         const handleConvFlagUpdate = (data) => {
             if (activeChat && data.conversationId === activeChat.id) {
-                const column = \`is_\${data.flagType}_by_\${data.senderType}\`;
+                const column = `is_${data.flagType}_by_${data.senderType}`;
                 setActiveChat(prev => ({
                     ...prev,
                     [column]: data.value
@@ -282,15 +282,15 @@ export default function SupportInbox() {
             clearTimeout(typingTimeoutRef.current);
         }
 
-        api.get(\`/chat/presence/\${conv.user_id}\`).then(res => {
+        api.get(`/chat/presence/${conv.user_id}`).then(res => {
             setPartnerPresence(res.data);
         }).catch(console.error);
 
         try {
             socket?.emit('join_chat', conv.id);
-            await api.patch(\`/chat/\${conv.id}/read\`, { readerType: 'admin' });
+            await api.patch(`/chat/${conv.id}/read`, { readerType: 'admin' });
             
-            const res = await api.get(\`/chat/\${conv.id}/messages\`);
+            const res = await api.get(`/chat/${conv.id}/messages`);
             setMessages(res.data);
             scrollToBottom();
             
@@ -332,7 +332,7 @@ export default function SupportInbox() {
     const handleReactMessage = async (messageId, emoji) => {
         setActiveReactionMenuMessageId(null);
         try {
-            const res = await api.post(\`/chat/messages/\${messageId}/react\`, { emoji });
+            const res = await api.post(`/chat/messages/${messageId}/react`, { emoji });
             setMessages(prev => prev.map(m => m.id === messageId ? res.data : m));
         } catch (error) {
             console.error('Failed to react to message:', error);
@@ -346,7 +346,7 @@ export default function SupportInbox() {
 
     const handleToggleStar = async (messageId) => {
         try {
-            const res = await api.post(\`/chat/messages/\${messageId}/star\`);
+            const res = await api.post(`/chat/messages/${messageId}/star`);
             setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_starred: res.data.is_starred } : m));
             toast.success(res.data.is_starred ? t('common.message_starred', 'Message starred') : t('common.message_unstarred', 'Message unstarred'));
         } catch (error) {
@@ -358,7 +358,7 @@ export default function SupportInbox() {
     const handleClearChat = async () => {
         setShowClearConfirmModal(false);
         try {
-            await api.delete(\`/chat/\${activeChat.id}/clear\`, {
+            await api.delete(`/chat/${activeChat.id}/clear`, {
                 data: { senderType: 'admin' }
             });
             toast.success(t('common.chat_cleared_success', 'Chat history cleared.'));
@@ -389,7 +389,7 @@ export default function SupportInbox() {
 
     const handleSetDisappearing = async (duration) => {
         try {
-            const res = await api.patch(\`/chat/\${activeChat.id}/disappearing\`, {
+            const res = await api.patch(`/chat/${activeChat.id}/disappearing`, {
                 duration,
                 senderType: 'admin'
             });
@@ -416,14 +416,14 @@ export default function SupportInbox() {
         const replyMsg = replyingTo;
         setReplyingTo(null);
 
-        const tempId = \`temp-\${Date.now()}\`;
+        const tempId = `temp-${Date.now()}`;
 
         try {
             let res;
             if (fileToSend) {
                 const tempMsg = {
                     id: tempId,
-                    content: \`[Media] \${fileToSend.name}\`,
+                    content: `[Media] ${fileToSend.name}`,
                     sender_type: 'admin',
                     created_at: new Date().toISOString(),
                     attachments: [{
@@ -439,7 +439,7 @@ export default function SupportInbox() {
                 formData.append('file', fileToSend);
                 formData.append('senderType', 'admin');
 
-                res = await api.post(\`/chat/\${activeChat.id}/messages/attachment\`, formData, {
+                res = await api.post(`/chat/${activeChat.id}/messages/attachment`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
 
@@ -457,7 +457,7 @@ export default function SupportInbox() {
                 setMessages(prev => [...prev, tempMsg]);
                 scrollToBottom();
 
-                res = await api.post(\`/chat/\${activeChat.id}/messages\`, {
+                res = await api.post(`/chat/${activeChat.id}/messages`, {
                     content,
                     senderType: 'admin',
                     replyToId: replyMsg ? replyMsg.id : null
@@ -515,18 +515,18 @@ export default function SupportInbox() {
                                 <button
                                     key={conv.id}
                                     onClick={() => handleSelectChat(conv)}
-                                    className={\`w-full text-left p-3.5 rounded-2xl transition-all duration-200 flex items-center gap-3 border \${
+                                    className={`w-full text-left p-3.5 rounded-2xl transition-all duration-200 flex items-center gap-3 border ${
                                         isActive 
                                             ? 'bg-indigo-600 border-indigo-600 shadow-md shadow-indigo-200' 
                                             : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-100'
-                                    }\`}
+                                    }`}
                                 >
                                     <div className="relative flex-shrink-0">
-                                        <div className={\`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg \${isActive ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-700 shadow-inner border border-white'}\`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${isActive ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-700 shadow-inner border border-white'}`}>
                                             {conv.user_name?.[0]?.toUpperCase()}
                                         </div>
                                         {Number(conv.disappearing_duration) > 0 && (
-                                            <span className={\`absolute -bottom-1 -right-1 p-1 rounded-full shadow-sm border \${isActive ? 'bg-white border-indigo-600 text-indigo-600' : 'bg-indigo-600 border-white text-white'}\`} title="Disappearing messages active">
+                                            <span className={`absolute -bottom-1 -right-1 p-1 rounded-full shadow-sm border ${isActive ? 'bg-white border-indigo-600 text-indigo-600' : 'bg-indigo-600 border-white text-white'}`} title="Disappearing messages active">
                                                 <Clock className="w-2.5 h-2.5" />
                                             </span>
                                         )}
@@ -538,17 +538,17 @@ export default function SupportInbox() {
                                     </div>
                                     <div className="flex-1 min-w-0 pr-1">
                                         <div className="flex justify-between items-center mb-1">
-                                            <h4 className={\`font-bold text-sm truncate flex items-center gap-1.5 \${isActive ? 'text-white' : unread ? 'text-gray-900' : 'text-gray-700'}\`}>
+                                            <h4 className={`font-bold text-sm truncate flex items-center gap-1.5 ${isActive ? 'text-white' : unread ? 'text-gray-900' : 'text-gray-700'}`}>
                                                 {conv.user_name}
                                                 {conv.is_starred_by_admin && (
-                                                    <Star className={\`w-3.5 h-3.5 \${isActive ? 'text-white fill-white' : 'text-amber-500 fill-amber-500'} flex-shrink-0\`} />
+                                                    <Star className={`w-3.5 h-3.5 ${isActive ? 'text-white fill-white' : 'text-amber-500 fill-amber-500'} flex-shrink-0`} />
                                                 )}
                                             </h4>
-                                            <span className={\`text-[10px] font-semibold tracking-wide \${isActive ? 'text-indigo-100' : 'text-gray-400'}\`}>
+                                            <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-indigo-100' : 'text-gray-400'}`}>
                                                 {new Date(conv.last_message_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
                                             </span>
                                         </div>
-                                        <p className={\`text-xs truncate \${isActive ? 'text-indigo-100' : unread ? 'text-gray-900 font-bold' : 'text-gray-500'}\`}>
+                                        <p className={`text-xs truncate ${isActive ? 'text-indigo-100' : unread ? 'text-gray-900 font-bold' : 'text-gray-500'}`}>
                                             {conv.last_message || t('common.no_messages', 'No messages yet')}
                                         </p>
                                     </div>
@@ -593,7 +593,7 @@ export default function SupportInbox() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setShowRightPane(!showRightPane)}
-                                    className={\`p-2.5 rounded-xl transition-all \${showRightPane ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}\`}
+                                    className={`p-2.5 rounded-xl transition-all ${showRightPane ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}`}
                                     title="Toggle Details"
                                 >
                                     {showRightPane ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
@@ -610,7 +610,7 @@ export default function SupportInbox() {
                                             <div className="flex items-center gap-2 bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 rounded-2xl px-5 py-2.5 text-xs text-indigo-800 shadow-sm">
                                                 <Clock className="h-4 w-4 text-indigo-600 animate-pulse" />
                                                 <span className="font-medium">
-                                                    {t('common.disappearing_banner', \`Disappearing messages are on ( \${activeChat.disappearing_duration === 86400 ? '24 hours' : activeChat.disappearing_duration === 604800 ? '7 days' : '90 days'} ).\`)}
+                                                    {t('common.disappearing_banner', `Disappearing messages are on ( ${activeChat.disappearing_duration === 86400 ? '24 hours' : activeChat.disappearing_duration === 604800 ? '7 days' : '90 days'} ).`)}
                                                 </span>
                                             </div>
                                         </div>
@@ -630,8 +630,8 @@ export default function SupportInbox() {
 
                                         const isMe = msg.sender_type === 'admin';
                                         return (
-                                            <div key={msg.id || i} id={\`msg-\${msg.id}\`} className={\`flex w-full group/row \${isMe ? 'justify-end' : 'justify-start'}\`}>
-                                                <div className={\`flex max-w-[75%] \${isMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-2\`}>
+                                            <div key={msg.id || i} id={`msg-${msg.id}`} className={`flex w-full group/row ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`flex max-w-[75%] ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-2`}>
                                                     
                                                     {/* Avatar for user messages */}
                                                     {!isMe && (
@@ -655,14 +655,14 @@ export default function SupportInbox() {
                                                         {msg.reply_to_id && (
                                                             <div 
                                                                 onClick={() => {
-                                                                    const el = document.getElementById(\`msg-\${msg.reply_to_id}\`);
+                                                                    const el = document.getElementById(`msg-${msg.reply_to_id}`);
                                                                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                                                 }}
-                                                                className={\`mb-1 p-2.5 rounded-xl text-xs cursor-pointer border-l-4 select-none backdrop-blur-sm \${
+                                                                className={`mb-1 p-2.5 rounded-xl text-xs cursor-pointer border-l-4 select-none backdrop-blur-sm ${
                                                                     isMe 
                                                                         ? 'bg-indigo-700/40 border-indigo-300 text-indigo-50' 
                                                                         : 'bg-gray-200/60 border-indigo-400 text-gray-700'
-                                                                }\`}
+                                                                }`}
                                                             >
                                                                 <div className="font-extrabold mb-0.5 opacity-90">
                                                                     {msg.reply_to_sender_type === 'admin' ? t('common.support', 'Support') : activeChat?.user_name || 'User'}
@@ -671,16 +671,16 @@ export default function SupportInbox() {
                                                             </div>
                                                         )}
 
-                                                        <div className={\`relative px-5 py-3.5 text-[14.5px] shadow-sm transition-all \${
+                                                        <div className={`relative px-5 py-3.5 text-[14.5px] shadow-sm transition-all ${
                                                             isMe 
                                                                 ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-3xl rounded-br-sm shadow-indigo-200' 
                                                                 : 'bg-white text-gray-800 border border-gray-100 rounded-3xl rounded-bl-sm shadow-gray-200'
-                                                        }\`}>
+                                                        }`}>
                                                             
                                                             {/* Action Buttons (Reply/React/More) */}
-                                                            <div className={\`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity \${
+                                                            <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity ${
                                                                 isMe ? '-left-[110px]' : '-right-[110px]'
-                                                            }\`}>
+                                                            }`}>
                                                                 <button onClick={(e) => { e.stopPropagation(); setReplyingTo(msg); }} className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-gray-500 hover:text-indigo-600 shadow-sm" title="Reply">
                                                                     <CornerUpLeft className="h-4 w-4" />
                                                                 </button>
@@ -694,12 +694,12 @@ export default function SupportInbox() {
 
                                                             {/* Dropdown Options Menu */}
                                                             {activeMessageMenuId === msg.id && (
-                                                                <div onClick={(e) => e.stopPropagation()} className={\`absolute top-10 \${isMe ? '-left-32' : '-right-32'} w-44 bg-white border border-gray-150 rounded-2xl shadow-xl z-50 py-1.5 text-gray-800 animate-in fade-in slide-in-from-top-1\`}>
+                                                                <div onClick={(e) => e.stopPropagation()} className={`absolute top-10 ${isMe ? '-left-32' : '-right-32'} w-44 bg-white border border-gray-150 rounded-2xl shadow-xl z-50 py-1.5 text-gray-800 animate-in fade-in slide-in-from-top-1`}>
                                                                     <button onClick={() => { handleCopyMessage(msg.content); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-50 flex items-center gap-2">
                                                                         <Copy className="h-4 w-4 text-gray-400" /> Copy
                                                                     </button>
                                                                     <button onClick={() => { handleToggleStar(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-50 flex items-center gap-2">
-                                                                        <Star className={\`h-4 w-4 \${msg.is_starred ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}\`} /> {msg.is_starred ? 'Unstar' : 'Star'}
+                                                                        <Star className={`h-4 w-4 ${msg.is_starred ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}`} /> {msg.is_starred ? 'Unstar' : 'Star'}
                                                                     </button>
                                                                     <button onClick={() => { setInfoMessage(msg); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-50 flex items-center gap-2">
                                                                         <Info className="h-4 w-4 text-gray-400" /> Info
@@ -709,7 +709,7 @@ export default function SupportInbox() {
 
                                                             {/* Reactions Popover Menu */}
                                                             {activeReactionMenuMessageId === msg.id && (
-                                                                <div className={\`absolute bottom-full mb-2 bg-white border border-gray-150 rounded-full px-2 py-1.5 shadow-xl flex gap-1 z-50 animate-in fade-in slide-in-from-bottom-2 \${isMe ? 'right-0' : 'left-0'}\`}>
+                                                                <div className={`absolute bottom-full mb-2 bg-white border border-gray-150 rounded-full px-2 py-1.5 shadow-xl flex gap-1 z-50 animate-in fade-in slide-in-from-bottom-2 ${isMe ? 'right-0' : 'left-0'}`}>
                                                                     {['👍', '❤️', '😂', '😮', '😢', '🙏'].map(emoji => (
                                                                         <button key={emoji} onClick={() => handleReactMessage(msg.id, emoji)} className="hover:scale-125 transition-transform px-1 text-lg">
                                                                             {emoji}
@@ -723,7 +723,7 @@ export default function SupportInbox() {
                                                                 <div className="space-y-2 mb-2 select-none">
                                                                     {msg.attachments.map((att) => {
                                                                         const isImg = att.mime_type?.startsWith('image/');
-                                                                        const attachmentUrl = \`\${api.defaults.baseURL}/chat/messages/attachment/\${att.id}\`;
+                                                                        const attachmentUrl = `${api.defaults.baseURL}/chat/messages/attachment/${att.id}`;
                                                                         return isImg ? (
                                                                             <div key={att.id} className="relative group/attachment overflow-hidden rounded-xl">
                                                                                 <img src={attachmentUrl} alt="attachment" className="max-w-[240px] max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setActiveLightboxImage(attachmentUrl)} />
@@ -732,12 +732,12 @@ export default function SupportInbox() {
                                                                                 </a>
                                                                             </div>
                                                                         ) : (
-                                                                            <div key={att.id} className={\`flex items-center gap-3 p-3 rounded-xl \${isMe ? 'bg-indigo-700/50 text-indigo-50 border border-indigo-500' : 'bg-gray-50 border border-gray-200'}\`}>
-                                                                                <FileText className={\`h-8 w-8 \${isMe ? 'text-indigo-200' : 'text-indigo-600'}\`} />
+                                                                            <div key={att.id} className={`flex items-center gap-3 p-3 rounded-xl ${isMe ? 'bg-indigo-700/50 text-indigo-50 border border-indigo-500' : 'bg-gray-50 border border-gray-200'}`}>
+                                                                                <FileText className={`h-8 w-8 ${isMe ? 'text-indigo-200' : 'text-indigo-600'}`} />
                                                                                 <div className="flex-1 min-w-0">
                                                                                     <p className="font-semibold text-xs truncate max-w-[150px]">{att.file_name}</p>
                                                                                 </div>
-                                                                                <a href={attachmentUrl} download={att.file_name} target="_blank" rel="noreferrer" className={\`p-1.5 rounded-lg transition-colors \${isMe ? 'hover:bg-indigo-600 text-white' : 'hover:bg-indigo-100 text-indigo-600'}\`}>
+                                                                                <a href={attachmentUrl} download={att.file_name} target="_blank" rel="noreferrer" className={`p-1.5 rounded-lg transition-colors ${isMe ? 'hover:bg-indigo-600 text-white' : 'hover:bg-indigo-100 text-indigo-600'}`}>
                                                                                     <Download className="h-4 w-4" />
                                                                                 </a>
                                                                             </div>
@@ -748,7 +748,7 @@ export default function SupportInbox() {
 
                                                             <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                                                             
-                                                            <div className={\`flex items-center justify-end gap-1 mt-1.5 \${isMe ? 'text-indigo-200' : 'text-gray-400'}\`}>
+                                                            <div className={`flex items-center justify-end gap-1 mt-1.5 ${isMe ? 'text-indigo-200' : 'text-gray-400'}`}>
                                                                 {msg.is_starred && <Star className="h-3 w-3 text-amber-400 fill-amber-400 mr-0.5" />}
                                                                 <span className="text-[10px] font-medium tracking-wide">
                                                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -847,7 +847,7 @@ export default function SupportInbox() {
                                         ) : (
                                             <form onSubmit={handleSendMessage} className="flex items-end gap-2 p-2 relative">
                                                 <div className="flex gap-1 pl-1">
-                                                    <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={\`p-2.5 rounded-full transition-colors \${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}\`}>
+                                                    <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={`p-2.5 rounded-full transition-colors ${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}`}>
                                                         <Smile className="h-5 w-5" />
                                                     </button>
                                                     <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors">
@@ -932,7 +932,7 @@ export default function SupportInbox() {
                                     <div className="bg-gray-50 rounded-2xl p-2 space-y-1">
                                         <div className="w-full text-left px-3 py-2.5 text-sm hover:bg-white hover:shadow-sm rounded-xl flex items-center justify-between transition cursor-pointer" onClick={() => handleToggleConversationFlag('starred')}>
                                             <div className="flex items-center gap-3 text-gray-700 font-medium">
-                                                <Star className={\`w-5 h-5 \${activeChat.is_starred_by_admin ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}\`} />
+                                                <Star className={`w-5 h-5 ${activeChat.is_starred_by_admin ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}`} />
                                                 Star Contact
                                             </div>
                                         </div>
@@ -953,7 +953,7 @@ export default function SupportInbox() {
                                                     <button 
                                                         key={opt.v} 
                                                         onClick={(e) => { e.stopPropagation(); handleSetDisappearing(opt.v); }}
-                                                        className={\`flex-1 py-1.5 text-xs font-semibold rounded-lg border \${Number(activeChat.disappearing_duration) === opt.v ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'}\`}
+                                                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border ${Number(activeChat.disappearing_duration) === opt.v ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'}`}
                                                     >
                                                         {opt.l}
                                                     </button>
