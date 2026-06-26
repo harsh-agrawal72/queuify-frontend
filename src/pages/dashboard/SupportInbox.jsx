@@ -56,7 +56,7 @@ export default function SupportInbox() {
     const formatDuration = (seconds) => {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
         const s = (seconds % 60).toString().padStart(2, '0');
-        return \`\${m}:\${s}\`;
+        return `${m}:${s}`;
     };
 
     const isSameDay = (d1, d2) => {
@@ -117,7 +117,7 @@ export default function SupportInbox() {
 
             mediaRecorderRef.current.onstop = () => {
                 const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                const file = new File([audioBlob], \`voice_message_\${Date.now()}.webm\`, { type: 'audio/webm' });
+                const file = new File([audioBlob], `voice_message_${Date.now()}.webm`, { type: 'audio/webm' });
                 setSelectedFile(file);
                 // Can create object URL for preview if we want a custom audio player, for now we treat as file
                 stream.getTracks().forEach(track => track.stop());
@@ -157,7 +157,7 @@ export default function SupportInbox() {
         if (!convId) return;
         setLoadingStarred(true);
         try {
-            const res = await api.get(\`/chat/\${convId}/starred\`);
+            const res = await api.get(`/chat/${convId}/starred`);
             setStarredMessages(res.data);
         } catch (error) {
             console.error('Failed to fetch starred messages:', error);
@@ -169,11 +169,11 @@ export default function SupportInbox() {
     const handleToggleConversationFlag = async (flagType) => {
         if (!activeChat) return;
         try {
-            const res = await api.post(\`/chat/\${activeChat.id}/flag\`, {
+            const res = await api.post(`/chat/${activeChat.id}/flag`, {
                 flagType,
                 senderType: 'admin'
             });
-            const column = \`is_\${flagType}_by_admin\`;
+            const column = `is_${flagType}_by_admin`;
             const newValue = res.data[column];
             setActiveChat(prev => ({
                 ...prev,
@@ -193,7 +193,7 @@ export default function SupportInbox() {
             }
             fetchConversations();
         } catch (error) {
-            console.error(\`Failed to toggle conversation flag \${flagType}:\`, error);
+            console.error(`Failed to toggle conversation flag ${flagType}:`, error);
             toast.error(t('common.error_updating_flag', 'Failed to update flag settings'));
         }
     };
@@ -202,7 +202,7 @@ export default function SupportInbox() {
         if (!user || user.role !== 'admin') return;
 
         const rawUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const socketUrl = rawUrl.replace(/\\/v1\\/?$/, '');
+        const socketUrl = rawUrl.replace(/\/v1\/?$/, '');
         const newSocket = io(socketUrl);
         setSocket(newSocket);
 
@@ -243,7 +243,7 @@ export default function SupportInbox() {
                 scrollToBottom();
                 
                 if (msg.sender_type === 'user') {
-                    api.patch(\`/chat/\${activeChat.id}/read\`, { readerType: 'admin' })
+                    api.patch(`/chat/${activeChat.id}/read`, { readerType: 'admin' })
                        .then(() => fetchConversations())
                        .catch(console.error);
                 }
@@ -311,7 +311,7 @@ export default function SupportInbox() {
 
         const handleConvFlagUpdate = (data) => {
             if (activeChat && data.conversationId === activeChat.id) {
-                const column = \`is_\${data.flagType}_by_\${data.senderType}\`;
+                const column = `is_${data.flagType}_by_${data.senderType}`;
                 setActiveChat(prev => ({
                     ...prev,
                     [column]: data.value
@@ -387,15 +387,15 @@ export default function SupportInbox() {
             clearTimeout(typingTimeoutRef.current);
         }
 
-        api.get(\`/chat/presence/\${conv.user_id}\`).then(res => {
+        api.get(`/chat/presence/${conv.user_id}`).then(res => {
             setPartnerPresence(res.data);
         }).catch(console.error);
 
         try {
             socket?.emit('join_chat', conv.id);
-            await api.patch(\`/chat/\${conv.id}/read\`, { readerType: 'admin' });
+            await api.patch(`/chat/${conv.id}/read`, { readerType: 'admin' });
             
-            const res = await api.get(\`/chat/\${conv.id}/messages\`);
+            const res = await api.get(`/chat/${conv.id}/messages`);
             setMessages(res.data);
             scrollToBottom();
             
@@ -447,7 +447,7 @@ export default function SupportInbox() {
     const handleReactMessage = async (messageId, emoji) => {
         setActiveReactionMenuMessageId(null);
         try {
-            const res = await api.post(\`/chat/messages/\${messageId}/react\`, { emoji });
+            const res = await api.post(`/chat/messages/${messageId}/react`, { emoji });
             setMessages(prev => prev.map(m => m.id === messageId ? res.data : m));
         } catch (error) {
             console.error('Failed to react to message:', error);
@@ -461,7 +461,7 @@ export default function SupportInbox() {
 
     const handleToggleStar = async (messageId) => {
         try {
-            const res = await api.post(\`/chat/messages/\${messageId}/star\`);
+            const res = await api.post(`/chat/messages/${messageId}/star`);
             setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_starred: res.data.is_starred } : m));
             toast.success(res.data.is_starred ? t('common.message_starred', 'Message starred') : t('common.message_unstarred', 'Message unstarred'));
         } catch (error) {
@@ -473,7 +473,7 @@ export default function SupportInbox() {
     const handleClearChat = async () => {
         setShowClearConfirmModal(false);
         try {
-            await api.delete(\`/chat/\${activeChat.id}/clear\`, {
+            await api.delete(`/chat/${activeChat.id}/clear`, {
                 data: { senderType: 'admin' }
             });
             toast.success(t('common.chat_cleared_success', 'Chat history cleared.'));
@@ -504,7 +504,7 @@ export default function SupportInbox() {
 
     const handleSetDisappearing = async (duration) => {
         try {
-            const res = await api.patch(\`/chat/\${activeChat.id}/disappearing\`, {
+            const res = await api.patch(`/chat/${activeChat.id}/disappearing`, {
                 duration,
                 senderType: 'admin'
             });
@@ -531,7 +531,7 @@ export default function SupportInbox() {
         const replyMsg = replyingTo;
         setReplyingTo(null);
 
-        const tempId = \`temp-\${Date.now()}\`;
+        const tempId = `temp-${Date.now()}`;
 
         try {
             let res;
@@ -539,7 +539,7 @@ export default function SupportInbox() {
                 const isAudio = fileToSend.type.startsWith('audio/');
                 const tempMsg = {
                     id: tempId,
-                    content: isAudio ? '[Voice Message]' : \`[Media] \${fileToSend.name}\`,
+                    content: isAudio ? '[Voice Message]' : `[Media] ${fileToSend.name}`,
                     sender_type: 'admin',
                     created_at: new Date().toISOString(),
                     attachments: [{
@@ -555,7 +555,7 @@ export default function SupportInbox() {
                 formData.append('file', fileToSend);
                 formData.append('senderType', 'admin');
 
-                res = await api.post(\`/chat/\${activeChat.id}/messages/attachment\`, formData, {
+                res = await api.post(`/chat/${activeChat.id}/messages/attachment`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
 
@@ -573,7 +573,7 @@ export default function SupportInbox() {
                 setMessages(prev => [...prev, tempMsg]);
                 scrollToBottom();
 
-                res = await api.post(\`/chat/\${activeChat.id}/messages\`, {
+                res = await api.post(`/chat/${activeChat.id}/messages`, {
                     content,
                     senderType: 'admin',
                     replyToId: replyMsg ? replyMsg.id : null
@@ -633,18 +633,18 @@ export default function SupportInbox() {
                                 <button
                                     key={conv.id}
                                     onClick={() => handleSelectChat(conv)}
-                                    className={\`w-full text-left p-3.5 rounded-2xl transition-all duration-200 flex items-center gap-3 border \${
+                                    className={`w-full text-left p-3.5 rounded-2xl transition-all duration-200 flex items-center gap-3 border ${
                                         isActive 
                                             ? 'bg-indigo-600 border-indigo-600 shadow-md shadow-indigo-200' 
                                             : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-100'
-                                    }\`}
+                                    }`}
                                 >
                                     <div className="relative flex-shrink-0">
-                                        <div className={\`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg \${isActive ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-700 shadow-inner border border-white'}\`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${isActive ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-700 shadow-inner border border-white'}`}>
                                             {conv.user_name?.[0]?.toUpperCase()}
                                         </div>
                                         {Number(conv.disappearing_duration) > 0 && (
-                                            <span className={\`absolute -bottom-1 -right-1 p-1 rounded-full shadow-sm border \${isActive ? 'bg-white border-indigo-600 text-indigo-600' : 'bg-indigo-600 border-white text-white'}\`} title="Disappearing messages active">
+                                            <span className={`absolute -bottom-1 -right-1 p-1 rounded-full shadow-sm border ${isActive ? 'bg-white border-indigo-600 text-indigo-600' : 'bg-indigo-600 border-white text-white'}`} title="Disappearing messages active">
                                                 <Clock className="w-2.5 h-2.5" />
                                             </span>
                                         )}
@@ -656,17 +656,17 @@ export default function SupportInbox() {
                                     </div>
                                     <div className="flex-1 min-w-0 pr-1">
                                         <div className="flex justify-between items-center mb-1">
-                                            <h4 className={\`font-bold text-sm truncate flex items-center gap-1.5 \${isActive ? 'text-white' : unread ? 'text-gray-900' : 'text-gray-700'}\`}>
+                                            <h4 className={`font-bold text-sm truncate flex items-center gap-1.5 ${isActive ? 'text-white' : unread ? 'text-gray-900' : 'text-gray-700'}`}>
                                                 {conv.user_name}
                                                 {conv.is_starred_by_admin && (
-                                                    <Star className={\`w-3.5 h-3.5 \${isActive ? 'text-white fill-white' : 'text-amber-500 fill-amber-500'} flex-shrink-0\`} />
+                                                    <Star className={`w-3.5 h-3.5 ${isActive ? 'text-white fill-white' : 'text-amber-500 fill-amber-500'} flex-shrink-0`} />
                                                 )}
                                             </h4>
-                                            <span className={\`text-[10px] font-semibold tracking-wide \${isActive ? 'text-indigo-100' : 'text-gray-400'}\`}>
+                                            <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-indigo-100' : 'text-gray-400'}`}>
                                                 {new Date(conv.last_message_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
                                             </span>
                                         </div>
-                                        <p className={\`text-xs truncate flex items-center gap-1 \${isActive ? 'text-indigo-100' : unread ? 'text-gray-900 font-bold' : 'text-gray-500'}\`}>
+                                        <p className={`text-xs truncate flex items-center gap-1 ${isActive ? 'text-indigo-100' : unread ? 'text-gray-900 font-bold' : 'text-gray-500'}`}>
                                             {isTyping ? (
                                                 <span className="text-emerald-500 font-bold italic">typing...</span>
                                             ) : (
@@ -730,7 +730,7 @@ export default function SupportInbox() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setShowRightPane(!showRightPane)}
-                                    className={\`p-2.5 rounded-xl transition-all \${showRightPane ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}\`}
+                                    className={`p-2.5 rounded-xl transition-all ${showRightPane ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}`}
                                     title="Contact Info"
                                 >
                                     {showRightPane ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
@@ -754,7 +754,7 @@ export default function SupportInbox() {
                                     )}
 
                                     {groupedMessages.map((group, groupIndex) => (
-                                        <div key={\`group-\${groupIndex}\`} className="space-y-1.5 relative">
+                                        <div key={`group-${groupIndex}`} className="space-y-1.5 relative">
                                             
                                             {/* Date Separator Pill */}
                                             <div className="flex justify-center my-4 sticky top-2 z-20">
@@ -792,8 +792,8 @@ export default function SupportInbox() {
                                                             </div>
                                                         )}
 
-                                                        <div id={\`msg-\${msg.id}\`} className={\`flex w-full group/row \${isMe ? 'justify-end' : 'justify-start'} \${msg.showTail ? 'mt-2' : 'mt-[2px]'}\`}>
-                                                            <div className={\`flex max-w-[75%] lg:max-w-[65%] \${isMe ? 'flex-row-reverse' : 'flex-row'} items-start gap-1.5\`}>
+                                                        <div id={`msg-${msg.id}`} className={`flex w-full group/row ${isMe ? 'justify-end' : 'justify-start'} ${msg.showTail ? 'mt-2' : 'mt-[2px]'}`}>
+                                                            <div className={`flex max-w-[75%] lg:max-w-[65%] ${isMe ? 'flex-row-reverse' : 'flex-row'} items-start gap-1.5`}>
                                                                 
                                                                 <motion.div
                                                                     drag="x"
@@ -807,19 +807,19 @@ export default function SupportInbox() {
                                                                 >
                                                                     <div 
                                                                         onContextMenu={(e) => handleRightClickMessage(e, msg)}
-                                                                        className={\`relative px-3.5 py-2 text-[14px] shadow-sm transition-all \${
+                                                                        className={`relative px-3.5 py-2 text-[14px] shadow-sm transition-all ${
                                                                         isMe 
                                                                             ? 'bg-[#dcf8c6] text-gray-900 border border-green-200/50' 
                                                                             : 'bg-white text-gray-900 border border-gray-100'
-                                                                        } \${
+                                                                        } ${
                                                                             msg.showTail 
                                                                                 ? (isMe ? 'rounded-2xl rounded-tr-sm' : 'rounded-2xl rounded-tl-sm')
                                                                                 : 'rounded-2xl'
-                                                                        }\`}
+                                                                        }`}
                                                                     >
                                                                         {/* WhatsApp-style Tail */}
                                                                         {msg.showTail && (
-                                                                            <svg viewBox="0 0 8 13" width="8" height="13" className={\`absolute top-0 \${isMe ? '-right-1.5 text-[#dcf8c6]' : '-left-1.5 text-white'}\`} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.05))' }}>
+                                                                            <svg viewBox="0 0 8 13" width="8" height="13" className={`absolute top-0 ${isMe ? '-right-1.5 text-[#dcf8c6]' : '-left-1.5 text-white'}`} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.05))' }}>
                                                                                 <path fill="currentColor" d={isMe ? "M8 0L0 0L0 13C0 13 4.2 8.7 8 0Z" : "M0 0L8 0L8 13C8 13 3.8 8.7 0 0Z"} />
                                                                             </svg>
                                                                         )}
@@ -827,7 +827,7 @@ export default function SupportInbox() {
                                                                         {msg.reply_to_id && (
                                                                             <div 
                                                                                 onClick={() => {
-                                                                                    const el = document.getElementById(\`msg-\${msg.reply_to_id}\`);
+                                                                                    const el = document.getElementById(`msg-${msg.reply_to_id}`);
                                                                                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                                                                 }}
                                                                                 className="mb-1 p-2 rounded-lg text-xs cursor-pointer border-l-4 select-none bg-black/5 hover:bg-black/10 transition-colors"
@@ -841,7 +841,7 @@ export default function SupportInbox() {
                                                                         )}
 
                                                                         {/* Hover Actions */}
-                                                                        <div className={\`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity \${isMe ? '-left-[40px]' : '-right-[40px]'}\`}>
+                                                                        <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity ${isMe ? '-left-[40px]' : '-right-[40px]'}`}>
                                                                             <button onClick={(e) => { e.stopPropagation(); setActiveReactionMenuMessageId(activeReactionMenuMessageId === msg.id ? null : msg.id); }} className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-gray-500 hover:text-yellow-500 shadow-sm" title="React">
                                                                                 <Smile className="h-4 w-4" />
                                                                             </button>
@@ -849,7 +849,7 @@ export default function SupportInbox() {
 
                                                                         {/* Reactions Menu Popover */}
                                                                         {activeReactionMenuMessageId === msg.id && (
-                                                                            <div className={\`absolute bottom-full mb-2 bg-white border border-gray-200 rounded-full px-2 py-1.5 shadow-xl flex gap-2 z-50 animate-in zoom-in-95 duration-100 \${isMe ? 'right-0' : 'left-0'}\`}>
+                                                                            <div className={`absolute bottom-full mb-2 bg-white border border-gray-200 rounded-full px-2 py-1.5 shadow-xl flex gap-2 z-50 animate-in zoom-in-95 duration-100 ${isMe ? 'right-0' : 'left-0'}`}>
                                                                                 {['👍', '❤️', '😂', '😮', '😢', '🙏'].map(emoji => (
                                                                                     <button key={emoji} onClick={() => handleReactMessage(msg.id, emoji)} className="hover:scale-125 transition-transform text-xl px-1">
                                                                                         {emoji}
@@ -864,7 +864,7 @@ export default function SupportInbox() {
                                                                                 {msg.attachments.map((att) => {
                                                                                     const isImg = att.mime_type?.startsWith('image/');
                                                                                     const isAudio = att.mime_type?.startsWith('audio/');
-                                                                                    const attachmentUrl = \`\${api.defaults.baseURL}/chat/messages/attachment/\${att.id}\`;
+                                                                                    const attachmentUrl = `${api.defaults.baseURL}/chat/messages/attachment/${att.id}`;
                                                                                     
                                                                                     if (isImg) {
                                                                                         return (
@@ -904,7 +904,7 @@ export default function SupportInbox() {
                                                                             </p>
                                                                             
                                                                             {/* Floating Meta data (Time & Ticks) inside the bubble bottom right */}
-                                                                            <div className={\`float-right flex items-center justify-end gap-1 mt-auto pt-2 -mr-1 -mb-1 \${isMe ? 'text-gray-500' : 'text-gray-400'}\`}>
+                                                                            <div className={`float-right flex items-center justify-end gap-1 mt-auto pt-2 -mr-1 -mb-1 ${isMe ? 'text-gray-500' : 'text-gray-400'}`}>
                                                                                 {msg.is_starred && <Star className="h-3 w-3 text-amber-500 fill-amber-500 mr-0.5" />}
                                                                                 <span className="text-[10px] font-semibold tracking-tight whitespace-nowrap">
                                                                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -1024,7 +1024,7 @@ export default function SupportInbox() {
                                                     // Default Input State UI
                                                     <>
                                                         <div className="flex gap-1.5 pl-1.5 pb-0.5">
-                                                            <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={\`p-2.5 rounded-full transition-colors \${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'}\`}>
+                                                            <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={`p-2.5 rounded-full transition-colors ${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'}`}>
                                                                 <Smile className="h-6 w-6" />
                                                             </button>
                                                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
@@ -1088,7 +1088,7 @@ export default function SupportInbox() {
                                         <Copy className="h-4 w-4 text-gray-500" /> Copy
                                     </button>
                                     <button onClick={() => { handleToggleStar(contextMenu.msg.id); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-gray-100 flex items-center gap-3">
-                                        <Star className={\`h-4 w-4 \${contextMenu.msg.is_starred ? 'text-amber-500 fill-amber-500' : 'text-gray-500'}\`} /> {contextMenu.msg.is_starred ? 'Unstar' : 'Star'}
+                                        <Star className={`h-4 w-4 ${contextMenu.msg.is_starred ? 'text-amber-500 fill-amber-500' : 'text-gray-500'}`} /> {contextMenu.msg.is_starred ? 'Unstar' : 'Star'}
                                     </button>
                                     <hr className="my-1 border-gray-200/60" />
                                     <button onClick={() => { setInfoMessage(contextMenu.msg); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-gray-100 flex items-center gap-3">
@@ -1142,7 +1142,7 @@ export default function SupportInbox() {
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100/50 overflow-hidden">
                                     <div className="w-full text-left px-5 py-4 text-[15px] hover:bg-gray-50 flex items-center justify-between transition cursor-pointer border-b border-gray-100" onClick={() => handleToggleConversationFlag('starred')}>
                                         <div className="flex items-center gap-4 text-gray-800 font-bold">
-                                            <Star className={\`w-5 h-5 \${activeChat.is_starred_by_admin ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}\`} />
+                                            <Star className={`w-5 h-5 ${activeChat.is_starred_by_admin ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}`} />
                                             Star Contact
                                         </div>
                                     </div>
@@ -1162,7 +1162,7 @@ export default function SupportInbox() {
                                                 <button 
                                                     key={opt.v} 
                                                     onClick={(e) => { e.stopPropagation(); handleSetDisappearing(opt.v); }}
-                                                    className={\`flex-1 py-2 text-xs font-bold rounded-xl border transition-all \${Number(activeChat.disappearing_duration) === opt.v ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'}\`}
+                                                    className={`flex-1 py-2 text-xs font-bold rounded-xl border transition-all ${Number(activeChat.disappearing_duration) === opt.v ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50'}`}
                                                 >
                                                     {opt.l}
                                                 </button>
