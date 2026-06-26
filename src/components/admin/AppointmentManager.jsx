@@ -25,7 +25,10 @@ import {
     Award,
     History,
     ShieldCheck,
-    RefreshCw
+    RefreshCw,
+    CheckSquare,
+    Square,
+    MinusSquare
 } from 'lucide-react';
 import UserHistoryModal from './UserHistoryModal';
 import toast from 'react-hot-toast';
@@ -54,6 +57,10 @@ const AppointmentManager = () => {
     const [historyModal, setHistoryModal] = useState({ isOpen: false, userId: null, userName: '' });
     const [searchParams, setSearchParams] = useSearchParams();
     const [orgProfile, setOrgProfile] = useState(null);
+
+    // ─── Multi-Select Delete ───
+    const [selectedAppts, setSelectedAppts] = useState(new Set());
+    const [bulkDeleting, setBulkDeleting] = useState(false);
 
     // Fetch organization profile for PDF branding
     const fetchOrgProfile = async () => {
@@ -180,6 +187,60 @@ const AppointmentManager = () => {
         }
     }, [debouncedSearch, statusFilter, selectedResourceId, selectedDate]);
 
+    // ═══════════════════════════════════════════
+    // MULTI-SELECT & BULK DELETE
+    // ═══════════════════════════════════════════
+    const toggleApptSelection = (apptId) => {
+        setSelectedAppts(prev => {
+            const next = new Set(prev);
+            if (next.has(apptId)) {
+                next.delete(apptId);
+            } else {
+                next.add(apptId);
+            }
+            return next;
+        });
+    };
+
+    const toggleSelectAllAppts = () => {
+        if (selectedAppts.size === appointments.length && appointments.length > 0) {
+            setSelectedAppts(new Set());
+        } else {
+            setSelectedAppts(new Set(appointments.map(a => a.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedAppts.size === 0) return;
+
+        const count = selectedAppts.size;
+        if (!confirm(`Delete ${count} selected appointment(s)? This action cannot be undone.`)) return;
+
+        setBulkDeleting(true);
+        try {
+            const res = await api.post('/admin/appointments/bulk-delete', {
+                appointmentIds: [...selectedAppts],
+                reason: 'Bulk deleted by Admin'
+            });
+            const { deletedCount, failedCount } = res.data;
+            setSelectedAppts(new Set());
+            toast.success(
+                `${deletedCount} appointment(s) deleted.` +
+                (failedCount > 0 ? ` ${failedCount} failed.` : '')
+            );
+            fetchAppointments();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Bulk delete failed');
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
+
+    // Clear selection when filters/page change
+    useEffect(() => {
+        setSelectedAppts(new Set());
+    }, [debouncedSearch, statusFilter, selectedResourceId, selectedDate, page]);
+
     const handleStatusUpdate = async (id, newStatus) => {
         setActiveActionId(null);
         let reason = null;
@@ -231,6 +292,7 @@ const AppointmentManager = () => {
 
             // Immediately remove from the local state for instant UI feedback
             setAppointments(prev => prev.filter(a => a.id !== apt.id));
+            setSelectedAppts(prev => { const next = new Set(prev); next.delete(apt.id); return next; });
             toast.success(t('appointment.delete_success', "Appointment deleted successfully"));
 
             // Optional: Background refresh to sync any other changes
@@ -421,7 +483,6 @@ const AppointmentManager = () => {
                     >
                         {t('common.clear', 'Clear Filters')}
                     </button>
-                    {/* ){'}'} */}
                 </div>
             </div>
 
@@ -431,6 +492,21 @@ const AppointmentManager = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
+                                <th className="px-3 py-4 text-center w-12">
+                                    <button
+                                        onClick={toggleSelectAllAppts}
+                                        className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+                                        title={selectedAppts.size === appointments.length && appointments.length > 0 ? 'Deselect all' : 'Select all'}
+                                    >
+                                        {selectedAppts.size === 0 ? (
+                                            <Square className="h-4 w-4 text-gray-400" />
+                                        ) : selectedAppts.size === appointments.length && appointments.length > 0 ? (
+                                            <CheckSquare className="h-4 w-4 text-indigo-600" />
+                                        ) : (
+                                            <MinusSquare className="h-4 w-4 text-indigo-400" />
+                                        )}
+                                    </button>
+                                </th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.customer', 'Customer')}</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('appointment.service_details', 'Service Details')}</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('slot.date_time', 'Date & Time')}</th>
@@ -443,6 +519,7 @@ const AppointmentManager = () => {
                             {loading ? (
                                 [...Array(5)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
+                                        <td className="px-3 py-4"><div className="h-4 w-4 bg-gray-100 rounded"></div></td>
                                         <td className="px-6 py-4"><div className="h-10 w-10 bg-gray-100 rounded-full inline-block mr-3 align-middle"></div> <div className="h-4 bg-gray-100 rounded w-24 inline-block align-middle"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-32"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-28"></div></td>
@@ -453,23 +530,33 @@ const AppointmentManager = () => {
                                 ))
                             ) : appointments.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-20 text-center text-gray-500">
+                                    <td colSpan="7" className="px-6 py-20 text-center text-gray-500">
                                         <div className="flex flex-col items-center justify-center">
                                             <div className="bg-gray-50 p-4 rounded-full mb-4">
                                                 <Calendar className="h-8 w-8 text-gray-400" />
                                             </div>
                                             <p className="text-lg font-semibold text-gray-900">{t('appointment.no_appointments', 'No appointments found')}</p>
-                                            <p className="text-sm text-gray-500 max-w-xs mt-1">{t('appointment.adjust_filters', "Try adjusting your search or filters to find what you're looking for.")}</p>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 appointments.map((apt, index) => {
-                                    // Logic to determine if dropdown should open upwards
                                     const isLastItems = index >= appointments.length - 2 && appointments.length > 3;
 
                                     return (
-                                        <tr key={apt.id} className="hover:bg-gray-50/80 transition-colors group">
+                                        <tr key={apt.id} className={`hover:bg-gray-50/80 transition-colors group ${selectedAppts.has(apt.id) ? '!bg-indigo-50/70' : ''}`}>
+                                            <td className="px-3 py-4 text-center w-12">
+                                                <button
+                                                    onClick={() => toggleApptSelection(apt.id)}
+                                                    className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                                                >
+                                                    {selectedAppts.has(apt.id) ? (
+                                                        <CheckSquare className="h-4 w-4 text-indigo-600" />
+                                                    ) : (
+                                                        <Square className="h-4 w-4 text-gray-300" />
+                                                    )}
+                                                </button>
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm">
@@ -879,6 +966,36 @@ const AppointmentManager = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ═══ BULK DELETE FLOATING BAR ═══ */}
+            {selectedAppts.size > 0 && (
+                <div className="sticky bottom-0 left-0 right-0 bg-white border border-gray-200 rounded-2xl px-5 py-3 flex items-center justify-between shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-50" style={{animation: 'slideUp 0.2s ease-out'}}>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-700 rounded-lg font-black text-sm">
+                            {selectedAppts.size}
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700">
+                            {selectedAppts.size} appointment(s) selected
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setSelectedAppts(new Set())}
+                            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleBulkDelete}
+                            disabled={bulkDeleting}
+                            className="flex items-center gap-2 px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50"
+                        >
+                            {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <AnimatePresence>
                 {reschedulingAppt && (
