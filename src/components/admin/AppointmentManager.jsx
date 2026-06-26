@@ -203,10 +203,11 @@ const AppointmentManager = () => {
     };
 
     const toggleSelectAllAppts = () => {
-        if (selectedAppts.size === appointments.length && appointments.length > 0) {
+        const selectableAppts = appointments.filter(a => !['confirmed', 'no_show'].includes(a.status));
+        if (selectedAppts.size === selectableAppts.length && selectableAppts.length > 0) {
             setSelectedAppts(new Set());
         } else {
-            setSelectedAppts(new Set(appointments.map(a => a.id)));
+            setSelectedAppts(new Set(selectableAppts.map(a => a.id)));
         }
     };
 
@@ -222,11 +223,12 @@ const AppointmentManager = () => {
                 appointmentIds: [...selectedAppts],
                 reason: 'Bulk deleted by Admin'
             });
-            const { deletedCount, failedCount } = res.data;
+            const { deletedCount, failedCount, skippedCount } = res.data;
             setSelectedAppts(new Set());
             toast.success(
                 `${deletedCount} appointment(s) deleted.` +
-                (failedCount > 0 ? ` ${failedCount} failed.` : '')
+                (failedCount > 0 ? ` ${failedCount} failed.` : '') +
+                (skippedCount > 0 ? ` ${skippedCount} skipped.` : '')
             );
             fetchAppointments();
         } catch (error) {
@@ -359,7 +361,8 @@ const AppointmentManager = () => {
             'booked': 'bg-indigo-50 text-indigo-700 border-indigo-200 ring-indigo-100',
             'confirmed': 'bg-blue-50 text-blue-700 border-blue-200 ring-blue-100',
             'completed': 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-100',
-            'cancelled': 'bg-rose-50 text-rose-700 border-rose-200 ring-rose-100'
+            'cancelled': 'bg-rose-50 text-rose-700 border-rose-200 ring-rose-100',
+            'no_show': 'bg-gray-100 text-gray-700 border-gray-200 ring-gray-100'
         };
         const activeStyle = styles[status] || 'bg-gray-50 text-gray-700 border-gray-200';
 
@@ -368,7 +371,8 @@ const AppointmentManager = () => {
             'booked': <Calendar className="h-3 w-3" />,
             'confirmed': <CheckCircle className="h-3 w-3" />,
             'completed': <CheckCircle className="h-3 w-3" />,
-            'cancelled': <XCircle className="h-3 w-3" />
+            'cancelled': <XCircle className="h-3 w-3" />,
+            'no_show': <XCircle className="h-3 w-3" />
         };
 
         let displayLabel = t(`status.${status}`, status);
@@ -496,11 +500,11 @@ const AppointmentManager = () => {
                                     <button
                                         onClick={toggleSelectAllAppts}
                                         className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-                                        title={selectedAppts.size === appointments.length && appointments.length > 0 ? 'Deselect all' : 'Select all'}
+                                        title={selectedAppts.size === appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length && appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length > 0 ? 'Deselect all' : 'Select all'}
                                     >
                                         {selectedAppts.size === 0 ? (
                                             <Square className="h-4 w-4 text-gray-400" />
-                                        ) : selectedAppts.size === appointments.length && appointments.length > 0 ? (
+                                        ) : selectedAppts.size === appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length && appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length > 0 ? (
                                             <CheckSquare className="h-4 w-4 text-indigo-600" />
                                         ) : (
                                             <MinusSquare className="h-4 w-4 text-indigo-400" />
@@ -542,13 +546,16 @@ const AppointmentManager = () => {
                             ) : (
                                 appointments.map((apt, index) => {
                                     const isLastItems = index >= appointments.length - 2 && appointments.length > 3;
+                                    const isNonDeletable = ['confirmed', 'no_show'].includes(apt.status);
 
                                     return (
                                         <tr key={apt.id} className={`hover:bg-gray-50/80 transition-colors group ${selectedAppts.has(apt.id) ? '!bg-indigo-50/70' : ''}`}>
                                             <td className="px-3 py-4 text-center w-12">
                                                 <button
-                                                    onClick={() => toggleApptSelection(apt.id)}
-                                                    className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                                                    onClick={() => !isNonDeletable && toggleApptSelection(apt.id)}
+                                                    className={`p-1 rounded-md transition-colors ${isNonDeletable ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                                                    disabled={isNonDeletable}
+                                                    title={isNonDeletable ? 'Cannot delete confirmed or no-show appointments' : ''}
                                                 >
                                                     {selectedAppts.has(apt.id) ? (
                                                         <CheckSquare className="h-4 w-4 text-indigo-600" />
