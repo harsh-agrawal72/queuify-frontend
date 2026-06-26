@@ -16,7 +16,10 @@ import {
     Copy,
     Search,
     Sparkles,
-    Info
+    Info,
+    CheckSquare,
+    Square,
+    MinusSquare
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format, parseISO, addDays, addWeeks } from 'date-fns';
@@ -63,6 +66,10 @@ const SlotManagement = () => {
     const [copyOverwrite, setCopyOverwrite] = useState(false);
     const [copying, setCopying] = useState(false);
     const [copyMode, setCopyMode] = useState('manual');
+
+    // ─── Multi-Select Delete ───
+    const [selectedSlots, setSelectedSlots] = useState(new Set());
+    const [bulkDeleting, setBulkDeleting] = useState(false);
 
     // ─── AI Capacity Stats ───
     const [performanceLoading, setPerformanceLoading] = useState(false);
@@ -214,11 +221,73 @@ const SlotManagement = () => {
         try {
             await api.delete(`/slots/${slotId}`);
             setSlots(prev => prev.filter(s => s.id !== slotId));
+            setSelectedSlots(prev => { const next = new Set(prev); next.delete(slotId); return next; });
             toast.success(t('admin.slots.deleted', 'Slot deleted'));
         } catch (error) {
             toast.error(error.response?.data?.message || t('admin.slots.delete_failed', 'Failed to delete slot'));
         }
     };
+
+    // ═══════════════════════════════════════════
+    // MULTI-SELECT & BULK DELETE
+    // ═══════════════════════════════════════════
+    const toggleSlotSelection = (slotId) => {
+        setSelectedSlots(prev => {
+            const next = new Set(prev);
+            if (next.has(slotId)) {
+                next.delete(slotId);
+            } else {
+                next.add(slotId);
+            }
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedSlots.size === slots.length) {
+            setSelectedSlots(new Set());
+        } else {
+            setSelectedSlots(new Set(slots.map(s => s.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedSlots.size === 0) return;
+
+        const count = selectedSlots.size;
+        const hasPast = [...selectedSlots].some(id => {
+            const slot = slots.find(s => s.id === id);
+            return slot && new Date(slot.end_time) < new Date();
+        });
+
+        let message = `Delete ${count} selected slot(s)?`;
+        if (hasPast) {
+            message = `${count} slot(s) selected (includes past slots). Deleting past slots will remove historical data. Continue?`;
+        }
+
+        if (!confirm(message)) return;
+
+        setBulkDeleting(true);
+        try {
+            const res = await api.post('/slots/bulk-delete', { slotIds: [...selectedSlots] });
+            const { deletedCount, skippedCount } = res.data;
+            setSlots(prev => prev.filter(s => !selectedSlots.has(s.id)));
+            setSelectedSlots(new Set());
+            toast.success(
+                `${deletedCount} slot(s) deleted successfully.` +
+                (skippedCount > 0 ? ` ${skippedCount} skipped.` : '')
+            );
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Bulk delete failed');
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
+
+    // Clear selection when filters change
+    useEffect(() => {
+        setSelectedSlots(new Set());
+    }, [filterService, filterResource, filterDate]);
 
     const openModal = () => {
         setIsModalOpen(true);
@@ -453,6 +522,21 @@ const SlotManagement = () => {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 text-gray-500 uppercase tracking-wider text-[10px] font-bold">
+                                    <th className="px-3 py-4 text-center w-12">
+                                        <button
+                                            onClick={toggleSelectAll}
+                                            className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+                                            title={selectedSlots.size === slots.length ? 'Deselect all' : 'Select all'}
+                                        >
+                                            {selectedSlots.size === 0 ? (
+                                                <Square className="h-4 w-4 text-gray-400" />
+                                            ) : selectedSlots.size === slots.length ? (
+                                                <CheckSquare className="h-4 w-4 text-indigo-600" />
+                                            ) : (
+                                                <MinusSquare className="h-4 w-4 text-indigo-400" />
+                                            )}
+                                        </button>
+                                    </th>
                                     <th className="px-5 py-4 text-left">{t('common.date', 'Date')}</th>
                                     <th className="px-5 py-4 text-left">{t('common.resource', 'Resource')}</th>
                                     <th className="px-5 py-4 text-left">{t('admin.slots.linked_services', 'Linked Services')}</th>
@@ -468,7 +552,19 @@ const SlotManagement = () => {
                                     const isPast = end < new Date();
 
                                     return (
-                                        <tr key={slot.id} className={`hover:bg-gray-50/50 transition-colors ${isPast ? 'bg-slate-50/50 grayscale-[0.3]' : ''}`}>
+                                        <tr key={slot.id} className={`hover:bg-gray-50/50 transition-colors ${isPast ? 'bg-slate-50/50 grayscale-[0.3]' : ''} ${selectedSlots.has(slot.id) ? '!bg-indigo-50/70' : ''}`}>
+                                            <td className="px-3 py-4 text-center w-12">
+                                                <button
+                                                    onClick={() => toggleSlotSelection(slot.id)}
+                                                    className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                                                >
+                                                    {selectedSlots.has(slot.id) ? (
+                                                        <CheckSquare className="h-4 w-4 text-indigo-600" />
+                                                    ) : (
+                                                        <Square className="h-4 w-4 text-gray-300" />
+                                                    )}
+                                                </button>
+                                            </td>
                                             <td className="px-5 py-4 font-medium flex items-center gap-2">
                                                 {format(start, 'MMM d, yyyy')}
                                                 {isPast && (
@@ -526,6 +622,36 @@ const SlotManagement = () => {
                                 })}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {/* ═══ BULK DELETE FLOATING BAR ═══ */}
+                {selectedSlots.size > 0 && (
+                    <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.06)]" style={{animation: 'slideUp 0.2s ease-out'}}>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-700 rounded-lg font-black text-sm">
+                                {selectedSlots.size}
+                            </div>
+                            <span className="text-sm font-semibold text-gray-700">
+                                {selectedSlots.size} slot(s) selected
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setSelectedSlots(new Set())}
+                                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={bulkDeleting}
+                                className="flex items-center gap-2 px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 disabled:opacity-50"
+                            >
+                                {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                Delete Selected
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
