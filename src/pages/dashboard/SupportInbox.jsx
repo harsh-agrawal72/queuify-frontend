@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { MessageCircle, Search, Send, Check, CheckCheck, CheckCircle2, Smile, CornerUpLeft, X, Paperclip, FileText, Download, Clock, Maximize2, ChevronDown, Copy, Star, Info, Trash2, MoreVertical, Ban, Flag } from 'lucide-react';
+import { MessageCircle, Search, Send, Check, CheckCheck, Smile, CornerUpLeft, X, Paperclip, FileText, Download, Clock, ChevronDown, Copy, Star, Info, Trash2, Ban, Flag, PanelRightClose, PanelRightOpen, ArrowLeft, Phone, Mail, User } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { toast } from 'react-hot-toast';
 import EmojiPicker from 'emoji-picker-react';
@@ -25,27 +25,23 @@ export default function SupportInbox() {
     const messagesEndRef = useRef(null);
     const emojiPickerRef = useRef(null);
     
-    // WhatsApp features states
+    // UI States
+    const [showRightPane, setShowRightPane] = useState(false);
     const [activeReactionMenuMessageId, setActiveReactionMenuMessageId] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [filePreview, setFilePreview] = useState(null);
-    const [showDisappearingModal, setShowDisappearingModal] = useState(false);
     const [activeLightboxImage, setActiveLightboxImage] = useState(null);
     const fileInputRef = useRef(null);
-    const disappearingMenuRef = useRef(null);
     const [activeMessageMenuId, setActiveMessageMenuId] = useState(null);
     const [infoMessage, setInfoMessage] = useState(null);
+    
+    // Modals
     const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
-
-    // Starred messages & Contact options states
-    const [showStarredDrawer, setShowStarredDrawer] = useState(false);
-    const [starredMessages, setStarredMessages] = useState([]);
-    const [showMoreMenu, setShowMoreMenu] = useState(false);
     const [showBlockConfirmModal, setShowBlockConfirmModal] = useState(false);
     const [showReportConfirmModal, setShowReportConfirmModal] = useState(false);
-    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
+    const [starredMessages, setStarredMessages] = useState([]);
     const [loadingStarred, setLoadingStarred] = useState(false);
-    const moreMenuRef = useRef(null);
 
     const fetchStarredMessages = async (convId) => {
         if (!convId) return;
@@ -76,6 +72,7 @@ export default function SupportInbox() {
 
             if (flagType === 'deleted' && newValue === true) {
                 setActiveChat(null);
+                setShowRightPane(false);
                 toast.success(t('common.chat_deleted', 'Chat deleted successfully'));
             } else if (flagType === 'blocked') {
                 toast.success(newValue ? t('common.contact_blocked', 'Contact blocked') : t('common.contact_unblocked', 'Contact unblocked'));
@@ -100,7 +97,6 @@ export default function SupportInbox() {
         setSocket(newSocket);
 
         newSocket.on('connect', () => {
-            // Join org room for notifications
             newSocket.emit('join_org', user.org_id);
         });
 
@@ -111,7 +107,6 @@ export default function SupportInbox() {
         return () => newSocket.close();
     }, [user]);
 
-    // Handle Click Away for Emoji Picker
     useEffect(() => {
         const handleClickAway = (event) => {
             if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
@@ -124,40 +119,14 @@ export default function SupportInbox() {
         return () => document.removeEventListener('mousedown', handleClickAway);
     }, [showEmojiPicker]);
 
-    // Handle Click Away for Disappearing Dropdown
-    useEffect(() => {
-        const handleClickAway = (event) => {
-            if (disappearingMenuRef.current && !disappearingMenuRef.current.contains(event.target)) {
-                setShowDisappearingModal(false);
-            }
-        };
-        if (showDisappearingModal) {
-            document.addEventListener('mousedown', handleClickAway);
-        }
-        return () => document.removeEventListener('mousedown', handleClickAway);
-    }, [showDisappearingModal]);
-
-    // Handle Click Away for Message Menu Dropdown
     useEffect(() => {
         const handleClickAway = () => {
             setActiveMessageMenuId(null);
+            setActiveReactionMenuMessageId(null);
         };
         window.addEventListener('click', handleClickAway);
         return () => window.removeEventListener('click', handleClickAway);
     }, []);
-
-    // Handle Click Away for Header More Dropdown
-    useEffect(() => {
-        const handleClickAway = (event) => {
-            if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
-                setShowMoreMenu(false);
-            }
-        };
-        if (showMoreMenu) {
-            document.addEventListener('mousedown', handleClickAway);
-        }
-        return () => document.removeEventListener('mousedown', handleClickAway);
-    }, [showMoreMenu]);
 
     const onEmojiClick = (emojiData) => {
         setInput(prev => prev + emojiData.emoji);
@@ -174,7 +143,6 @@ export default function SupportInbox() {
                 });
                 scrollToBottom();
                 
-                // Mark as read if user sent it
                 if (msg.sender_type === 'user') {
                     api.patch(`/chat/${activeChat.id}/read`, { readerType: 'admin' })
                        .then(() => fetchConversations())
@@ -226,7 +194,7 @@ export default function SupportInbox() {
 
         const handleStarUpdate = (data) => {
             setMessages(prev => prev.map(m => m.id === data.messageId ? { ...m, is_starred: data.is_starred } : m));
-            if (showStarredDrawer && activeChat && data.conversationId === activeChat.id) {
+            if (showRightPane && activeChat && data.conversationId === activeChat.id) {
                 fetchStarredMessages(activeChat.id);
             }
         };
@@ -240,7 +208,7 @@ export default function SupportInbox() {
 
         const handleConvFlagUpdate = (data) => {
             if (activeChat && data.conversationId === activeChat.id) {
-                const column = `is_${data.flagType}_by_${data.senderType}`;
+                const column = \`is_\${data.flagType}_by_\${data.senderType}\`;
                 setActiveChat(prev => ({
                     ...prev,
                     [column]: data.value
@@ -252,6 +220,7 @@ export default function SupportInbox() {
             fetchConversations();
             if (data.flagType === 'deleted' && data.senderType === 'admin' && activeChat && data.conversationId === activeChat.id && data.value === true) {
                 setActiveChat(null);
+                setShowRightPane(false);
             }
         };
 
@@ -278,7 +247,7 @@ export default function SupportInbox() {
             socket.off('conversation_flag_update', handleConvFlagUpdate);
             socket.off('conversation_list_flag_update', handleConvListFlagUpdate);
         };
-    }, [socket, activeChat, showStarredDrawer]);
+    }, [socket, activeChat, showRightPane]);
 
     const fetchConversations = async () => {
         try {
@@ -306,34 +275,39 @@ export default function SupportInbox() {
 
         setActiveChat(conv);
         setMessages([]);
-        setShowStarredDrawer(false);
         setStarredMessages([]);
-        setShowMoreMenu(false);
         setPartnerPresence({ online: false, lastSeen: null });
         setIsPartnerTyping(false);
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
         }
 
-        // Fetch initial presence status
-        api.get(`/chat/presence/${conv.user_id}`).then(res => {
+        api.get(\`/chat/presence/\${conv.user_id}\`).then(res => {
             setPartnerPresence(res.data);
         }).catch(console.error);
 
         try {
             socket?.emit('join_chat', conv.id);
-            await api.patch(`/chat/${conv.id}/read`, { readerType: 'admin' });
+            await api.patch(\`/chat/\${conv.id}/read\`, { readerType: 'admin' });
             
-            const res = await api.get(`/chat/${conv.id}/messages`);
+            const res = await api.get(\`/chat/\${conv.id}/messages\`);
             setMessages(res.data);
             scrollToBottom();
             
-            // Refresh list to clear unread counts matching this conv
             fetchConversations();
+            if (showRightPane) {
+                fetchStarredMessages(conv.id);
+            }
         } catch (error) {
             console.error('Failed to fetch messages', error);
         }
     };
+
+    useEffect(() => {
+        if (showRightPane && activeChat) {
+            fetchStarredMessages(activeChat.id);
+        }
+    }, [showRightPane, activeChat]);
 
     const handleTyping = (e) => {
         setInput(e.target.value);
@@ -358,7 +332,7 @@ export default function SupportInbox() {
     const handleReactMessage = async (messageId, emoji) => {
         setActiveReactionMenuMessageId(null);
         try {
-            const res = await api.post(`/chat/messages/${messageId}/react`, { emoji });
+            const res = await api.post(\`/chat/messages/\${messageId}/react\`, { emoji });
             setMessages(prev => prev.map(m => m.id === messageId ? res.data : m));
         } catch (error) {
             console.error('Failed to react to message:', error);
@@ -372,7 +346,7 @@ export default function SupportInbox() {
 
     const handleToggleStar = async (messageId) => {
         try {
-            const res = await api.post(`/chat/messages/${messageId}/star`);
+            const res = await api.post(\`/chat/messages/\${messageId}/star\`);
             setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_starred: res.data.is_starred } : m));
             toast.success(res.data.is_starred ? t('common.message_starred', 'Message starred') : t('common.message_unstarred', 'Message unstarred'));
         } catch (error) {
@@ -384,7 +358,7 @@ export default function SupportInbox() {
     const handleClearChat = async () => {
         setShowClearConfirmModal(false);
         try {
-            await api.delete(`/chat/${activeChat.id}/clear`, {
+            await api.delete(\`/chat/\${activeChat.id}/clear\`, {
                 data: { senderType: 'admin' }
             });
             toast.success(t('common.chat_cleared_success', 'Chat history cleared.'));
@@ -414,9 +388,8 @@ export default function SupportInbox() {
     };
 
     const handleSetDisappearing = async (duration) => {
-        setShowDisappearingModal(false);
         try {
-            const res = await api.patch(`/chat/${activeChat.id}/disappearing`, {
+            const res = await api.patch(\`/chat/\${activeChat.id}/disappearing\`, {
                 duration,
                 senderType: 'admin'
             });
@@ -443,15 +416,14 @@ export default function SupportInbox() {
         const replyMsg = replyingTo;
         setReplyingTo(null);
 
-        const tempId = `temp-${Date.now()}`;
+        const tempId = \`temp-\${Date.now()}\`;
 
         try {
             let res;
             if (fileToSend) {
-                // Optimistic media message
                 const tempMsg = {
                     id: tempId,
-                    content: `[Media] ${fileToSend.name}`,
+                    content: \`[Media] \${fileToSend.name}\`,
                     sender_type: 'admin',
                     created_at: new Date().toISOString(),
                     attachments: [{
@@ -467,13 +439,12 @@ export default function SupportInbox() {
                 formData.append('file', fileToSend);
                 formData.append('senderType', 'admin');
 
-                res = await api.post(`/chat/${activeChat.id}/messages/attachment`, formData, {
+                res = await api.post(\`/chat/\${activeChat.id}/messages/attachment\`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
 
                 setMessages(prev => prev.map(m => m.id === tempId ? res.data : m));
             } else {
-                // Optimistic text message
                 const tempMsg = {
                     id: tempId,
                     content,
@@ -486,7 +457,7 @@ export default function SupportInbox() {
                 setMessages(prev => [...prev, tempMsg]);
                 scrollToBottom();
 
-                res = await api.post(`/chat/${activeChat.id}/messages`, {
+                res = await api.post(\`/chat/\${activeChat.id}/messages\`, {
                     content,
                     senderType: 'admin',
                     replyToId: replyMsg ? replyMsg.id : null
@@ -507,30 +478,34 @@ export default function SupportInbox() {
     );
 
     return (
-        <div className="flex h-[calc(100vh-100px)] bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Left Sidebar - Chat List */}
-            <div className="w-80 md:w-96 border-r border-gray-100 flex flex-col bg-gray-50/50">
-                <div className="p-4 border-b border-gray-100 bg-white">
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
-                        <MessageCircle className="h-6 w-6 text-indigo-600" />
+        <div className="flex h-[calc(100vh-100px)] bg-gray-50/50 rounded-3xl shadow-sm border border-gray-200/60 overflow-hidden font-sans">
+            
+            {/* 1. LEFT PANE - Conversation List */}
+            <div className="w-80 md:w-96 border-r border-gray-200/60 flex flex-col bg-white">
+                <div className="p-5 border-b border-gray-100 bg-white sticky top-0 z-10">
+                    <h2 className="text-xl font-extrabold text-gray-900 flex items-center gap-2 mb-4 tracking-tight">
+                        <MessageCircle className="h-6 w-6 text-indigo-600 fill-indigo-100" />
                         {t('navigation.support_inbox', 'Support Inbox')}
                     </h2>
-                    <div className="relative">
+                    <div className="relative group">
                         <input
                             type="text"
                             placeholder={t('common.search_users', 'Search users...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 bg-gray-50 transition"
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-300 transition-all text-gray-800 placeholder-gray-400"
                         />
-                        <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-3 space-y-1">
+                <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
                     {filteredConversations.length === 0 ? (
-                        <div className="text-center text-gray-500 text-sm mt-10">
-                            {t('common.no_conversations', 'No conversations found.')}
+                        <div className="flex flex-col items-center justify-center h-40 text-center text-gray-400 space-y-3">
+                            <div className="bg-gray-50 p-3 rounded-full">
+                                <MessageCircle className="w-6 h-6 text-gray-300" />
+                            </div>
+                            <span className="text-sm font-medium">{t('common.no_conversations', 'No conversations found.')}</span>
                         </div>
                     ) : (
                         filteredConversations.map(conv => {
@@ -540,40 +515,40 @@ export default function SupportInbox() {
                                 <button
                                     key={conv.id}
                                     onClick={() => handleSelectChat(conv)}
-                                    className={`w-full text-left p-3 rounded-2xl transition flex items-center gap-3 border ${
+                                    className={\`w-full text-left p-3.5 rounded-2xl transition-all duration-200 flex items-center gap-3 border \${
                                         isActive 
-                                            ? 'bg-indigo-50 border-indigo-100 ring-1 ring-indigo-500/20' 
-                                            : 'bg-white border-transparent hover:border-gray-200 hover:shadow-sm'
-                                    }`}
+                                            ? 'bg-indigo-600 border-indigo-600 shadow-md shadow-indigo-200' 
+                                            : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-100'
+                                    }\`}
                                 >
                                     <div className="relative flex-shrink-0">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-bold text-lg shadow-inner">
+                                        <div className={\`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg \${isActive ? 'bg-white/20 text-white' : 'bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-700 shadow-inner border border-white'}\`}>
                                             {conv.user_name?.[0]?.toUpperCase()}
                                         </div>
                                         {Number(conv.disappearing_duration) > 0 && (
-                                            <span className="absolute -bottom-1 -right-1 bg-indigo-600 border border-white p-1 rounded-full shadow text-white" title="Disappearing messages active">
-                                                <Clock className="w-3 h-3" />
+                                            <span className={\`absolute -bottom-1 -right-1 p-1 rounded-full shadow-sm border \${isActive ? 'bg-white border-indigo-600 text-indigo-600' : 'bg-indigo-600 border-white text-white'}\`} title="Disappearing messages active">
+                                                <Clock className="w-2.5 h-2.5" />
                                             </span>
                                         )}
                                         {unread && (
                                             <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                                                {conv.unread_count}
+                                                {conv.unread_count > 99 ? '99+' : conv.unread_count}
                                             </span>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0 pr-1">
                                         <div className="flex justify-between items-center mb-1">
-                                            <h4 className={`font-bold text-sm truncate ${unread ? 'text-gray-900' : 'text-gray-700'} flex items-center gap-1`}>
+                                            <h4 className={\`font-bold text-sm truncate flex items-center gap-1.5 \${isActive ? 'text-white' : unread ? 'text-gray-900' : 'text-gray-700'}\`}>
                                                 {conv.user_name}
                                                 {conv.is_starred_by_admin && (
-                                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+                                                    <Star className={\`w-3.5 h-3.5 \${isActive ? 'text-white fill-white' : 'text-amber-500 fill-amber-500'} flex-shrink-0\`} />
                                                 )}
                                             </h4>
-                                            <span className="text-[10px] text-gray-400 font-medium tracking-wide">
+                                            <span className={\`text-[10px] font-semibold tracking-wide \${isActive ? 'text-indigo-100' : 'text-gray-400'}\`}>
                                                 {new Date(conv.last_message_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
                                             </span>
                                         </div>
-                                        <p className={`text-xs truncate ${unread ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>
+                                        <p className={\`text-xs truncate \${isActive ? 'text-indigo-100' : unread ? 'text-gray-900 font-bold' : 'text-gray-500'}\`}>
                                             {conv.last_message || t('common.no_messages', 'No messages yet')}
                                         </p>
                                     </div>
@@ -584,677 +559,334 @@ export default function SupportInbox() {
                 </div>
             </div>
 
-            {/* Right Side - Chat Panel */}
-            <div className="flex-1 flex flex-col bg-white">
+            {/* 2. CENTER PANE - Main Chat */}
+            <div className="flex-1 flex flex-col bg-[#F8F9FA] relative">
                 {activeChat ? (
                     <>
-                        <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 shadow-sm">
-                            <div className="flex items-center gap-4">
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-gray-200/60 flex items-center justify-between bg-white/80 backdrop-blur-md z-10 sticky top-0 shadow-sm">
+                            <div className="flex items-center gap-4 cursor-pointer" onClick={() => setShowRightPane(!showRightPane)}>
                                 <div className="relative">
-                                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold shadow-inner">
+                                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center text-indigo-700 font-bold shadow-inner border border-white">
                                         {activeChat.user_name?.[0]?.toUpperCase()}
                                     </div>
-                                    {Number(activeChat.disappearing_duration) > 0 && (
-                                        <span className="absolute -bottom-1 -right-1 bg-indigo-600 border border-white p-0.5 rounded-full shadow text-white" title="Disappearing messages active">
-                                            <Clock className="w-3.5 h-3.5" />
-                                        </span>
-                                    )}
                                     {partnerPresence.online && (
-                                        <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                                        <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white shadow-sm" />
                                     )}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-gray-900 leading-tight">{activeChat.user_name}</h3>
-                                    <p className="text-xs text-gray-500 mt-0.5">
+                                    <h3 className="font-bold text-gray-900 leading-tight text-[15px]">{activeChat.user_name}</h3>
+                                    <p className="text-xs mt-0.5">
                                         {isPartnerTyping ? (
-                                            <span className="text-indigo-600 font-semibold animate-pulse">typing...</span>
+                                            <span className="text-indigo-600 font-bold animate-pulse">typing...</span>
                                         ) : partnerPresence.online ? (
                                             <span className="text-emerald-600 font-semibold">Online</span>
                                         ) : partnerPresence.lastSeen ? (
-                                            <span className="text-gray-400">Last seen at {new Date(partnerPresence.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span className="text-gray-500 font-medium">Last seen {new Date(partnerPresence.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                         ) : (
-                                            <span className="text-gray-400">Offline</span>
+                                            <span className="text-gray-400 font-medium">Offline</span>
                                         )}
                                     </p>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-1">
-                                <div className="relative" ref={disappearingMenuRef}>
-                                    <button
-                                        onClick={() => setShowDisappearingModal(!showDisappearingModal)}
-                                        className={`p-2 rounded-full hover:bg-gray-100 transition ${Number(activeChat.disappearing_duration) > 0 ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400'}`}
-                                        title={t('common.disappearing_messages', 'Disappearing Messages')}
-                                    >
-                                        <Clock className="h-5 w-5" />
-                                    </button>
-                                    {showDisappearingModal && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-150 rounded-2xl shadow-xl z-[9999] overflow-hidden text-gray-800">
-                                            <div className="p-3 border-b border-gray-100 bg-gray-50/50">
-                                                <p className="text-xs font-bold text-gray-700">Disappearing Messages</p>
-                                            </div>
-                                            <div className="p-1">
-                                                {[
-                                                    { label: t('common.off', 'Off'), value: 0 },
-                                                    { label: t('common.24h', '24 Hours'), value: 86400 },
-                                                    { label: t('common.7d', '7 Days'), value: 604800 },
-                                                    { label: t('common.90d', '90 Days'), value: 7776000 }
-                                                ].map(opt => (
-                                                    <button
-                                                        key={opt.value}
-                                                        onClick={() => handleSetDisappearing(opt.value)}
-                                                        className={`w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-gray-50 transition flex items-center justify-between ${
-                                                            Number(activeChat.disappearing_duration) === opt.value ? 'text-indigo-600 font-bold bg-indigo-50/30' : 'text-gray-700'
-                                                        }`}
-                                                    >
-                                                        <span>{opt.label}</span>
-                                                        {Number(activeChat.disappearing_duration) === opt.value && (
-                                                            <span className="w-1.5 h-1.5 bg-indigo-650 rounded-full" />
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="relative" ref={moreMenuRef}>
-                                    <button
-                                        onClick={() => setShowMoreMenu(!showMoreMenu)}
-                                        className="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition"
-                                        title={t('common.more_options', 'More Options')}
-                                    >
-                                        <MoreVertical className="h-5 w-5" />
-                                    </button>
-                                    {showMoreMenu && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-150 rounded-2xl shadow-xl z-60 overflow-hidden text-gray-800 py-1.5 animate-in fade-in slide-in-from-top-2">
-                                            <button
-                                                onClick={() => {
-                                                    setShowMoreMenu(false);
-                                                    handleToggleConversationFlag('starred');
-                                                }}
-                                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 flex items-center gap-2 transition text-gray-700"
-                                            >
-                                                <Star className={`h-4 w-4 ${activeChat.is_starred_by_admin ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}`} />
-                                                <span>{activeChat.is_starred_by_admin ? t('common.unstar_contact', 'Unstar Contact') : t('common.star_contact', 'Star Contact')}</span>
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    setShowMoreMenu(false);
-                                                    fetchStarredMessages(activeChat.id);
-                                                    setShowStarredDrawer(!showStarredDrawer);
-                                                }}
-                                                className={`w-full text-left px-4 py-2.5 text-xs hover:bg-gray-50 flex items-center gap-2 transition ${showStarredDrawer ? 'text-indigo-650 font-medium bg-indigo-50/30' : 'text-gray-700'}`}
-                                            >
-                                                <Star className="h-4 w-4 text-indigo-500 fill-indigo-100" />
-                                                <span>Starred Messages</span>
-                                            </button>
-
-                                            <hr className="border-gray-100 my-1" />
-
-                                            <button
-                                                onClick={() => {
-                                                    setShowMoreMenu(false);
-                                                    setShowClearConfirmModal(true);
-                                                }}
-                                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-rose-50 hover:text-rose-600 flex items-center gap-2 transition text-gray-700"
-                                            >
-                                                <Trash2 className="h-4 w-4 text-gray-400" />
-                                                <span>{t('common.clear_chat', 'Clear Chat')}</span>
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    setShowMoreMenu(false);
-                                                    setShowDeleteConfirmModal(true);
-                                                }}
-                                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-rose-50 hover:text-rose-600 flex items-center gap-2 transition text-gray-700"
-                                            >
-                                                <Trash2 className="h-4 w-4 text-rose-500" />
-                                                <span>{t('common.delete_chat', 'Delete Chat')}</span>
-                                            </button>
-
-                                            <hr className="border-gray-100 my-1" />
-
-                                            <button
-                                                onClick={() => {
-                                                    setShowMoreMenu(false);
-                                                    if (activeChat.is_blocked_by_admin) {
-                                                        handleToggleConversationFlag('blocked');
-                                                    } else {
-                                                        setShowBlockConfirmModal(true);
-                                                    }
-                                                }}
-                                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-rose-50 hover:text-rose-700 flex items-center gap-2 transition text-rose-600"
-                                            >
-                                                <Ban className="h-4 w-4" />
-                                                <span>{activeChat.is_blocked_by_admin ? t('common.unblock_contact', 'Unblock Contact') : t('common.block_contact', 'Block Contact')}</span>
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    setShowMoreMenu(false);
-                                                    if (activeChat.is_reported_by_admin) {
-                                                        handleToggleConversationFlag('reported');
-                                                    } else {
-                                                        setShowReportConfirmModal(true);
-                                                    }
-                                                }}
-                                                className="w-full text-left px-4 py-2.5 text-xs hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition text-amber-600"
-                                            >
-                                                <Flag className="h-4 w-4" />
-                                                <span>{activeChat.is_reported_by_admin ? t('common.unreport_contact', 'Cancel Report') : t('common.report_contact', 'Report Contact')}</span>
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 flex overflow-hidden">
-                            {/* Messages Feed and Input panel */}
-                            <div className="flex-1 flex flex-col min-w-0 bg-white">
-                                <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/30">
-                            {Number(activeChat.disappearing_duration) > 0 && (
-                                <div className="flex items-center justify-center w-full mb-4 px-4 select-none">
-                                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-2.5 text-xs text-amber-800 shadow-sm">
-                                        <Clock className="h-4 w-4 text-amber-600 flex-shrink-0 animate-pulse" />
-                                        <span>
-                                            {t('common.disappearing_banner', `Disappearing messages are on. New messages will disappear from this chat after ${activeChat.disappearing_duration === 86400 ? '24 hours' : activeChat.disappearing_duration === 604800 ? '7 days' : '90 days'}.`)}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {messages.map((msg, i) => {
-                                // System message rendering
-                                if (msg.content && msg.content.startsWith('$$SYSTEM$$:')) {
-                                    const systemText = msg.content.replace('$$SYSTEM$$:', '');
-                                    return (
-                                        <div key={msg.id || i} className="flex justify-center my-2.5 w-full select-none">
-                                            <div className="bg-gray-200/85 text-gray-650 text-xs font-semibold px-4.5 py-1.5 rounded-full shadow-inner select-none max-w-sm text-center">
-                                                {systemText}
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
-                                const isMe = msg.sender_type === 'admin';
-                                return (
-                                    <div 
-                                        key={msg.id || i} 
-                                        id={`msg-${msg.id}`}
-                                        className={`relative flex items-center w-full group transition-all duration-300 p-1 rounded-2xl ${isMe ? 'justify-end' : 'justify-start'}`}
-                                    >
-                                        {/* Reply Icon Indicator behind the bubble */}
-                                        {!isMe && (
-                                            <div className="absolute left-2 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity">
-                                                <CornerUpLeft className="h-5 w-5 text-indigo-600" />
-                                            </div>
-                                        )}
-                                        {isMe && (
-                                            <div className="absolute right-2 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity">
-                                                <CornerUpLeft className="h-5 w-5 text-indigo-600" />
-                                            </div>
-                                        )}
-
-                                        <motion.div
-                                            drag="x"
-                                            dragConstraints={isMe ? { left: -80, right: 0 } : { left: 0, right: 80 }}
-                                            dragElastic={0.4}
-                                            dragSnapToOrigin={true}
-                                            onDragEnd={(e, info) => {
-                                                const threshold = 45;
-                                                if (!isMe && info.offset.x > threshold) {
-                                                    setReplyingTo(msg);
-                                                } else if (isMe && info.offset.x < -threshold) {
-                                                    setReplyingTo(msg);
-                                                }
-                                            }}
-                                            className="relative z-10 max-w-[70%] lg:max-w-[60%]"
-                                        >
-                                            {/* Quoted Reply Box inside bubble */}
-                                            {msg.reply_to_id && (
-                                                <div 
-                                                    onClick={() => {
-                                                        const el = document.getElementById(`msg-${msg.reply_to_id}`);
-                                                        if (el) {
-                                                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                            el.classList.add('bg-indigo-100/50', 'ring-2', 'ring-indigo-50');
-                                                            setTimeout(() => {
-                                                                el.classList.remove('bg-indigo-100/50', 'ring-2', 'ring-indigo-50');
-                                                            }, 1500);
-                                                        }
-                                                    }}
-                                                    className={`mb-1.5 p-2 rounded-lg text-xs cursor-pointer border-l-4 select-none ${
-                                                        isMe 
-                                                            ? 'bg-indigo-700/50 border-white text-indigo-100' 
-                                                            : 'bg-gray-100 border-indigo-500 text-gray-600'
-                                                    }`}
-                                                >
-                                                    <div className="font-bold mb-0.5">
-                                                        {msg.reply_to_sender_type === 'admin' ? t('common.support', 'Support') : activeChat?.user_name || 'User'}
-                                                    </div>
-                                                    <p className="truncate">{msg.reply_to_content}</p>
-                                                </div>
-                                            )}
-
-                                            <div className={`rounded-2xl px-5 py-3 text-[15px] shadow-sm relative group/bubble ${
-                                                isMe 
-                                                    ? 'bg-indigo-600 text-white rounded-br-sm' 
-                                                    : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
-                                            }`}>
-                                                {/* Hover Reply Button */}
-                                                <button
-                                                    onClick={() => setReplyingTo(msg)}
-                                                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/bubble:opacity-100 transition-opacity p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full shadow-sm ${
-                                                        isMe ? '-left-10 text-gray-500 hover:text-indigo-600' : '-right-10 text-gray-500 hover:text-indigo-600'
-                                                    }`}
-                                                    title="Reply"
-                                                >
-                                                    <CornerUpLeft className="h-3.5 w-3.5" />
-                                                </button>
-
-                                                {/* Hover Reaction Button */}
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setActiveReactionMenuMessageId(activeReactionMenuMessageId === msg.id ? null : msg.id);
-                                                    }}
-                                                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/bubble:opacity-100 transition-opacity p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full shadow-sm text-gray-500 hover:text-yellow-500 ${
-                                                        isMe ? '-left-[74px]' : '-right-[74px]'
-                                                    }`}
-                                                    title="React"
-                                                >
-                                                    <Smile className="h-3.5 w-3.5" />
-                                                </button>
-
-                                                {/* Chevron Dropdown Trigger */}
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setActiveMessageMenuId(activeMessageMenuId === msg.id ? null : msg.id);
-                                                    }}
-                                                    className={`absolute top-2 right-2 p-1 rounded-full shadow-sm opacity-0 group-hover/bubble:opacity-100 transition-opacity z-30 ${
-                                                        isMe 
-                                                            ? 'bg-indigo-700/80 hover:bg-indigo-800 text-indigo-200 hover:text-white border border-indigo-500' 
-                                                            : 'bg-white/85 hover:bg-white text-gray-500 hover:text-gray-800 border border-gray-150'
-                                                    }`}
-                                                    title={t('common.options', 'Options')}
-                                                >
-                                                    <ChevronDown className="h-3 w-3" />
-                                                </button>
-
-                                                {/* Dropdown Options Menu */}
-                                                {activeMessageMenuId === msg.id && (
-                                                    <div 
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        className={`absolute top-8 ${isMe ? 'right-2' : 'left-2'} w-40 bg-white border border-gray-150 rounded-2xl shadow-xl z-40 py-1 text-gray-800 animate-in fade-in slide-in-from-top-1`}
-                                                    >
-                                                        <button
-                                                            onClick={() => {
-                                                                setReplyingTo(msg);
-                                                                setActiveMessageMenuId(null);
-                                                            }}
-                                                            className="w-full text-left px-3.5 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
-                                                        >
-                                                            <CornerUpLeft className="h-3.5 w-3.5 text-gray-400" />
-                                                            <span>{t('common.reply', 'Reply')}</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                handleCopyMessage(msg.content);
-                                                                setActiveMessageMenuId(null);
-                                                            }}
-                                                            className="w-full text-left px-3.5 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
-                                                        >
-                                                            <Copy className="h-3.5 w-3.5 text-gray-400" />
-                                                            <span>{t('common.copy', 'Copy Message')}</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                handleToggleStar(msg.id);
-                                                                setActiveMessageMenuId(null);
-                                                            }}
-                                                            className="w-full text-left px-3.5 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
-                                                        >
-                                                            <Star className={`h-3.5 w-3.5 ${msg.is_starred ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}`} />
-                                                            <span>{msg.is_starred ? t('common.unstar', 'Unstar Message') : t('common.star', 'Star Message')}</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setInfoMessage(msg);
-                                                                setActiveMessageMenuId(null);
-                                                            }}
-                                                            className="w-full text-left px-3.5 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
-                                                        >
-                                                            <Info className="h-3.5 w-3.5 text-gray-400" />
-                                                            <span>{t('common.info', 'Message Info')}</span>
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                {/* Reactions Popover Menu */}
-                                                {activeReactionMenuMessageId === msg.id && (
-                                                    <div className={`absolute bottom-full mb-2 bg-white border border-gray-150 rounded-full px-2 py-1.5 shadow-xl flex gap-1 z-30 animate-in fade-in slide-in-from-bottom-2 ${
-                                                        isMe ? 'right-0' : 'left-0'
-                                                    }`}>
-                                                        {['👍', '❤️', '😂', '😮', '😢', '🙏'].map(emoji => (
-                                                            <button
-                                                                key={emoji}
-                                                                type="button"
-                                                                onClick={() => handleReactMessage(msg.id, emoji)}
-                                                                className="hover:scale-130 transition-transform px-1 text-lg duration-150"
-                                                            >
-                                                                {emoji}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                {/* Render Attachments */}
-                                                {msg.attachments && msg.attachments.length > 0 && (
-                                                    <div className="space-y-2 mb-2 select-none">
-                                                        {msg.attachments.map((att) => {
-                                                            const isImg = att.mime_type?.startsWith('image/');
-                                                            const attachmentUrl = `${api.defaults.baseURL}/chat/messages/attachment/${att.id}`;
-                                                            if (isImg) {
-                                                                return (
-                                                                    <div key={att.id} className="relative group/attachment overflow-hidden rounded-lg border border-gray-150 shadow-inner">
-                                                                        <img 
-                                                                            src={attachmentUrl} 
-                                                                            alt={att.file_name} 
-                                                                            className="max-w-xs max-h-48 object-cover cursor-pointer transition hover:scale-[1.02] duration-200 animate-in fade-in"
-                                                                            onClick={() => setActiveLightboxImage(attachmentUrl)}
-                                                                        />
-                                                                        <div className="absolute top-2 right-2 opacity-0 group-hover/attachment:opacity-100 transition-opacity">
-                                                                            <a 
-                                                                                href={attachmentUrl} 
-                                                                                download={att.file_name} 
-                                                                                target="_blank"
-                                                                                rel="noreferrer"
-                                                                                className="p-1.5 bg-black/60 hover:bg-black/80 rounded-full text-white flex items-center justify-center transition shadow"
-                                                                                onClick={(e) => e.stopPropagation()}
-                                                                            >
-                                                                                <Download className="h-4 w-4" />
-                                                                            </a>
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            } else {
-                                                                return (
-                                                                    <div key={att.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-150 rounded-xl max-w-xs text-gray-800">
-                                                                        <FileText className="h-8 w-8 text-indigo-600 flex-shrink-0 animate-pulse" />
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <p className="font-semibold text-xs truncate">{att.file_name}</p>
-                                                                            <p className="text-[10px] text-gray-400 uppercase font-medium">{att.mime_type?.split('/')[1] || 'FILE'}</p>
-                                                                        </div>
-                                                                        <a 
-                                                                            href={attachmentUrl} 
-                                                                            download={att.file_name}
-                                                                            target="_blank"
-                                                                            rel="noreferrer"
-                                                                            className="p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-indigo-600 flex items-center justify-center transition flex-shrink-0"
-                                                                        >
-                                                                            <Download className="h-4 w-4" />
-                                                                        </a>
-                                                                    </div>
-                                                                );
-                                                            }
-                                                        })}
-                                                    </div>
-                                                )}
-
-                                                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                                                <div className={`flex items-center justify-end gap-1.5 mt-2 ${isMe ? 'text-indigo-200' : 'text-gray-400'}`}>
-                                                    {msg.is_starred && (
-                                                        <Star className="h-3 w-3 text-amber-400 fill-amber-400 mr-0.5 flex-shrink-0" />
-                                                    )}
-                                                    <span className="text-[11px] font-medium">
-                                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                    {isMe && (
-                                                        msg.is_read ? (
-                                                            <CheckCheck 
-                                                                className="h-4 w-4 text-emerald-305" 
-                                                                title={msg.read_at ? `Seen at ${new Date(msg.read_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Seen'} 
-                                                            />
-                                                        ) : (
-                                                            <Check className="h-4 w-4 text-indigo-200 opacity-70" title="Sent" />
-                                                        )
-                                                    )}
-                                                </div>
-
-                                                {/* Emojis Reactions Badges */}
-                                                {msg.reactions && msg.reactions.length > 0 && (
-                                                    <div className="absolute -bottom-2.5 right-3 flex items-center bg-white border border-gray-100 rounded-full px-1.5 py-0.5 shadow-sm text-xs gap-1 select-none z-20 hover:scale-105 transition-transform duration-200 cursor-pointer text-gray-800">
-                                                        <span className="flex items-center gap-0.5">
-                                                            {[...new Set(msg.reactions.map(r => r.emoji))].map(emoji => (
-                                                                <span key={emoji} title={msg.reactions.filter(r => r.emoji === emoji).map(r => r.user_name).join(', ')}>
-                                                                    {emoji}
-                                                                </span>
-                                                            ))}
-                                                        </span>
-                                                        {msg.reactions.length > 1 && (
-                                                            <span className="text-[10px] text-gray-500 font-bold ml-0.5">{msg.reactions.length}</span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    </div>
-                                );
-                            })}
-                            {isPartnerTyping && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white text-gray-500 border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm max-w-[70%] flex items-center gap-1.5">
-                                        <span className="text-xs font-semibold mr-1">{activeChat?.user_name || 'User'} typing</span>
-                                        <div className="flex items-center gap-1 mt-0.5">
-                                            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        <div className="relative p-4 bg-white border-t border-gray-100">
-                            {/* Reply Preview Banner */}
-                            {replyingTo && (
-                                <div className="max-w-4xl mx-auto mb-3 bg-indigo-50/80 border border-indigo-100 rounded-2xl p-3 flex justify-between items-center text-sm shadow-sm">
-                                    <div className="flex-1 min-w-0 border-l-4 border-indigo-600 pl-3">
-                                        <div className="font-bold text-indigo-700 text-[11px]">
-                                            {t('common.replying_to', 'Replying to')} {replyingTo.sender_type === 'admin' ? t('common.support', 'Support') : activeChat?.user_name || 'User'}
-                                        </div>
-                                        <p className="text-gray-600 truncate text-xs mt-0.5">{replyingTo.content}</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => setReplyingTo(null)} 
-                                        className="p-1.5 hover:bg-indigo-100 rounded-full text-indigo-600 transition ml-2"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Emoji Picker Popover */}
-                            {showEmojiPicker && (
-                                <div className="absolute bottom-full left-4 mb-2 z-50 shadow-2xl" ref={emojiPickerRef}>
-                                    <EmojiPicker 
-                                        onEmojiClick={onEmojiClick}
-                                        width={320}
-                                        height={380}
-                                        lazyLoadEmojis={true}
-                                        searchDisabled={false}
-                                        skinTonesDisabled={true}
-                                        previewConfig={{ showPreview: false }}
-                                    />
-                                </div>
-                            )}
-                            {/* File Upload Preview Banner */}
-                            {selectedFile && (
-                                <div className="max-w-4xl mx-auto mb-3 bg-gray-50 border border-gray-200 rounded-2xl p-3 flex justify-between items-center text-sm shadow-sm select-none">
-                                    <div className="flex items-center gap-3">
-                                        {filePreview ? (
-                                            <img src={filePreview} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-gray-150 shadow-inner" />
-                                        ) : (
-                                            <div className="w-12 h-12 bg-indigo-50 text-indigo-650 rounded-lg flex items-center justify-center border border-indigo-100 shadow-inner">
-                                                <FileText className="h-6 w-6 animate-pulse" />
-                                            </div>
-                                        )}
-                                        <div className="min-w-0">
-                                            <p className="text-gray-800 font-semibold text-xs truncate max-w-[200px]">{selectedFile.name}</p>
-                                            <p className="text-[10px] text-gray-400">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedFile(null);
-                                            if (filePreview) URL.revokeObjectURL(filePreview);
-                                            setFilePreview(null);
-                                        }} 
-                                        className="p-1.5 hover:bg-gray-200 rounded-full text-gray-500 transition ml-2"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            )}
-
-                            {activeChat.is_blocked_by_admin || activeChat.is_blocked_by_user ? (
-                                <div className="max-w-4xl mx-auto bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm select-none">
-                                    <Ban className="h-8 w-8 text-rose-500 mb-2 animate-pulse" />
-                                    <p className="text-gray-705 font-semibold text-sm">
-                                        {activeChat.is_blocked_by_admin 
-                                            ? t('common.you_blocked_this_contact', 'You blocked this contact. Unblock to send messages.')
-                                            : t('common.blocked_by_contact', 'You have been blocked by this contact.')}
-                                    </p>
-                                    {activeChat.is_blocked_by_admin && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleToggleConversationFlag('blocked')}
-                                            className="mt-2.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
-                                        >
-                                            {t('common.unblock', 'Unblock')}
-                                        </button>
-                                    )}
-                                </div>
-                            ) : (
-                                <>
-                                    <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto flex items-end gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-200 focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-50 transition-all">
-                                        <button
-                                            type="button"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="p-2.5 rounded-xl transition flex-shrink-0 mb-0.5 text-gray-400 hover:bg-gray-150"
-                                            title="Attach File"
-                                        >
-                                            <Paperclip className="h-5 w-5" />
-                                        </button>
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            onChange={handleFileSelect}
-                                            className="hidden"
-                                            accept="image/*,application/pdf"
-                                        />
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                            className={`p-2.5 rounded-xl transition flex-shrink-0 mb-0.5 ${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-400 hover:bg-gray-150'}`}
-                                        >
-                                            <Smile className="h-5 w-5" />
-                                        </button>
-                                        <textarea
-                                            value={input}
-                                            onChange={handleTyping}
-                                            placeholder={t('common.type_reply_placeholder', 'Type your reply...')}
-                                            className="flex-1 bg-transparent border-none px-3 py-2 text-sm focus:outline-none resize-none max-h-32 min-h-[44px]"
-                                            rows="1"
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    handleSendMessage(e);
-                                                }
-                                            }}
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={!input.trim() && !selectedFile}
-                                            className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex-shrink-0 shadow-md shadow-indigo-200 mb-0.5"
-                                        >
-                                            <Send className="h-5 w-5 ml-0.5" />
-                                        </button>
-                                    </form>
-                                    <p className="text-center text-[11px] text-gray-400 mt-2">{t('common.chat_hint', 'Press Enter to send, Shift + Enter for new line')}</p>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Starred Messages Drawer */}
-                    {showStarredDrawer && (
-                        <div className="w-80 border-l border-gray-100 bg-white flex flex-col h-full z-20 animate-in slide-in-from-right duration-200">
-                            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                <h3 className="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
-                                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                                    Starred Messages
-                                </h3>
-                                <button 
-                                    onClick={() => setShowStarredDrawer(false)}
-                                    className="p-1 hover:bg-gray-200 rounded-full text-gray-500 hover:text-gray-800 transition"
+                            
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowRightPane(!showRightPane)}
+                                    className={\`p-2.5 rounded-xl transition-all \${showRightPane ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}\`}
+                                    title="Toggle Details"
                                 >
-                                    <X className="h-4 w-4" />
+                                    {showRightPane ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
                                 </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gray-50/20">
-                                {loadingStarred ? (
-                                    <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-400">
-                                        <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-650 rounded-full animate-spin"></div>
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Loading...</span>
-                                    </div>
-                                ) : starredMessages.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 p-4">
-                                        <Star className="h-8 w-8 text-gray-200 mb-2" />
-                                        <p className="text-xs">No starred messages yet.</p>
-                                        <p className="text-[10px] text-gray-400 mt-1 max-w-[200px]">You can star important messages in this chat to see them here.</p>
-                                    </div>
-                                ) : (
-                                    starredMessages.map((msg) => {
-                                        const isStarredMe = msg.sender_type === 'admin';
-                                        return (
-                                            <div key={msg.id} className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm relative group/drawerMsg">
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="text-[10px] font-bold text-indigo-600">
-                                                        {isStarredMe ? t('common.you', 'You') : activeChat.user_name}
-                                                    </span>
-                                                    <span className="text-[9px] text-gray-400">
-                                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
+                        </div>
+
+                        {/* Messages Feed */}
+                        <div className="flex-1 flex overflow-hidden">
+                            <div className="flex-1 flex flex-col min-w-0 relative">
+                                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar pb-32">
+                                    {Number(activeChat.disappearing_duration) > 0 && (
+                                        <div className="flex items-center justify-center w-full mb-6 select-none">
+                                            <div className="flex items-center gap-2 bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 rounded-2xl px-5 py-2.5 text-xs text-indigo-800 shadow-sm">
+                                                <Clock className="h-4 w-4 text-indigo-600 animate-pulse" />
+                                                <span className="font-medium">
+                                                    {t('common.disappearing_banner', \`Disappearing messages are on ( \${activeChat.disappearing_duration === 86400 ? '24 hours' : activeChat.disappearing_duration === 604800 ? '7 days' : '90 days'} ).\`)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {messages.map((msg, i) => {
+                                        if (msg.content && msg.content.startsWith('$$SYSTEM$$:')) {
+                                            const systemText = msg.content.replace('$$SYSTEM$$:', '');
+                                            return (
+                                                <div key={msg.id || i} className="flex justify-center my-4 w-full select-none">
+                                                    <div className="bg-gray-200/50 text-gray-500 text-xs font-semibold px-4 py-1.5 rounded-full shadow-inner select-none max-w-sm text-center">
+                                                        {systemText}
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed break-words">{msg.content}</p>
-                                                <button
-                                                    onClick={() => handleToggleStar(msg.id)}
-                                                    className="absolute top-2 right-2 p-1 rounded-full bg-gray-50 hover:bg-rose-50 text-amber-500 hover:text-rose-600 opacity-0 group-hover/drawerMsg:opacity-100 transition-all border border-gray-100 shadow-sm"
-                                                    title="Unstar Message"
-                                                >
-                                                    <X className="h-3 w-3" />
-                                                </button>
+                                            );
+                                        }
+
+                                        const isMe = msg.sender_type === 'admin';
+                                        return (
+                                            <div key={msg.id || i} id={\`msg-\${msg.id}\`} className={\`flex w-full group/row \${isMe ? 'justify-end' : 'justify-start'}\`}>
+                                                <div className={\`flex max-w-[75%] \${isMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-2\`}>
+                                                    
+                                                    {/* Avatar for user messages */}
+                                                    {!isMe && (
+                                                        <div className="w-7 h-7 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-gray-500 mb-1">
+                                                            {activeChat.user_name?.[0]?.toUpperCase()}
+                                                        </div>
+                                                    )}
+
+                                                    <motion.div
+                                                        drag="x"
+                                                        dragConstraints={isMe ? { left: -80, right: 0 } : { left: 0, right: 80 }}
+                                                        dragElastic={0.2}
+                                                        dragSnapToOrigin={true}
+                                                        onDragEnd={(e, info) => {
+                                                            if ((!isMe && info.offset.x > 45) || (isMe && info.offset.x < -45)) {
+                                                                setReplyingTo(msg);
+                                                            }
+                                                        }}
+                                                        className="relative z-10 flex flex-col group/bubble"
+                                                    >
+                                                        {msg.reply_to_id && (
+                                                            <div 
+                                                                onClick={() => {
+                                                                    const el = document.getElementById(\`msg-\${msg.reply_to_id}\`);
+                                                                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                }}
+                                                                className={\`mb-1 p-2.5 rounded-xl text-xs cursor-pointer border-l-4 select-none backdrop-blur-sm \${
+                                                                    isMe 
+                                                                        ? 'bg-indigo-700/40 border-indigo-300 text-indigo-50' 
+                                                                        : 'bg-gray-200/60 border-indigo-400 text-gray-700'
+                                                                }\`}
+                                                            >
+                                                                <div className="font-extrabold mb-0.5 opacity-90">
+                                                                    {msg.reply_to_sender_type === 'admin' ? t('common.support', 'Support') : activeChat?.user_name || 'User'}
+                                                                </div>
+                                                                <p className="truncate opacity-90">{msg.reply_to_content}</p>
+                                                            </div>
+                                                        )}
+
+                                                        <div className={\`relative px-5 py-3.5 text-[14.5px] shadow-sm transition-all \${
+                                                            isMe 
+                                                                ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-3xl rounded-br-sm shadow-indigo-200' 
+                                                                : 'bg-white text-gray-800 border border-gray-100 rounded-3xl rounded-bl-sm shadow-gray-200'
+                                                        }\`}>
+                                                            
+                                                            {/* Action Buttons (Reply/React/More) */}
+                                                            <div className={\`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity \${
+                                                                isMe ? '-left-[110px]' : '-right-[110px]'
+                                                            }\`}>
+                                                                <button onClick={(e) => { e.stopPropagation(); setReplyingTo(msg); }} className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-gray-500 hover:text-indigo-600 shadow-sm" title="Reply">
+                                                                    <CornerUpLeft className="h-4 w-4" />
+                                                                </button>
+                                                                <button onClick={(e) => { e.stopPropagation(); setActiveReactionMenuMessageId(activeReactionMenuMessageId === msg.id ? null : msg.id); }} className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-gray-500 hover:text-yellow-500 shadow-sm" title="React">
+                                                                    <Smile className="h-4 w-4" />
+                                                                </button>
+                                                                <button onClick={(e) => { e.stopPropagation(); setActiveMessageMenuId(activeMessageMenuId === msg.id ? null : msg.id); }} className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-gray-500 hover:text-gray-800 shadow-sm" title="Options">
+                                                                    <ChevronDown className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Dropdown Options Menu */}
+                                                            {activeMessageMenuId === msg.id && (
+                                                                <div onClick={(e) => e.stopPropagation()} className={\`absolute top-10 \${isMe ? '-left-32' : '-right-32'} w-44 bg-white border border-gray-150 rounded-2xl shadow-xl z-50 py-1.5 text-gray-800 animate-in fade-in slide-in-from-top-1\`}>
+                                                                    <button onClick={() => { handleCopyMessage(msg.content); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-50 flex items-center gap-2">
+                                                                        <Copy className="h-4 w-4 text-gray-400" /> Copy
+                                                                    </button>
+                                                                    <button onClick={() => { handleToggleStar(msg.id); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-50 flex items-center gap-2">
+                                                                        <Star className={\`h-4 w-4 \${msg.is_starred ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}\`} /> {msg.is_starred ? 'Unstar' : 'Star'}
+                                                                    </button>
+                                                                    <button onClick={() => { setInfoMessage(msg); setActiveMessageMenuId(null); }} className="w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-50 flex items-center gap-2">
+                                                                        <Info className="h-4 w-4 text-gray-400" /> Info
+                                                                    </button>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Reactions Popover Menu */}
+                                                            {activeReactionMenuMessageId === msg.id && (
+                                                                <div className={\`absolute bottom-full mb-2 bg-white border border-gray-150 rounded-full px-2 py-1.5 shadow-xl flex gap-1 z-50 animate-in fade-in slide-in-from-bottom-2 \${isMe ? 'right-0' : 'left-0'}\`}>
+                                                                    {['👍', '❤️', '😂', '😮', '😢', '🙏'].map(emoji => (
+                                                                        <button key={emoji} onClick={() => handleReactMessage(msg.id, emoji)} className="hover:scale-125 transition-transform px-1 text-lg">
+                                                                            {emoji}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Attachments */}
+                                                            {msg.attachments?.length > 0 && (
+                                                                <div className="space-y-2 mb-2 select-none">
+                                                                    {msg.attachments.map((att) => {
+                                                                        const isImg = att.mime_type?.startsWith('image/');
+                                                                        const attachmentUrl = \`\${api.defaults.baseURL}/chat/messages/attachment/\${att.id}\`;
+                                                                        return isImg ? (
+                                                                            <div key={att.id} className="relative group/attachment overflow-hidden rounded-xl">
+                                                                                <img src={attachmentUrl} alt="attachment" className="max-w-[240px] max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setActiveLightboxImage(attachmentUrl)} />
+                                                                                <a href={attachmentUrl} download={att.file_name} target="_blank" rel="noreferrer" className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white opacity-0 group-hover/attachment:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                                                                    <Download className="h-4 w-4" />
+                                                                                </a>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div key={att.id} className={\`flex items-center gap-3 p-3 rounded-xl \${isMe ? 'bg-indigo-700/50 text-indigo-50 border border-indigo-500' : 'bg-gray-50 border border-gray-200'}\`}>
+                                                                                <FileText className={\`h-8 w-8 \${isMe ? 'text-indigo-200' : 'text-indigo-600'}\`} />
+                                                                                <div className="flex-1 min-w-0">
+                                                                                    <p className="font-semibold text-xs truncate max-w-[150px]">{att.file_name}</p>
+                                                                                </div>
+                                                                                <a href={attachmentUrl} download={att.file_name} target="_blank" rel="noreferrer" className={\`p-1.5 rounded-lg transition-colors \${isMe ? 'hover:bg-indigo-600 text-white' : 'hover:bg-indigo-100 text-indigo-600'}\`}>
+                                                                                    <Download className="h-4 w-4" />
+                                                                                </a>
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            )}
+
+                                                            <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                                                            
+                                                            <div className={\`flex items-center justify-end gap-1 mt-1.5 \${isMe ? 'text-indigo-200' : 'text-gray-400'}\`}>
+                                                                {msg.is_starred && <Star className="h-3 w-3 text-amber-400 fill-amber-400 mr-0.5" />}
+                                                                <span className="text-[10px] font-medium tracking-wide">
+                                                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                </span>
+                                                                {isMe && (
+                                                                    msg.is_read ? (
+                                                                        <CheckCheck className="h-4 w-4 text-emerald-300" title="Seen" />
+                                                                    ) : (
+                                                                        <Check className="h-4 w-4 opacity-80" title="Sent" />
+                                                                    )
+                                                                )}
+                                                            </div>
+
+                                                            {msg.reactions?.length > 0 && (
+                                                                <div className="absolute -bottom-3 right-4 flex items-center bg-white border border-gray-200 rounded-full px-2 py-0.5 shadow-sm text-xs gap-1 z-20 hover:scale-105 cursor-pointer text-gray-800">
+                                                                    {[...new Set(msg.reactions.map(r => r.emoji))].map(emoji => (
+                                                                        <span key={emoji}>{emoji}</span>
+                                                                    ))}
+                                                                    {msg.reactions.length > 1 && <span className="text-[10px] font-bold ml-1 text-gray-600">{msg.reactions.length}</span>}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </motion.div>
+                                                </div>
                                             </div>
                                         );
-                                    })
-                                )}
+                                    })}
+
+                                    {isPartnerTyping && (
+                                        <div className="flex justify-start">
+                                            <div className="bg-white border border-gray-100 rounded-3xl rounded-bl-sm px-5 py-3.5 shadow-sm flex items-center gap-2">
+                                                <div className="flex gap-1.5">
+                                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                                
+                                {/* Input Area (Floating) */}
+                                <div className="absolute bottom-6 left-6 right-6 z-30">
+                                    <div className="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden flex flex-col transition-all">
+                                        {/* Reply Preview */}
+                                        {replyingTo && (
+                                            <div className="bg-gray-50 border-b border-gray-100 p-3 flex justify-between items-center relative">
+                                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
+                                                <div className="pl-2">
+                                                    <div className="text-[11px] font-bold text-indigo-600 mb-0.5">
+                                                        Replying to {replyingTo.sender_type === 'admin' ? 'Support' : activeChat?.user_name}
+                                                    </div>
+                                                    <div className="text-xs text-gray-600 truncate max-w-lg">{replyingTo.content}</div>
+                                                </div>
+                                                <button onClick={() => setReplyingTo(null)} className="p-1.5 hover:bg-gray-200 rounded-full text-gray-500 transition">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* File Preview */}
+                                        {selectedFile && (
+                                            <div className="bg-gray-50 border-b border-gray-100 p-3 flex justify-between items-center">
+                                                <div className="flex items-center gap-3">
+                                                    {filePreview ? (
+                                                        <img src={filePreview} alt="Preview" className="w-10 h-10 object-cover rounded-lg border border-gray-200 shadow-sm" />
+                                                    ) : (
+                                                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center border border-indigo-100">
+                                                            <FileText className="h-5 w-5" />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-800 truncate max-w-[200px]">{selectedFile.name}</p>
+                                                        <p className="text-[10px] text-gray-400">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => { setSelectedFile(null); setFilePreview(null); }} className="p-1.5 hover:bg-gray-200 rounded-full text-gray-500 transition">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {activeChat.is_blocked_by_admin || activeChat.is_blocked_by_user ? (
+                                            <div className="p-4 flex flex-col items-center justify-center text-center bg-gray-50">
+                                                <Ban className="h-5 w-5 text-rose-500 mb-1" />
+                                                <p className="text-sm font-medium text-gray-700">
+                                                    {activeChat.is_blocked_by_admin ? 'You blocked this contact.' : 'You have been blocked.'}
+                                                </p>
+                                                {activeChat.is_blocked_by_admin && (
+                                                    <button onClick={() => handleToggleConversationFlag('blocked')} className="mt-2 text-indigo-600 text-xs font-bold hover:underline">
+                                                        Unblock to send messages
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <form onSubmit={handleSendMessage} className="flex items-end gap-2 p-2 relative">
+                                                <div className="flex gap-1 pl-1">
+                                                    <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={\`p-2.5 rounded-full transition-colors \${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}\`}>
+                                                        <Smile className="h-5 w-5" />
+                                                    </button>
+                                                    <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+                                                        <Paperclip className="h-5 w-5" />
+                                                    </button>
+                                                </div>
+                                                
+                                                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,application/pdf" />
+
+                                                <textarea
+                                                    value={input}
+                                                    onChange={handleTyping}
+                                                    placeholder={t('common.type_reply_placeholder', 'Type a message...')}
+                                                    className="flex-1 bg-transparent border-none py-3 text-sm focus:outline-none resize-none max-h-32 min-h-[44px] text-gray-800 placeholder-gray-400 font-medium"
+                                                    rows="1"
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); }
+                                                    }}
+                                                />
+
+                                                <button type="submit" disabled={!input.trim() && !selectedFile} className="bg-indigo-600 text-white p-3 rounded-full hover:bg-indigo-700 transition disabled:opacity-50 disabled:bg-gray-300 shadow-md shadow-indigo-200 mb-0.5 mr-0.5">
+                                                    <Send className="h-5 w-5 ml-0.5" />
+                                                </button>
+
+                                                {showEmojiPicker && (
+                                                    <div className="absolute bottom-full left-0 mb-4 z-50 shadow-2xl rounded-2xl overflow-hidden border border-gray-100" ref={emojiPickerRef}>
+                                                        <EmojiPicker onEmojiClick={onEmojiClick} width={320} height={380} lazyLoadEmojis={true} skinTonesDisabled={true} previewConfig={{ showPreview: false }} />
+                                                    </div>
+                                                )}
+                                            </form>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    )}
-                </div>
-            </>
+                    </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gray-50/50">
+                        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100">
                             <MessageCircle className="h-10 w-10 text-gray-300" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">{t('common.select_conversation_title', 'Select a Conversation')}</h3>
@@ -1263,28 +895,130 @@ export default function SupportInbox() {
                 )}
             </div>
 
+            {/* 3. RIGHT PANE - Contact Details & Actions */}
+            <AnimatePresence>
+                {showRightPane && activeChat && (
+                    <motion.div 
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 340, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-l border-gray-200/60 bg-white flex flex-col overflow-hidden"
+                    >
+                        <div className="p-5 border-b border-gray-100 bg-white sticky top-0 z-10 flex items-center justify-between">
+                            <h3 className="font-bold text-gray-900">Contact Details</h3>
+                            <button onClick={() => setShowRightPane(false)} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            {/* Profile Header */}
+                            <div className="p-6 flex flex-col items-center border-b border-gray-100">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center text-indigo-700 font-bold text-3xl shadow-inner border-2 border-white mb-4 relative">
+                                    {activeChat.user_name?.[0]?.toUpperCase()}
+                                    {partnerPresence.online && (
+                                        <span className="absolute bottom-1 right-1 block h-5 w-5 rounded-full bg-emerald-500 ring-4 ring-white shadow-sm" />
+                                    )}
+                                </div>
+                                <h2 className="text-lg font-bold text-gray-900">{activeChat.user_name}</h2>
+                                <p className="text-sm text-gray-500 mt-1">{activeChat.user_email || 'No email provided'}</p>
+                            </div>
+
+                            {/* Settings / Actions */}
+                            <div className="p-4 space-y-4">
+                                <div>
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Settings</h4>
+                                    <div className="bg-gray-50 rounded-2xl p-2 space-y-1">
+                                        <div className="w-full text-left px-3 py-2.5 text-sm hover:bg-white hover:shadow-sm rounded-xl flex items-center justify-between transition cursor-pointer" onClick={() => handleToggleConversationFlag('starred')}>
+                                            <div className="flex items-center gap-3 text-gray-700 font-medium">
+                                                <Star className={\`w-5 h-5 \${activeChat.is_starred_by_admin ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}\`} />
+                                                Star Contact
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Disappearing Messages Setting */}
+                                        <div className="w-full text-left px-3 py-2.5 text-sm hover:bg-white hover:shadow-sm rounded-xl flex flex-col transition cursor-pointer group">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3 text-gray-700 font-medium">
+                                                    <Clock className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                                                    Disappearing Messages
+                                                </div>
+                                                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                                                    {activeChat.disappearing_duration === 86400 ? '24h' : activeChat.disappearing_duration === 604800 ? '7d' : activeChat.disappearing_duration === 7776000 ? '90d' : 'Off'}
+                                                </span>
+                                            </div>
+                                            <div className="mt-3 flex gap-1.5 w-full">
+                                                {[{l:'Off',v:0},{l:'24h',v:86400},{l:'7d',v:604800},{l:'90d',v:7776000}].map(opt => (
+                                                    <button 
+                                                        key={opt.v} 
+                                                        onClick={(e) => { e.stopPropagation(); handleSetDisappearing(opt.v); }}
+                                                        className={\`flex-1 py-1.5 text-xs font-semibold rounded-lg border \${Number(activeChat.disappearing_duration) === opt.v ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm' : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'}\`}
+                                                    >
+                                                        {opt.l}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Starred Messages Preview */}
+                                <div>
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 flex items-center justify-between">
+                                        Starred Messages
+                                        <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full">{starredMessages.length}</span>
+                                    </h4>
+                                    <div className="bg-gray-50 rounded-2xl p-3 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                        {loadingStarred ? (
+                                            <div className="text-center text-xs text-gray-400 py-4">Loading...</div>
+                                        ) : starredMessages.length === 0 ? (
+                                            <div className="text-center text-xs text-gray-400 py-4">No starred messages.</div>
+                                        ) : (
+                                            starredMessages.map((msg) => (
+                                                <div key={msg.id} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm relative group">
+                                                    <p className="text-xs text-gray-700 line-clamp-3">{msg.content}</p>
+                                                    <button onClick={() => handleToggleStar(msg.id)} className="absolute top-2 right-2 p-1 bg-white rounded-full shadow hover:text-rose-600 opacity-0 group-hover:opacity-100 transition">
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Danger Zone */}
+                                <div>
+                                    <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-2 px-2 mt-6">Danger Zone</h4>
+                                    <div className="bg-rose-50/50 rounded-2xl p-2 space-y-1 border border-rose-100/50">
+                                        <button onClick={() => setShowClearConfirmModal(true)} className="w-full text-left px-3 py-2.5 text-sm hover:bg-white hover:shadow-sm rounded-xl flex items-center gap-3 transition text-gray-700 hover:text-rose-600 font-medium">
+                                            <Trash2 className="w-5 h-5 text-gray-400" />
+                                            Clear Chat History
+                                        </button>
+                                        <button onClick={() => { activeChat.is_blocked_by_admin ? handleToggleConversationFlag('blocked') : setShowBlockConfirmModal(true) }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-white hover:shadow-sm rounded-xl flex items-center gap-3 transition text-rose-600 font-medium">
+                                            <Ban className="w-5 h-5" />
+                                            {activeChat.is_blocked_by_admin ? 'Unblock Contact' : 'Block Contact'}
+                                        </button>
+                                        <button onClick={() => { activeChat.is_reported_by_admin ? handleToggleConversationFlag('reported') : setShowReportConfirmModal(true) }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-white hover:shadow-sm rounded-xl flex items-center gap-3 transition text-amber-600 font-medium">
+                                            <Flag className="w-5 h-5" />
+                                            {activeChat.is_reported_by_admin ? 'Cancel Report' : 'Report Contact'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Lightbox Modal */}
             <AnimatePresence>
                 {activeLightboxImage && (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-                        onClick={() => setActiveLightboxImage(null)}
-                    >
-                        <button 
-                            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/25 rounded-full text-white transition"
-                            onClick={() => setActiveLightboxImage(null)}
-                        >
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/95 z-[99] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setActiveLightboxImage(null)}>
+                        <button className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition backdrop-blur-md" onClick={() => setActiveLightboxImage(null)}>
                             <X className="h-6 w-6" />
                         </button>
-                        <img 
-                            src={activeLightboxImage} 
-                            alt="Full screen preview" 
-                            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl select-none"
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                        <img src={activeLightboxImage} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -1292,37 +1026,47 @@ export default function SupportInbox() {
             {/* Clear Chat Confirmation Modal */}
             <AnimatePresence>
                 {showClearConfirmModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowClearConfirmModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 text-gray-800"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">{t('common.clear_chat_title', 'Clear chat history?')}</h3>
-                            <p className="text-sm text-gray-500 mb-6">
-                                {t('common.clear_chat_desc', 'This will permanently delete all messages and files in this conversation. This action cannot be undone.')}
-                            </p>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99] flex items-center justify-center p-4" onClick={() => setShowClearConfirmModal(false)}>
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100" onClick={(e) => e.stopPropagation()}>
+                            <h3 className="text-xl font-extrabold text-gray-900 mb-2">Clear chat history?</h3>
+                            <p className="text-sm text-gray-500 mb-6 font-medium">This will permanently delete all messages and files in this conversation for you. This action cannot be undone.</p>
                             <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowClearConfirmModal(false)}
-                                    className="px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition"
-                                >
-                                    {t('common.cancel', 'Cancel')}
-                                </button>
-                                <button
-                                    onClick={handleClearChat}
-                                    className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md shadow-rose-200"
-                                >
-                                    {t('common.clear_chat', 'Clear Chat')}
-                                </button>
+                                <button onClick={() => setShowClearConfirmModal(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+                                <button onClick={handleClearChat} className="px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md shadow-rose-200">Clear Chat</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
+            {/* Block Contact Modal */}
+            <AnimatePresence>
+                {showBlockConfirmModal && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99] flex items-center justify-center p-4" onClick={() => setShowBlockConfirmModal(false)}>
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100" onClick={(e) => e.stopPropagation()}>
+                            <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mb-4"><Ban className="w-6 h-6" /></div>
+                            <h3 className="text-xl font-extrabold text-gray-900 mb-2">Block this contact?</h3>
+                            <p className="text-sm text-gray-500 mb-6 font-medium">They won't be able to send you messages until you unblock them.</p>
+                            <div className="flex justify-end gap-3">
+                                <button onClick={() => setShowBlockConfirmModal(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+                                <button onClick={() => { handleToggleConversationFlag('blocked'); setShowBlockConfirmModal(false); }} className="px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md shadow-rose-200">Block</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
+            {/* Report Contact Modal */}
+            <AnimatePresence>
+                {showReportConfirmModal && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99] flex items-center justify-center p-4" onClick={() => setShowReportConfirmModal(false)}>
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100" onClick={(e) => e.stopPropagation()}>
+                            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4"><Flag className="w-6 h-6" /></div>
+                            <h3 className="text-xl font-extrabold text-gray-900 mb-2">Report this contact?</h3>
+                            <p className="text-sm text-gray-500 mb-6 font-medium">This contact will be flagged for inappropriate behavior.</p>
+                            <div className="flex justify-end gap-3">
+                                <button onClick={() => setShowReportConfirmModal(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+                                <button onClick={() => { handleToggleConversationFlag('reported'); setShowReportConfirmModal(false); }} className="px-5 py-2.5 text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition shadow-md shadow-amber-200">Report</button>
                             </div>
                         </motion.div>
                     </motion.div>
@@ -1332,63 +1076,30 @@ export default function SupportInbox() {
             {/* Message Info Modal */}
             <AnimatePresence>
                 {infoMessage && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setInfoMessage(null)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 text-gray-800"
-                            onClick={(e) => e.stopPropagation()}
-                        >
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99] flex items-center justify-center p-4" onClick={() => setInfoMessage(null)}>
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100" onClick={(e) => e.stopPropagation()}>
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-bold text-gray-900">{t('common.message_info', 'Message Info')}</h3>
-                                <button
-                                    onClick={() => setInfoMessage(null)}
-                                    className="p-1.5 hover:bg-gray-150 rounded-full transition text-gray-500 hover:text-gray-800"
-                                >
-                                    <X className="h-4 w-4" />
+                                <h3 className="text-lg font-bold text-gray-900">Message Info</h3>
+                                <button onClick={() => setInfoMessage(null)} className="p-1.5 hover:bg-gray-100 rounded-full transition text-gray-500">
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
-                            
-                            {/* Message preview */}
-                            <div className="bg-gray-50 p-3.5 rounded-2xl mb-4 border border-gray-100 text-sm max-h-36 overflow-y-auto break-words whitespace-pre-wrap">
+                            <div className="bg-gray-50 p-4 rounded-2xl mb-5 border border-gray-100 text-sm max-h-40 overflow-y-auto break-words whitespace-pre-wrap font-medium text-gray-800">
                                 {infoMessage.content}
                             </div>
-
                             <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                                        <Send className="h-4 w-4" />
-                                    </div>
+                                <div className="flex items-center gap-4 p-3 bg-gray-50/50 rounded-2xl">
+                                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><Send className="h-5 w-5" /></div>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('common.sent_delivered', 'Sent / Delivered')}</p>
-                                        <p className="text-sm text-gray-800 font-semibold mt-0.5">
-                                            {new Date(infoMessage.created_at).toLocaleString()}
-                                        </p>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Sent / Delivered</p>
+                                        <p className="text-sm text-gray-900 font-bold mt-0.5">{new Date(infoMessage.created_at).toLocaleString()}</p>
                                     </div>
                                 </div>
-
-                                <div className="flex items-start gap-3">
-                                    <div className={`p-2 rounded-xl ${infoMessage.is_read ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                                        <CheckCheck className="h-4 w-4" />
-                                    </div>
+                                <div className="flex items-center gap-4 p-3 bg-gray-50/50 rounded-2xl">
+                                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><CheckCheck className="h-5 w-5" /></div>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('common.read_seen', 'Read / Seen')}</p>
-                                        <p className="text-sm text-gray-800 font-semibold mt-0.5">
-                                            {infoMessage.is_read && infoMessage.read_at ? (
-                                                new Date(infoMessage.read_at).toLocaleString()
-                                            ) : infoMessage.is_read ? (
-                                                t('common.seen', 'Seen')
-                                            ) : (
-                                                t('common.not_seen_yet', 'Not seen yet')
-                                            )}
-                                        </p>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Read By User</p>
+                                        <p className="text-sm text-gray-900 font-bold mt-0.5">{infoMessage.is_read && infoMessage.read_at ? new Date(infoMessage.read_at).toLocaleString() : 'Not yet read'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1397,134 +1108,6 @@ export default function SupportInbox() {
                 )}
             </AnimatePresence>
 
-            {/* Delete Chat Confirmation Modal */}
-            <AnimatePresence>
-                {showDeleteConfirmModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowDeleteConfirmModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 text-gray-800"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">{t('common.delete_chat_title', 'Delete chat?')}</h3>
-                            <p className="text-sm text-gray-500 mb-6">
-                                {t('common.delete_chat_desc', 'Are you sure you want to delete this chat? This will remove the conversation from your inbox.')}
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowDeleteConfirmModal(false)}
-                                    className="px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition"
-                                >
-                                    {t('common.cancel', 'Cancel')}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowDeleteConfirmModal(false);
-                                        handleToggleConversationFlag('deleted');
-                                    }}
-                                    className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md shadow-rose-200"
-                                >
-                                    {t('common.delete', 'Delete')}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Block Contact Confirmation Modal */}
-            <AnimatePresence>
-                {showBlockConfirmModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowBlockConfirmModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 text-gray-800"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">{t('common.block_contact_title', 'Block contact?')}</h3>
-                            <p className="text-sm text-gray-500 mb-6">
-                                {t('common.block_contact_desc', 'Blocked contacts cannot message you or view your availability. You can unblock them at any time.')}
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowBlockConfirmModal(false)}
-                                    className="px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition"
-                                >
-                                    {t('common.cancel', 'Cancel')}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowBlockConfirmModal(false);
-                                        handleToggleConversationFlag('blocked');
-                                    }}
-                                    className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition shadow-md shadow-rose-200"
-                                >
-                                    {t('common.block', 'Block')}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Report Contact Confirmation Modal */}
-            <AnimatePresence>
-                {showReportConfirmModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowReportConfirmModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 text-gray-800"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">{t('common.report_contact_title', 'Report contact?')}</h3>
-                            <p className="text-sm text-gray-500 mb-6">
-                                {t('common.report_contact_desc', 'This contact will be reported for review. Your recent message history with them may be analyzed.')}
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowReportConfirmModal(false)}
-                                    className="px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition"
-                                >
-                                    {t('common.cancel', 'Cancel')}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowReportConfirmModal(false);
-                                        handleToggleConversationFlag('reported');
-                                    }}
-                                    className="px-4 py-2 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition shadow-md shadow-amber-200"
-                                >
-                                    {t('common.report', 'Report')}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
