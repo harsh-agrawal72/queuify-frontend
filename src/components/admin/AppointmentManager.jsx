@@ -203,7 +203,7 @@ const AppointmentManager = () => {
     };
 
     const toggleSelectAllAppts = () => {
-        const selectableAppts = appointments.filter(a => !['confirmed', 'no_show'].includes(a.status));
+        const selectableAppts = appointments.filter(a => !['pending', 'confirmed', 'no_show'].includes(a.status));
         if (selectedAppts.size === selectableAppts.length && selectableAppts.length > 0) {
             setSelectedAppts(new Set());
         } else {
@@ -500,11 +500,11 @@ const AppointmentManager = () => {
                                     <button
                                         onClick={toggleSelectAllAppts}
                                         className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-                                        title={selectedAppts.size === appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length && appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length > 0 ? 'Deselect all' : 'Select all'}
+                                        title={selectedAppts.size === appointments.filter(a => !['pending', 'confirmed', 'no_show'].includes(a.status)).length && appointments.filter(a => !['pending', 'confirmed', 'no_show'].includes(a.status)).length > 0 ? 'Deselect all' : 'Select all'}
                                     >
                                         {selectedAppts.size === 0 ? (
                                             <Square className="h-4 w-4 text-gray-400" />
-                                        ) : selectedAppts.size === appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length && appointments.filter(a => !['confirmed', 'no_show'].includes(a.status)).length > 0 ? (
+                                        ) : selectedAppts.size === appointments.filter(a => !['pending', 'confirmed', 'no_show'].includes(a.status)).length && appointments.filter(a => !['pending', 'confirmed', 'no_show'].includes(a.status)).length > 0 ? (
                                             <CheckSquare className="h-4 w-4 text-indigo-600" />
                                         ) : (
                                             <MinusSquare className="h-4 w-4 text-indigo-400" />
@@ -546,7 +546,7 @@ const AppointmentManager = () => {
                             ) : (
                                 appointments.map((apt, index) => {
                                     const isLastItems = index >= appointments.length - 2 && appointments.length > 3;
-                                    const isNonDeletable = ['confirmed', 'no_show'].includes(apt.status);
+                                    const isNonDeletable = ['pending', 'confirmed', 'no_show'].includes(apt.status);
 
                                     return (
                                         <tr key={apt.id} className={`hover:bg-gray-50/80 transition-colors group ${selectedAppts.has(apt.id) ? '!bg-indigo-50/70' : ''}`}>
@@ -555,7 +555,7 @@ const AppointmentManager = () => {
                                                     onClick={() => !isNonDeletable && toggleApptSelection(apt.id)}
                                                     className={`p-1 rounded-md transition-colors ${isNonDeletable ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
                                                     disabled={isNonDeletable}
-                                                    title={isNonDeletable ? 'Cannot delete confirmed or no-show appointments' : ''}
+                                                    title={isNonDeletable ? 'Cannot delete pending, confirmed, or no-show appointments' : ''}
                                                 >
                                                     {selectedAppts.has(apt.id) ? (
                                                         <CheckSquare className="h-4 w-4 text-indigo-600" />
