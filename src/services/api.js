@@ -142,9 +142,11 @@ const apiService = {
     markNotificationAsRead: (id) => api.patch(`/notifications/${id}/read`),
     markAllNotificationsAsRead: () => api.patch('/notifications/read-all'),
 
-    // User Profile
+    // User Profile & Favorites
     getUserProfile: () => api.get('/user/profile'),
     updateUserProfile: (data) => api.patch('/user/profile', data),
+    getFavorites: () => api.get('/user/favorites'),
+    toggleFavorite: (orgId) => api.post(`/user/favorites/${orgId}`),
 
     // Reviews
     submitReview: (data) => api.post('/reviews', data),

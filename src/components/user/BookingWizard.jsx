@@ -41,7 +41,8 @@ const BookingWizard = ({ orgId, service, initialResource, initialSlot, onClose }
 
     // If slot/resource provided, start at step 4 (Review) or 3 (Time/Slot)
     const getInitialStep = () => {
-        if (initialSlot || initialResource) return 4;
+        if (initialSlot) return 4;
+        if (initialResource) return 3;
         if (service) return 2;
         return 1;
     };

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { MessageCircle, Search, Send, Check, CheckCheck, Smile, CornerUpLeft, X, Paperclip, FileText, Download, Clock, Copy, Star, Info, Trash2, Ban, Flag, PanelRightClose, PanelRightOpen, Mic, Square } from 'lucide-react';
+import { MessageCircle, Search, Send, Check, CheckCheck, Smile, CornerUpLeft, X, Paperclip, FileText, Download, Clock, Copy, Star, Info, Trash2, Ban, Flag, PanelRightClose, PanelRightOpen, Mic, Square, Edit2, CheckSquare, Pin, PinOff } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { toast } from 'react-hot-toast';
 import EmojiPicker from 'emoji-picker-react';
@@ -19,6 +19,7 @@ export default function SupportInbox() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [replyingTo, setReplyingTo] = useState(null);
+    const [editingMessage, setEditingMessage] = useState(null);
     const [partnerPresence, setPartnerPresence] = useState({ online: false, lastSeen: null });
     const [typingUsers, setTypingUsers] = useState({}); // { conversationId: boolean }
     const typingTimeoutRef = useRef(null);
@@ -48,6 +49,13 @@ export default function SupportInbox() {
     const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
     const [showBlockConfirmModal, setShowBlockConfirmModal] = useState(false);
     const [showReportConfirmModal, setShowReportConfirmModal] = useState(false);
+    const [deleteConfirmModal, setDeleteConfirmModal] = useState({ visible: false, messageId: null });
+
+    // Selection mode
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedMessageIds, setSelectedMessageIds] = useState([]);
+    const [activeMessageMenuId, setActiveMessageMenuId] = useState(null);
+    const [showFullReactionPicker, setShowFullReactionPicker] = useState(null);
 
     const [starredMessages, setStarredMessages] = useState([]);
     const [loadingStarred, setLoadingStarred] = useState(false);
@@ -166,6 +174,30 @@ export default function SupportInbox() {
         }
     };
 
+    // Check for disappearing messages dynamically
+    useEffect(() => {
+        if (!activeChat || activeChat.disappearing_duration === 0) return;
+        
+        const interval = setInterval(() => {
+            setMessages(prev => {
+                let changed = false;
+                const now = Date.now();
+                const newMessages = prev.filter(msg => {
+                    if (msg.is_starred || msg.content?.startsWith('$$SYSTEM$$:')) return true;
+                    const msgTime = new Date(msg.created_at).getTime();
+                    if (now - msgTime > activeChat.disappearing_duration * 1000) {
+                        changed = true;
+                        return false; // hide message
+                    }
+                    return true;
+                });
+                return changed ? newMessages : prev;
+            });
+        }, 5000); // check every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [activeChat, messages]);
+
     const handleToggleConversationFlag = async (flagType) => {
         if (!activeChat) return;
         try {
@@ -236,6 +268,13 @@ export default function SupportInbox() {
 
         const handleNewMessage = (msg) => {
             if (activeChat && msg.conversation_id === activeChat.id) {
+                // Skip messages sent by admin — they are already in state
+                // from the optimistic update in handleSendMessage.
+                if (msg.sender_type === 'admin') {
+                    // Still update read status for conversations list
+                    fetchConversations();
+                    return;
+                }
                 setMessages(prev => {
                     if (prev.some(m => m.id === msg.id)) return prev;
                     return [...prev, msg];
@@ -302,6 +341,10 @@ export default function SupportInbox() {
             }
         };
 
+        const handlePinUpdate = (data) => {
+            setMessages(prev => prev.map(m => m.id === data.messageId ? { ...m, is_pinned: data.is_pinned } : m));
+        };
+
         const handleChatCleared = (data) => {
             if (activeChat && data.conversationId === activeChat.id) {
                 setMessages([]);
@@ -327,6 +370,18 @@ export default function SupportInbox() {
             }
         };
 
+        const handleMessageEdited = (data) => {
+            setMessages(prev => prev.map(m => m.id === data.messageId ? { ...m, content: data.newContent, is_edited: true } : m));
+        };
+
+        const handleMessageDeleted = (data) => {
+            if (data.deleteType === 'for_me') {
+                setMessages(prev => prev.filter(m => m.id !== data.messageId));
+            } else {
+                setMessages(prev => prev.map(m => m.id === data.messageId ? { ...m, is_deleted: true, content: 'This message was deleted' } : m));
+            }
+        };
+
         socket.on('new_message', handleNewMessage);
         socket.on('messages_read', handleMessagesRead);
         socket.on('presence_change', handlePresenceChange);
@@ -334,9 +389,12 @@ export default function SupportInbox() {
         socket.on('message_reaction_update', handleReactionUpdate);
         socket.on('disappearing_update', handleDisappearingUpdate);
         socket.on('message_star_update', handleStarUpdate);
+        socket.on('message_pin_update', handlePinUpdate);
         socket.on('chat_cleared', handleChatCleared);
         socket.on('conversation_flag_update', handleConvFlagUpdate);
         socket.on('conversation_list_flag_update', handleConvListFlagUpdate);
+        socket.on('message_edited', handleMessageEdited);
+        socket.on('message_deleted', handleMessageDeleted);
 
         return () => {
             socket.off('new_message', handleNewMessage);
@@ -346,9 +404,12 @@ export default function SupportInbox() {
             socket.off('message_reaction_update', handleReactionUpdate);
             socket.off('disappearing_update', handleDisappearingUpdate);
             socket.off('message_star_update', handleStarUpdate);
+            socket.off('message_pin_update', handlePinUpdate);
             socket.off('chat_cleared', handleChatCleared);
             socket.off('conversation_flag_update', handleConvFlagUpdate);
             socket.off('conversation_list_flag_update', handleConvListFlagUpdate);
+            socket.off('message_edited', handleMessageEdited);
+            socket.off('message_deleted', handleMessageDeleted);
         };
     }, [socket, activeChat, showRightPane]);
 
@@ -436,21 +497,62 @@ export default function SupportInbox() {
 
     const handleRightClickMessage = (e, msg) => {
         e.preventDefault();
+        const menuWidth = 200;
+        const menuHeight = 300;
+        let x = e.pageX;
+        let y = e.pageY;
+        
+        if (x + menuWidth > window.innerWidth) {
+            x = window.innerWidth - menuWidth - 20;
+        }
+        if (y + menuHeight > window.innerHeight) {
+            y = window.innerHeight - menuHeight - 20;
+        }
+
         setContextMenu({
             visible: true,
-            x: e.pageX,
-            y: e.pageY,
+            x,
+            y,
             msg: msg
         });
     };
 
     const handleReactMessage = async (messageId, emoji) => {
         setActiveReactionMenuMessageId(null);
+        
+        // Optimistic update
+        const adminId = user?.id; // from useAuth
+        setMessages(prev => prev.map(m => {
+            if (m.id === messageId) {
+                const reactions = [...(m.reactions || [])];
+                const existingIndex = reactions.findIndex(r => r.emoji === emoji && r.user_id === adminId);
+                if (existingIndex > -1) {
+                    reactions.splice(existingIndex, 1);
+                } else {
+                    reactions.push({ emoji, user_id: adminId, user_name: user?.name || 'Admin' });
+                }
+                return { ...m, reactions };
+            }
+            return m;
+        }));
+
         try {
             const res = await api.post(`/chat/messages/${messageId}/react`, { emoji });
+            // Let the socket event handle the final sync or just update with response
             setMessages(prev => prev.map(m => m.id === messageId ? res.data : m));
         } catch (error) {
             console.error('Failed to react to message:', error);
+        }
+    };
+
+    const handlePinMessage = async (messageId) => {
+        setContextMenu({ visible: false, x: 0, y: 0, msg: null });
+        try {
+            const res = await api.post(`/chat/messages/${messageId}/pin`);
+            setMessages(prev => prev.map(m => m.id === messageId ? res.data : m));
+        } catch (error) {
+            console.error('Failed to pin message:', error);
+            toast.error('Failed to pin message');
         }
     };
 
@@ -468,6 +570,68 @@ export default function SupportInbox() {
             console.error('Failed to star message:', error);
             toast.error(t('common.error_starring', 'Failed to update star status'));
         }
+    };
+
+    const handleEditMessage = async () => {
+        if (!input.trim() || !editingMessage) return;
+        try {
+            const res = await api.patch(`/chat/messages/${editingMessage.id}/edit`, {
+                newContent: input.trim(),
+                senderType: 'admin'
+            });
+            setMessages(prev => prev.map(m => m.id === editingMessage.id ? res.data : m));
+            setEditingMessage(null);
+            setInput('');
+        } catch (error) {
+            console.error('Failed to edit message', error);
+            toast.error(error.response?.data?.message || 'Failed to edit message');
+        }
+    };
+
+    const handleDeleteMessage = async (messageId, deleteType) => {
+        // Optimistic UI update
+        const previousMessages = [...messages];
+        if (deleteType === 'for_me') {
+            setMessages(prev => prev.filter(m => m.id !== messageId));
+        } else {
+            setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_deleted: true, content: 'This message was deleted' } : m));
+        }
+        setDeleteConfirmModal({ visible: false, messageId: null });
+        
+        try {
+            await api.delete(`/chat/messages/${messageId}`, { data: { senderType: 'admin', deleteType } });
+        } catch (error) {
+            console.error('Failed to delete message', error);
+            setMessages(previousMessages);
+        }
+    };
+
+    const handleBulkDelete = async (deleteType) => {
+        // Optimistic UI update
+        const previousMessages = [...messages];
+        if (deleteType === 'for_me') {
+            setMessages(prev => prev.filter(m => !selectedMessageIds.includes(m.id)));
+        } else {
+            setMessages(prev => prev.map(m => selectedMessageIds.includes(m.id) ? { ...m, is_deleted: true, content: 'This message was deleted' } : m));
+        }
+        setDeleteConfirmModal({ visible: false, messageId: null });
+        setSelectedMessageIds([]);
+        setSelectionMode(false);
+
+        try {
+            await Promise.all(selectedMessageIds.map(id => 
+                api.delete(`/chat/messages/${id}`, { data: { senderType: 'admin', deleteType } })
+                   .catch(err => console.error(`Failed to delete message ${id}`, err))
+            ));
+        } catch (error) {
+            console.error('Failed to perform bulk delete', error);
+            setMessages(previousMessages);
+        }
+    };
+
+    const openDeleteModal = (messageId) => {
+        setDeleteConfirmModal({ visible: true, messageId });
+        setActiveMessageMenuId(null);
     };
 
     const handleClearChat = async () => {
@@ -702,46 +866,82 @@ export default function SupportInbox() {
                     <>
                         {/* Header */}
                         <div className="px-6 py-4 border-b border-gray-200/60 flex items-center justify-between bg-white/95 backdrop-blur-md z-10 sticky top-0 shadow-sm">
-                            <div className="flex items-center gap-4 cursor-pointer" onClick={() => setShowRightPane(!showRightPane)}>
-                                <div className="relative">
-                                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center text-indigo-700 font-bold shadow-inner border border-white">
-                                        {activeChat.user_name?.[0]?.toUpperCase()}
+                            {selectionMode ? (
+                                <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => { setSelectionMode(false); setSelectedMessageIds([]); }} className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
+                                            <X className="h-5 w-5" />
+                                        </button>
+                                        <span className="font-semibold text-lg text-gray-800">{selectedMessageIds.length} Selected</span>
                                     </div>
-                                    {partnerPresence.online && (
-                                        <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white shadow-sm" />
-                                    )}
+                                    <button
+                                        onClick={() => { if (selectedMessageIds.length > 0) setDeleteConfirmModal({ visible: true, messageId: 'bulk' }); }}
+                                        disabled={selectedMessageIds.length === 0}
+                                        className="px-4 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg font-semibold text-sm transition disabled:opacity-50"
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 leading-tight text-[15px]">{activeChat.user_name}</h3>
-                                    <p className="text-xs mt-0.5">
-                                        {typingUsers[activeChat.id] ? (
-                                            <span className="text-emerald-600 font-bold italic animate-pulse">typing...</span>
-                                        ) : partnerPresence.online ? (
-                                            <span className="text-emerald-600 font-semibold">Online</span>
-                                        ) : partnerPresence.lastSeen ? (
-                                            <span className="text-gray-500 font-medium">Last seen {new Date(partnerPresence.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                        ) : (
-                                            <span className="text-gray-400 font-medium">Offline</span>
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setShowRightPane(!showRightPane)}
-                                    className={`p-2.5 rounded-xl transition-all ${showRightPane ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}`}
-                                    title="Contact Info"
-                                >
-                                    {showRightPane ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
-                                </button>
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-4 cursor-pointer" onClick={() => setShowRightPane(!showRightPane)}>
+                                        <div className="relative">
+                                            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center text-indigo-700 font-bold shadow-inner border border-white">
+                                                {activeChat.user_name?.[0]?.toUpperCase()}
+                                            </div>
+                                            {partnerPresence.online && (
+                                                <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white shadow-sm" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 leading-tight text-[15px]">{activeChat.user_name}</h3>
+                                            <p className="text-xs mt-0.5">
+                                                {typingUsers[activeChat.id] ? (
+                                                    <span className="text-emerald-600 font-bold italic animate-pulse">typing...</span>
+                                                ) : partnerPresence.online ? (
+                                                    <span className="text-emerald-600 font-semibold">Online</span>
+                                                ) : partnerPresence.lastSeen ? (
+                                                    <span className="text-gray-500 font-medium">Last seen {new Date(partnerPresence.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                ) : (
+                                                    <span className="text-gray-400 font-medium">Offline</span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setShowRightPane(!showRightPane)}
+                                            className={`p-2.5 rounded-xl transition-all ${showRightPane ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}`}
+                                            title="Contact Info"
+                                        >
+                                            {showRightPane ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Messages Feed */}
                         <div className="flex-1 flex overflow-hidden">
-                            <div className="flex-1 flex flex-col min-w-0 relative">
-                                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 custom-scrollbar pb-36">
+                            <div className="flex-1 flex flex-col min-w-0 relative bg-[#e5e5e5]" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")', backgroundBlendMode: 'overlay', opacity: 0.97 }}>
+                                {messages.filter(m => m.is_pinned).length > 0 && (
+                                    <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm z-30 cursor-pointer hover:bg-gray-50 transition-colors"
+                                         onClick={() => {
+                                             const pinnedMsg = messages.filter(m => m.is_pinned).pop();
+                                             const el = document.getElementById(`msg-${pinnedMsg.id}`);
+                                             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                         }}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <Pin className="h-4 w-4 text-indigo-500" />
+                                            <div className="flex flex-col">
+                                                <span className="text-[11px] font-semibold text-indigo-600">Pinned Message</span>
+                                                <span className="text-[13px] text-gray-700 line-clamp-1">{messages.filter(m => m.is_pinned).pop().content}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 custom-scrollbar">
                                     {Number(activeChat.disappearing_duration) > 0 && (
                                         <div className="flex items-center justify-center w-full mb-6 select-none">
                                             <div className="flex items-center gap-2 bg-yellow-100/90 backdrop-blur-sm border border-yellow-200 rounded-xl px-4 py-2 text-xs text-yellow-800 shadow-sm">
@@ -778,7 +978,17 @@ export default function SupportInbox() {
                                                 const isMe = msg.sender_type === 'admin';
                                                 
                                                 return (
-                                                    <div key={msg.id} className="w-full">
+                                                    <div
+                                                        key={msg.id}
+                                                        className={`w-full transition-colors duration-150 rounded-xl ${selectionMode && selectedMessageIds.includes(msg.id) ? 'bg-indigo-50/60' : ''}`}
+                                                        onClick={() => {
+                                                            if (selectionMode) {
+                                                                setSelectedMessageIds(prev =>
+                                                                    prev.includes(msg.id) ? prev.filter(id => id !== msg.id) : [...prev, msg.id]
+                                                                );
+                                                            }
+                                                        }}
+                                                    >
                                                         
                                                         {/* Unread Divider */}
                                                         {msg.isFirstUnread && (
@@ -792,8 +1002,16 @@ export default function SupportInbox() {
                                                             </div>
                                                         )}
 
-                                                        <div id={`msg-${msg.id}`} className={`flex w-full group/row ${isMe ? 'justify-end' : 'justify-start'} ${msg.showTail ? 'mt-2' : 'mt-[2px]'}`}>
-                                                            <div className={`flex max-w-[75%] lg:max-w-[65%] ${isMe ? 'flex-row-reverse' : 'flex-row'} items-start gap-1.5`}>
+                                                        <div id={`msg-${msg.id}`} className={`flex w-full items-center group/row ${isMe ? 'justify-end' : 'justify-start'} ${msg.showTail ? 'mt-2' : 'mt-[2px]'}`}>
+                                                            {/* Checkbox for selection mode */}
+                                                            {selectionMode && (
+                                                                <div className={`flex items-center justify-center cursor-pointer mx-2 ${isMe ? 'order-last' : 'order-first'}`}>
+                                                                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${selectedMessageIds.includes(msg.id) ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-400 bg-white'}`}>
+                                                                        {selectedMessageIds.includes(msg.id) && <Check className="w-3 h-3" />}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            <div className={`flex max-w-[75%] lg:max-w-[65%] ${isMe ? 'flex-row-reverse' : 'flex-row'} items-start gap-1.5 ${selectionMode ? 'pointer-events-none' : ''}`}>
                                                                 
                                                                 <motion.div
                                                                     drag="x"
@@ -841,20 +1059,106 @@ export default function SupportInbox() {
                                                                         )}
 
                                                                         {/* Hover Actions */}
-                                                                        <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity ${isMe ? '-left-[40px]' : '-right-[40px]'}`}>
-                                                                            <button onClick={(e) => { e.stopPropagation(); setActiveReactionMenuMessageId(activeReactionMenuMessageId === msg.id ? null : msg.id); }} className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-gray-500 hover:text-yellow-500 shadow-sm" title="React">
-                                                                                <Smile className="h-4 w-4" />
-                                                                            </button>
-                                                                        </div>
+                                                                        {!selectionMode && (
+                                                                            <div className={`absolute top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity z-20 ${isMe ? '-left-[40px]' : '-right-[40px]'}`}>
+
+                                                                                <button onClick={(e) => { e.stopPropagation(); setActiveReactionMenuMessageId(activeReactionMenuMessageId === msg.id ? null : msg.id); }} className="p-1.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-gray-500 hover:text-yellow-500 shadow-sm" title="React">
+                                                                                    <Smile className="h-4 w-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Message Dropdown Menu */}
+                                                                        {activeMessageMenuId === msg.id && !selectionMode && (
+                                                                            <div
+                                                                                onClick={(e) => { e.stopPropagation(); setActiveMessageMenuId(null); }}
+                                                                                className={`absolute top-2 ${isMe ? 'right-2' : 'left-2'} w-40 bg-white border border-gray-150 rounded-2xl shadow-2xl z-[99999] py-1 text-gray-800 animate-in fade-in slide-in-from-top-1`}
+                                                                            >
+                                                                                <button
+                                                                                    onClick={() => { setSelectionMode(true); setSelectedMessageIds([msg.id]); setActiveMessageMenuId(null); }}
+                                                                                    className="w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center gap-2 transition text-indigo-700 font-medium"
+                                                                                >
+                                                                                    <CheckSquare className="h-3.5 w-3.5" /> Select
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => { setReplyingTo(msg); setActiveMessageMenuId(null); }}
+                                                                                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
+                                                                                >
+                                                                                    <CornerUpLeft className="h-3.5 w-3.5 text-gray-400" /> Reply
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => { handlePinMessage(msg.id); setActiveMessageMenuId(null); }}
+                                                                                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
+                                                                                >
+                                                                                    <Pin className="h-3.5 w-3.5 text-gray-400" /> {msg.is_pinned ? 'Unpin' : 'Pin'}
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => { handleCopyMessage(msg.content); setActiveMessageMenuId(null); }}
+                                                                                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
+                                                                                >
+                                                                                    <Copy className="h-3.5 w-3.5 text-gray-400" /> Copy
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => { handleToggleStar(msg.id); setActiveMessageMenuId(null); }}
+                                                                                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
+                                                                                >
+                                                                                    <Star className={`h-3.5 w-3.5 ${msg.is_starred ? 'text-amber-500 fill-amber-500' : 'text-gray-400'}`} /> {msg.is_starred ? 'Unstar' : 'Star'}
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => { setInfoMessage(msg); setActiveMessageMenuId(null); }}
+                                                                                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition"
+                                                                                >
+                                                                                    <Info className="h-3.5 w-3.5 text-gray-400" /> Info
+                                                                                </button>
+                                                                                {isMe && (
+                                                                                    <>
+                                                                                        <hr className="my-1 border-gray-100" />
+                                                                                        {!msg.is_deleted && (
+                                                                                            <button
+                                                                                                onClick={() => { setEditingMessage(msg); setInput(msg.content); setActiveMessageMenuId(null); }}
+                                                                                                className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 transition text-gray-700"
+                                                                                            >
+                                                                                                <Edit2 className="h-3.5 w-3.5 text-gray-400" /> Edit
+                                                                                            </button>
+                                                                                        )}
+                                                                                        <button
+                                                                                            onClick={() => openDeleteModal(msg.id)}
+                                                                                            className="w-full text-left px-3 py-2 text-xs hover:bg-rose-50 flex items-center gap-2 transition text-rose-600"
+                                                                                        >
+                                                                                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                                                                                        </button>
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
 
                                                                         {/* Reactions Menu Popover */}
-                                                                        {activeReactionMenuMessageId === msg.id && (
+                                                                        {activeReactionMenuMessageId === msg.id && !showFullReactionPicker && (
                                                                             <div className={`absolute bottom-full mb-2 bg-white border border-gray-200 rounded-full px-2 py-1.5 shadow-xl flex gap-2 z-50 animate-in zoom-in-95 duration-100 ${isMe ? 'right-0' : 'left-0'}`}>
                                                                                 {['👍', '❤️', '😂', '😮', '😢', '🙏'].map(emoji => (
                                                                                     <button key={emoji} onClick={() => handleReactMessage(msg.id, emoji)} className="hover:scale-125 transition-transform text-xl px-1">
                                                                                         {emoji}
                                                                                     </button>
                                                                                 ))}
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(e) => { e.stopPropagation(); setShowFullReactionPicker(msg.id); }}
+                                                                                    className="hover:scale-125 transition-transform px-1 text-xl text-gray-500 font-bold ml-1 flex items-center justify-center"
+                                                                                    title="More Emojis"
+                                                                                >
+                                                                                    +
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                        {showFullReactionPicker === msg.id && (
+                                                                            <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20" onClick={(e) => { e.stopPropagation(); setShowFullReactionPicker(null); setActiveReactionMenuMessageId(null); }}>
+                                                                                <div onClick={(e) => e.stopPropagation()} className="shadow-2xl rounded-xl overflow-hidden animate-in zoom-in-95 duration-200 bg-white">
+                                                                                    <EmojiPicker
+                                                                                        onEmojiClick={(e) => { handleReactMessage(msg.id, e.emoji); setShowFullReactionPicker(null); setActiveReactionMenuMessageId(null); }}
+                                                                                        width={280}
+                                                                                        height={300}
+                                                                                    />
+                                                                                </div>
                                                                             </div>
                                                                         )}
 
@@ -899,8 +1203,14 @@ export default function SupportInbox() {
                                                                         )}
 
                                                                         <div className="flex gap-4">
-                                                                            <p className="whitespace-pre-wrap leading-snug break-words pb-3 pt-1">
-                                                                                {msg.content === '[Voice Message]' && !msg.attachments?.length ? <span className="italic text-gray-500">Audio message</span> : msg.content}
+                                                                            <p className={`whitespace-pre-wrap leading-snug break-words pb-3 pt-1 ${msg.is_deleted ? 'italic text-gray-400' : ''}`}>
+                                                                                {msg.is_deleted ? (
+                                                                                    <span className="flex items-center gap-1.5"><Ban className="h-3.5 w-3.5" /> This message was deleted</span>
+                                                                                ) : msg.content === '[Voice Message]' && !msg.attachments?.length ? (
+                                                                                    <span className="italic text-gray-500">Audio message</span>
+                                                                                ) : (
+                                                                                    <>{msg.content}{msg.is_edited && <span className="text-[10px] opacity-60 ml-1.5 font-medium">(edited)</span>}</>
+                                                                                )}
                                                                             </p>
                                                                             
                                                                             {/* Floating Meta data (Time & Ticks) inside the bubble bottom right */}
@@ -920,9 +1230,15 @@ export default function SupportInbox() {
                                                                         </div>
 
                                                                         {msg.reactions?.length > 0 && (
-                                                                            <div className="absolute -bottom-3 left-4 flex items-center bg-white border border-gray-200 rounded-full px-1.5 py-0.5 shadow-sm text-xs gap-1 z-20 cursor-pointer text-gray-800 scale-90 origin-left">
+                                                                            <div className="absolute -bottom-3 left-4 flex items-center bg-white border border-gray-150 rounded-full px-2 py-1 shadow-sm text-sm gap-1.5 z-20 cursor-pointer text-gray-800">
                                                                                 {[...new Set(msg.reactions.map(r => r.emoji))].map(emoji => (
-                                                                                    <span key={emoji}>{emoji}</span>
+                                                                                    <span
+                                                                                        key={emoji}
+                                                                                        onClick={(e) => { e.stopPropagation(); handleReactMessage(msg.id, emoji); }}
+                                                                                        className="hover:scale-110 transition-transform cursor-pointer"
+                                                                                    >
+                                                                                        {emoji}
+                                                                                    </span>
                                                                                 ))}
                                                                                 {msg.reactions.length > 1 && <span className="text-[10px] font-bold ml-0.5">{msg.reactions.length}</span>}
                                                                             </div>
@@ -937,8 +1253,15 @@ export default function SupportInbox() {
                                         </div>
                                     ))}
 
+                                    <div ref={messagesEndRef} />
+                                </div>
+
+                                {/* Input Area — flex-shrink-0 keeps it at the bottom */}
+                                <div className="flex-shrink-0 px-4 pb-4 pt-1 relative">
+
+                                    {/* Typing indicator — above the card */}
                                     {typingUsers[activeChat.id] && (
-                                        <div className="flex justify-start ml-2 mt-2">
+                                        <div className="flex justify-start mb-2">
                                             <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-1.5">
                                                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                                                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
@@ -946,24 +1269,45 @@ export default function SupportInbox() {
                                             </div>
                                         </div>
                                     )}
-                                    <div ref={messagesEndRef} />
-                                </div>
-                                
-                                {/* Input Area (Floating) */}
-                                <div className="absolute bottom-6 left-6 right-6 z-30">
-                                    <div className="bg-white rounded-3xl shadow-xl border border-gray-200/60 overflow-hidden flex flex-col transition-all">
+
+                                    {/* Emoji Picker — anchored to this relative container, opens upward */}
+                                    {showEmojiPicker && (
+                                        <div className="absolute bottom-full left-4 mb-2 z-50 shadow-2xl rounded-3xl overflow-hidden border border-gray-100" ref={emojiPickerRef}>
+                                            <EmojiPicker onEmojiClick={onEmojiClick} width={340} height={400} lazyLoadEmojis={true} skinTonesDisabled={true} previewConfig={{ showPreview: false }} />
+                                        </div>
+                                    )}
+
+                                    {/* Input Card */}
+                                    <div className="bg-white rounded-3xl shadow-xl border border-gray-200/60 flex flex-col transition-all">
+
                                         {/* Reply Preview */}
                                         {replyingTo && (
-                                            <div className="bg-gray-50 border-b border-gray-100 p-3 flex justify-between items-center relative">
-                                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 rounded-tl-xl" />
-                                                <div className="pl-3">
-                                                    <div className="text-[11px] font-extrabold text-indigo-600 mb-0.5 uppercase tracking-wide">
-                                                        Replying to {replyingTo.sender_type === 'admin' ? 'Yourself' : activeChat?.user_name}
+                                            <div className="px-4 py-2 bg-black/5 border-b border-black/5 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <CornerUpLeft className="w-4 h-4 text-indigo-600" />
+                                                    <div>
+                                                        <p className="text-xs font-bold text-indigo-600 mb-0.5">Replying to {replyingTo.sender_type === 'user' ? 'User' : 'Yourself'}</p>
+                                                        <p className="text-xs text-gray-500 truncate max-w-md">{replyingTo.content}</p>
                                                     </div>
-                                                    <div className="text-sm text-gray-700 truncate max-w-lg font-medium">{replyingTo.content}</div>
                                                 </div>
-                                                <button onClick={() => setReplyingTo(null)} className="p-1.5 hover:bg-gray-200 rounded-full text-gray-500 transition">
-                                                    <X className="w-5 h-5" />
+                                                <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-black/5 rounded-full text-gray-500">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Editing Preview */}
+                                        {editingMessage && (
+                                            <div className="px-4 py-2 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <FileText className="w-4 h-4 text-indigo-600" />
+                                                    <div>
+                                                        <p className="text-xs font-bold text-indigo-600 mb-0.5">Editing Message</p>
+                                                        <p className="text-xs text-indigo-400 truncate max-w-md">Press escape to cancel</p>
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => { setEditingMessage(null); setInput(''); }} className="p-1 hover:bg-indigo-100 rounded-full text-indigo-500">
+                                                    <X className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         )}
@@ -991,7 +1335,7 @@ export default function SupportInbox() {
                                         )}
 
                                         {activeChat.is_blocked_by_admin || activeChat.is_blocked_by_user ? (
-                                            <div className="p-5 flex flex-col items-center justify-center text-center bg-gray-50">
+                                            <div className="p-5 flex flex-col items-center justify-center text-center bg-gray-50 rounded-3xl">
                                                 <Ban className="h-6 w-6 text-rose-500 mb-2" />
                                                 <p className="text-sm font-semibold text-gray-700">
                                                     {activeChat.is_blocked_by_admin ? 'You blocked this contact.' : 'You have been blocked.'}
@@ -1003,25 +1347,20 @@ export default function SupportInbox() {
                                                 )}
                                             </div>
                                         ) : (
-                                            <form onSubmit={handleSendMessage} className="flex items-end gap-2 p-2 relative bg-white">
-                                                
+                                            <form onSubmit={editingMessage ? (e) => { e.preventDefault(); handleEditMessage(); } : handleSendMessage} className="flex items-end gap-2 p-2">
                                                 {isRecording ? (
-                                                    // Recording State UI
                                                     <div className="flex-1 flex items-center gap-4 px-4 py-2">
                                                         <div className="flex items-center gap-2">
                                                             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-sm shadow-red-200"></div>
                                                             <span className="text-red-500 font-bold text-sm tracking-wide font-mono">{formatDuration(recordingDuration)}</span>
                                                         </div>
                                                         <div className="flex-1"></div>
-                                                        <button type="button" onClick={cancelRecording} className="text-gray-400 hover:text-red-500 text-sm font-semibold transition px-2">
-                                                            Cancel
-                                                        </button>
+                                                        <button type="button" onClick={cancelRecording} className="text-gray-400 hover:text-red-500 text-sm font-semibold transition px-2">Cancel</button>
                                                         <button type="button" onClick={stopRecording} className="p-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-full transition shadow-sm border border-red-100" title="Stop & Use">
                                                             <Square className="h-5 w-5 fill-current" />
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    // Default Input State UI
                                                     <>
                                                         <div className="flex gap-1.5 pl-1.5 pb-0.5">
                                                             <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={`p-2.5 rounded-full transition-colors ${showEmojiPicker ? 'bg-indigo-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'}`}>
@@ -1031,7 +1370,7 @@ export default function SupportInbox() {
                                                                 <Paperclip className="h-6 w-6" />
                                                             </button>
                                                         </div>
-                                                        
+
                                                         <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,application/pdf" />
 
                                                         <textarea
@@ -1041,7 +1380,8 @@ export default function SupportInbox() {
                                                             className="flex-1 bg-transparent border-none py-3.5 text-[15px] focus:outline-none resize-none max-h-32 min-h-[48px] text-gray-800 placeholder-gray-400 font-medium leading-relaxed"
                                                             rows="1"
                                                             onKeyDown={(e) => {
-                                                                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); }
+                                                                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editingMessage ? handleEditMessage() : handleSendMessage(e); }
+                                                                if (e.key === 'Escape' && editingMessage) { setEditingMessage(null); setInput(''); }
                                                             }}
                                                         />
 
@@ -1053,12 +1393,6 @@ export default function SupportInbox() {
                                                             <button type="button" onClick={startRecording} className="bg-indigo-600 text-white p-3 rounded-full hover:bg-indigo-700 transition shadow-md mb-1 mr-1 flex-shrink-0 group">
                                                                 <Mic className="h-5 w-5 group-hover:scale-110 transition-transform" />
                                                             </button>
-                                                        )}
-
-                                                        {showEmojiPicker && (
-                                                            <div className="absolute bottom-full left-0 mb-4 z-50 shadow-2xl rounded-3xl overflow-hidden border border-gray-100" ref={emojiPickerRef}>
-                                                                <EmojiPicker onEmojiClick={onEmojiClick} width={340} height={400} lazyLoadEmojis={true} skinTonesDisabled={true} previewConfig={{ showPreview: false }} />
-                                                            </div>
                                                         )}
                                                     </>
                                                 )}
@@ -1081,8 +1415,14 @@ export default function SupportInbox() {
                                     className="fixed bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-2xl shadow-2xl z-[999] py-1.5 w-48 overflow-hidden text-gray-800"
                                     onClick={(e) => e.stopPropagation()}
                                 >
+                                    <button onClick={() => { setSelectionMode(true); setSelectedMessageIds([contextMenu.msg.id]); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-3">
+                                        <CheckSquare className="h-4 w-4" /> Select
+                                    </button>
                                     <button onClick={() => { setReplyingTo(contextMenu.msg); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-gray-100 flex items-center gap-3">
                                         <CornerUpLeft className="h-4 w-4 text-gray-500" /> Reply
+                                    </button>
+                                    <button onClick={() => { handlePinMessage(contextMenu.msg.id); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-gray-100 flex items-center gap-3">
+                                        {contextMenu.msg.is_pinned ? <PinOff className="h-4 w-4 text-gray-500" /> : <Pin className="h-4 w-4 text-gray-500" />} {contextMenu.msg.is_pinned ? 'Unpin' : 'Pin'}
                                     </button>
                                     <button onClick={() => { handleCopyMessage(contextMenu.msg.content); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-gray-100 flex items-center gap-3">
                                         <Copy className="h-4 w-4 text-gray-500" /> Copy
@@ -1094,6 +1434,19 @@ export default function SupportInbox() {
                                     <button onClick={() => { setInfoMessage(contextMenu.msg); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-gray-100 flex items-center gap-3">
                                         <Info className="h-4 w-4 text-gray-500" /> Message Info
                                     </button>
+                                    {contextMenu.msg?.sender_type === 'admin' && (
+                                        <>
+                                            <hr className="my-1 border-gray-200/60" />
+                                            {!contextMenu.msg.is_deleted && (
+                                                <button onClick={() => { setEditingMessage(contextMenu.msg); setInput(contextMenu.msg.content); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-gray-100 flex items-center gap-3">
+                                                    <Edit2 className="h-4 w-4 text-gray-500" /> Edit
+                                                </button>
+                                            )}
+                                            <button onClick={() => { openDeleteModal(contextMenu.msg.id); setContextMenu({ ...contextMenu, visible: false }); }} className="w-full text-left px-4 py-2 text-sm font-semibold hover:bg-rose-50 hover:text-rose-600 flex items-center gap-3 text-rose-600">
+                                                <Trash2 className="h-4 w-4" /> Delete
+                                            </button>
+                                        </>
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -1307,6 +1660,96 @@ export default function SupportInbox() {
                                         <p className="text-sm text-gray-900 font-extrabold mt-0.5">{infoMessage.is_read && infoMessage.read_at ? new Date(infoMessage.read_at).toLocaleString() : 'Not yet read'}</p>
                                     </div>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Message Confirmation Modal */}
+            <AnimatePresence>
+                {deleteConfirmModal.visible && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99999] flex items-end sm:items-center justify-center p-4"
+                        onClick={() => setDeleteConfirmModal({ visible: false, messageId: null })}
+                    >
+                        <motion.div
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 50, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+                                <div className="flex items-center gap-3 mb-1">
+                                    <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+                                        <Trash2 className="h-5 w-5 text-rose-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 text-base">Delete Message{deleteConfirmModal.messageId === 'bulk' ? `s (${selectedMessageIds.length})` : ''}</h3>
+                                        <p className="text-xs text-gray-500">Choose who you want to delete this for</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Options */}
+                            <div className="p-4 flex flex-col gap-2">
+                                <button
+                                    onClick={() => {
+                                        if (deleteConfirmModal.messageId === 'bulk') {
+                                            handleBulkDelete('for_me');
+                                        } else {
+                                            handleDeleteMessage(deleteConfirmModal.messageId, 'for_me');
+                                        }
+                                    }}
+                                    className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 transition text-left group"
+                                >
+                                    <div className="w-9 h-9 rounded-full bg-gray-100 group-hover:bg-indigo-100 flex items-center justify-center flex-shrink-0 transition">
+                                        <span className="text-base">👤</span>
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-gray-800 text-sm group-hover:text-indigo-700 transition">Delete for Me</div>
+                                        <div className="text-xs text-gray-400 mt-0.5">This message will be removed only from your view</div>
+                                    </div>
+                                </button>
+
+                                {(deleteConfirmModal.messageId === 'bulk'
+                                    ? selectedMessageIds.every(id => { const m = messages.find(msg => msg.id === id); return m && !m.is_deleted && m.sender_type === 'admin'; })
+                                    : (messages.find(m => m.id === deleteConfirmModal.messageId) && !messages.find(m => m.id === deleteConfirmModal.messageId)?.is_deleted && messages.find(m => m.id === deleteConfirmModal.messageId)?.sender_type === 'admin')) && (
+                                    <button
+                                        onClick={() => {
+                                            if (deleteConfirmModal.messageId === 'bulk') {
+                                                handleBulkDelete('for_everyone');
+                                            } else {
+                                                handleDeleteMessage(deleteConfirmModal.messageId, 'for_everyone');
+                                            }
+                                        }}
+                                        className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-rose-200 hover:bg-rose-50 transition text-left group"
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-gray-100 group-hover:bg-rose-100 flex items-center justify-center flex-shrink-0 transition">
+                                            <span className="text-base">🌐</span>
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-gray-800 text-sm group-hover:text-rose-600 transition">Delete for Everyone</div>
+                                            <div className="text-xs text-gray-400 mt-0.5">This message will be removed for all participants</div>
+                                        </div>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Cancel */}
+                            <div className="px-4 pb-4">
+                                <button
+                                    onClick={() => setDeleteConfirmModal({ visible: false, messageId: null })}
+                                    className="w-full py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 transition"
+                                >
+                                    Cancel
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>

@@ -17,7 +17,7 @@ import UserSubscriptionView from '../components/user/UserSubscriptionView';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import BroadcastBanner from '../components/common/BroadcastBanner';
-import { Bell, CreditCard } from 'lucide-react';
+import { Bell, CreditCard, Heart } from 'lucide-react';
 
 const UserDashboard = () => {
     const { user } = useAuth();
@@ -36,6 +36,7 @@ const UserDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'bookings', 'payments'
     const [notifications, setNotifications] = useState([]);
     const [loadingNotifications, setLoadingNotifications] = useState(false);
+    const [favorites, setFavorites] = useState([]);
     const { t } = useTranslation();
 
     const { update, broadcast } = useUserSocket(user?.id);
@@ -50,6 +51,7 @@ const UserDashboard = () => {
         fetchOrganizations();
         fetchMyBookings();
         fetchNotifications();
+        fetchFavorites();
     }, [searchParams]);
 
     // Refresh on socket update
@@ -84,6 +86,29 @@ const UserDashboard = () => {
             setMyBookings(response.data);
         } catch (error) {
             console.error('Error fetching bookings:', error);
+        }
+    };
+
+    const fetchFavorites = async () => {
+        try {
+            const response = await apiService.getFavorites();
+            setFavorites(response.data);
+        } catch (error) {
+            console.error('Error fetching favorites:', error);
+        }
+    };
+
+    const handleToggleFavorite = async (orgId) => {
+        try {
+            const response = await apiService.toggleFavorite(orgId);
+            if (response.data.isFavorite) {
+                toast.success('Added to favorites');
+            } else {
+                toast.success('Removed from favorites');
+            }
+            fetchFavorites();
+        } catch (error) {
+            toast.error('Failed to update favorites');
         }
     };
 
@@ -183,6 +208,18 @@ const UserDashboard = () => {
             console.error('Cancellation failed:', error);
             alert('Failed to cancel booking');
         }
+    };
+
+    const handleRebook = (booking) => {
+        setSelectedOrg({ id: booking.org_id, name: booking.org_name });
+        setBookingSlot({
+            service_id: booking.service_id,
+            service_name: booking.service_name,
+            resource_id: booking.resource_id,
+            resource_name: booking.resource_name,
+            // omit slot_id so wizard forces slot selection
+        });
+        setShowBookingModal(true);
     };
 
     const handleCancelNotification = async (notificationId) => {
@@ -300,6 +337,32 @@ const UserDashboard = () => {
                         </div>
                     )}
 
+                    {/* Favorite Organizations Section */}
+                    {favorites.length > 0 && searchQuery === '' && selectedType === 'All' && (
+                        <div className="mb-12">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2 bg-rose-50 rounded-lg text-rose-500">
+                                    <Heart className="h-5 w-5 fill-rose-500" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Favorite Organizations</h2>
+                                    <p className="text-sm text-gray-500 font-medium">Your pinned places for quick access.</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {favorites.map(org => (
+                                    <OrganizationCard
+                                        key={org.org_id || org.id}
+                                        org={{...org, id: org.org_id || org.id}}
+                                        onViewSlots={handleViewSlots}
+                                        isFavorite={true}
+                                        onToggleFavorite={handleToggleFavorite}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t('user_dashboard.find_orgs', 'Find Organizations')}</h2>
                         <div className="hidden sm:flex items-center gap-3">
@@ -338,6 +401,8 @@ const UserDashboard = () => {
                                 key={org.id}
                                 org={org}
                                 onViewSlots={handleViewSlots}
+                                isFavorite={favorites.some(f => (f.org_id || f.id) === org.id)}
+                                onToggleFavorite={handleToggleFavorite}
                             />
                         ))}
                     </div>
@@ -350,7 +415,7 @@ const UserDashboard = () => {
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t('appointments.title', 'My Recent Appointments')}</h2>
                     </div>
-                    <MyBookings bookings={myBookings} onCancel={handleCancelBooking} />
+                    <MyBookings bookings={myBookings} onCancel={handleCancelBooking} onRebook={handleRebook} />
                 </div>
             )}
 
@@ -409,8 +474,8 @@ const UserDashboard = () => {
                 <BookingWizard
                     orgId={selectedOrg?.id}
                     service={bookingSlot ? { id: bookingSlot.service_id, name: bookingSlot.service_name } : null}
-                    initialResource={bookingSlot ? { id: bookingSlot.resource_id, name: bookingSlot.resource_name, type: bookingSlot.resource_type } : null}
-                    initialSlot={bookingSlot ? { id: bookingSlot.slot_id, ...bookingSlot } : null}
+                    initialResource={bookingSlot?.resource_id ? { id: bookingSlot.resource_id, name: bookingSlot.resource_name, type: bookingSlot.resource_type } : null}
+                    initialSlot={bookingSlot?.slot_id ? { id: bookingSlot.slot_id, ...bookingSlot } : null}
                     onClose={closeBookingModal}
                 />
             )}

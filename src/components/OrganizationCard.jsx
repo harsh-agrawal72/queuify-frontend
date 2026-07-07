@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageCircle, ShieldCheck } from 'lucide-react';
+import { MessageCircle, ShieldCheck, Heart } from 'lucide-react';
+import clsx from 'clsx';
 
 const getIndustryTerminology = (type) => {
     switch (type) {
@@ -15,13 +16,22 @@ const getIndustryTerminology = (type) => {
     }
 };
 
-const OrganizationCard = ({ org, onViewSlots }) => {
+const OrganizationCard = ({ org, onViewSlots, isFavorite, onToggleFavorite }) => {
     const term = getIndustryTerminology(org.type);
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group">
+        <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group relative">
+            {onToggleFavorite && (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(org.id); }}
+                    className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm border border-gray-100 hover:bg-rose-50 hover:border-rose-100 transition-colors group/btn shadow-sm"
+                    title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                >
+                    <Heart className={clsx("w-5 h-5 transition-colors", isFavorite ? "fill-rose-500 text-rose-500" : "text-gray-400 group-hover/btn:text-rose-400")} />
+                </button>
+            )}
             <div className="p-6">
-                <div className="flex items-start gap-4 mb-4">
+                <div className="flex items-start gap-4 mb-4 pr-10">
                     <div className="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center text-gray-400 font-bold text-lg border border-gray-100">
                         {org.logo_url ? (
                             <img src={org.logo_url} alt={org.name} className="w-full h-full object-cover" />

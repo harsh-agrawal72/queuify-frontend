@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { apiService } from '../services/api';
 import clsx from 'clsx';
-import { MapPin, AlertCircle, CheckCircle2, ShieldAlert, Download, Clock, Crown } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle2, ShieldAlert, Download, Clock, Crown, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import receiptModal from './user/ReceiptModal'; // Adjust if case matters, usually components are capitalized
 import { toast } from 'react-hot-toast';
 
-const MyBookings = ({ bookings, onCancel }) => {
+const MyBookings = ({ bookings, onCancel, onRebook }) => {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(null);
     const [selectedReceipt, setSelectedReceipt] = useState(null);
@@ -177,12 +177,22 @@ const MyBookings = ({ bookings, onCancel }) => {
                             </div>
 
                             {booking.status === 'completed' && (
-                                <button
-                                    onClick={() => setSelectedReceipt(booking)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
-                                >
-                                    <Download className="h-3.5 w-3.5" /> {t('appointments.actions.receipt', 'Receipt')}
-                                </button>
+                                <div className="flex flex-col gap-2 mt-2">
+                                    <button
+                                        onClick={() => setSelectedReceipt(booking)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors justify-center"
+                                    >
+                                        <Download className="h-3.5 w-3.5" /> {t('appointments.actions.receipt', 'Receipt')}
+                                    </button>
+                                    {onRebook && (
+                                        <button
+                                            onClick={() => onRebook(booking)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors justify-center shadow-sm"
+                                        >
+                                            <Calendar className="h-3.5 w-3.5" /> Rebook
+                                        </button>
+                                    )}
+                                </div>
                             )}
 
                             {booking.status !== 'cancelled' && booking.status !== 'completed' && (
